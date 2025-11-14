@@ -44,7 +44,7 @@ class EnsureAdminHasPermission
 
         // User ko dashboard par redirect karein aur error message dein
         return redirect()->route('admin.dashboard') // 🚨 Apna sahi dashboard route name use karein
-            ->with('error', "Your permission to access the **$moduleName** module has been revoked.");
+            ->with('error', "🚨 Your permission to access the <strong>$moduleName</strong> module may have changed or been revoked, so you have been redirected here.");
 
         // Old Code: abort(403, 'Unauthorized');
     }

@@ -28,10 +28,10 @@
             <div class="alert-content">
                 <h5 class="alert-title">Permission Guidelines</h5>
                 <ul class="alert-list">
-                    <li>Use descriptive names that clearly indicate what the permission allows</li>
-                    <li>Slugs should use dot notation (e.g., <code>users.create</code>, <code>reports.view</code>)</li>
-                    <li>Keep slugs lowercase and use underscores for spaces in resource names</li>
-                    <li>Descriptions help admins understand when to assign this permission</li>
+                    <li>Use clear, descriptive names indicating the permission's function</li>
+                    <li>Apply dot notation for slugs: <code>resource.action</code></li>
+                    <li>Maintain lowercase slugs with underscores for multi-word resources</li>
+                    <li>Provide concise descriptions for administrative clarity</li>
                 </ul>
             </div>
         </div>
@@ -114,10 +114,20 @@
                                     <span class="required-badge">Required</span>
                                 </label>
                                 <input type="text" name="category" id="permission_category" class="form-control-modern"
-                                    value="{{ old('category') }}" placeholder="e.g., Users, Reports, Settings" required>
+                                    list="permission_categories" value="{{ old('category') }}"
+                                    placeholder="Type or select an existing category" required>
+
+                                <datalist id="permission_categories">
+                                    @if(isset($categories) && $categories->count())
+                                        @foreach($categories as $cat)
+                                            <option value="{{ $cat }}">{{ $cat }}</option>
+                                        @endforeach
+                                    @endif
+                                </datalist>
+
                                 <small class="form-hint">
                                     <i class="bi bi-lightbulb me-1"></i>
-                                    Group related permissions together for ease of management
+                                    Start typing to select an existing category or enter a new one
                                 </small>
                             </div>
                         </div>

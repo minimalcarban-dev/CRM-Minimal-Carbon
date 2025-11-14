@@ -15,7 +15,7 @@
                     <p class="page-subtitle mb-0">Fill the details below to create a new order entry</p>
                 </div>
                 <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Back to Orders
+                    <i class="bi bi-arrow-left me-2"></i>Back again to Orders
                 </a>
             </div>
         </div>

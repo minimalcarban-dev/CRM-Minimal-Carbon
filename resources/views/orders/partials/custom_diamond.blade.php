@@ -18,7 +18,7 @@
                     <span class="label-icon">
                         <i class="bi bi-person-lines-fill"></i>
                     </span>
-                    <span class="label-text">Customer Details</span>
+                    <span class="label-text">Client Details</span>
                     <span class="required-badge">Required</span>
                 </label>
                 <textarea name="client_details" class="form-control-modern" rows="4"
@@ -63,16 +63,16 @@
         </div>
         <div class="section-body">
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-12">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">
                                 <i class="bi bi-briefcase"></i>
                             </span>
                             <span class="label-text">Company</span>
-                            <span class="optional-badge">Optional</span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <select name="company_id" class="form-control-modern">
+                        <select name="company_id" class="form-control-modern" required>
                             <option value="">-- Select Company --</option>
                             @foreach($companies as $company)
                                 <option value="{{ $company->id }}" {{ old('company_id', $order->company_id ?? '') == $company->id ? 'selected' : '' }}>
@@ -83,16 +83,16 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-12">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">
                                 <i class="bi bi-check-circle"></i>
                             </span>
                             <span class="label-text">Diamond Status</span>
-                            <span class="required-badge">Required</span>
+                            <span class="optional-badge">Optional</span>
                         </label>
-                        <select name="diamond_status" class="form-control-modern" required>
+                        <select name="diamond_status" class="form-control-modern">
                             <option value="">-- Select Status --</option>
                             <option value="diamond_purchased" {{ old('diamond_status', $order->diamond_status ?? '') == 'diamond_purchased' ? 'selected' : '' }}>
                                 Diamond Purchased
@@ -111,47 +111,26 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-12">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">
-                                <i class="bi bi-currency-rupee"></i>
+                                <i class="bi bi-currency-dollar"></i>
                             </span>
-                            <span class="label-text">Gross Sell Amount</span>
-                            <span class="optional-badge">Optional</span>
+                            <span class="label-text">Gross Sell ($)</span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <input type="number" step="0.01" name="gross_sell" class="form-control-modern"
+                        <input type="number" step="0.01" name="gross_sell" class="form-control-modern" required
                             placeholder="0.00" value="{{ old('gross_sell', $order->gross_sell ?? '') }}">
                         <div class="form-hint">
                             <i class="bi bi-info-circle"></i>
-                            Enter the total selling price in rupees
+                            <span>Enter the total selling price</span>
                         </div>
-                    </div>
-                </div>
-
-
-                <div class="col-md-6">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">
-                            <span class="label-icon">
-                                <i class="bi bi-chat-left-text"></i>
-                            </span>
-                            <span class="label-text">Priority Note</span>
-                            <span class="required-badge">Required</span>
-                        </label>
-                        <select name="note" class="form-control-modern" required>
-                            <option value="">-- Select Status --</option>
-                            <option value="priority" {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
-                                Priority
-                            </option>
-                            <option value="non_priority" {{ old('note', $order->note ?? '') == 'non_priority' ? 'selected' : '' }}>
-                                Non Priority
-                            </option>
-                        </select>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- Media Upload Section -->
@@ -772,3 +751,25 @@
         btn.closest('.file-preview-list-item').remove();
     }
 </script>
+
+
+<!-- <div class="col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">
+                                <i class="bi bi-chat-left-text"></i>
+                            </span>
+                            <span class="label-text">Priority Note</span>
+                            <span class="required-badge">Required</span>
+                        </label>
+                        <select name="note" class="form-control-modern" required>
+                            <option value="">-- Select Status --</option>
+                            <option value="priority" {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
+                                Priority
+                            </option>
+                            <option value="non_priority" {{ old('note', $order->note ?? '') == 'non_priority' ? 'selected' : '' }}>
+                                Non Priority
+                            </option>
+                        </select>
+                    </div>
+                </div> -->

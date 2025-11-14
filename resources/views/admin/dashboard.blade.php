@@ -82,17 +82,16 @@
                     <p class="welcome-text">
                         You can only access the modules assigned to you.
                     </p>
-
-                    @if (session('error'))
-                        <div class="warning-message">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            <span><strong>Access Denied:</strong> {!! session('error') !!}</span><br />
-                            <span>You were redirected here because your permissions may have changed or been revoked.</span>
-                        </div>
-                    @endif
-
                 </div>
             </div>
+
+            @if (session('error'))
+                <div class="warning-message">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span><strong>Access Denied:</strong> {!! session('error') !!}</span>
+                </div>
+            @endif
+
             <div class="welcome-actions">
                 @if (
                         auth()->guard('admin')->user() && auth()->guard('admin')
@@ -191,44 +190,44 @@
 
         <!-- Activity Feed (Optional) -->
         <!-- <div class="section-header mt-5">
-                                                                    <h3 class="section-title">Recent Activity</h3>
-                                                                    <p class="section-subtitle">Latest system events</p>
-                                                                </div>
+                                                                                        <h3 class="section-title">Recent Activity</h3>
+                                                                                        <p class="section-subtitle">Latest system events</p>
+                                                                                    </div>
 
-                                                                <div class="activity-card">
-                                                                    <div class="activity-item">
-                                                                        <div class="activity-icon activity-success">
-                                                                            <i class="bi bi-person-check"></i>
-                                                                        </div>
-                                                                        <div class="activity-content">
-                                                                            <p class="activity-title">New admin added</p>
-                                                                            <p class="activity-description">John Doe was added to the system</p>
-                                                                        </div>
-                                                                        <span class="activity-time">2 hours ago</span>
-                                                                    </div>
+                                                                                    <div class="activity-card">
+                                                                                        <div class="activity-item">
+                                                                                            <div class="activity-icon activity-success">
+                                                                                                <i class="bi bi-person-check"></i>
+                                                                                            </div>
+                                                                                            <div class="activity-content">
+                                                                                                <p class="activity-title">New admin added</p>
+                                                                                                <p class="activity-description">John Doe was added to the system</p>
+                                                                                            </div>
+                                                                                            <span class="activity-time">2 hours ago</span>
+                                                                                        </div>
 
-                                                                    <div class="activity-item">
-                                                                        <div class="activity-icon activity-primary">
-                                                                            <i class="bi bi-shield-check"></i>
-                                                                        </div>
-                                                                        <div class="activity-content">
-                                                                            <p class="activity-title">Permissions updated</p>
-                                                                            <p class="activity-description">Admin permissions were modified</p>
-                                                                        </div>
-                                                                        <span class="activity-time">5 hours ago</span>
-                                                                    </div>
+                                                                                        <div class="activity-item">
+                                                                                            <div class="activity-icon activity-primary">
+                                                                                                <i class="bi bi-shield-check"></i>
+                                                                                            </div>
+                                                                                            <div class="activity-content">
+                                                                                                <p class="activity-title">Permissions updated</p>
+                                                                                                <p class="activity-description">Admin permissions were modified</p>
+                                                                                            </div>
+                                                                                            <span class="activity-time">5 hours ago</span>
+                                                                                        </div>
 
-                                                                    <div class="activity-item">
-                                                                        <div class="activity-icon activity-warning">
-                                                                            <i class="bi bi-basket"></i>
-                                                                        </div>
-                                                                        <div class="activity-content">
-                                                                            <p class="activity-title">New order received</p>
-                                                                            <p class="activity-description">Order #1234 needs processing</p>
-                                                                        </div>
-                                                                        <span class="activity-time">1 day ago</span>
-                                                                    </div>
-                                                                </div> -->
+                                                                                        <div class="activity-item">
+                                                                                            <div class="activity-icon activity-warning">
+                                                                                                <i class="bi bi-basket"></i>
+                                                                                            </div>
+                                                                                            <div class="activity-content">
+                                                                                                <p class="activity-title">New order received</p>
+                                                                                                <p class="activity-description">Order #1234 needs processing</p>
+                                                                                            </div>
+                                                                                            <span class="activity-time">1 day ago</span>
+                                                                                        </div>
+                                                                                    </div> -->
     </div>
 
     <style>
@@ -489,8 +488,8 @@
         }
 
         .warning-message {
-            background: rgba(245, 158, 11, 0.2);
-            border-left: 4px solid var(--warning);
+            background: rgba(245, 11, 11, 0.2);
+            border-left: 4px solid var(--danger);
             padding: 0.75rem 1rem;
             border-radius: 8px;
             margin-top: 1rem;

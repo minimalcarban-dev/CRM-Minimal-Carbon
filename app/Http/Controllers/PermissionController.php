@@ -69,7 +69,13 @@ class PermissionController extends Controller
 
     public function create()
     {
-        return view('permissions.create');
+        // Provide existing permission categories so the form can suggest them
+        $categories = Permission::whereNotNull('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        return view('permissions.create', compact('categories'));
     }
 
     public function store(Request $request)
