@@ -60,15 +60,18 @@
 
     <!-- Metal, Company & Status -->
     <div class="form-section-card mb-4">
-        <div class="section-header">
-            <div class="section-info">
-                <div class="section-icon">
+        <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="section-info" style="display:flex; align-items:center;">
+                <div class="section-icon" style="margin-right:10px;">
                     <i class="bi bi-diagram-3"></i>
                 </div>
                 <div>
                     <h5 class="section-title">Product Specifications</h5>
                     <p class="section-description">Select metal type, sizes, and settings</p>
                 </div>
+            </div>
+            <div class="optional-badge" style="font-weight:600; color:#fffff;">
+                Optional
             </div>
         </div>
         <div class="section-body">
@@ -248,8 +251,9 @@
                                 <span class="label-icon"><i class="bi bi-building"></i></span>
                                 <span class="label-text">Company</span>
                             </span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <select name="company_id" class="form-control-modern">
+                        <select name="company_id" class="form-control-modern" required>
                             <option value="">Select Company</option>
                             @foreach($companies as $company)
                                 <option value="{{ $company->id }}" {{ old('company_id', $order->company_id ?? '') == $company->id ? 'selected' : '' }}>
@@ -267,8 +271,9 @@
                                 <span class="label-icon"><i class="bi bi-chat-left-text"></i></span>
                                 <span class="label-text">Priority Note</span>
                             </span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <select name="note" class="form-control-modern">
+                        <select name="note" class="form-control-modern" required>
                             <option value="">Select Priority</option>
                             <option value="priority" {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
                                 Priority
@@ -304,11 +309,12 @@
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-content">
-                                <span class="label-icon"><i class="bi bi-currency-rupee"></i></span>
-                                <span class="label-text">Gross Sell (₹)</span>
+                                <span class="label-icon"><i class="bi bi-currency-dollar"></i></span>
+                                <span class="label-text">Gross Sell ($)</span>
                             </span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <input type="number" step="0.01" name="gross_sell" class="form-control-modern"
+                        <input type="number" step="0.01" name="gross_sell" class="form-control-modern" required
                             placeholder="0.00" value="{{ old('gross_sell', $order->gross_sell ?? '0.00') }}">
                         <div class="form-hint">
                             <i class="bi bi-info-circle"></i>
@@ -370,8 +376,9 @@
                                 <span class="label-icon"><i class="bi bi-calendar-event"></i></span>
                                 <span class="label-text">Dispatch Date</span>
                             </span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <input type="date" name="dispatch_date" class="form-control-modern"
+                        <input type="date" name="dispatch_date" class="form-control-modern" required
                             value="{{ old('dispatch_date', $order->dispatch_date ?? '') }}">
                     </div>
                 </div>
@@ -501,25 +508,25 @@
     }
 
     .required-badge {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
+        background: linear-gradient(135deg, var(--danger), #dc2626);
         color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 6px;
-        font-size: 0.75rem;
+        font-size: 0.625rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
         font-weight: 600;
+        letter-spacing: 0.3px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .optional-badge {
         background: linear-gradient(135deg, var(--gray), #475569);
         color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 6px;
-        font-size: 0.75rem;
+        font-size: 0.625rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
         font-weight: 600;
+        letter-spacing: 0.3px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .badge-info {

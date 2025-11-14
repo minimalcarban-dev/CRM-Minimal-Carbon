@@ -13,19 +13,20 @@
         </div>
         <div class="section-body">
             <div class="form-group-modern">
-                <label class="form-label-modern">
-                    <span class="label-content">
-                        <span class="label-icon"><i class="bi bi-person-lines-fill"></i></span>
-                        <span class="label-text">Client Details</span>
+                <label class="form-label-modern"
+                    style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.625rem;font-weight:600;color:var(--dark);font-size:0.875rem;">
+                    <span class="label-icon" style="color:var(--primary);">
+                        <i class="bi bi-person-lines-fill"></i>
                     </span>
+                    <span class="label-text">Client Details</span>
                     <span class="required-badge">Required</span>
                 </label>
                 <textarea name="client_details" class="form-control-modern" rows="4"
-                    placeholder="Enter customer name, contact details, and requirements..."
+                    placeholder="Enter client name, contact details, and requirements..."
                     required>{{ old('client_details', $order->client_details ?? '') }}</textarea>
                 <div class="form-hint">
                     <i class="bi bi-info-circle"></i>
-                    Include customer name, phone, email, and any special requests
+                    <span>Include client name, phone, email, and any special requests</span>
                 </div>
             </div>
 
@@ -84,9 +85,9 @@
                                 <i class="bi bi-circle-fill"></i>
                             </span>
                             <span class="label-text">Gold Type</span>
-                            <span class="optional-badge">Optional</span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <select name="gold_detail_id" class="form-control-modern">
+                        <select name="gold_detail_id" class="form-control-modern" required>
                             <option value="">-- Select Gold Type --</option>
                             @foreach($metalTypes as $metal)
                                 <option value="{{ $metal->id }}" {{ old('gold_detail_id', $order->gold_detail_id ?? '') == $metal->id ? 'selected' : '' }}>
@@ -180,9 +181,9 @@
                                 <i class="bi bi-briefcase"></i>
                             </span>
                             <span class="label-text">Company</span>
-                            <span class="optional-badge">Optional</span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <select name="company_id" class="form-control-modern">
+                        <select name="company_id" class="form-control-modern" required>
                             <option value="">-- Select Company --</option>
                             @foreach($companies as $company)
                                 <option value="{{ $company->id }}" {{ old('company_id', $order->company_id ?? '') == $company->id ? 'selected' : '' }}>
@@ -218,16 +219,16 @@
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">
-                                <i class="bi bi-currency-rupee"></i>
+                                <i class="bi bi-currency-dollar"></i>
                             </span>
-                            <span class="label-text">Gross Sell Amount</span>
-                            <span class="optional-badge">Optional</span>
+                            <span class="label-text">Gross Sell ($)</span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <input type="number" step="0.01" name="gross_sell" class="form-control-modern"
+                        <input type="number" step="0.01" name="gross_sell" class="form-control-modern" required
                             placeholder="0.00" value="{{ old('gross_sell', $order->gross_sell ?? '') }}">
                         <div class="form-hint">
                             <i class="bi bi-info-circle"></i>
-                            Enter the total selling price in rupees
+                            <span>Enter the total selling price</span>
                         </div>
                     </div>
                 </div>
@@ -235,12 +236,13 @@
                 <div class="col-md-6">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
-                            <span class="label-content">
-                                <span class="label-icon"><i class="bi bi-chat-left-text"></i></span>
-                                <span class="label-text">Priority Note</span>
+                            <span class="label-icon">
+                                <i class="bi bi-chat-left-text"></i>
                             </span>
+                            <span class="label-text">Priority Note</span>
+                            <span class="required-badge">Required</span>
                         </label>
-                        <select name="note" class="form-control-modern">
+                        <select name="note" class="form-control-modern" required>
                             <option value="">Select Priority</option>
                             <option value="priority" {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
                                 Priority
@@ -273,11 +275,11 @@
                         <i class="bi bi-card-image"></i>
                     </span>
                     <span class="label-text">Product Images</span>
-                    <span class="optional-badge">Optional</span>
+                    <span class="required-badge">Required</span>
                     <span class="badge-info">Max 10 images</span>
                 </label>
                 <input type="file" name="images[]" id="product_images" class="file-input-hidden" accept="image/*"
-                    multiple>
+                    required multiple>
                 <label for="product_images" class="file-upload-area diamond">
                     <div class="file-upload-content">
                         <div class="file-upload-icon">
@@ -299,10 +301,10 @@
                         <i class="bi bi-file-pdf"></i>
                     </span>
                     <span class="label-text">PDF Documents</span>
-                    <span class="optional-badge">Optional</span>
+                    <span class="required-badge">Required</span>
                     <span class="badge-info">Max 5 PDFs</span>
                 </label>
-                <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden"
+                <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden" required
                     accept="application/pdf" multiple>
                 <label for="order_pdfs" class="file-upload-area pdf">
                     <div class="file-upload-content">
@@ -371,7 +373,7 @@
                                 <i class="bi bi-calendar-event"></i>
                             </span>
                             <span class="label-text">Dispatch Date</span>
-                            <span class="optional-badge">Optional</span>
+                            <span class="required-badge">Required</span>
                         </label>
                         <input type="date" name="dispatch_date" class="form-control-modern"
                             value="{{ old('dispatch_date', $order->dispatch_date ?? '') }}">

@@ -14,9 +14,15 @@
                     </h2>
                     <p class="page-subtitle mb-0">Configure access rights for {{ $admin->name }}</p>
                 </div>
-                <a href="{{ route('admins.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Back to Admins
-                </a>
+                <div class="header-right">
+                    <button form="permissionsForm" type="submit" class="btn-primary-custom me-2">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Save Permissions
+                    </button>
+                    <a href="{{ route('admins.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Admins
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -48,20 +54,16 @@
                 <div class="search-box">
                     <i class="bi bi-search search-icon"></i>
                     <input type="text" class="form-control" id="permissionSearch" 
-                           placeholder="Search permissions...">
+                            placeholder="Search permissions...">
                     <button class="clear-search" id="clearSearch" style="display: none;">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
             </div>
             <div class="control-group">
-                <button class="btn btn-outline-primary" id="globalSelectAll">
-                    <i class="bi bi-check-square me-2"></i>
+                <button class="btn-primary-custom me-2" id="globalSelectAll">
+                    <i class="bi bi-check-circle me-2"></i>
                     <span>Select All</span>
-                </button>
-                <button class="btn btn-outline-secondary" id="clearAllBtn">
-                    <i class="bi bi-x-square me-2"></i>
-                    <span>Clear All</span>
                 </button>
             </div>
         </div>
@@ -91,9 +93,9 @@
                             <div class="category-actions">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input category-select-all" 
-                                           type="checkbox" 
-                                           id="select-all-{{ $category }}"
-                                           data-category="{{ $category }}">
+                                            type="checkbox" 
+                                            id="select-all-{{ $category }}"
+                                            data-category="{{ $category }}">
                                     <label class="form-check-label" for="select-all-{{ $category }}">
                                         Select All
                                     </label>
@@ -107,12 +109,12 @@
                                     <div class="permission-item" data-permission-id="{{ $permission->id }}">
                                         <div class="form-check">
                                             <input class="form-check-input permission-checkbox" 
-                                                   type="checkbox" 
-                                                   name="permissions[]" 
-                                                   value="{{ $permission->id }}"
-                                                   id="permission-{{ $permission->id }}"
-                                                   data-category="{{ $category }}"
-                                                   @checked(in_array($permission->id, $assignedPermissions))>
+                                                    type="checkbox" 
+                                                    name="permissions[]" 
+                                                    value="{{ $permission->id }}"
+                                                    id="permission-{{ $permission->id }}"
+                                                    data-category="{{ $category }}"
+                                                    @checked(in_array($permission->id, $assignedPermissions))>
                                             <label class="form-check-label" for="permission-{{ $permission->id }}">
                                                 <span class="permission-name">
                                                     {{ ucwords(str_replace('_', ' ', $permission->name)) }}
@@ -131,17 +133,7 @@
                 @endforeach
             </div>
 
-            <!-- Action Buttons -->
-            <div class="action-footer">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-check-circle me-2"></i>
-                    Save Permissions
-                </button>
-                <a href="{{ route('admins.index') }}" class="btn btn-outline-secondary btn-lg">
-                    <i class="bi bi-x-circle me-2"></i>
-                    Cancel
-                </a>
-            </div>
+            <!-- Action Buttons moved to header for quick access -->
         </form>
     </div>
 
@@ -257,9 +249,17 @@
                 gap: 0.75rem;
             }
 
+            /* Make the first control-group (search area) flexible so the search input
+               can expand to fill available space and look like the provided design */
+            .control-bar .control-group:first-child {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
             .search-box {
                 position: relative;
-                min-width: 320px;
+                min-width: 0;
+                width: 100%;
             }
 
             .search-icon {
@@ -273,18 +273,23 @@
             }
 
             .search-box .form-control {
-                padding-left: 2.75rem;
-                padding-right: 2.75rem;
-                height: 46px;
-                border-radius: 12px;
-                border: 2px solid var(--border);
+                width: 100%;
+                padding-left: 3rem;
+                padding-right: 3rem;
+                height: 52px;
+                border-radius: 14px;
+                border: 1px solid rgba(226, 232, 240, 0.9);
+                background: var(--light-gray);
                 font-size: 0.95rem;
-                transition: all 0.3s ease;
+                transition: all 0.18s ease;
+                box-shadow: none;
             }
 
             .search-box .form-control:focus {
+                outline: none;
                 border-color: var(--primary);
-                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+                background: white;
+                box-shadow: 0 6px 20px rgba(99,102,241,0.06);
             }
 
             .clear-search {
@@ -378,10 +383,23 @@
             }
 
             .category-actions .form-switch {
-                padding-left: 3rem;
+                padding-left: 0;
             }
 
-            .category-actions .form-switch .form-check-input {
+            /* Align the category toggle vertically and style to match theme */
+            .category-actions {
+                display: flex;
+                align-items: center;
+            }
+
+            .category-actions .form-check.form-switch {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin: 0;
+            }
+
+            .category-actions .form-check.form-switch .form-check-input {
                 width: 48px;
                 height: 24px;
                 cursor: pointer;
@@ -389,7 +407,7 @@
                 background-color: var(--light-gray);
             }
 
-            .category-actions .form-switch .form-check-input:checked {
+            .category-actions .form-check.form-switch .form-check-input:checked {
                 background-color: var(--primary);
                 border-color: var(--primary);
             }
@@ -482,17 +500,49 @@
                 background: white;
                 border-radius: 16px;
                 border: 2px solid var(--border);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 1rem;
+                display: none; /* moved to header */
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             }
 
-            .action-footer .btn-lg {
-                padding: 0.875rem 2rem;
+            /* Header action buttons (Save / Cancel) */
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .btn-primary-custom {
+                background: var(--primary);
+                color: white;
+                padding: 0.6rem 1.25rem;
+                border-radius: 10px;
+                border: none;
                 font-weight: 600;
-                border-radius: 12px;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
+                cursor: pointer;
+            }
+
+            .btn-primary-custom:hover {
+                background: var(--primary-dark);
+            }
+
+            .header-right .btn.btn-outline-secondary {
+                background: white;
+                color: var(--gray);
+                border: 2px solid var(--border);
+                padding: 0.55rem 1rem;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .header-right .btn.btn-outline-secondary:hover {
+                border-color: var(--primary);
+                color: var(--primary);
             }
 
             /* Hidden State */
@@ -581,21 +631,25 @@
                         }
                     }
 
-                    // Global select all
+                    // Global select all (button) - toggles visible checkboxes
                     if (globalSelectAll) {
-                        globalSelectAll.addEventListener('change', function() {
+                        globalSelectAll.addEventListener('click', function(e) {
+                            e.preventDefault();
                             const visibleCheckboxes = document.querySelectorAll('.permission-item:not([style*="display: none"]) .permission-checkbox:not([disabled])');
-                            visibleCheckboxes.forEach(cb => cb.checked = this.checked);
-                            document.querySelectorAll('.category-select-all').forEach(updateCategorySelectAll);
+                            const anyUnchecked = Array.from(visibleCheckboxes).some(cb => !cb.checked);
+                            visibleCheckboxes.forEach(cb => cb.checked = anyUnchecked);
+                            // Update category select all states based on visible items
+                            document.querySelectorAll('.category-select-all').forEach(cb => updateCategorySelectAll(cb));
                             updateCounts();
                         });
                     }
 
-                    // Clear all
+                    // Clear all button - clears every checkbox
                     if (clearAllBtn) {
-                        clearAllBtn.addEventListener('change', function() {
+                        clearAllBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
                             document.querySelectorAll('.permission-checkbox:not([disabled])').forEach(cb => cb.checked = false);
-                            document.querySelectorAll('.category-select-all').forEach(cb => cb.checked = false);
+                            document.querySelectorAll('.category-select-all').forEach(cb => { cb.checked = false; cb.indeterminate = false; });
                             updateCounts();
                         });
                     }
@@ -670,10 +724,10 @@
                     function updateCategorySelectAll(selectAllCheckbox) {
                         const category = selectAllCheckbox.dataset.category;
                         const categoryCheckboxes = document.querySelectorAll(
-                            `.permission-checkbox[data-category="${category}"]:not([disabled])`
+                            `.permission-item:not([style*="display: none"]) .permission-checkbox[data-category="${category}"]:not([disabled])`
                         );
                         const checkedBoxes = document.querySelectorAll(
-                            `.permission-checkbox[data-category="${category}"]:not([disabled]):checked`
+                            `.permission-item:not([style*="display: none"]) .permission-checkbox[data-category="${category}"]:not([disabled]):checked`
                         );
 
                         selectAllCheckbox.checked = categoryCheckboxes.length > 0 && 

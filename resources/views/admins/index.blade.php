@@ -100,8 +100,7 @@
 
                     <div class="admin-actions">
                         @if ($currentAdmin && $currentAdmin->hasPermission('admins.view'))
-                            <a href="{{ route('admins.show', $admin) }}" class="action-btn action-btn-view"
-                                title="View Details">
+                            <a href="{{ route('admins.show', $admin) }}" class="action-btn action-btn-view" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </a>
                         @endif
@@ -111,8 +110,8 @@
                             </a>
                         @endif
                         @if ($currentAdmin && $currentAdmin->hasPermission('admins.assign_permissions'))
-                            <a href="{{ route('admins.permissions.show', $admin) }}"
-                                class="action-btn action-btn-permissions" title="Permissions">
+                            <a href="{{ route('admins.permissions.show', $admin) }}" class="action-btn action-btn-permissions"
+                                title="Permissions">
                                 <i class="bi bi-shield-lock"></i>
                             </a>
                         @endif
@@ -469,6 +468,20 @@
             gap: 0.5rem;
             padding-top: 1rem;
             border-top: 1px solid var(--border);
+        }
+
+        /* Ensure forms inside the actions row behave like the other action buttons
+               so the delete button aligns and sizes consistently with anchors. */
+        .admin-actions form.d-inline {
+            display: flex;
+            flex: 1;
+            margin: 0;
+            align-items: center;
+        }
+
+        .admin-actions form.d-inline .action-btn {
+            width: 100%;
+            flex: 1;
         }
 
         .action-btn {

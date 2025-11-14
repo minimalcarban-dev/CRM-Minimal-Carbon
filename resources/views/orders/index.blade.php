@@ -234,7 +234,7 @@
                                 </th>
                                 <th>
                                     <div class="th-content">
-                                        <i class="bi bi-currency-rupee"></i>
+                                        <i class="bi bi-currency-dollar"></i>
                                         <span>Gross Sell</span>
                                     </div>
                                 </th>
@@ -304,7 +304,7 @@
                                     <td>
                                         <span class="amount-value">
                                             @if($order->gross_sell)
-                                                ₹{{ number_format($order->gross_sell, 2) }}
+                                                $ {{ number_format($order->gross_sell, 2) }}
                                             @else
                                                 <span class="text-muted">—</span>
                                             @endif
