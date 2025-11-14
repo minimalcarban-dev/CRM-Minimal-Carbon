@@ -9,6 +9,9 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.1/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 
@@ -592,6 +595,400 @@
                 justify-content: center;
             }
         }
+
+        /* Top Navbar */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            height: 70px;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 500;
+            transition: left 0.3s;
+        }
+
+        .sidebar.collapsed~.top-navbar {
+            left: var(--sidebar-collapsed);
+        }
+
+        .navbar-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .navbar-left {
+            flex: 1;
+        }
+
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+            line-height: 1;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: relative;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: white;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.25rem;
+        }
+
+        .notification-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+            border: 2px solid white;
+        }
+
+        .notification-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            width: 360px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .notification-menu.show {
+            display: flex;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .notification-header h6 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .mark-all-read {
+            font-size: 0.85rem;
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .mark-all-read:hover {
+            color: var(--primary-dark);
+        }
+
+        .notification-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .notification-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notification-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .notification-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: var(--light-gray);
+        }
+
+        .notification-item.unread {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .notification-item.read {
+            opacity: 0.7;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .notification-item.read .notification-icon {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray);
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-message {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.9rem;
+            color: var(--dark);
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .notification-close {
+            border: none;
+            background: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+
+        .notification-close:hover {
+            color: var(--danger);
+        }
+
+        .notification-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .notification-empty i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .notification-empty p {
+            margin: 0;
+        }
+
+        .notification-divider {
+            padding: 0.75rem 1rem;
+            background: var(--light-gray);
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Profile Dropdown */
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: white;
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+
+        .profile-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .profile-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            width: 250px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+
+        .profile-menu.show {
+            display: flex;
+        }
+
+        .profile-header {
+            padding: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .profile-name {
+            margin: 0 0 0.25rem 0;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .profile-email {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .profile-divider {
+            height: 2px;
+            background: var(--border);
+        }
+
+        .profile-logout {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .profile-logout:hover {
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        /* Adjust main content for navbar */
+        #mainContent {
+            margin-left: var(--sidebar-width);
+            margin-top: 70px;
+            padding: 2rem;
+            transition: margin-left 0.3s;
+        }
+
+        .sidebar.collapsed~.top-navbar~#mainContent {
+            margin-left: var(--sidebar-collapsed);
+        }
+
+        /* Responsive for top navbar */
+        @media (max-width: 768px) {
+            .top-navbar {
+                left: 0;
+                padding: 0 1rem;
+            }
+
+            .sidebar.collapsed~.top-navbar {
+                left: 0;
+            }
+
+            .notification-menu {
+                width: calc(100vw - 2rem);
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+            }
+
+            .profile-menu {
+                width: calc(100vw - 2rem);
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+            }
+
+            .navbar-title {
+                font-size: 1.25rem;
+            }
+        }
     </style>
 
     @stack('head')
@@ -698,7 +1095,25 @@
                     </li>
                 @endif
             </ul>
+            
+            @php
+                $canSeeOrders =
+                    isset($currentAdmin) &&
+                    $currentAdmin &&
+                    ($currentAdmin->is_super ||
+                        $currentAdmin->hasPermission('diamonds.view') ||
+                        $currentAdmin->hasPermission('diamonds.create'));
+            @endphp
 
+            @if ($canSeeOrders)
+                <li>
+                    <a class="nav-link {{ request()->routeIs('diamonds.*') ? 'active' : '' }}"
+                        href="{{ route('diamond.index') }}" data-tooltip="Diamonds">
+                        <i class="bi bi-gem"></i>
+                        <span>Diamonds</span>
+                    </a>
+                </li>
+            @endif
 
             <div class="nav-dropdown">
                 <button class="dropdown-toggle-link" id="attributesDropdown" data-tooltip="Attributes">
@@ -833,6 +1248,129 @@
         @endif
     </nav>
 
+    <!-- Top Navbar with Notifications -->
+    <div class="top-navbar">
+        <div class="navbar-content">
+            <div class="navbar-left">
+                <h2 class="navbar-title">@yield('title', 'Admin Panel')</h2>
+            </div>
+            <div class="navbar-right">
+                <!-- Notifications Dropdown -->
+                <div class="notification-dropdown">
+                    <button class="notification-btn" id="notificationBtn">
+                        <i class="bi bi-bell"></i>
+                        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->unreadNotifications->count() > 0)
+                            <span class="notification-badge">{{ auth()->guard('admin')->user()->unreadNotifications->count() }}</span>
+                        @endif
+                    </button>
+                    <div class="notification-menu" id="notificationMenu">
+                        <div class="notification-header">
+                            <h6>Notifications</h6>
+                            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->unreadNotifications->count() > 0)
+                                <a href="#" class="mark-all-read" id="markAllRead">Mark all as read</a>
+                            @endif
+                        </div>
+                        <div class="notification-list">
+                            @if(auth()->guard('admin')->user())
+                                @if(auth()->guard('admin')->user()->unreadNotifications->count() > 0)
+                                    @foreach(auth()->guard('admin')->user()->unreadNotifications as $notification)
+                                        <div class="notification-item unread" data-notification-id="{{ $notification->id }}">
+                                            <div class="notification-icon">
+                                                @if($notification->type === 'App\Notifications\DiamondAssignedNotification')
+                                                    <i class="bi bi-gem"></i>
+                                                @else
+                                                    <i class="bi bi-info-circle"></i>
+                                                @endif
+                                            </div>
+                                            <div class="notification-content">
+                                                <p class="notification-message">
+                                                    @if(isset($notification->data['message']))
+                                                        {{ $notification->data['message'] }}
+                                                    @else
+                                                        New notification
+                                                    @endif
+                                                </p>
+                                                <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                            </div>
+                                            <button class="notification-close" onclick="closeNotification('{{ $notification->id }}')">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="notification-empty">
+                                        <i class="bi bi-inbox"></i>
+                                        <p>No new notifications</p>
+                                    </div>
+                                @endif
+
+                                @if(auth()->guard('admin')->user()->readNotifications->count() > 0)
+                                    <div class="notification-divider">
+                                        <span>Earlier</span>
+                                    </div>
+                                    @foreach(auth()->guard('admin')->user()->readNotifications->take(5) as $notification)
+                                        <div class="notification-item read">
+                                            <div class="notification-icon">
+                                                @if($notification->type === 'App\Notifications\DiamondAssignedNotification')
+                                                    <i class="bi bi-gem"></i>
+                                                @else
+                                                    <i class="bi bi-info-circle"></i>
+                                                @endif
+                                            </div>
+                                            <div class="notification-content">
+                                                <p class="notification-message">
+                                                    @if(isset($notification->data['message']))
+                                                        {{ $notification->data['message'] }}
+                                                    @else
+                                                        Notification
+                                                    @endif
+                                                </p>
+                                                <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            @else
+                                <div class="notification-empty">
+                                    <p>Please login to see notifications</p>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="notification-footer" style="border-top: 1px solid #e9ecef; padding: 10px; text-align: center;">
+                            <a href="{{ route('notifications.index') }}" style="color: #6366f1; text-decoration: none; font-size: 14px; display: inline-block; width: 100%; padding: 8px;">
+                                <i class="bi bi-arrow-right-circle"></i> View All Notifications
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile Dropdown -->
+                <div class="profile-dropdown">
+                    <button class="profile-btn" id="profileBtn">
+                        <div class="profile-avatar">
+                            {{ strtoupper(substr(auth()->guard('admin')->user()->name ?? 'A', 0, 2)) }}
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="profile-menu" id="profileMenu">
+                        <div class="profile-header">
+                            <p class="profile-name">{{ auth()->guard('admin')->user()->name ?? 'Admin' }}</p>
+                            <p class="profile-email">{{ auth()->guard('admin')->user()->email ?? '' }}</p>
+                        </div>
+                        <div class="profile-divider"></div>
+                        <form method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                            <button type="submit" class="profile-logout">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Logout</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main id="mainContent">
         @if (session('success'))
@@ -862,6 +1400,44 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Y3Qv1p6a2mZ6Yk2b2Q5p3yZ9f+8H9g0h+8=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // Initialize Select2 for multi and single selects
+        jQuery(function($) {
+            try {
+                // Multi-selects
+                $('.select2-multiple').each(function() {
+                    const $el = $(this);
+                    const placeholder = $el.data('placeholder') || 'Select options';
+                    $el.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: placeholder,
+                        allowClear: true,
+                        closeOnSelect: false,
+                        width: '100%'
+                    });
+                });
+
+                // Single-selects
+                $('.select2-single').each(function() {
+                    const $el = $(this);
+                    const placeholder = $el.data('placeholder') || 'Select an option';
+                    $el.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: placeholder,
+                        allowClear: true,
+                        closeOnSelect: true,
+                        width: '100%'
+                    });
+                });
+            } catch (e) {
+                console.warn('Select2 init failed:', e);
+            }
+        });
+
+    </script>
 
     <script>
         // Toast Helper
@@ -950,6 +1526,153 @@
                 });
             });
         }
+
+        // Notification Dropdown Handler
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationMenu = document.getElementById('notificationMenu');
+        const markAllRead = document.getElementById('markAllRead');
+
+        if (notificationBtn && notificationMenu) {
+            notificationBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notificationMenu.classList.toggle('show');
+                profileMenu.classList.remove('show');
+            });
+
+            if (markAllRead) {
+                markAllRead.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    markAllReadNotifications();
+                });
+            }
+        }
+
+        // Profile Dropdown Handler
+        const profileBtn = document.getElementById('profileBtn');
+        const profileMenu = document.getElementById('profileMenu');
+
+        if (profileBtn && profileMenu) {
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileMenu.classList.toggle('show');
+                notificationMenu.classList.remove('show');
+            });
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (notificationMenu && !notificationMenu.parentElement.contains(e.target)) {
+                notificationMenu.classList.remove('show');
+            }
+            if (profileMenu && !profileMenu.parentElement.contains(e.target)) {
+                profileMenu.classList.remove('show');
+            }
+        });
+
+        // Close notification function
+        function closeNotification(notificationId) {
+            const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (notificationItem) {
+                notificationItem.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => {
+                    notificationItem.remove();
+                    // Mark as read via AJAX
+                    fetch(`/admin/notifications/${notificationId}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json'
+                        }
+                    }).catch(err => console.error('Error marking notification as read:', err));
+                }, 300);
+            }
+        }
+
+        // Mark all as read function
+        function markAllReadNotifications() {
+            fetch('/admin/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(err => console.error('Error:', err));
+        }
+
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                to {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <!-- SweetAlert2 Script -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
+    
+    <script>
+        // Global alert helper function
+        window.showAlert = function(message, type = 'info', title = null) {
+            const typeConfig = {
+                'success': { icon: 'success', background: '#d4edda', color: '#155724' },
+                'error': { icon: 'error', background: '#f8d7da', color: '#721c24' },
+                'warning': { icon: 'warning', background: '#fff3cd', color: '#856404' },
+                'info': { icon: 'info', background: '#d1ecf1', color: '#0c5460' }
+            };
+            
+            const config = typeConfig[type] || typeConfig['info'];
+            
+            Swal.fire({
+                icon: config.icon,
+                title: title || (type.charAt(0).toUpperCase() + type.slice(1)),
+                text: message,
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                background: config.background,
+                color: config.color,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+        };
+
+        // Global error handler for fetch requests
+        document.addEventListener('DOMContentLoaded', function() {
+            // Intercept fetch calls to handle errors globally
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                return originalFetch.apply(this, args)
+                    .then(response => {
+                        if (!response.ok && response.status !== 422) {
+                            response.json().then(data => {
+                                const message = data.message || `Error: ${response.status}`;
+                                showAlert(message, 'error', 'Error');
+                            }).catch(() => {
+                                showAlert(`HTTP Error: ${response.status}`, 'error', 'Error');
+                            });
+                        }
+                        return response;
+                    })
+                    .catch(error => {
+                        showAlert(error.message || 'An error occurred', 'error', 'Error');
+                        throw error;
+                    });
+            };
+        });
     </script>
 
     @stack('scripts')

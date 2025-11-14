@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Admin extends Authenticatable
 {
@@ -45,6 +46,16 @@ class Admin extends Authenticatable
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'admin_permission');
+    }
+
+    /**
+     * Get all diamonds assigned to this admin (many-to-many)
+     */
+    public function diamonds(): BelongsToMany
+    {
+        return $this->belongsToMany(Diamond::class, 'diamond_admin', 'admin_id', 'diamond_id')
+            ->withPivot('assign_by', 'assigned_at')
+            ->withTimestamps();
     }
 
     public function hasPermission(string $slug): bool

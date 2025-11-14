@@ -235,4 +235,56 @@ class AdminController extends Controller
             ->route('admins.permissions.show', $admin)
             ->with('success', 'Permissions updated successfully.');
     }
+
+    /**
+     * Mark a single notification as read
+     */
+    public function markNotificationAsRead(Request $request, $notificationId)
+    {
+        $admin = auth()->guard('admin')->user();
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $notification = $admin->notifications()->find($notificationId);
+        if ($notification) {
+            $notification->markAsRead();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead()
+    {
+        $admin = auth()->guard('admin')->user();
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $admin->unreadNotifications->markAsRead();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Show all notifications for the current admin
+     */
+    public function showNotifications()
+    {
+        $admin = auth()->guard('admin')->user();
+        if (!$admin) {
+            abort(401, 'Unauthorized');
+        }
+
+        // Get all notifications (both read and unread)
+        $notifications = $admin->notifications()
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('notifications.index', compact('notifications'));
+    }
 }
+

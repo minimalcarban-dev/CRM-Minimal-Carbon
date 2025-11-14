@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminPermissionController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\DiamondController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ChatController;
@@ -321,4 +322,38 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::delete('companies/{company}', [CompanyController::class, 'destroy'])
         ->name('companies.destroy')
         ->middleware('admin.permission:companies.delete');
+
+    // Diamond CRUD 
+    Route::get('diamonds/create', [DiamondController::class, 'create'])
+        ->name('diamond.create')
+        ->middleware('admin.permission:diamonds.create');
+    Route::post('diamonds', [DiamondController::class, 'store'])
+        ->name('diamond.store')
+        ->middleware('admin.permission:diamonds.create');
+    Route::get('diamonds', [DiamondController::class, 'index'])
+        ->name('diamond.index')
+        ->middleware('admin.permission:diamonds.view');
+    Route::get('diamonds/{diamond}', [DiamondController::class, 'show'])
+        ->name('diamond.show')
+        ->middleware('admin.permission:diamonds.view');
+    Route::get('diamonds/{diamond}/edit', [DiamondController::class, 'edit'])
+        ->name('diamond.edit')
+        ->middleware('admin.permission:diamonds.edit');
+    Route::put('diamonds/{diamond}', [DiamondController::class, 'update'])
+        ->name('diamond.update')
+        ->middleware('admin.permission:diamonds.edit');
+    Route::delete('diamonds/{diamond}', [DiamondController::class, 'destroy'])
+        ->name('diamond.destroy')
+        ->middleware('admin.permission:diamonds.delete');
+    Route::post('diamonds/{diamond}/assign', [DiamondController::class, 'assignToAdmin'])
+        ->name('diamond.assign')
+        ->middleware('admin.permission:diamonds.assign');
+
+    // Notification Routes
+    Route::get('notifications', [AdminController::class, 'showNotifications'])
+        ->name('notifications.index');
+    Route::post('notifications/{notification}/read', [AdminController::class, 'markNotificationAsRead'])
+        ->name('notifications.read');
+    Route::post('notifications/mark-all-read', [AdminController::class, 'markAllNotificationsAsRead'])
+        ->name('notifications.mark-all-read');
 });
