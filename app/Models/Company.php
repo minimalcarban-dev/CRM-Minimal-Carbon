@@ -11,4 +11,6 @@ class Company extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['name', 'email', 'phone', 'address', 'status'];
+    
+    public $timestamps = true;
 }

@@ -215,18 +215,4 @@
             </div>
         @endif
     </div>
-
-    <style>
-        .form-value {
-            margin: 0;
-            font-size: 1rem;
-            color: #333;
-            padding: 8px 0;
-        }
-
-        .text-muted {
-            color: #6c757d;
-            font-style: italic;
-        }
-    </style>
 @endsection

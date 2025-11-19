@@ -36,5 +36,15 @@ class DatabaseSeeder extends Seeder
         $this->call(ChatPermissionSeeder::class);
         // Seed default chat channels and attach admins
         $this->call(\Database\Seeders\ChatDefaultSeeder::class);
+        
+        // Seed attribute data
+        $this->call(CompanySeeder::class);
+        $this->call(MetalTypeSeeder::class);
+        $this->call(SettingTypeSeeder::class);
+        $this->call(ClosureTypeSeeder::class);
+        $this->call(RingSizeSeeder::class);
+        $this->call(StoneTypeSeeder::class);
+        $this->call(StoneShapeSeeder::class);
+        $this->call(StoneColorSeeder::class);
     }
 }

@@ -13,6 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.1/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="{{ asset('css/diamond.css') }}" rel="stylesheet">
     @stack('styles')
 
     <style>
@@ -1107,7 +1108,7 @@
 
             @if ($canSeeOrders)
                 <li>
-                    <a class="nav-link {{ request()->routeIs('diamonds.*') ? 'active' : '' }}"
+                    <a class="nav-link {{ request()->routeIs('diamond.*') ? 'active' : '' }}"
                         href="{{ route('diamond.index') }}" data-tooltip="Diamonds">
                         <i class="bi bi-gem"></i>
                         <span>Diamonds</span>
