@@ -19,7 +19,7 @@ class AdminController extends Controller
             abort(403, 'Unauthorized');
         }
 
-    $query = Admin::where('is_super', false)->where('id', '<>', $current->id);
+        $query = Admin::where('is_super', false)->where('id', '<>', $current->id);
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -227,7 +227,7 @@ class AdminController extends Controller
 
         $permissions = $request->input('permissions', []);
         $admin->permissions()->sync($permissions);
-        
+
         // Clear the cache for this admin's permissions
         Cache::tags(['permissions', 'admin_permissions'])->forget('admin_permissions_' . $admin->id);
 

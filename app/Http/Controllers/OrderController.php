@@ -243,8 +243,12 @@ class OrderController extends Controller
             'shipping_company_name' => 'nullable|string',
             'tracking_number' => 'nullable|string',
             'tracking_url' => 'nullable|url',
-            'images.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:10240',
-            'order_pdfs.*' => 'nullable|mimes:pdf|max:10240',
+
+            'images' => 'required|array|min:1',
+            'images.*' => 'image|mimes:jpg,jpeg,png,gif,webp|max:10240',
+
+            'order_pdfs' => 'required|array|min:1',
+            'order_pdfs.*' => 'mimes:pdf|max:10240',
         ];
 
         switch ($request->order_type) {
@@ -439,7 +443,8 @@ class OrderController extends Controller
             return response('<div class="alert alert-danger">Invalid form type selected.</div>', 404);
         }
 
-        $order = null;
+        $order = new Order(); // Empty model for 'create' mode
+
         if ($request->has('edit') && $request->edit === 'true' && $request->has('id')) {
             $order = Order::find($request->id);
         }
@@ -451,7 +456,7 @@ class OrderController extends Controller
         $closureTypes = ClosureType::all();
 
         return view($view, compact(
-            'order',
+            'order', // Ye zaroor pass karein
             'companies',
             'metalTypes',
             'ringSizes',

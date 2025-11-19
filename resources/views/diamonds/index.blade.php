@@ -32,47 +32,47 @@
 
         <!-- Stats Cards (visible to Super Admin only) -->
         @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->is_super)
+            <div class="stats-grid">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Diamonds</div>
+                        <div class="stat-value">{{ $diamonds->count() }}</div>
+                        <div class="stat-trend">
+                            <i class="bi bi-arrow-up"></i> In Stock
+                        </div>
+                    </div>
+                </div>
 
-         <div class="stats-grid">
-             <div class="stat-card stat-card-primary">
-                 <div class="stat-icon">
-                     <i class="bi bi-gem"></i>
-                 </div>
-                 <div class="stat-content">
-                     <div class="stat-label">Total Diamonds</div>
-                     <div class="stat-value">{{ $diamonds->count() }}</div>
-                     <div class="stat-trend">
-                         <i class="bi bi-arrow-up"></i> In Stock
-                     </div>
-                 </div>
-             </div>
- 
-             <div class="stat-card stat-card-success">
-                 <div class="stat-icon">
-                     <i class="bi bi-currency-dollar"></i>
-                 </div>
-                 <div class="stat-content">
-                     <div class="stat-label">Total Value</div>
-                     <div class="stat-value">${{ number_format($diamonds->sum('price'), 2) }}</div>
-                     <div class="stat-trend">
-                         <i class="bi bi-graph-up"></i> Inventory
-                     </div>
-                 </div>
-             </div>
- 
-             <div class="stat-card stat-card-info">
-                 <div class="stat-icon">
-                     <i class="bi bi-tag"></i>
-                 </div>
-                 <div class="stat-content">
-                     <div class="stat-label">Avg. Price</div>
-                     <div class="stat-value">${{ $diamonds->count() > 0 ? number_format($diamonds->avg('price'), 2) : '0.00' }}</div>
-                     <div class="stat-trend">
-                         <i class="bi bi-calculator"></i> Per Item
-                     </div>
-                 </div>
-             </div>
-         </div>
+                <div class="stat-card stat-card-success">
+                    <div class="stat-icon">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Value</div>
+                        <div class="stat-value">${{ number_format($diamonds->sum('price'), 2) }}</div>
+                        <div class="stat-trend">
+                            <i class="bi bi-graph-up"></i> Inventory
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card stat-card-info">
+                    <div class="stat-icon">
+                        <i class="bi bi-tag"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Avg. Price</div>
+                        <div class="stat-value">
+                            ${{ $diamonds->count() > 0 ? number_format($diamonds->avg('price'), 2) : '0.00' }}</div>
+                        <div class="stat-trend">
+                            <i class="bi bi-calculator"></i> Per Item
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         @endif
 
@@ -173,7 +173,8 @@
                     </thead>
                     <tbody>
                         @forelse($diamonds as $d)
-                            <tr class="diamond-row" data-search="{{ strtolower($d->stockid . ' ' . $d->sku . ' ' . $d->barcode_number) }}">
+                            <tr class="diamond-row"
+                                data-search="{{ strtolower($d->stockid . ' ' . $d->sku . ' ' . $d->barcode_number) }}">
                                 <td>
                                     <div class="cell-content">
                                         <span class="badge-custom badge-primary">{{ $d->stockid }}</span>
@@ -221,11 +222,13 @@
                                     <div class="cell-content">
                                         <div class="admin-assignment">
                                             @if($d->assignedAdmin)
-                                                <span class="admin-name badge-custom badge-success">{{ $d->assignedAdmin->name }}</span>
+                                                <span
+                                                    class="admin-name badge-custom badge-success">{{ $d->assignedAdmin->name }}</span>
                                             @else
                                                 <span class="text-muted">Unassigned</span>
                                             @endif
-                                            <button type="button" class="btn-reassign" data-diamond-id="{{ $d->id }}" title="Reassign to another admin">
+                                            <button type="button" class="btn-reassign" data-diamond-id="{{ $d->id }}"
+                                                title="Reassign to another admin">
                                                 <i class="bi bi-arrow-repeat"></i>
                                             </button>
                                         </div>
@@ -234,17 +237,40 @@
                                 <td>
                                     <div class="cell-content justify-end">
                                         <div class="action-buttons">
-                                            <a href="{{ route('diamond.edit', $d) }}" class="action-btn action-btn-edit" title="Edit">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <form action="{{ route('diamond.destroy', $d) }}" method="POST" class="d-inline"
-                                                onsubmit="return confirm('Are you sure you want to delete this diamond?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="action-btn action-btn-delete" title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+
+                                            @if (
+                                                    auth()->guard('admin')->user() && auth()->guard('admin')
+                                                        ->user()->canAccessAny(['diamonds.view'])
+                                                )
+                                                <a href="{{ route('diamond.show', $d) }}" class="action-btn action-btn-view"
+                                                    title="View">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            @endif
+
+                                            @if (
+                                                    auth()->guard('admin')->user() && auth()->guard('admin')
+                                                        ->user()->canAccessAny(['diamonds.edit'])
+                                                )
+                                                <a href="{{ route('diamond.edit', $d) }}" class="action-btn action-btn-edit"
+                                                    title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            @endif
+
+                                            @if (
+                                                    auth()->guard('admin')->user() && auth()->guard('admin')
+                                                        ->user()->canAccessAny(['diamonds.delete'])
+                                                )
+                                                <form action="{{ route('diamond.destroy', $d) }}" method="POST" class="d-inline"
+                                                    onsubmit="return confirm('Are you sure you want to delete this diamond?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="action-btn action-btn-delete" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -284,9 +310,11 @@
             </button>
         </div>
 
-        <div class="mt-4">
-            {{ $diamonds->appends(request()->query())->links() }}
-        </div>
+        @if($diamonds->hasPages())
+            <div class="pagination-container">
+                {{ $diamonds->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     </div>
 
     <!-- Reassign Modal -->
@@ -377,11 +405,11 @@
 
             // Open modal when reassign button clicked
             document.querySelectorAll('.btn-reassign').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     currentDiamondId = this.dataset.diamondId;
                     const row = this.closest('tr');
                     const sku = row.querySelector('td:nth-child(2) .text-semibold').textContent;
-                    
+
                     modalDiamondSku.textContent = sku;
                     adminSelect.value = '';
                     modal.classList.remove('d-none');
@@ -403,9 +431,9 @@
             });
 
             // Confirm reassignment
-            confirmBtn?.addEventListener('click', async function() {
+            confirmBtn?.addEventListener('click', async function () {
                 const adminId = adminSelect.value;
-                
+
                 if (!adminId) {
                     showAlert('Please select an admin', 'warning', 'Select Admin');
                     return;
@@ -431,10 +459,10 @@
                     if (response.ok && data.success) {
                         // Show success message
                         showAlert(data.message, 'success', 'Success');
-                        
+
                         // Close modal
                         modal.classList.add('d-none');
-                        
+
                         // Reload the page to see updated assignments
                         setTimeout(() => {
                             window.location.reload();

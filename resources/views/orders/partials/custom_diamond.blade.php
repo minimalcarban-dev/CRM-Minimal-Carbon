@@ -1,6 +1,3 @@
-<form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-
     <!-- Order Details Section -->
     <div class="form-section-card mb-4">
         <div class="section-header">
@@ -277,7 +274,7 @@
             </div>
         </div>
     </div>
-</form>
+
 
 <style>
     :root {

@@ -14,13 +14,13 @@
         <div class="container mx-auto">
             <div class="flex justify-center">
                 <div class="w-full sm:w-10/12 md:w-8/12 text-center">
-                    <div class="bg-[url('https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif')] 
-                    h-[250px] sm:h-[350px] md:h-[400px] bg-center bg-no-repeat bg-contain"
-                        aria-hidden="true">
+                    <div class="w-full h-[350px] sm:h-[400px] bg-center bg-no-repeat bg-contain bg-[length:70%]"
+                        style="background-image: url('{{ asset('images/404.gif') }}');">
                         <h1 class="text-center text-black text-6xl sm:text-7xl md:text-8xl pt-6 sm:pt-8">
                             Wrong Way...
                         </h1>
                     </div>
+
 
                     <div class="mt-[-50px]">
                         <h3 class="text-2xl text-black sm:text-3xl font-bold mb-4">

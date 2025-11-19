@@ -17,7 +17,7 @@ use App\Models\Admin;
 
 Broadcast::channel('chat.channel.{id}', function ($user, $id) {
     // Make sure we're using the admin guard
-    if (!$user instanceof \App\Models\Admin) {
+    if (!$user instanceof Admin) {
         return false;
     }
 

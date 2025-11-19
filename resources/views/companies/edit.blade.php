@@ -3,88 +3,34 @@
 @section('title', 'Edit Company')
 
 @section('content')
-    <div class="companies-management-container">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <div class="breadcrumb-nav">
-                        <a href="{{ route('admin.dashboard') }}" class="breadcrumb-link">
-                            <i class="bi bi-house-door"></i> Dashboard
-                        </a>
-                        <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                        <a href="{{ route('companies.index') }}" class="breadcrumb-link">
-                            Companies
-                        </a>
-                        <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                        <span class="breadcrumb-current">Edit Company</span>
-                    </div>
-                    <h1 class="page-title">
-                        <i class="bi bi-pencil-square"></i>
-                        Edit Company
-                    </h1>
-                    <p class="page-subtitle">Update the company information below</p>
-                </div>
-                <div class="header-right">
-                    <a href="{{ route('companies.index') }}" class="btn-secondary-custom">
-                        <i class="bi bi-arrow-left"></i>
-                        <span>Back to List</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title mb-0">Edit Company</h1>
+        <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
 
-        <!-- Error Alert -->
-        @if ($errors->any())
-            <div class="alert-card danger">
-                <div class="alert-icon">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                </div>
-                <div class="alert-content">
-                    <h5 class="alert-title">Please Correct the Following Errors</h5>
-                    <ul class="error-list">
+    <div class="card">
+        <div class="card-body">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <strong>Whoops!</strong> Please fix the following issues:<br><br>
+                    <ul class="mb-0">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
                     </ul>
                 </div>
-            </div>
-        @endif
+            @endif
 
-        <form action="{{ route('companies.update', $company->id) }}" method="POST" id="companyForm">
-            @csrf
-            @method('PUT')
-
-            <!-- Company Form Card -->
-            <div class="form-section-card">
-                <div class="section-header">
-                    <div class="section-info">
-                        <div class="section-icon">
-                            <i class="bi bi-building"></i>
-                        </div>
-                        <div>
-                            <h5 class="section-title">Company Information</h5>
-                            <p class="section-description">Update the company details and contact information</p>
-                        </div>
-                    </div>
+            <form action="{{ route('companies.update', $company->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+                @include('companies.form')
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Update Company</button>
                 </div>
-                <div class="section-body">
-                    @include('companies.form')
-                </div>
-            </div>
-
-            <!-- Action Footer -->
-            <div class="action-footer">
-                <button type="submit" class="btn-primary-custom">
-                    <i class="bi bi-check-circle"></i>
-                    <span>Update Company</span>
-                </button>
-                <a href="{{ route('companies.index') }}" class="btn-secondary-custom">
-                    <i class="bi bi-x-circle"></i>
-                    <span>Cancel</span>
-                </a>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-
-    @endsection
+@endsection
