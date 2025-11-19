@@ -1,21 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Companies Management')
-
-@php
-    // Calculate stats
-    $totalCompanies = $companies->total();
-    $activeCount = 0;
-    $inactiveCount = 0;
-
-    foreach ($companies as $company) {
-        if ($company->status === 'active') {
-            $activeCount++;
-        } else {
-            $inactiveCount++;
-        }
-    }
-@endphp
+@section('title', 'Companies')
 
 @section('content')
     <div class="page-header d-flex justify-content-between align-items-center mb-4">

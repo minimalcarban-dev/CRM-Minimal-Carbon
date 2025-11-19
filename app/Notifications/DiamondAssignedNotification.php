@@ -68,7 +68,7 @@ class DiamondAssignedNotification extends Notification implements ShouldQueue
             'details' => [
                 'sku' => $this->diamond->sku,
                 'stock_id' => $this->diamond->stockid,
-                'price' => 'Rs. ' . number_format((float) $this->diamond->price, 2),
+                'price' => 'Rs. ' . number_format((float)$this->diamond->price, 2),
                 'type' => $this->diamond->diamond_type ?? 'N/A',
                 'assigned_by' => $this->assignedBy->name,
             ]

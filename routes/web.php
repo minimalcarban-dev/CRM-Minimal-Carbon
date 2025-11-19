@@ -21,8 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
-    return redirect('admin/login');
-    // return view('welcome');
+    return view('welcome');
 });
 
 // Admin auth routes

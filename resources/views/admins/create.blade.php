@@ -140,12 +140,8 @@
                                 <label class="form-label-modern">
                                     <i class="bi bi-flag me-2"></i>Country Code
                                 </label>
-                                <!-- Visible (disabled) field for UX. Disabled inputs are not submitted, so we add
-                                        a hidden input below that actually carries the country_code value to the server. -->
-                                <input type="text" class="form-control-modern"
+                                <input type="text" name="country_code" class="form-control-modern"
                                     value="+91" placeholder="+91" readonly style="background-color: #f1f5f9;" disabled>
-
-                                <input type="hidden" name="country_code" value="{{ old('country_code', '+91') }}">
                             </div>
                         </div>
                         <div class="col-md-3">

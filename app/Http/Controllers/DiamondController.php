@@ -48,7 +48,7 @@ class DiamondController extends Controller
         }
 
         // Get results
-        $diamonds = $query->latest()->paginate(10);
+        $diamonds = $query->paginate(10);
 
         // Get distinct shapes for dropdown
         $shapes = Diamond::select('shape')->distinct()->pluck('shape')->filter()->sort();
@@ -101,10 +101,10 @@ class DiamondController extends Controller
         // Generate barcode using Picqer with only SKU
         $generator = new BarcodeGeneratorSVG();
         $svgContent = $generator->getBarcode($barcodeData, $generator::TYPE_CODE_128);
-
+        
         // Convert SVG to data URI (can be used directly in img src)
         $dataUri = 'data:image/svg+xml;base64,' . base64_encode($svgContent);
-
+        
         $barcodeFilename = 'barcode_' . $barcodeNumber . '.svg';
         $barcodeRelativePath = 'barcodes/' . $barcodeFilename;
 
@@ -182,23 +182,23 @@ class DiamondController extends Controller
             $brandCode = '100';
             $paddedStockid = str_pad($validated['stockid'], 6, '0', STR_PAD_LEFT);
             $newBarcodeNumber = $year . $brandCode . $paddedStockid;
-
+            
             // Create barcode with only SKU
             $barcodeData = $sku;
-
+            
             // Generate new barcode using Picqer with only SKU
             $generator = new BarcodeGeneratorSVG();
             $svgContent = $generator->getBarcode($barcodeData, $generator::TYPE_CODE_128);
-
+            
             // Convert SVG to data URI for inline display
             $dataUri = 'data:image/svg+xml;base64,' . base64_encode($svgContent);
-
+            
             $barcodeFilename = 'barcode_' . $newBarcodeNumber . '.svg';
             $publicDir = public_path('barcodes');
             if (!file_exists($publicDir)) {
                 mkdir($publicDir, 0755, true);
             }
-
+            
             // Save barcode SVG for reference (optional)
             $barcodeFullPath = $publicDir . DIRECTORY_SEPARATOR . $barcodeFilename;
             file_put_contents($barcodeFullPath, $svgContent);
@@ -223,7 +223,7 @@ class DiamondController extends Controller
         // Handle single admin assignment
         $oldAdminId = $diamond->admin_id;
         $newAdminId = $validated['admin_id'] ?? null;
-
+        
         if ($newAdminId != $oldAdminId) {
             // Send reassignment notification to previous admin
             if ($oldAdminId) {
@@ -232,7 +232,7 @@ class DiamondController extends Controller
                     Notification::sendNow($oldAdmin, new DiamondReassignedNotification($diamond, $currentAdmin, $oldAdmin));
                 }
             }
-
+            
             // Send assignment notification to new admin
             if ($newAdminId && $currentAdmin) {
                 $newAdmin = Admin::find($newAdminId);
@@ -240,7 +240,7 @@ class DiamondController extends Controller
                     Notification::sendNow($newAdmin, new DiamondAssignedNotification($diamond, $currentAdmin));
                 }
             }
-
+            
             $diamond->admin_id = $newAdminId;
             $diamond->assign_by = $currentAdmin ? $currentAdmin->id : null;
             $diamond->assigned_at = $newAdminId ? now() : null;

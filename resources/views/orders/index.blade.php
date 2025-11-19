@@ -50,6 +50,7 @@
 @endphp
 
 
+
 @section('content')
     <div class="orders-management-container">
         <!-- Page Header -->
@@ -331,31 +332,14 @@
                                     </td>
                                     <td class="td-actions">
                                         <div class="action-buttons">
-
-                                            @if (
-                                                    auth()->guard('admin')->user() && auth()->guard('admin')
-                                                        ->user()->canAccessAny(['orders.view'])
-                                                )
-                                                <a href="{{ route('orders.show', $order->id) }}" class="action-btn action-btn-view"
-                                                    title="View Order">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                            @endif
-
-                                            @if (
-                                                    auth()->guard('admin')->user() && auth()->guard('admin')
-                                                        ->user()->canAccessAny(['orders.edit'])
-                                                )
+                                            <a href="{{ route('orders.show', $order->id) }}" class="action-btn action-btn-view"
+                                                title="View Order">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                             <a href="{{ route('orders.edit', $order->id) }}" class="action-btn action-btn-edit"
                                                 title="Edit Order">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            @endif
-
-                                            @if (
-                                                    auth()->guard('admin')->user() && auth()->guard('admin')
-                                                        ->user()->canAccessAny(['orders.delete'])
-                                                )
                                             <form action="{{ route('orders.destroy', $order->id) }}" method="POST" class="d-inline"
                                                 onsubmit="return confirm('Are you sure you want to delete this order? This action cannot be undone.');">
                                                 @csrf
@@ -364,7 +348,6 @@
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
-                                            @endif
                                         </div>
                                     </td>
                                 </tr>

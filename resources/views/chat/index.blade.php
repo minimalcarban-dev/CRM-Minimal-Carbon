@@ -26,7 +26,7 @@
 <script>
     window.userId = {{ auth()->guard('admin')->id() }};
     window.authAdminName = "{{ auth()->guard('admin')->user()->name ?? 'Admin' }}";
-    // console.log('Chat view loaded, user ID: ' + {{ auth()->guard('admin')->id() }});
+    console.log('Chat view loaded, user ID: ' + {{ auth()->guard('admin')->id() }});
 </script>
 @endpush
 @endsection

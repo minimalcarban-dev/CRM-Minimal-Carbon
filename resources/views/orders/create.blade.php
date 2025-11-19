@@ -501,95 +501,30 @@
     @push('scripts')
         <script>
             (function () {
-                // Selectors
                 const orderTypeInputs = document.querySelectorAll('input[name="order_type"]');
                 const formContainer = document.getElementById('orderFormFields');
-                const submitButtonContainer = document.getElementById('submitButtonContainer');
-                const form = document.getElementById('orderForm'); // Main form
+                const submitButton = document.getElementById('submitButtonContainer');
+                let currentType = '';
 
-                // Server Side Errors (Laravel se aane wale errors)
-                const serverErrors = @json($errors->getMessages());
-                // Old Input Data
-                const oldOrderType = "{{ old('order_type') }}";
-
-                // ==========================================
-                // 1. Submit Event Listener (Validation Logic)
-                // ==========================================
-                if (form) {
-                    form.addEventListener('submit', function (e) {
-                        // Form ke andar ke inputs dhundein (jo dynamic partial se aaye hain)
-                        const imageInput = document.querySelector('input[name="images[]"]');
-                        const pdfInput = document.querySelector('input[name="order_pdfs[]"]');
-
-                        let hasError = false;
-
-                        // --- Image Validation ---
-                        // Check karein agar input exist karta hai aur files empty hain
-                        if (imageInput && imageInput.files.length === 0) {
-                            e.preventDefault(); // Submit Roko
-                            showToastNotification('⚠️ Please select at least one Product/Diamond Image', 'error');
-
-                            // Visual Box ko Red karein
-                            const imgBox = imageInput.nextElementSibling; // Label tag
-                            if (imgBox) {
-                                imgBox.style.borderColor = '#ef4444';
-                                imgBox.style.backgroundColor = '#fef2f2';
-                            }
-                            hasError = true;
-                        }
-
-                        // --- PDF Validation ---
-                        if (pdfInput && pdfInput.files.length === 0) {
-                            e.preventDefault(); // Submit Roko
-                            if (!hasError) {
-                                // Sirf tab notification dikhaye agar image ka error nahi dikhaya abhi
-                                showToastNotification('⚠️ Please select at least one PDF Document', 'error');
-                            }
-
-                            // Visual Box ko Red karein
-                            const pdfBox = pdfInput.nextElementSibling; // Label tag
-                            if (pdfBox) {
-                                pdfBox.style.borderColor = '#ef4444';
-                                pdfBox.style.backgroundColor = '#fef2f2';
-                            }
-                        }
-                    });
-                }
-
-                // ==========================================
-                // 2. Radio Button Change Listener
-                // ==========================================
                 orderTypeInputs.forEach(input => {
                     input.addEventListener('change', function () {
                         if (this.checked) {
-                            loadOrderForm(this.value);
+                            currentType = this.value;
+                            loadOrderForm(currentType);
                         }
                     });
                 });
 
-                // ==========================================
-                // 3. Initial Load (Agar validation fail hoke page reload hua ho)
-                // ==========================================
-                if (oldOrderType) {
-                    const radio = document.querySelector(`input[name="order_type"][value="${oldOrderType}"]`);
-                    if (radio) {
-                        radio.checked = true;
-                        loadOrderForm(oldOrderType);
-                    }
-                }
-
-                // ==========================================
-                // 4. Load Form Function
-                // ==========================================
                 function loadOrderForm(type) {
                     // Show loading state
-                    formContainer.innerHTML =
-                        `<div class="loading-state">
+                    formContainer.innerHTML = `
+                                        <div class="loading-state">
                                             <div class="loading-spinner"></div>
                                             <p class="loading-text">Loading order form...</p>
                                         </div>
                                     `;
 
+                    // Fetch form
                     fetch(`/admin/orders/form/${type}`)
                         .then(response => {
                             if (!response.ok) throw new Error('Network response was not ok');
@@ -598,7 +533,10 @@
                         .then(html => {
                             formContainer.innerHTML = html;
 
-                            // Execute Scripts inside partials
+                            // Execute any scripts included in the returned partial so
+                            // event listeners (file previews, drag/drop handlers) run.
+                            // When inserting HTML via innerHTML, <script> tags are not
+                            // executed by default, so we find them and append to body.
                             try {
                                 const temp = document.createElement('div');
                                 temp.innerHTML = html;
@@ -607,6 +545,7 @@
                                     const newScript = document.createElement('script');
                                     if (s.src) {
                                         newScript.src = s.src;
+                                        // preserve execution order
                                         newScript.async = false;
                                     } else {
                                         newScript.textContent = s.innerHTML;
@@ -614,50 +553,39 @@
                                     document.body.appendChild(newScript);
                                 });
                             } catch (e) {
+                                // If script parsing fails, log for debugging but don't break UX
                                 console.error('Error evaluating returned scripts:', e);
                             }
+                            submitButton.style.display = 'flex';
 
-                            submitButtonContainer.style.display = 'flex';
+                            // Smooth scroll to form
+                            setTimeout(() => {
+                                formContainer.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'start'
+                                });
+                            }, 100);
 
-                            // --- Handle Server Side Errors (After Reload) ---
-                            // Agar Laravel ne page reload kiya aur errors bheje, toh boxes ko red karo
-                            highlightServerErrors();
+                            showToastNotification('Order form loaded successfully', 'success');
                         })
                         .catch(error => {
                             console.error('Error loading form:', error);
-                            formContainer.innerHTML = `<div class="alert alert-danger">Error loading form</div>`;
+                            formContainer.innerHTML = `
+                                                <div class="alert-card danger">
+                                                    <div class="alert-icon">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                    </div>
+                                                    <div class="alert-content">
+                                                        <h5 class="alert-title">Error Loading Form</h5>
+                                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
+                                                    </div>
+                                                </div>
+                                            `;
+                            submitButton.style.display = 'none';
+                            showToastNotification('Failed to load order form', 'error');
                         });
                 }
 
-                // Function to highlight boxes if server returns errors
-                function highlightServerErrors() {
-                    // Check Images Error
-                    if (serverErrors.images) {
-                        const imgInput = document.querySelector('input[name="images[]"]');
-                        if (imgInput) {
-                            const box = imgInput.nextElementSibling;
-                            if (box) {
-                                box.style.borderColor = '#ef4444';
-                                box.style.backgroundColor = '#fef2f2';
-                            }
-                        }
-                    }
-                    // Check PDF Error
-                    if (serverErrors.order_pdfs) {
-                        const pdfInput = document.querySelector('input[name="order_pdfs[]"]');
-                        if (pdfInput) {
-                            const box = pdfInput.nextElementSibling;
-                            if (box) {
-                                box.style.borderColor = '#ef4444';
-                                box.style.backgroundColor = '#fef2f2';
-                            }
-                        }
-                    }
-                }
-
-                // ==========================================
-                // 5. Toast Notification Helper
-                // ==========================================
                 function showToastNotification(message, type) {
                     if (typeof showToast === 'function') {
                         showToast(message);
@@ -675,11 +603,8 @@
                         (colors[type] || colors.info) +
                         ';color:white;padding:1rem 1.5rem;border-radius:12px;' +
                         'box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;' +
-                        'font-weight:600;animation:slideIn 0.3s ease;max-width:350px;display:flex;align-items:center;gap:10px;';
-
-                    // Adding icon based on type could be done here, but text is fine
-                    toast.innerHTML = `<span>${message}</span>`;
-
+                        'font-weight:600;animation:slideIn 0.3s ease;max-width:350px;';
+                    toast.textContent = message;
                     document.body.appendChild(toast);
 
                     setTimeout(function () {
@@ -691,9 +616,6 @@
                 }
             })();
         </script>
-    @endpush
-
-    @push('styles')
         <style>
             @keyframes slideIn {
                 from {

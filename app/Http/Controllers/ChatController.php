@@ -2,13 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\ChannelMembershipChanged;
-use App\Events\UserMentioned;
-use App\Models\Admin;
 use App\Models\Channel;
 use App\Models\Message;
 use App\Models\MessageAttachment;
-use App\Models\MessageLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -74,23 +70,14 @@ class ChatController extends Controller
 
     /**
      * Get channels for the authenticated user
-     * Super Admin: सभी channels दिखते हैं
-     * Normal Admin: सिर्फ वो channels जिनमें वह member है
      */
     public function getChannels()
     {
-        /** @var Admin $user */
+        /** @var \App\Models\Admin $user */
         $user = Auth::guard('admin')->user();
-
-        if ($user->is_super) {
-            // Super Admin: सभी channels
-            $channels = Channel::all();
-        } else {
-            // Normal Admin: सिर्फ अपने channels जिनमें वह member है
-            $channels = Channel::whereHas('users', function ($query) use ($user) {
-                $query->where('admin_id', $user->id);
-            })->get();
-        }
+        $channels = Channel::whereHas('users', function ($query) use ($user) {
+            $query->where('admin_id', $user->id);
+        })->get();
 
         // Add unread count to each channel
         $channels->each(function ($channel) use ($user) {
@@ -143,26 +130,13 @@ class ChatController extends Controller
         }
 
         // Create new personal channel
-        $target = Admin::findOrFail($targetId);
+        $target = \App\Models\Admin::findOrFail($targetId);
         $channel = Channel::create([
             'name' => $target->name, // UI can override with other party name
             'type' => 'personal',
             'created_by' => $current->id,
         ]);
-
-        // By default add the two participants
-        $members = [$current->id, $targetId];
-
-        // If neither party is a super admin, also add all super admins as watchers
-        // This enables monitoring / oversight by super admins
-        if (! $current->is_super && ! $target->is_super) {
-            $superAdmins = Admin::where('is_super', true)->pluck('id')->toArray();
-            if (! empty($superAdmins)) {
-                $members = array_merge($members, $superAdmins);
-            }
-        }
-
-        $channel->users()->attach(array_values(array_unique($members)));
+        $channel->users()->attach([$current->id, $targetId]);
 
         return response()->json($channel->load('users'));
     }
@@ -181,7 +155,7 @@ class ChatController extends Controller
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
-        $admins = Admin::select('id', 'name', 'email')->orderBy('name')->get();
+        $admins = \App\Models\Admin::select('id', 'name', 'email')->orderBy('name')->get();
         return response()->json(['admins' => $admins]);
     }
 
@@ -270,7 +244,7 @@ class ChatController extends Controller
         if (is_array($mentions) && count($mentions)) {
             foreach ($mentions as $mentionedId) {
                 try {
-                    broadcast(new UserMentioned((int) $mentionedId, $message));
+                    broadcast(new \App\Events\UserMentioned((int)$mentionedId, $message));
                 } catch (\Throwable $e) {
                     // swallow broadcast exceptions to avoid breaking send flow
                 }
@@ -283,7 +257,7 @@ class ChatController extends Controller
             if (preg_match_all($pattern, $request->body, $matches)) {
                 $urls = array_unique($matches[0] ?? []);
                 foreach ($urls as $url) {
-                    MessageLink::create([
+                    \App\Models\MessageLink::create([
                         'message_id' => $message->id,
                         'url' => $url,
                     ]);
@@ -362,33 +336,11 @@ class ChatController extends Controller
         }
 
         // Channel info
-        $creator = Admin::select('id', 'name', 'email')->find($channel->created_by);
-
-        // Decide whether sidebar should be visible to this requester.
-        // Show for group channels; for personal channels show only to super admins; never show for public.
-        $showSidebar = $channel->type === 'group' || ($channel->type === 'personal' && $user->is_super);
-
-        // Member list: if sidebar is hidden, do not return super-admin watchers to regular users.
-        if ($showSidebar) {
-            $members = $channel->users()->select('admins.id', 'admins.name', 'admins.email')->get();
-        } else {
-            // For personal channels where sidebar is hidden for this user, only return non-super members (the actual participants).
-            $members = $channel->users()
-                ->select('admins.id', 'admins.name', 'admins.email', 'admins.is_super')
-                ->where('admins.is_super', false)
-                ->get()
-                ->map(function ($m) {
-                    // Remove is_super flag from the payload
-                    return [
-                        'id' => $m->id,
-                        'name' => $m->name,
-                        'email' => $m->email,
-                    ];
-                });
-        }
+        $creator = \App\Models\Admin::select('id', 'name', 'email')->find($channel->created_by);
+        $members = $channel->users()->select('admins.id', 'admins.name', 'admins.email')->get();
 
         // Attachments
-        $images = MessageAttachment::whereHas('message', function ($q) use ($channel) {
+        $images = \App\Models\MessageAttachment::whereHas('message', function ($q) use ($channel) {
             $q->where('channel_id', $channel->id);
         })
             ->where('mime_type', 'like', 'image/%')
@@ -396,7 +348,7 @@ class ChatController extends Controller
             ->limit(30)
             ->get(['id', 'filename', 'path', 'thumbnail_path', 'mime_type', 'size', 'message_id', 'created_at']);
 
-        $files = MessageAttachment::whereHas('message', function ($q) use ($channel) {
+        $files = \App\Models\MessageAttachment::whereHas('message', function ($q) use ($channel) {
             $q->where('channel_id', $channel->id);
         })
             ->where('mime_type', 'not like', 'image/%')
@@ -405,7 +357,7 @@ class ChatController extends Controller
             ->get(['id', 'filename', 'path', 'mime_type', 'size', 'message_id', 'created_at']);
 
         // Links: read from indexed table for efficiency
-        $links = MessageLink::whereHas('message', function ($q) use ($channel) {
+        $links = \App\Models\MessageLink::whereHas('message', function ($q) use ($channel) {
             $q->where('channel_id', $channel->id);
         })
             ->with(['message:id,sender_id,created_at', 'message.sender:id,name'])
@@ -434,7 +386,7 @@ class ChatController extends Controller
                 'creator' => $creator,
                 'members' => $members,
                 // Server-driven UI hints
-                'show_sidebar' => $showSidebar,
+                'show_sidebar' => $channel->type !== 'public',
             ],
             'images' => $images,
             'files' => $files,
@@ -492,7 +444,7 @@ class ChatController extends Controller
         }
 
         $members = $channel->users()->pluck('admins.id');
-        $allAdmins = Admin::select('id', 'name', 'email')->orderBy('name')->get();
+        $allAdmins = \App\Models\Admin::select('id', 'name', 'email')->orderBy('name')->get();
 
         return response()->json([
             'channel' => ['id' => $channel->id, 'name' => $channel->name],
@@ -535,10 +487,10 @@ class ChatController extends Controller
 
         // Notify affected users via per-admin notification channel
         foreach ($removed as $adminId) {
-            broadcast(new ChannelMembershipChanged($adminId, $channel->id, 'removed'));
+            broadcast(new \App\Events\ChannelMembershipChanged($adminId, $channel->id, 'removed'));
         }
         foreach ($added as $adminId) {
-            broadcast(new ChannelMembershipChanged($adminId, $channel->id, 'added'));
+            broadcast(new \App\Events\ChannelMembershipChanged($adminId, $channel->id, 'added'));
         }
 
         return response()->json(['success' => true]);
