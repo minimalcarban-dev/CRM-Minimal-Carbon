@@ -21,13 +21,19 @@
                     </h1>
                     <p class="page-subtitle">Stay updated with the latest alerts and messages</p>
                 </div>
-                <div class="header-right">
-                    @if($notifications->count() > 0)
-                        <button class="btn-primary-custom" id="markAllRead">
-                            <i class="bi bi-check2-all"></i>
-                            <span>Mark All Read</span>
-                        </button>
-                    @endif
+                <div class="header-spacer">
+                    <a href="{{ route('admin.dashboard') }}" class="btn-primary-custom" style="margin-bottom: 15px;">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Dashboard
+                    </a>
+                    <div class="header-right">
+                        @if($notifications->count() > 0)
+                            <button class="btn-primary-custom" id="markAllRead">
+                                <i class="bi bi-check2-all"></i>
+                                <span>Mark All Read</span>
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -80,7 +86,7 @@
                 @foreach($notifications as $notification)
                     <div class="notification-card {{ $notification->read_at ? 'read' : 'unread' }}">
                         <div class="notification-indicator"></div>
-                        
+
                         <div class="notification-icon">
                             @if(isset($notification->data['type']))
                                 @if($notification->data['type'] === 'order')
@@ -140,7 +146,8 @@
 
                                 <div class="notification-actions">
                                     @if(!$notification->read_at)
-                                        <button class="action-btn mark-read-btn" data-notification-id="{{ $notification->id }}" title="Mark as read">
+                                        <button class="action-btn mark-read-btn" data-notification-id="{{ $notification->id }}"
+                                            title="Mark as read">
                                             <i class="bi bi-check-circle"></i>
                                             <span>Mark as Read</span>
                                         </button>
@@ -733,9 +740,9 @@
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast-notification');
             const toastMessage = document.getElementById('toast-message');
-            
+
             toastMessage.textContent = message;
-            
+
             if (type === 'error') {
                 toast.style.background = 'var(--danger)';
                 toast.querySelector('i').className = 'bi bi-x-circle-fill';
@@ -743,19 +750,19 @@
                 toast.style.background = 'var(--success)';
                 toast.querySelector('i').className = 'bi bi-check-circle-fill';
             }
-            
+
             toast.classList.add('show');
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
         }
 
         // Mark all notifications as read
-        document.getElementById('markAllRead')?.addEventListener('click', async function() {
+        document.getElementById('markAllRead')?.addEventListener('click', async function () {
             this.disabled = true;
             this.innerHTML = '<i class="bi bi-hourglass-split"></i><span>Processing...</span>';
-            
+
             try {
                 const response = await fetch('{{ route("notifications.mark-all-read") }}', {
                     method: 'POST',
@@ -785,11 +792,11 @@
 
         // Mark individual notification as read
         document.querySelectorAll('.mark-read-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 const notificationId = this.dataset.notificationId;
                 this.disabled = true;
                 this.innerHTML = '<i class="bi bi-hourglass-split"></i><span>Processing...</span>';
-                
+
                 try {
                     const response = await fetch(`/admin/notifications/${notificationId}/read`, {
                         method: 'POST',

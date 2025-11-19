@@ -14,9 +14,15 @@
                 <a href="{{ route('orders.index') }}" class="btn-action btn-back">
                     <i class="bi bi-arrow-left"></i> Back
                 </a>
-                <a href="{{ route('orders.edit', $order) }}" class="btn-action btn-edit">
-                    <i class="bi bi-pencil"></i> Edit
-                </a>
+
+                @if (
+                        auth()->guard('admin')->user() && auth()->guard('admin')
+                            ->user()->canAccessAny(['orders.edit'])
+                    )
+                    <a href="{{ route('orders.edit', $order) }}" class="btn-action btn-edit">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                @endif
                 <button onclick="window.print()" class="btn-action btn-print">
                     <i class="bi bi-printer"></i> Print
                 </button>
@@ -246,9 +252,10 @@
                                             </small>
                                         </div>
                                         <div class="pdf-actions no-print">
-                                            <a href="{{ $pdf['url'] }}" target="_blank" class="pdf-btn" title="View">
+                                            <button type="button" onclick="openPdfModal('{{ $pdf['url'] }}')" class="pdf-btn"
+                                                title="View">
                                                 <i class="bi bi-eye"></i>
-                                            </a>
+                                            </button>
                                             <a href="{{ $pdf['url'] }}" download class="pdf-btn" title="Download">
                                                 <i class="bi bi-download"></i>
                                             </a>

@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel')</title>
-
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.1/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -70,7 +70,7 @@
             border-bottom: 2px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             min-height: 80px;
             flex-shrink: 0;
         }
@@ -83,20 +83,22 @@
         .logo-section {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            /* gap: 0.75rem; */
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.25rem;
-            flex-shrink: 0;
+            /* width: 60px; Increase size for open state */
+            /* height: 60px; Increase size for open state */
+            object-fit: contain;
+            display: block;
+            margin: 0 auto; /* Center the block element */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Add transition for smooth change */
+        }
+
+        .sidebar.collapsed .logo-icon {
+            width: 40px; /* Decrease size for collapsed state */
+            height: 40px; /* Decrease size for collapsed state */
+            margin: 0;
         }
 
         .logo-text {
@@ -624,6 +626,9 @@
         }
 
         .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             flex: 1;
         }
 
@@ -901,6 +906,34 @@
             flex-direction: column;
         }
 
+        .top-sidebar-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--gray);
+            cursor: pointer;
+            margin-right: 0.5rem;
+            padding: 0;
+            line-height: 1;
+            font-size: 1rem;
+        }
+
+        .top-sidebar-toggle i {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .top-sidebar-toggle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.03);
+        }
+
         .profile-menu.show {
             display: flex;
         }
@@ -1005,31 +1038,10 @@
         <!-- Sidebar Header -->
         <div class="sidebar-header">
             <div class="logo-section">
-                <div class="logo-icon">
-                    <i class="bi bi-gem" id="sidebarToggle"></i>
-                </div>
-                <span class="logo-text">Admin Panel</span>
+                <a href="{{ route('admin.dashboard') }}">
+                    <img src="{{ asset('images/diamond-moving.gif') }}" alt="Logo" class="logo-icon">
+                </a>
             </div>
-            {{-- <button class="toggle-btn" id="sidebarToggle">
-                <i class="bi bi-chevron-left"></i>
-            </button> --}}
-        </div>
-
-        <!-- User Info -->
-        <div class="user-info">
-            @if (isset($currentAdmin) && $currentAdmin)
-                <div class="user-card">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr($currentAdmin->name, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <p class="user-name">{{ $currentAdmin->name }}</p>
-                        <p class="user-email">{{ $currentAdmin->email }}</p>
-                    </div>
-                </div>
-            @else
-                <a href="{{ route('admin.login') }}" class="btn btn-primary w-100">Login</a>
-            @endif
         </div>
 
         <!-- Navigation -->
@@ -1096,18 +1108,12 @@
                 @endif
             </ul>
             
-            @php
-                $canSeeOrders =
-                    isset($currentAdmin) &&
-                    $currentAdmin &&
-                    ($currentAdmin->is_super ||
-                        $currentAdmin->hasPermission('diamonds.view') ||
-                        $currentAdmin->hasPermission('diamonds.create'));
-            @endphp
-
-            @if ($canSeeOrders)
+            @if (
+                        auth()->guard('admin')->user() && auth()->guard('admin')
+                            ->user()->canAccessAny(['diamonds.view', 'diamonds.create'])
+                    )
                 <li>
-                    <a class="nav-link {{ request()->routeIs('diamonds.*') ? 'active' : '' }}"
+                    <a class="nav-link {{ request()->routeIs('diamond.*') ? 'active' : '' }}"
                         href="{{ route('diamond.index') }}" data-tooltip="Diamonds">
                         <i class="bi bi-gem"></i>
                         <span>Diamonds</span>
@@ -1233,25 +1239,15 @@
                 </div>
             </div>
         </div>
-
-        <!-- Logout -->
-        @if (isset($currentAdmin) && $currentAdmin)
-            <div class="logout-section">
-                <form method="POST" action="{{ route('admin.logout') }}">
-                    @csrf
-                    <button type="submit" class="logout-btn">
-                        <i class="bi bi-box-arrow-right"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </div>
-        @endif
     </nav>
 
     <!-- Top Navbar with Notifications -->
     <div class="top-navbar">
         <div class="navbar-content">
             <div class="navbar-left">
+                <button class="top-sidebar-toggle" id="topSidebarToggle" title="Toggle sidebar">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
                 <h2 class="navbar-title">@yield('title', 'Admin Panel')</h2>
             </div>
             <div class="navbar-right">
@@ -1400,7 +1396,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Y3Qv1p6a2mZ6Yk2b2Q5p3yZ9f+8H9g0h+8=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
@@ -1468,12 +1464,17 @@
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebarToggle');
         const toggleIcon = toggleBtn?.querySelector('i');
+        const topToggleBtn = document.getElementById('topSidebarToggle');
+        const topToggleIcon = topToggleBtn?.querySelector('i');
         const mobileToggle = document.getElementById('mobileToggle');
 
         function toggleSidebar() {
             const isCollapsed = sidebar.classList.toggle('collapsed');
             if (toggleIcon) {
                 toggleIcon.className = isCollapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
+            }
+            if (topToggleIcon) {
+                topToggleIcon.className = isCollapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
             }
             localStorage.setItem('sidebarCollapsed', isCollapsed);
         }
@@ -1483,12 +1484,14 @@
         }
 
         toggleBtn?.addEventListener('click', toggleSidebar);
+        topToggleBtn?.addEventListener('click', toggleSidebar);
         mobileToggle?.addEventListener('click', toggleMobileSidebar);
 
         // Load saved state
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
             sidebar.classList.add('collapsed');
             if (toggleIcon) toggleIcon.className = 'bi bi-chevron-right';
+            if (topToggleIcon) topToggleIcon.className = 'bi bi-chevron-right';
         }
 
         // Dropdown Toggle Functionality

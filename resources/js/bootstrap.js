@@ -10,7 +10,8 @@ const token = document.head.querySelector('meta[name="csrf-token"]');
 if (token) {
     window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
 } else {
-    console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+    if (!import.meta.env.PROD) console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+    window.showAlert?.('CSRF token not found. Some requests may fail', 'warning');
 }
 
 // Initialize Laravel Echo

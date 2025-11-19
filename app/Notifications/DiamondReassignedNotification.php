@@ -71,7 +71,7 @@ class DiamondReassignedNotification extends Notification implements ShouldQueue
             'details' => [
                 'sku' => $this->diamond->sku,
                 'stock_id' => $this->diamond->stockid,
-                'price' => 'Rs. ' . number_format((float)$this->diamond->price, 2),
+                'price' => 'Rs. ' . number_format((float) $this->diamond->price, 2),
                 'type' => $this->diamond->diamond_type ?? 'N/A',
                 'reassigned_by' => $this->reassignedBy->name,
                 'previous_admin' => $this->previousAdmin->name,
