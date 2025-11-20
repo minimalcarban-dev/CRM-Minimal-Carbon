@@ -1016,22 +1016,7 @@
             </button> --}}
         </div>
 
-        <!-- User Info -->
-        <div class="user-info">
-            @if (isset($currentAdmin) && $currentAdmin)
-                <div class="user-card">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr($currentAdmin->name, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <p class="user-name">{{ $currentAdmin->name }}</p>
-                        <p class="user-email">{{ $currentAdmin->email }}</p>
-                    </div>
-                </div>
-            @else
-                <a href="{{ route('admin.login') }}" class="btn btn-primary w-100">Login</a>
-            @endif
-        </div>
+        <!-- User Info removed: header avatar + email now shown in top-right profile dropdown -->
 
         <!-- Navigation -->
         <div class="nav-section">
@@ -1235,18 +1220,7 @@
             </div>
         </div>
 
-        <!-- Logout -->
-        @if (isset($currentAdmin) && $currentAdmin)
-            <div class="logout-section">
-                <form method="POST" action="{{ route('admin.logout') }}">
-                    @csrf
-                    <button type="submit" class="logout-btn">
-                        <i class="bi bi-box-arrow-right"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </div>
-        @endif
+        <!-- Sidebar Logout removed: logout now handled in top-right profile dropdown -->
     </nav>
 
     <!-- Top Navbar with Notifications -->
