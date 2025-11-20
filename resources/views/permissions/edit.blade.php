@@ -70,6 +70,22 @@
             </div>
         </div>
 
+        @if ($errors->any())
+            <div class="alert-card danger mb-4">
+                <div class="alert-icon">
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                </div>
+                <div class="alert-content">
+                    <h5 class="alert-title">Please Fix These Issues</h5>
+                    <ul class="mb-0" style="padding-left:1.2rem; margin-top:.5rem;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('permissions.update', $permission) }}" id="editPermissionForm">
             @csrf
             @method('PUT')
@@ -137,6 +153,32 @@
                                 <small class="form-hint">
                                     <i class="bi bi-info-circle me-1"></i>
                                     Use dot notation: <code>resource.action</code> format (lowercase only)
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Permission Category (added for update validation) -->
+                        <div class="col-12">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <i class="bi bi-list-task me-2"></i>Permission Category
+                                    <span class="required-badge">Required</span>
+                                </label>
+                                <input type="text" name="category" id="permission_category" class="form-control-modern"
+                                    list="permission_categories" value="{{ old('category', $permission->category) }}"
+                                    placeholder="Type or select an existing category" required>
+
+                                <datalist id="permission_categories">
+                                    @if(isset($categories) && $categories->count())
+                                        @foreach($categories as $cat)
+                                            <option value="{{ $cat }}">{{ $cat }}</option>
+                                        @endforeach
+                                    @endif
+                                </datalist>
+
+                                <small class="form-hint">
+                                    <i class="bi bi-lightbulb me-1"></i>
+                                    Start typing to select an existing category or enter a new one
                                 </small>
                             </div>
                         </div>

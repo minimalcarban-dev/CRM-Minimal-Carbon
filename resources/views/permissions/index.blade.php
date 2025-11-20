@@ -216,7 +216,7 @@
                                                 </a>
                                             @endif
                                             @if ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.delete'))
-                                                <form action="{{ route('permissions.destroy', $perm) }}" method="POST" class="d-inline"
+                                                <form action="{{ route('permissions.delete', $perm) }}" method="POST" class="d-inline"
                                                     onsubmit="return confirm('Are you sure you want to delete this permission?');">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="action-btn action-btn-delete" title="Delete">
@@ -234,9 +234,9 @@
                                         @endif
                                         <div class="permission-meta">
                                             <code class="permission-slug" onclick="copySlug('{{ $perm->slug }}', this)">
-                                                                        <i class="bi bi-code-slash"></i>
-                                                                        {{ $perm->slug }}
-                                                                    </code>
+                                                            <i class="bi bi-code-slash"></i>
+                                                            {{ $perm->slug }}
+                                                        </code>
                                             <span class="permission-type">{{ ucfirst(str_replace('_', ' ', $action)) }}</span>
                                         </div>
                                     </div>

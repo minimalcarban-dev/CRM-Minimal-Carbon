@@ -125,7 +125,7 @@
 
             @if (
                     auth()->guard('admin')->user() && auth()->guard('admin')
-                        ->user()->canAccessAny(['admins.view', 'admins.create'])
+                        ->user()->canAccessAny(['admins.create'])
                 )
                 <a href="{{ route('admins.create') }}" class="quick-link-card">
                     <div class="quick-link-icon icon-primary">
@@ -141,7 +141,7 @@
 
             @if (
                     auth()->guard('admin')->user() && auth()->guard('admin')
-                        ->user()->canAccessAny(['permissions.view', 'permissions.create'])
+                        ->user()->canAccessAny(['permissions.create'])
                 )
                 <a href="{{ route('permissions.create') }}" class="quick-link-card">
                     <div class="quick-link-icon icon-success">
@@ -187,47 +187,6 @@
                 </a>
             @endif
         </div>
-
-        <!-- Activity Feed (Optional) -->
-        <!-- <div class="section-header mt-5">
-                                                                                        <h3 class="section-title">Recent Activity</h3>
-                                                                                        <p class="section-subtitle">Latest system events</p>
-                                                                                    </div>
-
-                                                                                    <div class="activity-card">
-                                                                                        <div class="activity-item">
-                                                                                            <div class="activity-icon activity-success">
-                                                                                                <i class="bi bi-person-check"></i>
-                                                                                            </div>
-                                                                                            <div class="activity-content">
-                                                                                                <p class="activity-title">New admin added</p>
-                                                                                                <p class="activity-description">John Doe was added to the system</p>
-                                                                                            </div>
-                                                                                            <span class="activity-time">2 hours ago</span>
-                                                                                        </div>
-
-                                                                                        <div class="activity-item">
-                                                                                            <div class="activity-icon activity-primary">
-                                                                                                <i class="bi bi-shield-check"></i>
-                                                                                            </div>
-                                                                                            <div class="activity-content">
-                                                                                                <p class="activity-title">Permissions updated</p>
-                                                                                                <p class="activity-description">Admin permissions were modified</p>
-                                                                                            </div>
-                                                                                            <span class="activity-time">5 hours ago</span>
-                                                                                        </div>
-
-                                                                                        <div class="activity-item">
-                                                                                            <div class="activity-icon activity-warning">
-                                                                                                <i class="bi bi-basket"></i>
-                                                                                            </div>
-                                                                                            <div class="activity-content">
-                                                                                                <p class="activity-title">New order received</p>
-                                                                                                <p class="activity-description">Order #1234 needs processing</p>
-                                                                                            </div>
-                                                                                            <span class="activity-time">1 day ago</span>
-                                                                                        </div>
-                                                                                    </div> -->
     </div>
 
     <style>

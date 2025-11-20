@@ -48,11 +48,11 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'    => 'required|string|max:255|unique:companies,name',
-            'email'   => 'nullable|email|max:255',
-            'phone'   => 'nullable|string|max:50',
+            'name' => 'required|string|max:255|unique:companies,name',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:500',
-            'status'  => 'required|in:active,inactive',
+            'status' => 'required|in:active,inactive',
         ]);
 
         Company::create($validated);
@@ -82,11 +82,11 @@ class CompanyController extends Controller
     public function update(Request $request, Company $company)
     {
         $validated = $request->validate([
-            'name'    => 'required|string|max:255|unique:companies,name,' . $company->id,
-            'email'   => 'nullable|email|max:255',
-            'phone'   => 'nullable|string|max:50',
+            'name' => 'required|string|max:255|unique:companies,name,' . $company->id,
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:500',
-            'status'  => 'required|in:active,inactive',
+            'status' => 'required|in:active,inactive',
         ]);
 
         $company->update($validated);

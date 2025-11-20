@@ -99,7 +99,12 @@ class PermissionController extends Controller
 
     public function edit(Permission $permission)
     {
-        return view('permissions.edit', compact('permission'));
+        // Provide existing categories (same as create) for datalist suggestions
+        $categories = Permission::whereNotNull('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+        return view('permissions.edit', compact('permission', 'categories'));
     }
 
     public function update(Request $request, Permission $permission)

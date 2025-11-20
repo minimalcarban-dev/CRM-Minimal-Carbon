@@ -44,6 +44,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('chat.index')
         ->middleware('admin.permission:chat.access');
 
+    // Chat routes
     Route::prefix('chat')->middleware('admin.permission:chat.access')->group(function () {
         Route::post('/channels', [ChatController::class, 'createChannel']);
         Route::get('/channels', [ChatController::class, 'getChannels']);
@@ -59,6 +60,8 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::get('/channels/{channel}/members', [ChatController::class, 'getChannelMembers']);
         Route::put('/channels/{channel}/members', [ChatController::class, 'updateChannelMembers']);
     });
+
+    // Admin management (CRUD)
     Route::get('admins', [AdminController::class, 'index'])
         ->name('admins.index')
         ->middleware('admin.permission:admins.view');
@@ -109,7 +112,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('permissions.update')
         ->middleware('admin.permission:permissions.edit');
     Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])
-        ->name('permissions.destroy')
+        ->name('permissions.delete')
         ->middleware('admin.permission:permissions.delete');
 
     // Orders
