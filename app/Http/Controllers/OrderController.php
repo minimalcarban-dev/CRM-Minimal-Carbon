@@ -65,8 +65,14 @@ class OrderController extends Controller
             $query->where('diamond_status', $request->diamond_status);
         }
 
+        // Correctly calculate stats before pagination
+        $totalOrders = (clone $query)->count();
+        $orderTypeCounts = (clone $query)->select('order_type', \DB::raw('count(*) as total'))->groupBy('order_type')->pluck('total', 'order_type');
+        $statusCounts = (clone $query)->select('diamond_status', \DB::raw('count(*) as total'))->groupBy('diamond_status')->pluck('total', 'diamond_status');
+
+
         $orders = $query->latest()->paginate(10);
-        return view('orders.index', compact('orders'));
+        return view('orders.index', compact('orders', 'totalOrders', 'orderTypeCounts', 'statusCounts'));
     }
 
     /**

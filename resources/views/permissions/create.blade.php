@@ -14,9 +14,15 @@
                     </h2>
                     <p class="page-subtitle mb-0">Define a new access permission for the system</p>
                 </div>
-                <a href="{{ route('permissions.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Back to Permissions
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ route('permissions.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Permissions
+                    </a>
+                    <!-- Top primary action submits the form below -->
+                    <button type="submit" form="createPermissionForm" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Create Permission
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -176,18 +182,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Action Footer -->
-            <div class="action-footer">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-check-circle me-2"></i>
-                    Create Permission
-                </button>
-                <a href="{{ route('permissions.index') }}" class="btn btn-outline-secondary btn-lg">
-                    <i class="bi bi-x-circle me-2"></i>
-                    Cancel
-                </a>
             </div>
         </form>
     </div>

@@ -45,7 +45,8 @@
                                 <a href="{{ route('stone_colors.edit', $item->id) }}" class="btn btn-sm btn-primary">Edit</a>
                             @endif
                             @if ($currentAdmin && $currentAdmin->hasPermission('stone_colors.delete'))
-                                <form action="{{ route('stone_colors.destroy', $item->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Delete this item?')">
+                                <form action="{{ route('stone_colors.destroy', $item->id) }}" method="POST"
+                                    style="display:inline-block;" onsubmit="return confirm('Delete this item?')">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-danger">Delete</button>

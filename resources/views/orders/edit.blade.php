@@ -8,11 +8,14 @@
             <h1 class="page-title">Edit Order #{{ $order->id }}</h1>
             <p class="page-subtitle">Update order details and related information</p>
         </div>
-        <div class="header-right">
+        <div class="header-right d-flex align-items-center gap-2">
             <a href="{{ route('orders.index') }}" class="btn-primary-custom btn-sm">
                 <i class="bi bi-arrow-left"></i>
                 <span>Back to Orders</span>
             </a>
+            <button type="submit" form="editOrderForm" class="btn-primary-custom px-4">
+                <i class="bi bi-save me-1"></i> Update Order
+            </button>
         </div>
     </div>
 
@@ -117,11 +120,7 @@
                 </div>
             </div>
 
-            <div class="text-end mt-4">
-                <button type="submit" class="btn-primary-custom px-4">
-                    <i class="bi bi-save me-1"></i> Update Order
-                </button>
-            </div>
+            
         </form>
     </div>
 

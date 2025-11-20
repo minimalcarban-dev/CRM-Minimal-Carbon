@@ -19,7 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.auth' => EnsureAdminAuthenticated::class,
             'admin.permission' => EnsureAdminHasPermission::class,
+            'chat.rate' => \App\Http\Middleware\ChatRateLimiter::class,
+            'csp' => \App\Http\Middleware\ContentSecurityPolicy::class,
         ]);
+        // Global security headers
+        $middleware->append(\App\Http\Middleware\ContentSecurityPolicy::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // For all admin pages and APIs: convert 403 to a friendly redirect

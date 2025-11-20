@@ -14,9 +14,14 @@
                     </h2>
                     <p class="page-subtitle mb-0">Fill the details below to create a new order entry</p>
                 </div>
-                <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Back again to Orders
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back again to Orders
+                    </a>
+                    <button type="submit" form="orderForm" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Create Order
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -120,17 +125,7 @@
                 </div>
             </div>
 
-            <!-- Submit Button (Hidden Initially) -->
-            <div class="action-footer" id="submitButtonContainer" style="display: none;">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-check-circle me-2"></i>
-                    Create Order
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-lg" onclick="window.history.back()">
-                    <i class="bi bi-x-circle me-2"></i>
-                    Cancel
-                </button>
-            </div>
+
         </form>
     </div>
 
@@ -518,11 +513,11 @@
                 function loadOrderForm(type) {
                     // Show loading state
                     formContainer.innerHTML = `
-                                        <div class="loading-state">
-                                            <div class="loading-spinner"></div>
-                                            <p class="loading-text">Loading order form...</p>
-                                        </div>
-                                    `;
+                                                        <div class="loading-state">
+                                                            <div class="loading-spinner"></div>
+                                                            <p class="loading-text">Loading order form...</p>
+                                                        </div>
+                                                    `;
 
                     // Fetch form
                     fetch(`/admin/orders/form/${type}`)
@@ -556,7 +551,7 @@
                                 // If script parsing fails, log for debugging but don't break UX
                                 console.error('Error evaluating returned scripts:', e);
                             }
-                            submitButton.style.display = 'flex';
+                            if (submitButton) submitButton.style.display = 'flex';
 
                             // Smooth scroll to form
                             setTimeout(() => {
@@ -571,17 +566,17 @@
                         .catch(error => {
                             console.error('Error loading form:', error);
                             formContainer.innerHTML = `
-                                                <div class="alert-card danger">
-                                                    <div class="alert-icon">
-                                                        <i class="bi bi-exclamation-triangle-fill"></i>
-                                                    </div>
-                                                    <div class="alert-content">
-                                                        <h5 class="alert-title">Error Loading Form</h5>
-                                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
-                                                    </div>
-                                                </div>
-                                            `;
-                            submitButton.style.display = 'none';
+                                                                <div class="alert-card danger">
+                                                                    <div class="alert-icon">
+                                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                    </div>
+                                                                    <div class="alert-content">
+                                                                        <h5 class="alert-title">Error Loading Form</h5>
+                                                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
+                                                                    </div>
+                                                                </div>
+                                                            `;
+                            if (submitButton) submitButton.style.display = 'none';
                             showToastNotification('Failed to load order form', 'error');
                         });
                 }

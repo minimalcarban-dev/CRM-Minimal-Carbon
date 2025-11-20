@@ -3,34 +3,6 @@
 @section('title', 'Orders Management')
 
 @php
-    // Calculate stats
-    $totalOrders = $orders->total();
-
-    // Order type counts (if available)
-    $orderTypeCounts = [
-        'ready_to_ship' => 0,
-        'custom_diamond' => 0,
-        'custom_jewellery' => 0,
-    ];
-
-    // Diamond status counts
-    $statusCounts = [
-        'completed' => 0,
-        'processed' => 0,
-        'diamond_purchased' => 0,
-        'factory_making' => 0,
-        'diamond_completed' => 0,
-    ];
-
-    foreach ($orders as $order) {
-        if (isset($orderTypeCounts[$order->order_type])) {
-            $orderTypeCounts[$order->order_type]++;
-        }
-        if (isset($statusCounts[$order->diamond_status])) {
-            $statusCounts[$order->diamond_status]++;
-        }
-    }
-
     // Status color mapping
     $statusColors = [
         'processed' => 'info',
@@ -101,7 +73,7 @@
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">Ready to Ship</div>
-                    <div class="stat-value">{{ $orderTypeCounts['ready_to_ship'] }}</div>
+                    <div class="stat-value">{{ $orderTypeCounts['ready_to_ship'] ?? 0 }}</div>
                     <div class="stat-trend">
                         <i class="bi bi-truck"></i> In stock
                     </div>
@@ -114,7 +86,7 @@
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">Custom Diamond</div>
-                    <div class="stat-value">{{ $orderTypeCounts['custom_diamond'] }}</div>
+                    <div class="stat-value">{{ $orderTypeCounts['custom_diamond'] ?? 0 }}</div>
                     <div class="stat-trend">
                         <i class="bi bi-star"></i> Custom
                     </div>
@@ -127,7 +99,7 @@
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">Custom Jewellery</div>
-                    <div class="stat-value">{{ $orderTypeCounts['custom_jewellery'] }}</div>
+                    <div class="stat-value">{{ $orderTypeCounts['custom_jewellery'] ?? 0 }}</div>
                     <div class="stat-trend">
                         <i class="bi bi-hammer"></i> Crafted
                     </div>

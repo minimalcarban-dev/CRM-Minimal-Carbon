@@ -327,8 +327,8 @@
 
       <!-- Info Sections -->
       <div class="info-sections">
-        <!-- About Section -->
-        <div class="info-section">
+        <!-- About Section (hidden in personal DMs for normal admins) -->
+        <div class="info-section" v-if="showAboutSection">
           <button @click="togglePanel('info')" class="section-toggle">
             <div class="section-header-content">
               <i class="bi bi-info-circle"></i>
@@ -355,8 +355,8 @@
           </div>
         </div>
 
-        <!-- Members Section -->
-        <div class="info-section">
+        <!-- Members Section (hidden in personal DMs for normal admins) -->
+        <div class="info-section" v-if="showMembersSection">
           <button @click="togglePanel('members')" class="section-toggle">
             <div class="section-header-content">
               <i class="bi bi-people"></i>
@@ -678,6 +678,10 @@ export default {
     const canSendMessage = computed(
       () => newMessage.value.trim() || attachmentFiles.value.length > 0
     );
+    const isSuperAdmin = computed(() => !!window.authAdminIsSuper);
+    const isPersonalChannel = computed(() => (currentChannel.value?.type || '').toLowerCase() === 'personal');
+    const showAboutSection = computed(() => !isPersonalChannel.value || isSuperAdmin.value);
+    const showMembersSection = computed(() => !isPersonalChannel.value || isSuperAdmin.value);
     const typingLabel = computed(() => {
       const now = Date.now();
       Object.keys(typingUsers.value).forEach((uid) => {
@@ -701,7 +705,7 @@ export default {
           ...c,
         }));
       } catch (error) {
-        console.error("Error loading channels:", error);
+        if (import.meta.env.DEV) console.error("Error loading channels:", error);
       }
     };
 
@@ -747,11 +751,11 @@ export default {
           c.id === channelId ? { ...c, unread_messages_count: 0 } : c
         );
         return true;
-      } catch (error) {
+        } catch (error) {
         if (error?.response?.status === 403) {
           window.showToast?.("You don't have access to this channel");
         } else {
-          console.error("Error loading messages:", error);
+          if (import.meta.env.DEV) console.error("Error loading messages:", error);
         }
         return false;
       } finally {
@@ -818,7 +822,7 @@ export default {
         await loadSidebar(currentChannel.value.id);
         scrollToBottom();
       } catch (error) {
-        console.error("Error sending message:", error);
+        if (import.meta.env.DEV) console.error("Error sending message:", error);
       }
     };
 
@@ -963,7 +967,7 @@ export default {
         sidebarFiles.value = Array.isArray(data.files) ? data.files : [];
         sidebarLinks.value = Array.isArray(data.links) ? data.links : [];
       } catch (e) {
-        console.error("Failed to load sidebar", e);
+        if (import.meta.env.DEV) console.error("Failed to load sidebar", e);
         channelInfo.value = {
           creator: null,
           members: [],
@@ -991,7 +995,7 @@ export default {
         const response = await axios.get("/admin/chat/messages/search", { params });
         searchResults.value = response.data;
       } catch (error) {
-        console.error("Error searching messages:", error);
+        if (import.meta.env.DEV) console.error("Error searching messages:", error);
       } finally {
         isSearching.value = false;
       }
@@ -1105,7 +1109,7 @@ export default {
         if (!initial.includes(props.userId)) initial.push(props.userId);
         memberIds.value = initial;
       } catch (e) {
-        console.error("Failed to load members", e);
+        if (import.meta.env.DEV) console.error("Failed to load members", e);
         window.showToast?.("Failed to load members");
         manageOpen.value = false;
       } finally {
@@ -1131,7 +1135,7 @@ export default {
         manageOpen.value = false;
         await loadChannels();
       } catch (e) {
-        console.error("Failed to update members", e);
+        if (import.meta.env.DEV) console.error("Failed to update members", e);
         window.showToast?.("Failed to update members");
       }
     };
@@ -1172,7 +1176,7 @@ export default {
         const dm = channels.value.find((c) => c.id === data.id) || data;
         await selectChannel(dm);
       } catch (e) {
-        console.error("Failed to start direct chat", e);
+        if (import.meta.env.DEV) console.error("Failed to start direct chat", e);
         const msg = e?.response?.data?.errors
           ? JSON.stringify(e.response.data.errors)
           : "Failed to start direct chat";
@@ -1203,7 +1207,7 @@ export default {
         createOpen.value = false;
         await loadChannels();
       } catch (e) {
-        console.error("Failed to create channel", e);
+        if (import.meta.env.DEV) console.error("Failed to create channel", e);
         window.showToast?.("Failed to create channel");
       }
     };
@@ -1403,6 +1407,10 @@ export default {
       createMemberIds,
       typingLabel,
       canSendMessage,
+      isSuperAdmin,
+      isPersonalChannel,
+      showAboutSection,
+      showMembersSection,
       isGroupChannel,
       avatarInitials,
       formatDate,

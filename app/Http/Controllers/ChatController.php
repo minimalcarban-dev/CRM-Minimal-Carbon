@@ -129,14 +129,27 @@ class ChatController extends Controller
             return response()->json($existing->load('users'));
         }
 
-        // Create new personal channel
+        // Create new personal channel (auto-add super admins for oversight when neither party is super)
         $target = \App\Models\Admin::findOrFail($targetId);
         $channel = Channel::create([
-            'name' => $target->name, // UI can override with other party name
+            'name' => $target->name,
             'type' => 'personal',
             'created_by' => $current->id,
         ]);
-        $channel->users()->attach([$current->id, $targetId]);
+
+        $members = [$current->id, $targetId];
+        if (!$current->is_super && !$target->is_super) {
+            $superIds = \App\Models\Admin::where('is_super', true)->pluck('id')->all();
+            $members = array_unique(array_merge($members, $superIds));
+        }
+        $channel->users()->attach($members);
+
+        \App\Services\AuditLogger::log(
+            event: 'channel.direct.created',
+            auditable: $channel,
+            userId: $current->id,
+            newValues: ['member_ids' => $members]
+        );
 
         return response()->json($channel->load('users'));
     }
@@ -264,6 +277,16 @@ class ChatController extends Controller
                 }
             }
         }
+
+        \App\Services\AuditLogger::log(
+            event: 'message.sent',
+            auditable: $message,
+            userId: $user->id,
+            newValues: [
+                'channel_id' => $channel->id,
+                'attachments' => $message->attachments->pluck('id')->all(),
+            ]
+        );
 
         return response()->json($message);
     }
@@ -492,6 +515,14 @@ class ChatController extends Controller
         foreach ($added as $adminId) {
             broadcast(new \App\Events\ChannelMembershipChanged($adminId, $channel->id, 'added'));
         }
+
+        \App\Services\AuditLogger::log(
+            event: 'channel.members.updated',
+            auditable: $channel,
+            userId: $current->id,
+            oldValues: ['previous_member_ids' => $existing],
+            newValues: ['current_member_ids' => $desired]
+        );
 
         return response()->json(['success' => true]);
     }

@@ -14,7 +14,11 @@
                     </h2>
                     <p class="page-subtitle mb-0">Update permission details and configuration</p>
                 </div>
-                <div class="header-actions">
+                <div class="header-actions d-flex align-items-center gap-2">
+                    <!-- Top primary action submits the edit form below -->
+                    <button type="submit" form="editPermissionForm" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                    </button>
                     <a href="{{ route('permissions.show', $permission) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-eye me-2"></i>View Details
                     </a>
@@ -61,7 +65,8 @@
             </div>
             <div class="alert-content">
                 <h5 class="alert-title">Important Notice</h5>
-                <p class="mb-0">Changing the slug will affect all admins who have been assigned this permission. Make sure to notify them of the change.</p>
+                <p class="mb-0">Changing the slug will affect all admins who have been assigned this permission. Make sure
+                    to notify them of the change.</p>
             </div>
         </div>
 
@@ -91,13 +96,9 @@
                                     <i class="bi bi-tag me-2"></i>Permission Name
                                     <span class="required-badge">Required</span>
                                 </label>
-                                <input type="text" 
-                                       name="name" 
-                                       id="permission_name"
-                                       class="form-control-modern" 
-                                       value="{{ old('name', $permission->name) }}" 
-                                       placeholder="e.g., Create User, View Reports, Edit Settings"
-                                       required>
+                                <input type="text" name="name" id="permission_name" class="form-control-modern"
+                                    value="{{ old('name', $permission->name) }}"
+                                    placeholder="e.g., Create User, View Reports, Edit Settings" required>
                                 <small class="form-hint">
                                     <i class="bi bi-lightbulb me-1"></i>
                                     Use a clear, action-oriented name that describes what this permission allows
@@ -114,27 +115,24 @@
                                     <span class="badge-unique">Unique</span>
                                 </label>
                                 <div class="input-with-suggestion">
-                                    <input type="text" 
-                                           name="slug" 
-                                           id="permission_slug"
-                                           class="form-control-modern" 
-                                           value="{{ old('slug', $permission->slug) }}" 
-                                           placeholder="e.g., users.create, reports.view, settings.edit"
-                                           required>
-                                    <button type="button" 
-                                            id="generateSlug" 
-                                            class="suggestion-btn"
-                                            title="Auto-generate from name">
+                                    <input type="text" name="slug" id="permission_slug" class="form-control-modern"
+                                        value="{{ old('slug', $permission->slug) }}"
+                                        placeholder="e.g., users.create, reports.view, settings.edit" required>
+                                    <button type="button" id="generateSlug" class="suggestion-btn"
+                                        title="Auto-generate from name">
                                         <i class="bi bi-magic"></i>
                                     </button>
                                 </div>
                                 <div class="slug-examples">
                                     <span class="examples-label">Examples:</span>
                                     <button type="button" class="example-chip" data-slug="users.view">users.view</button>
-                                    <button type="button" class="example-chip" data-slug="users.create">users.create</button>
+                                    <button type="button" class="example-chip"
+                                        data-slug="users.create">users.create</button>
                                     <button type="button" class="example-chip" data-slug="users.edit">users.edit</button>
-                                    <button type="button" class="example-chip" data-slug="users.delete">users.delete</button>
-                                    <button type="button" class="example-chip" data-slug="reports.export">reports.export</button>
+                                    <button type="button" class="example-chip"
+                                        data-slug="users.delete">users.delete</button>
+                                    <button type="button" class="example-chip"
+                                        data-slug="reports.export">reports.export</button>
                                 </div>
                                 <small class="form-hint">
                                     <i class="bi bi-info-circle me-1"></i>
@@ -150,11 +148,9 @@
                                     <i class="bi bi-text-paragraph me-2"></i>Description
                                     <span class="optional-badge">Optional</span>
                                 </label>
-                                <textarea name="description" 
-                                          id="permission_description"
-                                          class="form-control-modern" 
-                                          rows="4"
-                                          placeholder="Describe when and why this permission should be granted...">{{ old('description', $permission->description) }}</textarea>
+                                <textarea name="description" id="permission_description" class="form-control-modern"
+                                    rows="4"
+                                    placeholder="Describe when and why this permission should be granted...">{{ old('description', $permission->description) }}</textarea>
                                 <div class="d-flex justify-content-between align-items-center mt-2">
                                     <small class="form-hint">
                                         <i class="bi bi-lightbulb me-1"></i>
@@ -189,18 +185,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Action Footer -->
-            <div class="action-footer">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-check-circle me-2"></i>
-                    Save Changes
-                </button>
-                <a href="{{ route('permissions.index') }}" class="btn btn-outline-secondary btn-lg">
-                    <i class="bi bi-x-circle me-2"></i>
-                    Cancel
-                </a>
             </div>
         </form>
     </div>
@@ -765,14 +749,14 @@
 
     @push('scripts')
         <script>
-            (function() {
+            (function () {
                 function initEditPermissionForm() {
                     const nameInput = document.getElementById('permission_name');
                     const slugInput = document.getElementById('permission_slug');
                     const descInput = document.getElementById('permission_description');
                     const generateBtn = document.getElementById('generateSlug');
                     const charCount = document.getElementById('charCount');
-                    
+
                     const previewName = document.getElementById('preview_name');
                     const previewSlug = document.getElementById('preview_slug');
                     const previewDesc = document.getElementById('preview_description');
@@ -789,7 +773,7 @@
 
                     // Auto-generate slug button
                     if (generateBtn && nameInput && slugInput) {
-                        generateBtn.addEventListener('click', function() {
+                        generateBtn.addEventListener('click', function () {
                             const name = nameInput.value.trim();
                             if (name) {
                                 const slug = generateSlug(name);
@@ -804,7 +788,7 @@
 
                     // Example chips
                     document.querySelectorAll('.example-chip').forEach(chip => {
-                        chip.addEventListener('click', function() {
+                        chip.addEventListener('click', function () {
                             const slug = this.dataset.slug;
                             if (slugInput) {
                                 slugInput.value = slug;
@@ -816,7 +800,7 @@
 
                     // Character counter
                     if (descInput && charCount) {
-                        descInput.addEventListener('input', function() {
+                        descInput.addEventListener('input', function () {
                             charCount.textContent = this.value.length;
                         });
                         // Initialize
@@ -825,19 +809,19 @@
 
                     // Live preview updates
                     if (nameInput && previewName) {
-                        nameInput.addEventListener('input', function() {
+                        nameInput.addEventListener('input', function () {
                             previewName.textContent = this.value || 'Permission Name';
                         });
                     }
 
                     if (slugInput && previewSlug) {
-                        slugInput.addEventListener('input', function() {
+                        slugInput.addEventListener('input', function () {
                             previewSlug.textContent = this.value || 'permission.slug';
                         });
                     }
 
                     if (descInput && previewDesc) {
-                        descInput.addEventListener('input', function() {
+                        descInput.addEventListener('input', function () {
                             previewDesc.textContent = this.value || '';
                         });
                     }
@@ -854,19 +838,19 @@
                             error: '#ef4444',
                             info: '#3b82f6'
                         };
-                        
+
                         const toast = document.createElement('div');
-                        toast.style.cssText = 'position:fixed;top:20px;right:20px;background:' + 
-                            (colors[type] || colors.info) + 
+                        toast.style.cssText = 'position:fixed;top:20px;right:20px;background:' +
+                            (colors[type] || colors.info) +
                             ';color:white;padding:1rem 1.5rem;border-radius:12px;' +
                             'box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;' +
                             'font-weight:600;animation:slideIn 0.3s ease;';
                         toast.textContent = message;
                         document.body.appendChild(toast);
-                        
-                        setTimeout(function() {
+
+                        setTimeout(function () {
                             toast.style.animation = 'slideOut 0.3s ease';
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 if (toast.parentNode) {
                                     document.body.removeChild(toast);
                                 }
@@ -888,17 +872,19 @@
                     transform: translateX(100%);
                     opacity: 0;
                 }
+
                 to {
                     transform: translateX(0);
                     opacity: 1;
                 }
             }
-            
+
             @keyframes slideOut {
                 from {
                     transform: translateX(0);
                     opacity: 1;
                 }
+
                 to {
                     transform: translateX(100%);
                     opacity: 0;
