@@ -174,7 +174,6 @@
                             <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1">
                             <label class="form-check-label small" for="remember">Remember me</label>
                         </div>
-                        <span class="small text-muted">Forgot password? Contact support.</span>
                     </div>
 
                     <div class="d-grid">

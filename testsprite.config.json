@@ -1,0 +1,16 @@
+{
+  "apiKey": "sk-user-64g11-KOovGhT0uKq9vJRunnbLKeq0RVzTCtR4mZc_37_RbzoZQ8AIRXvPjj7LQxCaM82cCKbOvNYvvqD_7CwgWh9tCiG0414ReTt1J9A81IgL9GZN2rlgyu4pqUwh2NKgc",
+  "projectPath": "D:\\admin-crud-git\\CRM-Minimal-Carbon",
+  "testFramework": "pest",
+  "localPort": 8000,
+  "baseUrl": "http://localhost:8000",
+  "features": {
+    "importExport": {
+      "enabled": true,
+      "routes": {
+        "import": "/admin/diamonds/import",
+        "export": "/admin/diamonds/export"
+      }
+    }
+  }
+}

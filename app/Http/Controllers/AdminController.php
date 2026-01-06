@@ -7,8 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
 
+/**
+ * Admin Management Controller
+ * Handles admin CRUD operations with document uploads (Aadhar, bank passbook)
+ */
 class AdminController extends Controller
 {
 
@@ -19,7 +26,7 @@ class AdminController extends Controller
             abort(403, 'Unauthorized');
         }
 
-    $query = Admin::where('is_super', false)->where('id', '<>', $current->id);
+        $query = Admin::where('id', '<>', $current->id);
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -64,34 +71,84 @@ class AdminController extends Controller
             'aadhar_front_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'aadhar_back_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'bank_passbook_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'family_member_phone' => 'nullable|numeric',
         ];
 
-        $validated = $request->validate($rules);
+        try {
+            $validated = $request->validate($rules);
 
-        $data = $request->only([
-            'name',
-            'email',
-            'phone_number',
-            'country_code',
-            'address',
-            'country',
-            'state',
-            'city',
-            'pincode'
-        ]);
+            DB::beginTransaction();
 
-        $data['password'] = Hash::make($validated['password']);
+            $data = $request->only([
+                'name',
+                'email',
+                'phone_number',
+                'country_code',
+                'address',
+                'country',
+                'state',
+                'city',
+                'pincode',
+                'family_member_phone'
+            ]);
 
-        foreach (['aadhar_front_image', 'aadhar_back_image', 'bank_passbook_image'] as $field) {
-            $uploadPath = $this->storeAdminDocument($request, $field);
-            if ($uploadPath) {
-                $data[$field] = $uploadPath;
+            $data['password'] = Hash::make($validated['password']);
+
+            // Create admin first
+            $admin = Admin::create($data);
+
+            // Upload documents - failure here won't prevent admin creation
+            $uploadedDocs = [];
+            $failedDocs = [];
+            foreach (['aadhar_front_image', 'aadhar_back_image', 'bank_passbook_image'] as $field) {
+                try {
+                    $uploadPath = $this->storeAdminDocument($request, $field);
+                    if ($uploadPath) {
+                        $admin->{$field} = $uploadPath;
+                        $uploadedDocs[] = $field;
+                    }
+                } catch (\Exception $e) {
+                    $failedDocs[] = $field;
+                    Log::warning('Admin document upload failed', [
+                        'admin_id' => $admin->id,
+                        'field' => $field,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
+
+            if (!empty($uploadedDocs)) {
+                $admin->save();
+            }
+
+            DB::commit();
+
+            Log::info('Admin created', [
+                'admin_id' => $admin->id,
+                'name' => $admin->name,
+                'email' => $admin->email,
+                'uploaded_docs' => $uploadedDocs,
+                'failed_docs' => $failedDocs,
+                'created_by' => $current->id
+            ]);
+
+            $message = 'Admin created successfully.';
+            if (!empty($failedDocs)) {
+                $message .= ' Some documents failed to upload: ' . implode(', ', $failedDocs);
+            }
+
+            return redirect()->route('admins.index')->with('success', $message);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'created_by' => $current->id
+            ]);
+            return back()->withInput()->with('error', 'Failed to create admin. Please try again.');
         }
-
-        Admin::create($data);
-
-        return redirect()->route('admins.index')->with('success', 'Admin created successfully.');
     }
 
     public function edit(Admin $admin)
@@ -125,36 +182,96 @@ class AdminController extends Controller
             'aadhar_front_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'aadhar_back_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'bank_passbook_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'family_member_phone' => 'nullable|numeric',
         ];
 
-        $validated = $request->validate($rules);
+        try {
+            $validated = $request->validate($rules);
 
-        $data = $request->only([
-            'name',
-            'email',
-            'phone_number',
-            'country_code',
-            'address',
-            'country',
-            'state',
-            'city',
-            'pincode'
-        ]);
+            DB::beginTransaction();
 
-        if (!empty($validated['password'])) {
-            $data['password'] = Hash::make($validated['password']);
-        }
+            $changes = [];
+            $data = $request->only([
+                'name',
+                'email',
+                'phone_number',
+                'country_code',
+                'address',
+                'country',
+                'state',
+                'city',
+                'pincode',
+                'family_member_phone'
+            ]);
 
-        foreach (['aadhar_front_image', 'aadhar_back_image', 'bank_passbook_image'] as $field) {
-            $uploadPath = $this->storeAdminDocument($request, $field, $admin->{$field});
-            if ($uploadPath) {
-                $data[$field] = $uploadPath;
+            // Track what changed
+            foreach ($data as $key => $value) {
+                if ($admin->{$key} != $value) {
+                    $changes[] = $key;
+                }
             }
+
+            if (!empty($validated['password'])) {
+                $data['password'] = Hash::make($validated['password']);
+                $changes[] = 'password';
+            }
+
+            // Update basic data first
+            $admin->update($data);
+
+            // Handle document uploads - failure here won't rollback admin update
+            $uploadedDocs = [];
+            $failedDocs = [];
+            foreach (['aadhar_front_image', 'aadhar_back_image', 'bank_passbook_image'] as $field) {
+                try {
+                    $uploadPath = $this->storeAdminDocument($request, $field, $admin->{$field});
+                    if ($uploadPath) {
+                        $admin->{$field} = $uploadPath;
+                        $uploadedDocs[] = $field;
+                        $changes[] = $field;
+                    }
+                } catch (\Exception $e) {
+                    $failedDocs[] = $field;
+                    Log::warning('Admin document update failed', [
+                        'admin_id' => $admin->id,
+                        'field' => $field,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            if (!empty($uploadedDocs)) {
+                $admin->save();
+            }
+
+            DB::commit();
+
+            Log::info('Admin updated', [
+                'admin_id' => $admin->id,
+                'changes' => $changes,
+                'uploaded_docs' => $uploadedDocs,
+                'failed_docs' => $failedDocs,
+                'updated_by' => $current->id
+            ]);
+
+            $message = 'Admin updated successfully.';
+            if (!empty($failedDocs)) {
+                $message .= ' Some documents failed to upload: ' . implode(', ', $failedDocs);
+            }
+
+            return redirect()->route('admins.index')->with('success', $message);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin update failed', [
+                'admin_id' => $admin->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'updated_by' => $current->id
+            ]);
+            return back()->withInput()->with('error', 'Failed to update admin. Please try again.');
         }
-
-        $admin->update($data);
-
-        return redirect()->route('admins.index')->with('success', 'Admin updated successfully.');
     }
 
     public function show(Admin $admin)
@@ -173,16 +290,93 @@ class AdminController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        foreach (['aadhar_front_image', 'aadhar_back_image', 'bank_passbook_image'] as $field) {
-            if ($admin->{$field}) {
-                Storage::disk('public')->delete($admin->{$field});
-            }
+        if ($admin->id === $current->id) {
+            return back()->with('error', 'You cannot delete your own account.');
         }
 
-        $admin->clearPermissionCache();
-        $admin->delete();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('admins.index')->with('success', 'Admin deleted successfully.');
+            $adminData = [
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'email' => $admin->email
+            ];
+
+            // Reassign related records to the current admin (or another designated admin)
+            \App\Models\Channel::where('created_by', $admin->id)->update(['created_by' => $current->id]);
+            \App\Models\Message::where('sender_id', $admin->id)->update(['sender_id' => $current->id]);
+
+            // Delete non-critical related records
+            \App\Models\MessageRead::where('user_id', $admin->id)->delete();
+
+
+            // Delete associated documents
+            $deletedDocs = [];
+            $failedDocs = [];
+            foreach (['aadhar_front_image', 'aadhar_back_image', 'bank_passbook_image'] as $field) {
+                if ($admin->{$field}) {
+                    try {
+                        if (Storage::disk('public')->delete($admin->{$field})) {
+                            $deletedDocs[] = $field;
+                        } else {
+                            $failedDocs[] = $field;
+                        }
+                    } catch (\Exception $e) {
+                        $failedDocs[] = $field;
+                        Log::warning('Failed to delete admin document', [
+                            'admin_id' => $admin->id,
+                            'field' => $field,
+                            'path' => $admin->{$field},
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+
+            $admin->clearPermissionCache();
+            $admin->delete();
+
+            DB::commit();
+
+            Log::info('Admin deleted', [
+                'admin' => $adminData,
+                'deleted_docs' => $deletedDocs,
+                'failed_docs' => $failedDocs,
+                'deleted_by' => $current->id
+            ]);
+
+            return redirect()->route('admins.index')->with('success', 'Admin deleted successfully. Associated channels and messages have been reassigned.');
+        } catch (QueryException $e) {
+            DB::rollBack();
+            // Check for foreign key constraint violation
+            if ($e->errorInfo[1] == 1451) {
+                Log::warning('Admin deletion blocked by foreign key constraint', [
+                    'admin_id' => $admin->id,
+                    'error' => $e->getMessage(),
+                    'deleted_by' => $current->id,
+                ]);
+                return back()->with('error', 'This admin cannot be deleted because they are linked to other data (e.g., they created channels or messages). Please reassign or remove the associated data first.');
+            }
+
+            // For other database-related errors
+            Log::error('Admin deletion failed with a database error', [
+                'admin_id' => $admin->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'deleted_by' => $current->id
+            ]);
+            return back()->with('error', 'Failed to delete admin due to a database error. Please try again.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin deletion failed', [
+                'admin_id' => $admin->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'deleted_by' => $current->id
+            ]);
+            return back()->with('error', 'Failed to delete admin. An unexpected error occurred.');
+        }
     }
 
     private function storeAdminDocument(Request $request, string $field, ?string $existingPath = null): ?string
@@ -225,15 +419,43 @@ class AdminController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $permissions = $request->input('permissions', []);
-        $admin->permissions()->sync($permissions);
-        
-        // Clear the cache for this admin's permissions
-        Cache::tags(['permissions', 'admin_permissions'])->forget('admin_permissions_' . $admin->id);
+        try {
+            DB::beginTransaction();
 
-        return redirect()
-            ->route('admins.permissions.show', $admin)
-            ->with('success', 'Permissions updated successfully.');
+            $oldPermissions = $admin->permissions()->pluck('permissions.id')->toArray();
+            $newPermissions = $request->input('permissions', []);
+
+            $admin->permissions()->sync($newPermissions);
+
+            // Clear the cache for this admin's permissions
+            Cache::tags(['permissions', 'admin_permissions'])->forget('admin_permissions_' . $admin->id);
+
+            DB::commit();
+
+            $added = array_diff($newPermissions, $oldPermissions);
+            $removed = array_diff($oldPermissions, $newPermissions);
+
+            Log::info('Admin permissions updated', [
+                'admin_id' => $admin->id,
+                'admin_name' => $admin->name,
+                'permissions_added' => count($added),
+                'permissions_removed' => count($removed),
+                'total_permissions' => count($newPermissions),
+                'updated_by' => $current->id
+            ]);
+
+            return redirect()
+                ->route('admins.permissions.show', $admin)
+                ->with('success', 'Permissions updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Permission update failed', [
+                'admin_id' => $admin->id,
+                'error' => $e->getMessage(),
+                'updated_by' => $current->id
+            ]);
+            return back()->with('error', 'Failed to update permissions. Please try again.');
+        }
     }
 
     /**
@@ -287,4 +509,3 @@ class AdminController extends Controller
         return view('notifications.index', compact('notifications'));
     }
 }
-

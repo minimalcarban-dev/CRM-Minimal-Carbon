@@ -197,10 +197,14 @@
                                     </td>
                                     <td>
                                         <div class="company-info">
-                                            <div class="company-avatar">
-                                                {{ strtoupper(substr($company->name, 0, 2)) }}
+                                            <div class="company-avatar" onclick="showCompanyModal({{ $company->id }})" style="cursor: pointer;">
+                                                @if($company->logo)
+                                                    <img src="{{ asset($company->logo) }}" alt="{{ $company->name }}">
+                                                @else
+                                                    {{ strtoupper(substr($company->name, 0, 2)) }}
+                                                @endif
                                             </div>
-                                            <span class="company-name">{{ $company->name }}</span>
+                                            <span class="company-name" onclick="showCompanyModal({{ $company->id }})" style="cursor: pointer;">{{ $company->name }}</span>
                                         </div>
                                     </td>
                                     <td>
@@ -249,8 +253,7 @@
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <form action="{{ route('companies.destroy', $company->id) }}" method="POST"
-                                                class="d-inline"
-                                                onsubmit="return confirm('Are you sure you want to delete this company? This action cannot be undone.');">
+                                                class="d-inline delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="action-btn action-btn-delete" title="Delete Company">
@@ -734,10 +737,10 @@
         }
 
         .company-avatar {
-            width: 44px;
-            height: 44px;
+            width: 250px;
+            height: auto;
             border-radius: 10px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            /* background: linear-gradient(135deg, var(--primary), var(--primary-dark)); */
             color: white;
             display: flex;
             align-items: center;
@@ -745,6 +748,15 @@
             font-weight: 700;
             font-size: 0.95rem;
             flex-shrink: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .company-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
         }
 
         .company-name {
@@ -1101,6 +1113,15 @@
                 }, 100 * (index + 1));
             });
 
+            // Handle delete confirmations
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const confirmed = await showConfirm('Delete this company?', 'This action cannot be undone', 'Yes, Delete', 'Cancel');
+                    if (confirmed) this.submit();
+                });
+            });
+
             // Add success message handling
             @if(session('success'))
                 if (typeof showAlert !== 'undefined') {
@@ -1109,5 +1130,8 @@
             @endif
             });
     </script>
+
+    <!-- Include Company Details Modal -->
+    @include('companies.show-modal')
 
 @endsection

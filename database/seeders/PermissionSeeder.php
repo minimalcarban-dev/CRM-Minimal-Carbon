@@ -73,6 +73,62 @@ class PermissionSeeder extends Seeder
             ['name' => 'Create Stone Colors', 'slug' => 'stone_colors.create', 'description' => 'Create stone colors', 'category' => 'stone_colors'],
             ['name' => 'Edit Stone Colors', 'slug' => 'stone_colors.edit', 'description' => 'Edit stone colors', 'category' => 'stone_colors'],
             ['name' => 'Delete Stone Colors', 'slug' => 'stone_colors.delete', 'description' => 'Delete stone colors', 'category' => 'stone_colors'],
+
+            // Diamond Clarities
+            ['name' => 'View Diamond Clarities', 'slug' => 'diamond_clarities.view', 'description' => 'View diamond clarities', 'category' => 'diamond_clarities'],
+            ['name' => 'Create Diamond Clarities', 'slug' => 'diamond_clarities.create', 'description' => 'Create diamond clarities', 'category' => 'diamond_clarities'],
+            ['name' => 'Edit Diamond Clarities', 'slug' => 'diamond_clarities.edit', 'description' => 'Edit diamond clarities', 'category' => 'diamond_clarities'],
+            ['name' => 'Delete Diamond Clarities', 'slug' => 'diamond_clarities.delete', 'description' => 'Delete diamond clarities', 'category' => 'diamond_clarities'],
+
+            // Diamond Cuts
+            ['name' => 'View Diamond Cuts', 'slug' => 'diamond_cuts.view', 'description' => 'View diamond cuts', 'category' => 'diamond_cuts'],
+            ['name' => 'Create Diamond Cuts', 'slug' => 'diamond_cuts.create', 'description' => 'Create diamond cuts', 'category' => 'diamond_cuts'],
+            ['name' => 'Edit Diamond Cuts', 'slug' => 'diamond_cuts.edit', 'description' => 'Edit diamond cuts', 'category' => 'diamond_cuts'],
+            ['name' => 'Delete Diamond Cuts', 'slug' => 'diamond_cuts.delete', 'description' => 'Delete diamond cuts', 'category' => 'diamond_cuts'],
+
+            // Diamonds
+            ['name' => 'View Diamonds', 'slug' => 'diamonds.view', 'description' => 'View diamonds list and details', 'category' => 'diamonds'],
+            ['name' => 'Create Diamonds', 'slug' => 'diamonds.create', 'description' => 'Create diamonds', 'category' => 'diamonds'],
+            ['name' => 'Edit Diamonds', 'slug' => 'diamonds.edit', 'description' => 'Edit diamonds', 'category' => 'diamonds'],
+            ['name' => 'Delete Diamonds', 'slug' => 'diamonds.delete', 'description' => 'Delete diamonds', 'category' => 'diamonds'],
+            ['name' => 'Assign Diamonds', 'slug' => 'diamonds.assign', 'description' => 'Assign diamonds to admins', 'category' => 'diamonds'],
+            ['name' => 'View Diamond Pricing', 'slug' => 'diamonds.view_pricing', 'description' => 'View diamond pricing details (per_ct, purchase_price, margin)', 'category' => 'diamonds'],
+
+            // Companies
+            ['name' => 'View Companies', 'slug' => 'companies.view', 'description' => 'View companies list and details', 'category' => 'companies'],
+            ['name' => 'Create Companies', 'slug' => 'companies.create', 'description' => 'Create new companies', 'category' => 'companies'],
+            ['name' => 'Edit Companies', 'slug' => 'companies.edit', 'description' => 'Edit existing companies', 'category' => 'companies'],
+            ['name' => 'Delete Companies', 'slug' => 'companies.delete', 'description' => 'Delete companies', 'category' => 'companies'],
+
+            // Parties
+            ['name' => 'View Parties', 'slug' => 'parties.view', 'description' => 'View parties list and details', 'category' => 'parties'],
+            ['name' => 'Create Parties', 'slug' => 'parties.create', 'description' => 'Create new parties', 'category' => 'parties'],
+            ['name' => 'Edit Parties', 'slug' => 'parties.edit', 'description' => 'Edit existing parties', 'category' => 'parties'],
+            ['name' => 'Delete Parties', 'slug' => 'parties.delete', 'description' => 'Delete parties', 'category' => 'parties'],
+
+            // Invoices
+            ['name' => 'View Invoices', 'slug' => 'invoices.view', 'description' => 'View invoices list and details', 'category' => 'invoices'],
+            ['name' => 'Create Invoices', 'slug' => 'invoices.create', 'description' => 'Create new invoices', 'category' => 'invoices'],
+            ['name' => 'Edit Invoices', 'slug' => 'invoices.edit', 'description' => 'Edit existing invoices', 'category' => 'invoices'],
+            ['name' => 'Delete Invoices', 'slug' => 'invoices.delete', 'description' => 'Delete invoices', 'category' => 'invoices'],
+            ['name' => 'Download Invoice PDF', 'slug' => 'invoices.pdf', 'description' => 'Download invoice as PDF', 'category' => 'invoices'],
+
+            // Meta Lead Inbox
+            ['name' => 'Access Meta Lead Inbox', 'slug' => 'meta_leads.access', 'description' => 'Access Meta Lead Inbox module', 'category' => 'meta_leads'],
+            ['name' => 'Meta Settings', 'slug' => 'meta_leads.settings', 'description' => 'Manage Meta/Facebook settings', 'category' => 'meta_leads'],
+
+            // Purchase Tracker
+            ['name' => 'View Purchases', 'slug' => 'purchases.view', 'description' => 'View purchase list and details', 'category' => 'purchases'],
+            ['name' => 'Create Purchases', 'slug' => 'purchases.create', 'description' => 'Create new purchases', 'category' => 'purchases'],
+            ['name' => 'Edit Purchases', 'slug' => 'purchases.edit', 'description' => 'Edit existing purchases', 'category' => 'purchases'],
+            ['name' => 'Delete Purchases', 'slug' => 'purchases.delete', 'description' => 'Delete purchases', 'category' => 'purchases'],
+
+            // Office Expenses
+            ['name' => 'View Expenses', 'slug' => 'expenses.view', 'description' => 'View expense list and details', 'category' => 'expenses'],
+            ['name' => 'Create Expenses', 'slug' => 'expenses.create', 'description' => 'Create new expenses', 'category' => 'expenses'],
+            ['name' => 'Edit Expenses', 'slug' => 'expenses.edit', 'description' => 'Edit existing expenses', 'category' => 'expenses'],
+            ['name' => 'Delete Expenses', 'slug' => 'expenses.delete', 'description' => 'Delete expenses', 'category' => 'expenses'],
+            ['name' => 'View Expense Reports', 'slug' => 'expenses.reports', 'description' => 'View monthly and annual expense reports', 'category' => 'expenses'],
         ];
 
         foreach ($perms as $p) {

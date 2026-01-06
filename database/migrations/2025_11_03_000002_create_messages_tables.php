@@ -12,12 +12,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('channel_id')->constrained()->cascadeOnDelete();
             $table->foreignId('sender_id')->constrained('admins');
+            $table->foreignId('reply_to_id')->nullable()->constrained('messages')->cascadeOnDelete(); // Self-referencing for threads
+            $table->integer('thread_count')->default(0); // Cache for number of replies
             // Body can be null for attachment-only messages
             $table->text('body')->nullable();
             $table->string('type')->default('text');
             $table->json('metadata')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['channel_id', 'reply_to_id']); // Performance index
         });
 
         Schema::create('message_reads', function (Blueprint $table) {

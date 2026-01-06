@@ -14,7 +14,15 @@ class StoneTypeSeeder extends Seeder
     public function run(): void
     {
         $stoneTypes = [
-            ['name' => 'Diamond'],
+            ['name' => 'Natural white diamond'],
+            ['name' => 'Natural salt and pepper diamond'],
+            ['name' => 'Natural black diamond'],
+            ['name' => 'Natural fancy diamond'],
+            ['name' => 'Natural brown diamond'],
+            ['name' => 'Lab white diamond'],
+            ['name' => 'Lab salt and pepper diamond'],
+            ['name' => 'Lab fancy diamond'],
+            ['name' => 'Lab champagne diamond'],
             ['name' => 'Ruby'],
             ['name' => 'Sapphire'],
             ['name' => 'Emerald'],
@@ -26,6 +34,15 @@ class StoneTypeSeeder extends Seeder
             ['name' => 'Aquamarine'],
             ['name' => 'Citrine'],
             ['name' => 'Tourmaline'],
+            ['name' => 'Tanzanite'],
+            ['name' => 'Zircon'],
+            ['name' => 'Spinel'],
+            ['name' => 'Peridot'],
+            ['name' => 'Kunzite'],
+            ['name' => 'Iolite'],
+            ['name' => 'Chrysoberyl'],
+            ['name' => 'Alexandrite'],
+            ['name' => 'Other'],
         ];
 
         foreach ($stoneTypes as $stoneType) {

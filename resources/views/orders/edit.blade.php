@@ -86,16 +86,7 @@
     @endif
 
     <div class="card-custom p-4">
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Oops!</strong> Please correct the following errors:
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <!-- Errors are displayed via the unified flash partial in layout -->
 
         <form action="{{ route('orders.update', $order->id) }}" method="POST" enctype="multipart/form-data"
             id="editOrderForm">
@@ -104,7 +95,8 @@
 
             <div class="mb-4">
                 <label class="form-label fw-semibold">Order Type <span class="text-danger">*</span></label>
-                <select name="order_type" id="order_type" class="form-select-custom" required>
+                {{-- Disabled in edit mode - order type cannot be changed after creation --}}
+                <select name="order_type_display" id="order_type" class="form-select-custom" disabled>
                     <option value="ready_to_ship" {{ $order->order_type == 'ready_to_ship' ? 'selected' : '' }}>Ready to Ship
                     </option>
                     <option value="custom_diamond" {{ $order->order_type == 'custom_diamond' ? 'selected' : '' }}>Custom
@@ -112,6 +104,11 @@
                     <option value="custom_jewellery" {{ $order->order_type == 'custom_jewellery' ? 'selected' : '' }}>Custom
                         Jewellery</option>
                 </select>
+                {{-- Hidden input to submit the actual value since disabled fields don't submit --}}
+                <input type="hidden" name="order_type" value="{{ $order->order_type }}">
+                <small class="text-muted d-block mt-1">
+                    <i class="bi bi-lock-fill me-1"></i> Order type cannot be changed after creation
+                </small>
             </div>
 
             <div id="orderFormFields">
@@ -120,7 +117,7 @@
                 </div>
             </div>
 
-            
+
         </form>
     </div>
 
@@ -132,8 +129,8 @@
 
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
             --secondary: #64748b;
             --dark: #1e293b;
             --gray: #64748b;
@@ -141,6 +138,59 @@
             --border: #e2e8f0;
             --danger: #ef4444;
             --success: #10b981;
+        }
+
+        /* Custom Button Styles */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.65rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, var(--primary-dark), #4338ca);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45);
+            color: white;
+        }
+
+        .btn-secondary-custom {
+            background: white;
+            color: var(--gray);
+            border: 2px solid var(--border);
+            padding: 0.6rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-secondary-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
         }
 
         /* Current Files Section */
@@ -542,12 +592,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                        <div class="preview-header">
-                                            <i class="bi bi-images"></i>
-                                            <span>Selected Images (${files.length})</span>
-                                        </div>
-                                        <div class="preview-grid" id="imagePreviewGrid"></div>
-                                    `;
+                                                <div class="preview-header">
+                                                    <i class="bi bi-images"></i>
+                                                    <span>Selected Images (${files.length})</span>
+                                                </div>
+                                                <div class="preview-grid" id="imagePreviewGrid"></div>
+                                            `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -558,9 +608,9 @@
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
                         previewItem.innerHTML = `
-                                                <img src="${e.target.result}" alt="${file.name}">
-                                                <div class="file-name">${file.name}</div>
-                                            `;
+                                                        <img src="${e.target.result}" alt="${file.name}">
+                                                        <div class="file-name">${file.name}</div>
+                                                    `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -579,12 +629,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                        <div class="preview-header">
-                                            <i class="bi bi-file-pdf"></i>
-                                            <span>Selected PDFs (${files.length})</span>
-                                        </div>
-                                        <div id="pdfPreviewList"></div>
-                                    `;
+                                                <div class="preview-header">
+                                                    <i class="bi bi-file-pdf"></i>
+                                                    <span>Selected PDFs (${files.length})</span>
+                                                </div>
+                                                <div id="pdfPreviewList"></div>
+                                            `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
@@ -594,14 +644,14 @@
                     previewItem.className = 'pdf-preview-item';
                     const fileSize = (file.size / 1024).toFixed(2);
                     previewItem.innerHTML = `
-                                            <div class="pdf-preview-icon">
-                                                <i class="bi bi-file-pdf-fill"></i>
-                                            </div>
-                                            <div class="pdf-preview-info">
-                                                <div class="pdf-preview-name">${file.name}</div>
-                                                <div class="pdf-preview-size">${fileSize} KB</div>
-                                            </div>
-                                        `;
+                                                    <div class="pdf-preview-icon">
+                                                        <i class="bi bi-file-pdf-fill"></i>
+                                                    </div>
+                                                    <div class="pdf-preview-info">
+                                                        <div class="pdf-preview-name">${file.name}</div>
+                                                        <div class="pdf-preview-size">${fileSize} KB</div>
+                                                    </div>
+                                                `;
                     list.appendChild(previewItem);
                 });
             }

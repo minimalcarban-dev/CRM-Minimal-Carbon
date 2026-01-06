@@ -13,16 +13,27 @@ if (token) {
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
 
-// Initialize Laravel Echo
+// Initialize Laravel Echo with runtime fallbacks if VITE_* envs are missing
+const fallbackKey = typeof window !== 'undefined' ? window.chatPusherKey : undefined;
+const fallbackCluster = typeof window !== 'undefined' ? window.chatPusherCluster : undefined;
+const envKey = import.meta?.env?.VITE_PUSHER_APP_KEY;
+const envCluster = import.meta?.env?.VITE_PUSHER_APP_CLUSTER;
+const envHost = import.meta?.env?.VITE_PUSHER_HOST;
+const envPort = import.meta?.env?.VITE_PUSHER_PORT;
+const envScheme = import.meta?.env?.VITE_PUSHER_SCHEME;
+
+const pusherKey = envKey || fallbackKey;
+const pusherCluster = envCluster || fallbackCluster || 'mt1';
+
 window.Pusher = Pusher;
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
-    wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
-    wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
-    wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
+    key: pusherKey,
+    cluster: pusherCluster,
+    wsHost: envHost ? envHost : `ws-${pusherCluster}.pusher.com`,
+    wsPort: envPort ?? 80,
+    wssPort: envPort ?? 443,
+    forceTLS: (envScheme ?? 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
     authEndpoint: '/admin/broadcasting/auth',
     auth: {

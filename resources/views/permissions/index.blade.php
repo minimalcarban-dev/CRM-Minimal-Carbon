@@ -13,12 +13,13 @@
         ->sortKeys();
 
     // Define known actions and badge colors
-    $actionOrder = ['view', 'create', 'edit', 'delete', 'assign_permissions', 'access'];
+    $actionOrder = ['view', 'create', 'edit', 'delete', 'assign', 'assign_permissions', 'access'];
     $badgeMap = [
         'view' => 'info',
         'create' => 'success',
         'edit' => 'warning',
         'delete' => 'danger',
+        'assign' => 'purple',
         'assign_permissions' => 'purple',
         'access' => 'primary',
     ];
@@ -28,8 +29,11 @@
         'create' => 'bi-plus-circle',
         'edit' => 'bi-pencil-square',
         'delete' => 'bi-trash',
+        'assign' => 'bi-person-check',
         'assign_permissions' => 'bi-shield-check',
         'access' => 'bi-door-open',
+        'view_pricing' => 'bi-currency-dollar',
+        'pdf' => 'bi-file-earmark-pdf',
     ];
 
     // Calculate high-level metrics
@@ -217,7 +221,7 @@
                                             @endif
                                             @if ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.delete'))
                                                 <form action="{{ route('permissions.delete', $perm) }}" method="POST" class="d-inline"
-                                                    onsubmit="return confirm('Are you sure you want to delete this permission?');">
+                                                    class="delete-form">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="action-btn action-btn-delete" title="Delete">
                                                         <i class="bi bi-trash"></i>
@@ -234,9 +238,9 @@
                                         @endif
                                         <div class="permission-meta">
                                             <code class="permission-slug" onclick="copySlug('{{ $perm->slug }}', this)">
-                                                            <i class="bi bi-code-slash"></i>
-                                                            {{ $perm->slug }}
-                                                        </code>
+                                                                        <i class="bi bi-code-slash"></i>
+                                                                        {{ $perm->slug }}
+                                                                    </code>
                                             <span class="permission-type">{{ ucfirst(str_replace('_', ' ', $action)) }}</span>
                                         </div>
                                     </div>
@@ -706,9 +710,24 @@
             color: var(--purple);
         }
 
+        .action-assign {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--purple);
+        }
+
         .action-access {
             background: rgba(99, 102, 241, 0.1);
             color: var(--primary);
+        }
+
+        .action-view_pricing {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .action-pdf {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
         }
 
         .collapse-icon {
@@ -813,6 +832,11 @@
             color: var(--purple);
         }
 
+        .badge-assign {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--purple);
+        }
+
         .badge-access {
             background: rgba(99, 102, 241, 0.1);
             color: var(--primary);
@@ -821,6 +845,16 @@
         .badge-other {
             background: var(--light-gray);
             color: var(--gray);
+        }
+
+        .badge-view_pricing {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-pdf {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
         }
 
         .permission-actions {
@@ -1265,6 +1299,15 @@
             const cards = document.querySelectorAll('.permission-card');
             cards.forEach((card, index) => {
                 card.style.animationDelay = `${(index % 6) * 0.05}s`;
+            });
+
+            // Handle delete confirmations
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const confirmed = await showConfirm('Delete this permission?', 'This action cannot be undone', 'Yes, Delete', 'Cancel');
+                    if (confirmed) this.submit();
+                });
             });
         });
     </script>

@@ -64,9 +64,9 @@
                     </div>
                 @endif
 
-                <form action="{{ route('companies.store') }}" method="POST" id="companyForm">
+                <form action="{{ route('companies.store') }}" method="POST" id="companyForm" enctype="multipart/form-data">
                     @csrf
-                    @include('companies.form')
+                    @include('companies.form', ['company' => null])
 
                     <div class="form-actions">
                         <a href="{{ route('companies.index') }}" class="btn-cancel">

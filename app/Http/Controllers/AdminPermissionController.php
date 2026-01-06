@@ -44,6 +44,20 @@ class AdminPermissionController extends Controller
         $request->validate([
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,id',
+            'is_super' => 'nullable',
+        ]);
+
+        // Update Super Admin status (hidden input sends '1' or '0')
+        $isSuperValue = $request->input('is_super') === '1';
+        $admin->is_super = $isSuperValue;
+        $admin->save();
+
+        Log::info('Super Admin status update attempt', [
+            'admin_id' => $admin->id,
+            'request_has_is_super' => $request->has('is_super'),
+            'request_is_super_value' => $request->input('is_super'),
+            'new_is_super_value' => $isSuperValue,
+            'admin_is_super_after_save' => $admin->fresh()->is_super,
         ]);
 
         $newPermissionIds = $request->input('permissions', []);

@@ -1,26 +1,115 @@
 @extends('layouts.admin')
 
-@section('title', 'Stone Type')
+@section('title', 'View Stone Type')
 
 @section('content')
-    <h3>Stone Type</h3>
+    <div class="attr-form-container">
+        <!-- Page Header -->
+        <div class="attr-page-header">
+            <div class="attr-header-content">
+                <div class="attr-header-left">
+                    <div class="attr-breadcrumb-nav">
+                        <a href="{{ route('admin.dashboard') }}" class="attr-breadcrumb-link">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <a href="{{ route('stone_types.index') }}" class="attr-breadcrumb-link">Stone Types</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <span class="attr-breadcrumb-current">{{ $item->name }}</span>
+                    </div>
+                    <h1 class="attr-page-title">
+                        <i class="bi bi-eye"></i>
+                        Stone Type Details
+                    </h1>
+                    <p class="attr-page-subtitle">View stone type information</p>
+                </div>
+                <div class="attr-header-right">
+                    <a href="{{ route('stone_types.index') }}" class="attr-btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Back to List</span>
+                    </a>
+                </div>
+            </div>
+        </div>
 
-    <dl class="row">
-        <dt class="col-sm-3">ID</dt>
-        <dd class="col-sm-9">{{ $item->id }}</dd>
+        <!-- Detail Card -->
+        <div class="attr-detail-card">
+            <div class="attr-detail-header">
+                <div class="attr-detail-info">
+                    <div class="attr-detail-icon">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <div class="attr-detail-title">
+                        <h2>{{ $item->name }}</h2>
+                        <p>Stone Type Information</p>
+                    </div>
+                </div>
+                <div class="attr-status-badge {{ $item->is_active ? 'active' : 'inactive' }}">
+                    <i class="bi bi-{{ $item->is_active ? 'check-circle' : 'x-circle' }}"></i>
+                    {{ $item->is_active ? 'Active' : 'Inactive' }}
+                </div>
+            </div>
 
-        <dt class="col-sm-3">Name</dt>
-        <dd class="col-sm-9">{{ $item->name }}</dd>
+            <div class="attr-detail-body">
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label">
+                        <i class="bi bi-hash"></i> ID
+                    </div>
+                    <div class="attr-detail-value">{{ $item->id }}</div>
+                </div>
 
-        <dt class="col-sm-3">Active</dt>
-        <dd class="col-sm-9">{{ $item->is_active ? 'Yes' : 'No' }}</dd>
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label">
+                        <i class="bi bi-tag"></i> Name
+                    </div>
+                    <div class="attr-detail-value">{{ $item->name }}</div>
+                </div>
 
-        <dt class="col-sm-3">Created</dt>
-        <dd class="col-sm-9">{{ $item->created_at?->format('Y-m-d') ?? '—' }}</dd>
-    </dl>
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label">
+                        <i class="bi bi-toggle-on"></i> Status
+                    </div>
+                    <div class="attr-detail-value">
+                        <span class="attr-status-badge {{ $item->is_active ? 'active' : 'inactive' }}">
+                            <i class="bi bi-{{ $item->is_active ? 'check-circle' : 'x-circle' }}"></i>
+                            {{ $item->is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </div>
+                </div>
 
-    <a href="{{ route('stone_types.index') }}" class="btn btn-secondary">Back</a>
-    @if ($currentAdmin && $currentAdmin->hasPermission('stone_types.edit'))
-        <a href="{{ route('stone_types.edit', $item->id) }}" class="btn btn-primary">Edit</a>
-    @endif
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label">
+                        <i class="bi bi-calendar"></i> Created
+                    </div>
+                    <div class="attr-detail-value">{{ $item->created_at?->format('M d, Y H:i') ?? 'N/A' }}</div>
+                </div>
+
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label">
+                        <i class="bi bi-clock"></i> Updated
+                    </div>
+                    <div class="attr-detail-value">{{ $item->updated_at?->format('M d, Y H:i') ?? 'N/A' }}</div>
+                </div>
+
+                <!-- Actions -->
+                <div class="attr-detail-actions">
+                    <a href="{{ route('stone_types.edit', $item->id) }}" class="attr-btn-edit">
+                        <i class="bi bi-pencil"></i>
+                        <span>Edit</span>
+                    </a>
+                    <form action="{{ route('stone_types.destroy', $item->id) }}" method="POST" style="display: inline;"
+                        onsubmit="return confirm('Are you sure you want to delete this stone type?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="attr-btn-delete">
+                            <i class="bi bi-trash"></i>
+                            <span>Delete</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @include('partials.attribute-styles')
 @endsection

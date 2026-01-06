@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -21,9 +20,14 @@ return new class extends Migration
                 ->comment('Type of order');
 
             // ===== CLIENT & ORDER DETAILS =====
-            $table->text('client_details')->comment('Client information or notes');
+            $table->string('client_name', 191)->comment('Client full name');
+            $table->text('client_address')->comment('Client full address');
+            $table->string('client_mobile', 40)->nullable()->comment('Client mobile number');
+            $table->string('client_tax_id', 100)->nullable()->comment('Client tax / GST ID');
+            $table->string('client_email', 191)->comment('Client email address');
             $table->text('jewellery_details')->nullable()->comment('Jewellery details for relevant orders');
             $table->text('diamond_details')->nullable()->comment('Diamond details for relevant orders');
+            $table->string('diamond_sku')->nullable()->comment('Optional SKU or identifier for diamond');
 
             // ===== FILES =====
             $table->json('images')->nullable()->comment('Up to 10 uploaded image paths');
@@ -35,16 +39,29 @@ return new class extends Migration
             $table->unsignedBigInteger('ring_size_id')->nullable();
             $table->unsignedBigInteger('setting_type_id')->nullable();
             $table->unsignedBigInteger('earring_type_id')->nullable();
+            $table->string('product_other')->nullable()->comment('Optional other product type (e.g., Bracelet)');
             $table->unsignedBigInteger('company_id');
 
             // ===== STATUS & NOTES =====
             $table->enum('note', ['priority', 'non_priority'])->nullable()->comment('Order priority');
             $table->enum('diamond_status', [
-                'processed',
-                'completed',
-                'diamond_purchased',
-                'factory_making',
-                'diamond_completed'
+                'r_order_in_process',
+                'r_order_shipped',
+                'd_diamond_in_discuss',
+                'd_diamond_in_making',
+                'd_diamond_completed',
+                'd_diamond_in_certificate',
+                'd_order_shipped',
+                'j_diamond_in_progress',
+                'j_diamond_completed',
+                'j_diamond_in_discuss',
+                'j_cad_in_progress',
+                'j_cad_done',
+                'j_order_completed',
+                'j_order_in_qc',
+                'j_qc_done',
+                'j_order_shipped',
+                'j_order_hold'
             ])->nullable()->comment('Production progress');
 
             // ===== FINANCIALS =====

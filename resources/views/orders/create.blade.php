@@ -14,33 +14,18 @@
                     </h2>
                     <p class="page-subtitle mb-0">Fill the details below to create a new order entry</p>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Back again to Orders
-                    </a>
-                    <button type="submit" form="orderForm" class="btn btn-primary">
+                <div class="header-actions">
+                    <button type="submit" form="orderForm" class="btn-primary-custom">
                         <i class="bi bi-check-circle me-2"></i>Create Order
                     </button>
+                    <a href="{{ route('orders.index') }}" class="btn-secondary-custom">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Orders
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Error Alert -->
-        @if ($errors->any())
-            <div class="alert-card danger mb-4">
-                <div class="alert-icon">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                </div>
-                <div class="alert-content">
-                    <h5 class="alert-title">Please Correct the Following Errors</h5>
-                    <ul class="error-list">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        @endif
+        <!-- Errors are displayed via the unified flash partial in layout -->
 
         <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" id="orderForm">
             @csrf
@@ -141,6 +126,59 @@
                 --danger: #ef4444;
                 --success: #10b981;
                 --warning: #f59e0b;
+            }
+
+            /* Custom Button Styles */
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .btn-primary-custom {
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                color: white;
+                padding: 0.65rem 1.5rem;
+                border-radius: 12px;
+                border: none;
+                font-weight: 600;
+                font-size: 0.95rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+            }
+
+            .btn-primary-custom:hover {
+                background: linear-gradient(135deg, var(--primary-dark), #4338ca);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45);
+                color: white;
+            }
+
+            .btn-secondary-custom {
+                background: white;
+                color: var(--gray);
+                border: 2px solid var(--border);
+                padding: 0.6rem 1.25rem;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+            }
+
+            .btn-secondary-custom:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                background: rgba(99, 102, 241, 0.05);
             }
 
             /* Page Header */
@@ -492,6 +530,76 @@
             }
         </style>
     @endpush
+    @push('scripts')
+        <script>
+            (function () {
+                const form = document.getElementById('orderForm');
+                if (!form) return;
+
+                // Show a blocking modal (SweetAlert2 style) and prevent double-submit
+                function showBlockingLoader() {
+                    const show = () => {
+                        try {
+                            Swal.fire({
+                                title: '<span style="color: #1e293b; font-weight: 700;">Creating Order</span>',
+                                html: '<span style="color: #64748b;">Please wait — processing your order...</span>',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                showConfirmButton: false,
+                                backdrop: 'rgba(30, 41, 59, 0.6)',
+                                customClass: {
+                                    popup: 'swal-themed-popup'
+                                },
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                    // Style the loading spinner to match theme
+                                    const loader = document.querySelector('.swal2-loader');
+                                    if (loader) {
+                                        loader.style.borderColor = '#6366f1 transparent #6366f1 transparent';
+                                    }
+                                }
+                            });
+                        } catch (e) {
+                            // Fallback: create a styled overlay
+                            if (!document.getElementById('__simple_block_loader')) {
+                                const o = document.createElement('div');
+                                o.id = '__simple_block_loader';
+                                o.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(30,41,59,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;';
+                                o.innerHTML = `
+                                            <div style="background:white;border-radius:16px;padding:2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                                                <div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+                                                <div style="font-size:1.25rem;font-weight:700;color:#1e293b;margin-bottom:0.5rem;">Creating Order</div>
+                                                <div style="color:#64748b;font-size:0.95rem;">Please wait — processing your order...</div>
+                                            </div>
+                                            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+                                        `;
+                                document.body.appendChild(o);
+                            }
+                        }
+                    };
+
+                    if (window.Swal) return show();
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js';
+                    s.onload = show;
+                    document.head.appendChild(s);
+                }
+
+                form.addEventListener('submit', function (e) {
+                    if (form.dataset.submitting === '1') {
+                        e.preventDefault();
+                        return;
+                    }
+                    form.dataset.submitting = '1';
+                    // disable native buttons immediately
+                    const externalBtns = document.querySelectorAll(`button[type="submit"][form="${form.id}"]`);
+                    const internalBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+                    Array.from(externalBtns).concat(Array.from(internalBtns)).forEach(b => b.disabled = true);
+                    showBlockingLoader();
+                });
+            })();
+        </script>
+    @endpush
 
     @push('scripts')
         <script>
@@ -513,11 +621,11 @@
                 function loadOrderForm(type) {
                     // Show loading state
                     formContainer.innerHTML = `
-                                                        <div class="loading-state">
-                                                            <div class="loading-spinner"></div>
-                                                            <p class="loading-text">Loading order form...</p>
-                                                        </div>
-                                                    `;
+                                                                        <div class="loading-state">
+                                                                            <div class="loading-spinner"></div>
+                                                                            <p class="loading-text">Loading order form...</p>
+                                                                        </div>
+                                                                    `;
 
                     // Fetch form
                     fetch(`/admin/orders/form/${type}`)
@@ -566,16 +674,16 @@
                         .catch(error => {
                             console.error('Error loading form:', error);
                             formContainer.innerHTML = `
-                                                                <div class="alert-card danger">
-                                                                    <div class="alert-icon">
-                                                                        <i class="bi bi-exclamation-triangle-fill"></i>
-                                                                    </div>
-                                                                    <div class="alert-content">
-                                                                        <h5 class="alert-title">Error Loading Form</h5>
-                                                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
-                                                                    </div>
-                                                                </div>
-                                                            `;
+                                                                                <div class="alert-card danger">
+                                                                                    <div class="alert-icon">
+                                                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                                    </div>
+                                                                                    <div class="alert-content">
+                                                                                        <h5 class="alert-title">Error Loading Form</h5>
+                                                                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            `;
                             if (submitButton) submitButton.style.display = 'none';
                             showToastNotification('Failed to load order form', 'error');
                         });

@@ -62,7 +62,7 @@
         <!-- Admins Grid -->
         <div class="admins-grid">
             @forelse ($admins as $admin)
-                <div class="admin-card">
+                <div class="admin-card {{ $admin->is_super ? 'admin-card-super' : '' }}">
                     <div class="admin-header">
                         <div class="admin-avatar">
                             {{ strtoupper(substr($admin->name, 0, 2)) }}
@@ -116,8 +116,7 @@
                             </a>
                         @endif
                         @if ($currentAdmin && $currentAdmin->hasPermission('admins.delete'))
-                            <form action="{{ route('admins.destroy', $admin) }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Are you sure you want to delete this admin?');">
+                            <form action="{{ route('admins.destroy', $admin) }}" method="POST" class="d-inline" class="delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="action-btn action-btn-delete" title="Delete">
@@ -387,6 +386,16 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
 
+        /* Super Admin Card - Golden Border Styling */
+        .admin-card-super {
+            border: 2px solid #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fef9c3 100%);
+        }
+
+        .admin-card-super .admin-avatar {
+            background: linear-gradient(135deg, #f59e0b, #b45309);
+        }
+
         .admin-header {
             display: flex;
             justify-content: space-between;
@@ -471,7 +480,7 @@
         }
 
         /* Ensure forms inside the actions row behave like the other action buttons
-               so the delete button aligns and sizes consistently with anchors. */
+                   so the delete button aligns and sizes consistently with anchors. */
         .admin-actions form.d-inline {
             display: flex;
             flex: 1;
@@ -594,4 +603,16 @@
             }
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const confirmed = await showConfirm('Delete this admin?', 'This action cannot be undone', 'Yes, Delete', 'Cancel');
+                    if (confirmed) this.submit();
+                });
+            });
+        });
+    </script>
 @endsection

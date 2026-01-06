@@ -182,6 +182,16 @@
                                        value="{{ old('phone_number', $admin->phone_number) }}" placeholder="1234567890" required>
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <i class="bi bi-person-lines-fill me-2"></i>Family Member Phone
+                                </label>
+                                <input type="text" name="family_member_phone" maxlength="10" class="form-control-modern"
+                                       value="{{ old('family_member_phone', $admin->family_member_phone) }}" placeholder="1234567890">
+                                <small class="form-text text-muted">For security purposes</small>
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <div class="form-group-modern">
                                 <label class="form-label-modern">

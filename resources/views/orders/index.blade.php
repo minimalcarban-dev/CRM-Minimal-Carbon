@@ -7,17 +7,49 @@
     $statusColors = [
         'processed' => 'info',
         'completed' => 'success',
-        'diamond_purchased' => 'warning',
-        'factory_making' => 'purple',
-        'diamond_completed' => 'success',
+
+        // Custom Diamond
+        'd_diamond_in_discuss' => 'info',
+        'd_diamond_in_making' => 'warning',
+        'd_diamond_completed' => 'success',
+        'd_diamond_in_certificate' => 'purple',
+        'd_order_shipped' => 'dark',
+
+        // Custom Jewellery
+        'j_diamond_in_progress' => 'info',
+        'j_diamond_completed' => 'success',
+        'j_diamond_in_discuss' => 'cyan',
+        'j_cad_in_progress' => 'warning',
+        'j_cad_done' => 'purple',
+        'j_order_completed' => 'success',
+        'j_order_in_qc' => 'warning',
+        'j_qc_done' => 'success',
+        'j_order_shipped' => 'dark',
+        'j_order_hold' => 'danger',
     ];
 
     $statusIcons = [
         'processed' => 'bi-arrow-repeat',
         'completed' => 'bi-check-circle',
-        'diamond_purchased' => 'bi-gem',
-        'factory_making' => 'bi-gear',
-        'diamond_completed' => 'bi-check-circle-fill',
+
+        // Custom Diamond
+        'd_diamond_in_discuss' => 'bi-chat-dots',
+        'd_diamond_in_making' => 'bi-tools',
+        'd_diamond_completed' => 'bi-gem',
+        'd_diamond_in_certificate' => 'bi-file-earmark-text',
+        'd_order_shipped' => 'bi-truck',
+
+        // Custom Jewellery
+        'j_diamond_in_progress' => 'bi-gem',
+        'j_diamond_completed' => 'bi-check-circle',
+        'j_diamond_in_discuss' => 'bi-chat-dots',
+        'j_cad_in_progress' => 'bi-pencil-square',
+        'j_cad_done' => 'bi-file-check',
+        'j_order_completed' => 'bi-award',
+        'j_order_in_qc' => 'bi-search',
+        'j_qc_done' => 'bi-check-all',
+        'j_order_shipped' => 'bi-truck',
+        'j_order_hold' => 'bi-pause-circle',
     ];
 @endphp
 
@@ -51,10 +83,39 @@
                 </div>
             </div>
         </div>
+        <style>
+            .stats-grid a.stat-card {
+                display: flex;
+                gap: 1rem;
+                text-decoration: none;
+                color: inherit;
+                padding: 1rem;
+                border-radius: 12px;
+            }
+
+            .stats-grid .stat-card .stat-icon {
+                flex-shrink: 0;
+            }
+
+            .stats-grid a.stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            }
+
+            .stats-grid a.active-filter {
+                outline: 3px solid rgba(99, 102, 241, 0.12);
+                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+            }
+        </style>
 
         <!-- Stats Cards -->
         <div class="stats-grid">
-            <div class="stat-card stat-card-primary">
+            {{-- Total Orders - clicking clears order_type filter --}}
+            @php
+                $baseParams = request()->except(['order_type', 'page']);
+            @endphp
+            <a href="{{ route('orders.index', $baseParams) }}"
+                class="stat-card stat-card-primary {{ request('order_type') ? '' : 'active-filter' }}">
                 <div class="stat-icon">
                     <i class="bi bi-cart-check"></i>
                 </div>
@@ -65,9 +126,13 @@
                         <i class="bi bi-graph-up"></i> All orders
                     </div>
                 </div>
-            </div>
+            </a>
 
-            <div class="stat-card stat-card-info">
+            {{-- Ready to Ship --}}
+            @php $paramsReady = array_merge(request()->except(['page']), ['order_type' => 'ready_to_ship']); @endphp
+            @php $readyHref = request('order_type') === 'ready_to_ship' ? route('orders.index', request()->except(['order_type', 'page'])) : route('orders.index', $paramsReady); @endphp
+            <a href="{{ $readyHref }}"
+                class="stat-card stat-card-info {{ request('order_type') === 'ready_to_ship' ? 'active-filter' : '' }}">
                 <div class="stat-icon">
                     <i class="bi bi-box-seam"></i>
                 </div>
@@ -78,9 +143,13 @@
                         <i class="bi bi-truck"></i> In stock
                     </div>
                 </div>
-            </div>
+            </a>
 
-            <div class="stat-card stat-card-warning">
+            {{-- Custom Diamond --}}
+            @php $paramsDiamond = array_merge(request()->except(['page']), ['order_type' => 'custom_diamond']); @endphp
+            @php $diamondHref = request('order_type') === 'custom_diamond' ? route('orders.index', request()->except(['order_type', 'page'])) : route('orders.index', $paramsDiamond); @endphp
+            <a href="{{ $diamondHref }}"
+                class="stat-card stat-card-warning {{ request('order_type') === 'custom_diamond' ? 'active-filter' : '' }}">
                 <div class="stat-icon">
                     <i class="bi bi-gem"></i>
                 </div>
@@ -91,9 +160,13 @@
                         <i class="bi bi-star"></i> Custom
                     </div>
                 </div>
-            </div>
+            </a>
 
-            <div class="stat-card stat-card-success">
+            {{-- Custom Jewellery --}}
+            @php $paramsJewellery = array_merge(request()->except(['page']), ['order_type' => 'custom_jewellery']); @endphp
+            @php $jewelleryHref = request('order_type') === 'custom_jewellery' ? route('orders.index', request()->except(['order_type', 'page'])) : route('orders.index', $paramsJewellery); @endphp
+            <a href="{{ $jewelleryHref }}"
+                class="stat-card stat-card-success {{ request('order_type') === 'custom_jewellery' ? 'active-filter' : '' }}">
                 <div class="stat-icon">
                     <i class="bi bi-award"></i>
                 </div>
@@ -104,7 +177,23 @@
                         <i class="bi bi-hammer"></i> Crafted
                     </div>
                 </div>
-            </div>
+            </a>
+
+            {{-- Total Shipped Orders --}}
+            @php $shippedHref = request('shipped') === '1' ? route('orders.index', request()->except(['shipped', 'page'])) : route('orders.index', array_merge(request()->except(['page', 'order_type', 'diamond_status']), ['shipped' => '1'])); @endphp
+            <a href="{{ $shippedHref }}"
+                class="stat-card stat-card-dark {{ request('shipped') === '1' ? 'active-filter' : '' }}">
+                <div class="stat-icon">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Shipped</div>
+                    <div class="stat-value">{{ $shippedOrdersCount ?? 0 }}</div>
+                    <div class="stat-trend">
+                        <i class="bi bi-check-all"></i> Delivered
+                    </div>
+                </div>
+            </a>
         </div>
 
         <!-- Filter Section -->
@@ -131,22 +220,92 @@
 
                 <select name="diamond_status" class="filter-select">
                     <option value="">All Diamond Status</option>
-                    <option value="processed" {{ request('diamond_status') == 'processed' ? 'selected' : '' }}>
-                        Processed
+
+                    {{-- Ready to Ship Statuses --}}
+                    <option value="r_order_in_process" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process</option>
+                    <option value="r_order_shipped" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
+
+                    {{-- Custom Diamond Statuses --}}
+                    <option value="d_diamond_in_discuss" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
                     </option>
-                    <option value="completed" {{ request('diamond_status') == 'completed' ? 'selected' : '' }}>
-                        Completed
+                    <option value="d_diamond_in_making" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making</option>
+                    <option value="d_diamond_completed" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed</option>
+                    <option value="d_diamond_in_certificate" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
+                        Certificate</option>
+                    <option value="d_order_shipped" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
+
+                    {{-- Custom Jewellery Statuses --}}
+                    <option value="j_diamond_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In Progress
                     </option>
-                    <option value="diamond_purchased" {{ request('diamond_status') == 'diamond_purchased' ? 'selected' : '' }}>
-                        Diamond Purchased
+                    <option value="j_diamond_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed</option>
+                    <option value="j_diamond_in_discuss" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
                     </option>
-                    <option value="factory_making" {{ request('diamond_status') == 'factory_making' ? 'selected' : '' }}>
-                        Factory Making
-                    </option>
-                    <option value="diamond_completed" {{ request('diamond_status') == 'diamond_completed' ? 'selected' : '' }}>
-                        Diamond Completed
-                    </option>
+                    <option value="j_cad_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress</option>
+                    <option value="j_cad_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
+                    <option value="j_order_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed</option>
+                    <option value="j_order_in_qc" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
+                    <option value="j_qc_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
+                    <option value="j_order_shipped" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
+                    <option value="j_order_hold" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
                 </select>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const orderTypeSelect = document.querySelector('select[name="order_type"]');
+                        const statusSelect = document.querySelector('select[name="diamond_status"]');
+                        const statusOptions = statusSelect.querySelectorAll('.status-option');
+
+                        function updateStatusDropdown() {
+                            const selectedType = orderTypeSelect.value;
+
+                            // 1. If Ready to Ship selected, hide the status dropdown completely (as per user request)
+                            if (selectedType === 'ready_to_ship') {
+                                statusSelect.style.display = 'none';
+                                statusSelect.value = ''; // Clear selection
+                            } else {
+                                statusSelect.style.display = 'block';
+                            }
+
+                            // 2. Filter options based on type
+                            statusOptions.forEach(option => {
+                                if (!selectedType) {
+                                    // If no type selected, show all
+                                    option.style.display = 'block';
+                                } else if (selectedType === 'custom_diamond') {
+                                    if (option.classList.contains('custom_diamond')) {
+                                        option.style.display = 'block';
+                                    } else {
+                                        option.style.display = 'none';
+                                    }
+                                } else if (selectedType === 'custom_jewellery') {
+                                    if (option.classList.contains('custom_jewellery')) {
+                                        option.style.display = 'block';
+                                    } else {
+                                        option.style.display = 'none';
+                                    }
+                                } else if (selectedType === 'ready_to_ship') {
+                                    if (option.classList.contains('ready_to_ship')) {
+                                        option.style.display = 'block';
+                                    } else {
+                                        option.style.display = 'none';
+                                    }
+                                }
+                            });
+
+                            // If current selected status is hidden/invalid for the new type, reset to 'All'
+                            const currentSelected = statusSelect.selectedOptions[0];
+                            if (currentSelected && currentSelected.style.display === 'none' && currentSelected.value !== '') {
+                                statusSelect.value = '';
+                            }
+                        }
+
+                        // Run on load
+                        updateStatusDropdown();
+
+                        // Run on change
+                        orderTypeSelect.addEventListener('change', updateStatusDropdown);
+                    });
+                </script>
 
                 <button type="submit" class="btn-filter">
                     <i class="bi bi-funnel"></i>
@@ -212,6 +371,12 @@
                                 </th>
                                 <th>
                                     <div class="th-content">
+                                        <i class="bi bi-calendar-plus"></i>
+                                        <span>Created Date</span>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="th-content">
                                         <i class="bi bi-calendar-event"></i>
                                         <span>Dispatch Date</span>
                                     </div>
@@ -238,7 +403,8 @@
                                     </td>
                                     <td>
                                         <div class="client-info">
-                                            <span class="client-name">{{ Str::limit($order->client_details, 30) }}</span>
+                                            <span
+                                                class="client-name">{{ Str::limit($order->display_client_name ?? ($order->client_details ?? ''), 30) }}</span>
                                         </div>
                                     </td>
                                     <td>
@@ -283,6 +449,16 @@
                                         </span>
                                     </td>
                                     <td>
+                                        @if($order->created_at)
+                                            <div class="date-info">
+                                                <span class="date-main">{{ $order->created_at->format('M d, Y') }}</span>
+                                                <span class="date-time">{{ $order->created_at->format('l') }}</span>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
                                         @if($order->dispatch_date)
                                             <div class="date-info">
                                                 <span
@@ -308,18 +484,24 @@
                                                 title="View Order">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ route('orders.edit', $order->id) }}" class="action-btn action-btn-edit"
-                                                title="Edit Order">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <form action="{{ route('orders.destroy', $order->id) }}" method="POST" class="d-inline"
-                                                onsubmit="return confirm('Are you sure you want to delete this order? This action cannot be undone.');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="action-btn action-btn-delete" title="Delete Order">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+
+                                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.edit']))
+                                                <a href="{{ route('orders.edit', $order->id) }}" class="action-btn action-btn-edit"
+                                                    title="Edit Order">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            @endif
+
+                                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
+                                                <form action="{{ route('orders.destroy', $order->id) }}" method="POST"
+                                                    class="d-inline delete-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="action-btn action-btn-delete" title="Delete Order">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -569,6 +751,19 @@
             color: var(--info);
         }
 
+        .stat-card-dark {
+            border-color: rgba(30, 41, 59, 0.1);
+        }
+
+        .stat-card-dark:hover {
+            border-color: var(--dark);
+        }
+
+        .stat-card-dark .stat-icon {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.1), rgba(30, 41, 59, 0.05));
+            color: var(--dark);
+        }
+
         .stat-content {
             flex: 1;
         }
@@ -752,13 +947,30 @@
             width: 80px;
         }
 
+
         .th-actions {
-            width: 180px;
+            width: 140px;
             text-align: center;
         }
 
         .th-actions .th-content {
             justify-content: center;
+        }
+
+        /* Compact column widths to prevent horizontal scroll */
+        .orders-table th,
+        .orders-table td {
+            padding: 1rem 0.75rem;
+        }
+
+        .date-info {
+            min-width: 90px;
+        }
+
+        .order-type-badge,
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.6rem;
         }
 
         .table-row {
@@ -875,10 +1087,21 @@
             color: var(--purple);
         }
 
+        .status-dark {
+            background: rgba(30, 41, 59, 0.1);
+            color: var(--dark);
+        }
+
+        .status-cyan {
+            background: rgba(6, 182, 212, 0.1);
+            color: #0891b2;
+        }
+
         .amount-value {
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 0.9rem;
             color: var(--success);
+            white-space: nowrap;
         }
 
         .creator-info {
@@ -909,16 +1132,17 @@
         .date-info {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.15rem;
         }
 
         .date-main {
             font-weight: 500;
             color: var(--dark);
+            font-size: 0.8rem;
         }
 
         .date-time {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             color: var(--gray);
         }
 
@@ -1225,6 +1449,24 @@
                 setTimeout(() => {
                     card.style.opacity = '1';
                 }, 100 * (index + 1));
+            });
+
+            // Handle delete confirmations with SweetAlert2
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const confirmed = await showConfirm(
+                        'Are you sure you want to delete this order?',
+                        'This action cannot be undone',
+                        'Yes, Delete',
+                        'Cancel'
+                    );
+
+                    if (confirmed) {
+                        this.submit();
+                    }
+                });
             });
         });
     </script>

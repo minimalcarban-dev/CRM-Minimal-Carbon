@@ -84,6 +84,14 @@
                         </div>
                         <div class="info-item">
                             <div class="info-label">
+                                <i class="bi bi-person-lines-fill me-2"></i>Family Member Phone
+                            </div>
+                            <div class="info-value">
+                                {{ $admin->family_member_phone ?: 'Not provided' }}
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">
                                 <i class="bi bi-envelope me-2"></i>Email Address
                             </div>
                             <div class="info-value">
@@ -198,8 +206,7 @@
                                     <div class="document-preview">
                                         @if ($admin->aadhar_back_image)
                                             <img src="{{ Storage::url($admin->aadhar_back_image) }}" alt="Aadhar Back"
-                                                class="document-image"
-                                                onclick="openImageModal(this.src, 'Aadhar Back')" />
+                                                class="document-image" onclick="openImageModal(this.src, 'Aadhar Back')" />
                                             <div class="document-overlay">
                                                 <i class="bi bi-eye"></i>
                                                 <span>Click to view</span>
@@ -223,9 +230,8 @@
                                     </div>
                                     <div class="document-preview">
                                         @if ($admin->bank_passbook_image)
-                                            <img src="{{ Storage::url($admin->bank_passbook_image) }}"
-                                                alt="Bank Passbook" class="document-image"
-                                                onclick="openImageModal(this.src, 'Bank Passbook')" />
+                                            <img src="{{ Storage::url($admin->bank_passbook_image) }}" alt="Bank Passbook"
+                                                class="document-image" onclick="openImageModal(this.src, 'Bank Passbook')" />
                                             <div class="document-overlay">
                                                 <i class="bi bi-eye"></i>
                                                 <span>Click to view</span>
@@ -755,7 +761,7 @@
             }
 
             // Close modal on Escape key
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     closeImageModal();
                 }

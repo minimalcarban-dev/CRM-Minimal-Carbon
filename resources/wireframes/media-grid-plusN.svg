@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420" style="background:#fafafa;font-family:Arial,Helvetica,sans-serif">
+  <defs>
+    <style>
+      .card { fill:#fff; stroke:#e6eef8; stroke-width:1.5; rx:10; }
+      .title { font-size:18px; fill:#111827; font-weight:700 }
+      .subtitle { font-size:13px; fill:#6b7280 }
+      .grid-item { fill:#f3f4f6; stroke:#e6eef8; rx:8 }
+      .thumb { fill:#dbeafe }
+      .count-badge { font-size:12px; fill:#374151; }
+      .overlay { fill:rgba(0,0,0,0.56); }
+      .overlay-text { fill:#fff; font-size:20px; font-weight:700 }
+      .show-more { font-size:12px; fill:#2563eb; text-decoration:underline }
+      .note { font-size:12px; fill:#374151 }
+    </style>
+  </defs>
+
+  <!-- Card background -->
+  <rect x="20" y="20" width="720" height="380" class="card" />
+
+  <!-- Header -->
+  <text x="40" y="52" class="title">Media <tspan class="subtitle">(6)</tspan></text>
+
+  <!-- Collapse chevron (visual) -->
+  <g transform="translate(680,34)">
+    <rect x="-26" y="-10" width="44" height="28" rx="6" fill="#f8fafc" stroke="#e6eef8"/>
+    <text x="-4" y="8" font-size="14" fill="#6b7280">▾</text>
+  </g>
+
+  <!-- Grid (3 columns x 2 rows) -->
+  <!-- positions: start at x=40,y=80 cell size 160 spacing 16 -->
+  <!-- Render first 5 thumbnails normally -->
+  <g id="grid" transform="translate(40,80)">
+    <!-- row 1 -->
+    <rect class="grid-item" x="0" y="0" width="160" height="120" />
+    <rect class="thumb" x="8" y="8" width="144" height="104" rx="6" />
+
+    <rect class="grid-item" x="176" y="0" width="160" height="120" />
+    <rect class="thumb" x="184" y="8" width="144" height="104" rx="6" />
+
+    <rect class="grid-item" x="352" y="0" width="160" height="120" />
+    <rect class="thumb" x="360" y="8" width="144" height="104" rx="6" />
+
+    <!-- row 2 -->
+    <rect class="grid-item" x="0" y="136" width="160" height="120" />
+    <rect class="thumb" x="8" y="144" width="144" height="104" rx="6" />
+
+    <rect class="grid-item" x="176" y="136" width="160" height="120" />
+    <rect class="thumb" x="184" y="144" width="144" height="104" rx="6" />
+
+    <!-- 6th tile replaced with +N overlay -->
+    <rect class="grid-item" x="352" y="136" width="160" height="120" />
+    <rect class="thumb" x="360" y="144" width="144" height="104" rx="6" />
+
+    <!-- overlay for remaining count (example +6) -->
+    <rect x="360" y="144" width="144" height="104" rx="6" fill="rgba(0,0,0,0.56)" />
+    <text x="432" y="210" text-anchor="middle" class="overlay-text">+6</text>
+  </g>
+
+  <!-- Small show-more option below the grid (alternative) -->
+  <text x="40" y="320" class="show-more">Show more</text>
+
+  <!-- Notes area -->
+  <text x="460" y="120" class="note">Wireframe notes:</text>
+  <text x="460" y="140" class="note">- Show first 6 thumbnails, overlay "+N" on last tile.</text>
+  <text x="460" y="158" class="note">- Clicking +N opens lightbox with all media images.</text>
+  <text x="460" y="176" class="note">- Accessibility: provide text link "Show more" for screen readers.</text>
+
+  <!-- Example click target hint -->
+  <rect x="440" y="200" width="268" height="80" rx="8" fill="#fff" stroke="#e6eef8" />
+  <text x="460" y="224" class="note">Lightbox opens on click:</text>
+  <text x="460" y="244" class="note">- Keyboard: arrow keys + ESC to close</text>
+</svg>

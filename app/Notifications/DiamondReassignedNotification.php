@@ -47,8 +47,8 @@ class DiamondReassignedNotification extends Notification implements ShouldQueue
             ->line('A diamond previously assigned to you has been reassigned.')
             ->line('**Diamond Details:**')
             ->line('SKU: ' . $this->diamond->sku)
-            ->line('Stock ID: ' . $this->diamond->stockid)
-            ->line('Price: ' . $this->diamond->price)
+            ->line('Lot No: ' . $this->diamond->lot_no)
+            ->line('Price: ' . ($this->diamond->purchase_price ?? 0))
             ->line('Type: ' . ($this->diamond->diamond_type ?? 'N/A'))
             ->line('Reassigned by: ' . $this->reassignedBy->name)
             ->line('Reassigned to: ' . ($notifiable->name ?? 'Unknown'))
@@ -65,13 +65,13 @@ class DiamondReassignedNotification extends Notification implements ShouldQueue
             'title' => 'Diamond Reassigned',
             'diamond_id' => $this->diamond->id,
             'diamond_sku' => $this->diamond->sku,
-            'diamond_price' => $this->diamond->price,
+            'diamond_price' => $this->diamond->purchase_price,
             'reassigned_by' => $this->reassignedBy->name,
             'message' => 'Diamond ' . $this->diamond->sku . ' has been reassigned by ' . $this->reassignedBy->name,
             'details' => [
                 'sku' => $this->diamond->sku,
                 'stock_id' => $this->diamond->stockid,
-                'price' => 'Rs. ' . number_format((float)$this->diamond->price, 2),
+                'price' => 'Rs. ' . number_format((float)($this->diamond->purchase_price ?? 0), 2),
                 'type' => $this->diamond->diamond_type ?? 'N/A',
                 'reassigned_by' => $this->reassignedBy->name,
                 'previous_admin' => $this->previousAdmin->name,

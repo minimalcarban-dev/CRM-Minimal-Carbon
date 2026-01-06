@@ -18,6 +18,7 @@ class Message extends Model
         'body',
         'metadata',
         'reply_to_id',
+        'thread_count',
         'edited_at',
     ];
 

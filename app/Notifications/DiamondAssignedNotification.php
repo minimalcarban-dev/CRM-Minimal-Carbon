@@ -45,8 +45,8 @@ class DiamondAssignedNotification extends Notification implements ShouldQueue
             ->line('A new diamond has been assigned to you.')
             ->line('**Diamond Details:**')
             ->line('SKU: ' . $this->diamond->sku)
-            ->line('Stock ID: ' . $this->diamond->stockid)
-            ->line('Price: ' . $this->diamond->price)
+            ->line('Lot No: ' . $this->diamond->lot_no)
+            ->line('Price: ' . ($this->diamond->purchase_price ?? 0))
             ->line('Type: ' . ($this->diamond->diamond_type ?? 'N/A'))
             ->line('Assigned by: ' . $this->assignedBy->name)
             ->action('View Diamond', route('diamond.show', $this->diamond->id))
@@ -62,13 +62,13 @@ class DiamondAssignedNotification extends Notification implements ShouldQueue
             'title' => 'Diamond Assigned',
             'diamond_id' => $this->diamond->id,
             'diamond_sku' => $this->diamond->sku,
-            'diamond_price' => $this->diamond->price,
+            'diamond_price' => $this->diamond->purchase_price,
             'assigned_by' => $this->assignedBy->name,
             'message' => 'Diamond ' . $this->diamond->sku . ' has been assigned to you by ' . $this->assignedBy->name,
             'details' => [
                 'sku' => $this->diamond->sku,
-                'stock_id' => $this->diamond->stockid,
-                'price' => 'Rs. ' . number_format((float)$this->diamond->price, 2),
+                'lot_no' => $this->diamond->lot_no,
+                'price' => '$. ' . number_format((float)($this->diamond->purchase_price ?? 0), 2),
                 'type' => $this->diamond->diamond_type ?? 'N/A',
                 'assigned_by' => $this->assignedBy->name,
             ]
