@@ -126,6 +126,39 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- US Bank Details (Wire Transfer) -->
+                <div class="modal-section">
+                    <h6 class="modal-section-title">
+                        <i class="bi bi-bank"></i> US Bank Details (Wire Transfer)
+                    </h6>
+                    <div class="modal-grid">
+                        <div class="modal-item">
+                            <label class="modal-label">Beneficiary Name</label>
+                            <p id="modalBeneficiaryName" class="modal-value">-</p>
+                        </div>
+                        <div class="modal-item">
+                            <label class="modal-label">ABA Routing Number</label>
+                            <p id="modalAbaRouting" class="modal-value">-</p>
+                        </div>
+                        <div class="modal-item">
+                            <label class="modal-label">A/C Number (US)</label>
+                            <p id="modalUsAccountNo" class="modal-value">-</p>
+                        </div>
+                        <div class="modal-item">
+                            <label class="modal-label">A/C Type</label>
+                            <p id="modalAccountType" class="modal-value">-</p>
+                        </div>
+                        <div class="modal-item full-width">
+                            <label class="modal-label">Beneficiary Address</label>
+                            <p id="modalBeneficiaryAddress" class="modal-value">-</p>
+                        </div>
+                        <div class="modal-item">
+                            <label class="modal-label">Currency</label>
+                            <p id="modalCurrency" class="modal-value">-</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Modal Footer -->
@@ -150,23 +183,30 @@
     }
 
     .modal-company-logo {
-        width: 50px;
-        height: 50px;
-        border-radius: 8px;
+        width: 100px;
+        height: 100px;
+        border-radius: 12px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 1.5rem;
+        font-size: 2rem;
         overflow: hidden;
         flex-shrink: 0;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-company-logo.has-logo {
+        background: #ffffff;
     }
 
     .modal-company-logo img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        padding: 5px;
     }
 
     .modal-section {
@@ -256,6 +296,14 @@
                 document.getElementById('modalSortCode').textContent = data.sort_code || '-';
                 document.getElementById('modalAdCode').textContent = data.ad_code || '-';
 
+                // US Bank Details
+                document.getElementById('modalBeneficiaryName').textContent = data.beneficiary_name || '-';
+                document.getElementById('modalAbaRouting').textContent = data.aba_routing_number || '-';
+                document.getElementById('modalUsAccountNo').textContent = data.us_account_no || '-';
+                document.getElementById('modalAccountType').textContent = data.account_type ? data.account_type.charAt(0).toUpperCase() + data.account_type.slice(1) : '-';
+                document.getElementById('modalBeneficiaryAddress').textContent = data.beneficiary_address || '-';
+                document.getElementById('modalCurrency').textContent = data.currency ? (data.currency_symbol + ' ' + data.currency) : '-';
+
                 // Set status badge
                 const statusBadge = document.getElementById('modalCompanyStatus');
                 if (data.status === 'active') {
@@ -267,9 +315,11 @@
                 // Set logo or initials
                 const logoElement = document.getElementById('modalCompanyLogo');
                 if (data.logo) {
+                    logoElement.classList.add('has-logo');
                     logoElement.innerHTML = `<img src="${data.logo}" alt="${data.name}">`;
                 } else {
-                    logoElement.innerHTML = `<span style="font-size: 1.5rem; font-weight: bold;">${data.name.substring(0, 2).toUpperCase()}</span>`;
+                    logoElement.classList.remove('has-logo');
+                    logoElement.innerHTML = `<span style="font-size: 2rem; font-weight: bold;">${data.name.substring(0, 2).toUpperCase()}</span>`;
                 }
 
                 // Set edit button link

@@ -146,11 +146,13 @@
                                     <td class="hsn-code">{{ $it->hsn_code }}</td>
                                     <td class="text-center">{{ $it->pieces }}</td>
                                     <td class="text-center">{{ $it->carats }}</td>
-                                    <td class="text-right">₹{{ number_format($it->rate, 2) }}</td>
-                                    <td class="text-right item-amount">₹{{ number_format($it->amount, 2) }}</td>
+                                    <td class="text-right">
+                                        {{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($it->rate, 2) }}</td>
+                                    <td class="text-right item-amount">
+                                        {{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($it->amount, 2) }}</td>
                                 </tr>
                             @endforeach
-                        </tbody>
+                        </tbody>                    
                     </table>
                 </div>
             </div>
@@ -194,24 +196,24 @@
                     <div class="summary-rows">
                         <div class="summary-row">
                             <span>Taxable Amount</span>
-                            <span>₹{{ number_format($invoice->taxable_amount, 2) }}</span>
+                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->taxable_amount, 2) }}</span>
                         </div>
                         <div class="summary-row">
                             <span>IGST</span>
-                            <span>₹{{ number_format($invoice->igst_amount, 2) }}</span>
+                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->igst_amount, 2) }}</span>
                         </div>
                         <div class="summary-row">
                             <span>CGST</span>
-                            <span>₹{{ number_format($invoice->cgst_amount, 2) }}</span>
+                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->cgst_amount, 2) }}</span>
                         </div>
                         <div class="summary-row">
                             <span>SGST</span>
-                            <span>₹{{ number_format($invoice->sgst_amount, 2) }}</span>
+                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->sgst_amount, 2) }}</span>
                         </div>
                     </div>
                     <div class="summary-total">
                         <span>Total Invoice Value</span>
-                        <span>₹{{ number_format($invoice->total_invoice_value, 2) }}</span>
+                        <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->total_invoice_value, 2) }}</span>
                     </div>
                 </div>
             </div>

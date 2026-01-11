@@ -1833,7 +1833,8 @@ export default {
         // Hide the About section in the sidebar (always hidden)
         const showAboutSection = computed(() => false);
         const showMembersSection = computed(
-            () => !isPersonalChannel.value || isSuperAdmin.value
+            // Hide Members section for personal/direct chats (1-to-1 conversations)
+            () => !isPersonalChannel.value
         );
         const typingLabel = computed(() => {
             const now = Date.now();
@@ -1942,6 +1943,17 @@ export default {
 
         const selectChannel = async (channel) => {
             currentChannel.value = channel;
+
+            // Persist the selected channel ID to localStorage for page refresh persistence
+            try {
+                localStorage.setItem(
+                    "chat_current_channel_id",
+                    String(channel.id)
+                );
+            } catch (e) {
+                // Ignore localStorage errors (e.g., private browsing mode)
+            }
+
             const ok = await loadMessages(channel.id, true);
             if (!ok) {
                 // Keep the header visible and surface the error so the UI is not blank
@@ -3331,7 +3343,23 @@ export default {
                     Array.isArray(list) &&
                     list.length
                 ) {
-                    selectChannel(list[0]);
+                    // Try to restore the last selected channel from localStorage
+                    let channelToSelect = null;
+                    try {
+                        const savedId = localStorage.getItem(
+                            "chat_current_channel_id"
+                        );
+                        if (savedId) {
+                            channelToSelect = list.find(
+                                (c) => String(c.id) === savedId
+                            );
+                        }
+                    } catch (e) {
+                        // Ignore localStorage errors
+                    }
+
+                    // If no saved channel found, or saved channel doesn't exist anymore, use first one
+                    selectChannel(channelToSelect || list[0]);
                 }
             },
             { deep: false }

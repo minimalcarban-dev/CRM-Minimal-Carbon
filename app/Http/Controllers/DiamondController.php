@@ -146,6 +146,14 @@ class DiamondController extends Controller
             $query->where('admin_id', $request->admin_id);
         }
 
+        // Date range filter (purchase_date)
+        if ($request->filled('date_from')) {
+            $query->whereDate('purchase_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('purchase_date', '<=', $request->date_to);
+        }
+
         // Get total count before pagination
         $totalDiamonds = $query->count();
 

@@ -197,14 +197,16 @@
                                     </td>
                                     <td>
                                         <div class="company-info">
-                                            <div class="company-avatar" onclick="showCompanyModal({{ $company->id }})" style="cursor: pointer;">
+                                            <div class="company-avatar" onclick="showCompanyModal({{ $company->id }})"
+                                                style="cursor: pointer;">
                                                 @if($company->logo)
-                                                    <img src="{{ asset($company->logo) }}" alt="{{ $company->name }}">
+                                                    <img src="{{ str_starts_with($company->logo, 'http') ? $company->logo : asset($company->logo) }}" alt="{{ $company->name }}">
                                                 @else
                                                     {{ strtoupper(substr($company->name, 0, 2)) }}
                                                 @endif
                                             </div>
-                                            <span class="company-name" onclick="showCompanyModal({{ $company->id }})" style="cursor: pointer;">{{ $company->name }}</span>
+                                            <span class="company-name" onclick="showCompanyModal({{ $company->id }})"
+                                                style="cursor: pointer;">{{ $company->name }}</span>
                                         </div>
                                     </td>
                                     <td>
@@ -1115,7 +1117,7 @@
 
             // Handle delete confirmations
             document.querySelectorAll('.delete-form').forEach(form => {
-                form.addEventListener('submit', async function(e) {
+                form.addEventListener('submit', async function (e) {
                     e.preventDefault();
                     const confirmed = await showConfirm('Delete this company?', 'This action cannot be undone', 'Yes, Delete', 'Cancel');
                     if (confirmed) this.submit();
@@ -1128,7 +1130,7 @@
                     showAlert('{{ session('success') }}', 'success', 'Success');
                 }
             @endif
-            });
+                });
     </script>
 
     <!-- Include Company Details Modal -->

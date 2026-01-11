@@ -116,7 +116,7 @@
                             </a>
                         @endif
                         @if ($currentAdmin && $currentAdmin->hasPermission('admins.delete'))
-                            <form action="{{ route('admins.destroy', $admin) }}" method="POST" class="d-inline" class="delete-form">
+                            <form action="{{ route('admins.destroy', $admin) }}" method="POST" class="d-inline delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="action-btn action-btn-delete" title="Delete">
@@ -480,7 +480,7 @@
         }
 
         /* Ensure forms inside the actions row behave like the other action buttons
-                   so the delete button aligns and sizes consistently with anchors. */
+                       so the delete button aligns and sizes consistently with anchors. */
         .admin-actions form.d-inline {
             display: flex;
             flex: 1;

@@ -382,11 +382,13 @@
     /* Form Actions */
     .form-actions {
         display: flex;
-        justify-content: flex-end;
+        justify-content: flex-end !important;
         gap: 1rem;
         margin-top: 2rem;
         padding-top: 2rem;
         border-top: 2px solid var(--border);
+        width: 100%;
+        grid-column: span 2;
     }
 
     .btn-cancel,

@@ -14,7 +14,7 @@
         <div class="card-body">
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label">  
                         <i class="bi bi-hash"></i>
                         Invoice No
                     </label>

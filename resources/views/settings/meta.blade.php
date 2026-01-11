@@ -503,7 +503,7 @@
                         @foreach($accounts as $account)
                             <tr>
                                 <td>
-                                    <strong>{{ $account->name }}</strong>
+                                    <strong>{{ $account->account_name }}</strong>
                                 </td>
                                 <td>
                                     <span class="platform-badge {{ $account->platform }}">

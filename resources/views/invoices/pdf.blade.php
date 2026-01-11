@@ -851,7 +851,7 @@
             <div class="totals-section">
                 <table class="totals-table">
                     <tr class="taxable-row">
-                        <td>Total Taxable Amount Rs</td>
+                        <td>Total Taxable Amount {{ $invoice->company->currency_symbol ?? '₹' }}</td>
                         <td class="text-right">{{ number_format($invoice->taxable_amount ?? 0, 2) }}</td>
                     </tr>
                     <tr>
@@ -950,9 +950,18 @@
 
             <!-- Amount in Words -->
             <div class="amount-words">
-                <strong>Total Invoice Value (In Words):</strong> Total Rs.
+                @php
+                    $currencySymbol = $invoice->company->currency_symbol ?? '₹';
+                    $currencyName = match ($invoice->company->currency ?? 'INR') {
+                        'USD' => 'Dollars',
+                        'GBP' => 'Pounds',
+                        'EUR' => 'Euros',
+                        default => 'Rupees',
+                    };
+                @endphp
+                <strong>Total Invoice Value (In Words):</strong> Total {{ $currencySymbol }}
                 {{ number_format($invoice->total_invoice_value ?? 0, 2) }} -
-                {{ in_words($invoice->total_invoice_value ?? 0) }}
+                {{ str_replace('Rupees', $currencyName, in_words($invoice->total_invoice_value ?? 0)) }}
             </div>
 
             <!-- Bank Details -->
@@ -978,9 +987,35 @@
                 <div class="declaration-section">
                     <div class="declaration-title">Payment Instruction</div>
                     <div class="declaration-text">
-                        {{ $invoice->company->bank_name ?? 'STATE BANK OF INDIA (DIAMOND BRANCH - MUMBAI)' }}<br>
-                        ACCOUNT NO: {{ $invoice->company->account_no ?? '30257052826' }}<br>
-                        RTGS / NEFT (IFSC): {{ $invoice->company->ifsc_code ?? 'SBIN0009276' }}
+                        @php
+                            $country = strtolower($invoice->company->country ?? '');
+                            $isUSCompany = str_contains($country, 'us') ||
+                                str_contains($country, 'usa') ||
+                                str_contains($country, 'united states') ||
+                                str_contains($country, 'america');
+                        @endphp
+
+                        @if($isUSCompany && !empty($invoice->company->aba_routing_number))
+                            {{-- US Bank Details --}}
+                            <strong>BENEFICIARY:</strong>
+                            {{ $invoice->company->beneficiary_name ?? $invoice->company->account_holder_name ?? '-' }}<br>
+                            <strong>BANK:</strong> {{ $invoice->company->bank_name ?? '-' }}<br>
+                            <strong>ABA ROUTING NO:</strong> {{ $invoice->company->aba_routing_number ?? '-' }}<br>
+                            <strong>A/C NO:</strong>
+                            {{ $invoice->company->us_account_no ?? $invoice->company->account_no ?? '-' }}<br>
+                            <strong>A/C TYPE:</strong> {{ ucfirst($invoice->company->account_type ?? '-') }}<br>
+                            @if(!empty($invoice->company->beneficiary_address))
+                                <strong>BENEFICIARY ADDRESS:</strong> {{ $invoice->company->beneficiary_address }}
+                            @endif
+                        @else
+                            {{-- India/UK/Default Bank Details --}}
+                            {{ $invoice->company->bank_name ?? 'STATE BANK OF INDIA (DIAMOND BRANCH - MUMBAI)' }}<br>
+                            ACCOUNT NO: {{ $invoice->company->account_no ?? '30257052826' }}<br>
+                            RTGS / NEFT (IFSC): {{ $invoice->company->ifsc_code ?? 'SBIN0009276' }}
+                            @if(!empty($invoice->company->swift_code))
+                                <br>SWIFT CODE: {{ $invoice->company->swift_code }}
+                            @endif
+                        @endif
                     </div>
                 </div>
 

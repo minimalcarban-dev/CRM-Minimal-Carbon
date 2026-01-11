@@ -105,6 +105,14 @@ class OrderController extends Controller
             $query->where('diamond_status', $request->diamond_status);
         }
 
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
         $orders = $query->latest()->paginate(10);
         return view('orders.index', compact('orders', 'totalOrders', 'orderTypeCounts', 'statusCounts', 'shippedOrdersCount'));
     }

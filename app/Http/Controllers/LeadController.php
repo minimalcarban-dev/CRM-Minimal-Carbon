@@ -487,12 +487,12 @@ class LeadController extends Controller
             ->get();
 
         // Top performers
-        $topAgents = Admin::select('admins.*')
+        $topAgents = Admin::select('admins.id', 'admins.name')
             ->selectRaw('COUNT(leads.id) as lead_count')
             ->selectRaw('SUM(CASE WHEN leads.status = "completed" THEN 1 ELSE 0 END) as completed_count')
             ->leftJoin('leads', 'admins.id', '=', 'leads.assigned_to')
             ->where('leads.created_at', '>=', $startDate)
-            ->groupBy('admins.id')
+            ->groupBy('admins.id', 'admins.name')
             ->orderByDesc('completed_count')
             ->limit(5)
             ->get();

@@ -49,7 +49,7 @@ class MetaSettingsController extends Controller
 
         // Create the account
         MetaAccount::create([
-            'name' => $validated['name'],
+            'account_name' => $validated['name'],
             'platform' => $validated['platform'],
             'page_id' => $validated['page_id'],
             'account_id' => $verification['account_id'] ?? $validated['page_id'],

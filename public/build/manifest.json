@@ -4,7 +4,7 @@
     "src": "node_modules/pdfjs-dist/build/pdf.worker.mjs"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Cviom7Ow.css",
+    "file": "assets/app-DetOUDEx.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -13,12 +13,12 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DEWTzj6v.js",
+    "file": "assets/app-DVztzl6S.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app-CurZWoTc.css"
+      "assets/app-DJ-wsVox.css"
     ],
     "assets": [
       "assets/pdf.worker-CSHkrWs3.mjs"

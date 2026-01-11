@@ -34,6 +34,9 @@
         'access' => 'bi-door-open',
         'view_pricing' => 'bi-currency-dollar',
         'pdf' => 'bi-file-earmark-pdf',
+        'message' => 'bi-chat-dots',
+        'settings' => 'bi-gear',
+        'reports' => 'bi-bar-chart',
     ];
 
     // Calculate high-level metrics
@@ -238,9 +241,9 @@
                                         @endif
                                         <div class="permission-meta">
                                             <code class="permission-slug" onclick="copySlug('{{ $perm->slug }}', this)">
-                                                                        <i class="bi bi-code-slash"></i>
-                                                                        {{ $perm->slug }}
-                                                                    </code>
+                                                                                                <i class="bi bi-code-slash"></i>
+                                                                                                {{ $perm->slug }}
+                                                                                            </code>
                                             <span class="permission-type">{{ ucfirst(str_replace('_', ' ', $action)) }}</span>
                                         </div>
                                     </div>
@@ -728,6 +731,21 @@
         .action-pdf {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
+        }
+
+        .action-message {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .action-settings {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray);
+        }
+
+        .action-reports {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--purple);
         }
 
         .collapse-icon {

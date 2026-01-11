@@ -28,8 +28,29 @@ class Company extends Model
         'swift_code',
         'iban',
         'account_holder_name',
+        // US Bank Details
+        'beneficiary_name',
+        'aba_routing_number',
+        'us_account_no',
+        'account_type',
+        'beneficiary_address',
+        'currency',
         'status'
     ];
-    
+
     public $timestamps = true;
+
+    /**
+     * Get the currency symbol based on currency code
+     */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return match ($this->currency) {
+            'USD' => '$',
+            'GBP' => '£',
+            'INR' => '₹',
+            'EUR' => '€',
+            default => '₹',
+        };
+    }
 }

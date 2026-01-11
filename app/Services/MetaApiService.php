@@ -224,6 +224,13 @@ class MetaApiService
     {
         $messages = [];
 
+        // Detect platform from payload object type
+        $platform = match ($payload['object'] ?? 'page') {
+            'instagram' => 'instagram',
+            'page', 'facebook' => 'facebook',
+            default => 'facebook',
+        };
+
         $entries = $payload['entry'] ?? [];
 
         foreach ($entries as $entry) {
@@ -233,6 +240,7 @@ class MetaApiService
                 if (isset($event['message'])) {
                     $messages[] = [
                         'type' => 'message',
+                        'platform' => $platform, // Include platform in event
                         'sender_id' => $event['sender']['id'] ?? null,
                         'recipient_id' => $event['recipient']['id'] ?? null,
                         'timestamp' => $event['timestamp'] ?? null,

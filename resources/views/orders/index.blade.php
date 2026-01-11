@@ -249,6 +249,13 @@
                     <option value="j_order_hold" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
                 </select>
 
+                <div class="date-range-wrapper">
+                    <input type="text" id="orderDateRange" class="date-range-input" placeholder="Select Date Range"
+                        readonly>
+                    <input type="hidden" name="date_from" id="orderDateFrom" value="{{ request('date_from') }}">
+                    <input type="hidden" name="date_to" id="orderDateTo" value="{{ request('date_to') }}">
+                </div>
+
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
                         const orderTypeSelect = document.querySelector('select[name="order_type"]');
@@ -856,6 +863,35 @@
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .date-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-input-date {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 140px;
+        }
+
+        .filter-input-date:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .date-separator {
+            color: var(--gray);
+            font-weight: 500;
+            font-size: 0.875rem;
         }
 
         .btn-filter,
@@ -1470,5 +1506,53 @@
             });
         });
     </script>
+
+    @include('partials.daterangepicker-styles')
+
+    @push('scripts')
+        <script>
+            // Initialize Date Range Picker for Orders
+            $(document).ready(function () {
+                var startDate = $('#orderDateFrom').val() ? moment($('#orderDateFrom').val()) : null;
+                var endDate = $('#orderDateTo').val() ? moment($('#orderDateTo').val()) : null;
+
+                $('#orderDateRange').daterangepicker({
+                    autoUpdateInput: false,
+                    opens: 'left',
+                    showDropdowns: true,
+                    linkedCalendars: false,
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    },
+                    locale: {
+                        cancelLabel: 'Clear',
+                        applyLabel: 'Apply',
+                        format: 'MMM D, YYYY'
+                    }
+                }, function (start, end, label) {
+                    $('#orderDateFrom').val(start.format('YYYY-MM-DD'));
+                    $('#orderDateTo').val(end.format('YYYY-MM-DD'));
+                    $('#orderDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+                });
+
+                // Set initial value if dates exist
+                if (startDate && endDate) {
+                    $('#orderDateRange').val(startDate.format('MMM D, YYYY') + ' - ' + endDate.format('MMM D, YYYY'));
+                }
+
+                // Clear dates on cancel
+                $('#orderDateRange').on('cancel.daterangepicker', function (ev, picker) {
+                    $(this).val('');
+                    $('#orderDateFrom').val('');
+                    $('#orderDateTo').val('');
+                });
+            });
+        </script>
+    @endpush
 
 @endsection

@@ -616,13 +616,13 @@
                 if (card) {
                     // Get the source column before moving
                     const sourceColumn = card.closest('.kanban-cards');
-                    
+
                     // Hide empty state in target column if exists
                     const targetEmpty = column.querySelector('.kanban-empty');
                     if (targetEmpty) {
                         targetEmpty.style.display = 'none';
                     }
-                    
+
                     // Move the card - insert at beginning, not end
                     column.insertBefore(card, column.firstChild);
 
@@ -665,7 +665,7 @@
                 columns.forEach(column => {
                     const cards = column.querySelectorAll('.lead-card').length;
                     const emptyState = column.querySelector('.kanban-empty');
-                    
+
                     if (emptyState) {
                         emptyState.style.display = cards === 0 ? 'block' : 'none';
                     }
@@ -706,6 +706,74 @@
             filterPlatform?.addEventListener('change', applyFilters);
             filterPriority?.addEventListener('change', applyFilters);
             filterAgent?.addEventListener('change', applyFilters);
+
+            // Real-time updates via Pusher/Echo
+            if (typeof Echo !== 'undefined') {
+                // Listen on the general leads channel for new lead messages
+                Echo.private('leads.inbox')
+                    .listen('.lead.message.new', function (e) {
+                        console.log('New lead message received:', e);
+                        // Show notification
+                        showLeadNotification(e);
+                        // Refresh the page to show updated leads
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    });
+
+                // Also listen on agent-specific channel
+                const adminId = window.authAdminId;
+                if (adminId) {
+                    Echo.private(`admin.leads.${adminId}`)
+                        .listen('.lead.message.new', function (e) {
+                            console.log('New lead message for agent:', e);
+                            showLeadNotification(e);
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        });
+                }
+            }
+
+            function showLeadNotification(data) {
+                // Show browser notification if permitted
+                if (Notification.permission === 'granted') {
+                    new Notification('New Lead Message', {
+                        body: `${data.lead_name}: ${data.message?.content?.substring(0, 50) || 'New message'}`,
+                        icon: '/favicon.ico'
+                    });
+                }
+
+                // Also show on-page toast notification
+                const toast = document.createElement('div');
+                toast.className = 'lead-notification-toast';
+                toast.innerHTML = `
+                        <i class="bi bi-chat-dots-fill"></i>
+                        <span><strong>${data.lead_name || 'New Lead'}</strong>: ${data.message?.content?.substring(0, 30) || 'New message'}...</span>
+                    `;
+                toast.style.cssText = `
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                        color: white;
+                        padding: 1rem 1.5rem;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.75rem;
+                        z-index: 9999;
+                        animation: slideIn 0.3s ease;
+                    `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            // Request notification permission
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
         });
     </script>
 @endpush

@@ -341,8 +341,8 @@
 
             <!-- Price & Weight Range Section -->
             <div class="filter-section-group">
-                <div class="filter-section-title">Price & Weight Range</div>
-                <div class="filter-row-2">
+                <div class="filter-section-title">Price, Weight & Date Range</div>
+                <div class="filter-row-3">
                     <div class="filter-field-range">
                         <label class="filter-label">
                             <i class="bi bi-currency-dollar"></i>
@@ -368,6 +368,20 @@
                             <span class="range-separator">—</span>
                             <input type="number" name="max_weight" class="filter-input filter-input-small"
                                 placeholder="Max Carat" step="0.01" value="{{ request('max_weight') }}">
+                        </div>
+                    </div>
+
+                    <div class="filter-field-range">
+                        <label class="filter-label">
+                            <i class="bi bi-calendar-range"></i>
+                            <span>Purchase Date Range</span>
+                        </label>
+                        <div class="date-range-wrapper" style="flex: 1;">
+                            <input type="text" id="diamondDateRange" class="date-range-input"
+                                placeholder="Select Date Range" readonly style="width: 100%;">
+                            <input type="hidden" name="date_from" id="diamondDateFrom"
+                                value="{{ request('date_from') }}">
+                            <input type="hidden" name="date_to" id="diamondDateTo" value="{{ request('date_to') }}">
                         </div>
                     </div>
                 </div>
@@ -2459,5 +2473,53 @@
 
 {{-- Bulk Edit JavaScript --}}
 <script src="{{ asset('js/bulk-edit.js') }}"></script>
+
+@include('partials.daterangepicker-styles')
+
+@push('scripts')
+    <script>
+        // Initialize Date Range Picker for Diamonds
+        $(document).ready(function () {
+            var startDate = $('#diamondDateFrom').val() ? moment($('#diamondDateFrom').val()) : null;
+            var endDate = $('#diamondDateTo').val() ? moment($('#diamondDateTo').val()) : null;
+
+            $('#diamondDateRange').daterangepicker({
+                autoUpdateInput: false,
+                opens: 'left',
+                showDropdowns: true,
+                linkedCalendars: false,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                locale: {
+                    cancelLabel: 'Clear',
+                    applyLabel: 'Apply',
+                    format: 'MMM D, YYYY'
+                }
+            }, function (start, end, label) {
+                $('#diamondDateFrom').val(start.format('YYYY-MM-DD'));  
+                $('#diamondDateTo').val(end.format('YYYY-MM-DD'));
+                $('#diamondDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+            });
+
+            // Set initial value if dates exist
+            if (startDate && endDate) {
+                $('#diamondDateRange').val(startDate.format('MMM D, YYYY') + ' - ' + endDate.format('MMM D, YYYY'));
+            }
+
+            // Clear dates on cancel
+            $('#diamondDateRange').on('cancel.daterangepicker', function (ev, picker) {
+                $(this).val('');
+                $('#diamondDateFrom').val('');
+                $('#diamondDateTo').val('');
+            });
+        });
+    </script>
+@endpush
 
 @endsection

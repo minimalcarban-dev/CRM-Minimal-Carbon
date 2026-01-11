@@ -117,6 +117,14 @@ class PermissionSeeder extends Seeder
             ['name' => 'Access Meta Lead Inbox', 'slug' => 'meta_leads.access', 'description' => 'Access Meta Lead Inbox module', 'category' => 'meta_leads'],
             ['name' => 'Meta Settings', 'slug' => 'meta_leads.settings', 'description' => 'Manage Meta/Facebook settings', 'category' => 'meta_leads'],
 
+            // Leads Inbox
+            ['name' => 'View Leads', 'slug' => 'leads.view', 'description' => 'View leads inbox and details', 'category' => 'leads'],
+            ['name' => 'Create Leads', 'slug' => 'leads.create', 'description' => 'Create new leads', 'category' => 'leads'],
+            ['name' => 'Edit Leads', 'slug' => 'leads.edit', 'description' => 'Edit lead details and status', 'category' => 'leads'],
+            ['name' => 'Delete Leads', 'slug' => 'leads.delete', 'description' => 'Delete leads', 'category' => 'leads'],
+            ['name' => 'Assign Leads', 'slug' => 'leads.assign', 'description' => 'Assign leads to agents', 'category' => 'leads'],
+            ['name' => 'Message Leads', 'slug' => 'leads.message', 'description' => 'Send messages to leads', 'category' => 'leads'],
+
             // Purchase Tracker
             ['name' => 'View Purchases', 'slug' => 'purchases.view', 'description' => 'View purchase list and details', 'category' => 'purchases'],
             ['name' => 'Create Purchases', 'slug' => 'purchases.create', 'description' => 'Create new purchases', 'category' => 'purchases'],

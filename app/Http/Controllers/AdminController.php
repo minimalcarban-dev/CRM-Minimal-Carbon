@@ -35,7 +35,7 @@ class AdminController extends Controller
             });
         }
 
-        $admins = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $admins = $query->orderBy('is_super', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         return view('admins.index', compact('admins'));
     }
