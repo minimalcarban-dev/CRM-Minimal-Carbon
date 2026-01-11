@@ -122,9 +122,13 @@
                 <span class="label-text">Diamond SKU</span>
                 <span class="optional-badge">Optional</span>
             </label>
-            <input type="text" name="diamond_sku" class="form-control-modern"
-                placeholder="Enter diamond SKU (e.g., D-12345)"
-                value="{{ old('diamond_sku', $order->diamond_sku ?? '') }}">
+            <div class="sku-input-wrapper">
+                <input type="text" name="diamond_sku" id="diamond_sku_input" class="form-control-modern"
+                    placeholder="Enter diamond SKU (e.g., D-12345)"
+                    value="{{ old('diamond_sku', $order->diamond_sku ?? '') }}" autocomplete="off">
+                <span class="sku-validation-icon" id="sku_validation_icon"></span>
+            </div>
+            <div class="sku-validation-message" id="sku_validation_message"></div>
         </div>
     </div>
 </div>
@@ -902,6 +906,59 @@
 
         .file-preview-grid {
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+    }
+
+    /* SKU Real-time Validation Styles */
+    .sku-input-wrapper {
+        position: relative;
+    }
+
+    .sku-input-wrapper .form-control-modern {
+        padding-right: 2.75rem;
+    }
+
+    .sku-validation-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .sku-validation-message {
+        margin-top: 0.5rem;
+        font-size: 0.8125rem;
+        min-height: 1.25rem;
+    }
+
+    .form-control-modern.sku-valid {
+        border-color: var(--success) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .form-control-modern.sku-invalid {
+        border-color: var(--danger) !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .text-success {
+        color: var(--success) !important;
+    }
+
+    .text-danger {
+        color: var(--danger) !important;
+    }
+
+    .sku-spin {
+        animation: skuSpin 1s linear infinite;
+        color: var(--primary);
+    }
+
+    @keyframes skuSpin {
+        100% {
+            transform: translateY(-50%) rotate(360deg);
         }
     }
 </style>

@@ -85,9 +85,13 @@
                 <span class="label-text">Diamond SKU</span>
                 <span class="optional-badge">Optional</span>
             </label>
-            <input type="text" name="diamond_sku" class="form-control-modern"
-                placeholder="Enter diamond SKU (e.g., D-12345)"
-                value="{{ old('diamond_sku', $order->diamond_sku ?? '') }}">
+            <div class="sku-input-wrapper">
+                <input type="text" name="diamond_sku" id="diamond_sku_input" class="form-control-modern"
+                    placeholder="Enter diamond SKU (e.g., D-12345)"
+                    value="{{ old('diamond_sku', $order->diamond_sku ?? '') }}" autocomplete="off">
+                <span class="sku-validation-icon" id="sku_validation_icon"></span>
+            </div>
+            <div class="sku-validation-message" id="sku_validation_message"></div>
         </div>
     </div>
 </div>
@@ -729,6 +733,59 @@
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
         }
     }
+
+    /* SKU Real-time Validation Styles */
+    .sku-input-wrapper {
+        position: relative;
+    }
+
+    .sku-input-wrapper .form-control-modern {
+        padding-right: 2.75rem;
+    }
+
+    .sku-validation-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .sku-validation-message {
+        margin-top: 0.5rem;
+        font-size: 0.8125rem;
+        min-height: 1.25rem;
+    }
+
+    .form-control-modern.sku-valid {
+        border-color: var(--success) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .form-control-modern.sku-invalid {
+        border-color: var(--danger) !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .text-success {
+        color: var(--success) !important;
+    }
+
+    .text-danger {
+        color: var(--danger) !important;
+    }
+
+    .sku-spin {
+        animation: skuSpin 1s linear infinite;
+        color: var(--primary);
+    }
+
+    @keyframes skuSpin {
+        100% {
+            transform: translateY(-50%) rotate(360deg);
+        }
+    }
 </style>
 
 <script>
@@ -816,26 +873,54 @@
         pdfInput.files = dt.files;
         btn.closest('.file-preview-list-item').remove();
     }
+
+    // Diamond SKU Real-time Validation
+    (function () {
+        const skuInput = document.getElementById('diamond_sku_input');
+        const validationIcon = document.getElementById('sku_validation_icon');
+        const validationMessage = document.getElementById('sku_validation_message');
+
+        if (!skuInput || !validationIcon || !validationMessage) return;
+
+        let debounceTimer;
+
+        skuInput.addEventListener('input', function () {
+            const sku = this.value.trim();
+
+            // Clear previous validation
+            clearTimeout(debounceTimer);
+            validationIcon.innerHTML = '';
+            validationMessage.innerHTML = '';
+            skuInput.classList.remove('sku-valid', 'sku-invalid');
+
+            if (!sku) return;
+
+            // Show loading spinner
+            validationIcon.innerHTML = '<i class="bi bi-arrow-repeat sku-spin"></i>';
+
+            // Debounce: wait 500ms after user stops typing
+            debounceTimer = setTimeout(() => {
+                fetch(`/admin/diamonds/check-sku?sku=${encodeURIComponent(sku)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.available) {
+                            skuInput.classList.add('sku-valid');
+                            validationIcon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                            const d = data.diamond;
+                            const price = d.listing_price ? `$${parseFloat(d.listing_price).toLocaleString()}` : 'N/A';
+                            validationMessage.innerHTML = `<span class="text-success">✓ ${data.message} - ${d.carat || '?'}ct ${d.shape || ''} ${d.clarity || ''} ${d.color || ''} (${price})</span>`;
+                        } else {
+                            skuInput.classList.add('sku-invalid');
+                            validationIcon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+                            validationMessage.innerHTML = `<span class="text-danger">✗ ${data.message}</span>`;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('SKU validation error:', err);
+                        validationIcon.innerHTML = '';
+                        validationMessage.innerHTML = '<span class="text-danger">✗ Error checking SKU</span>';
+                    });
+            }, 500);
+        });
+    })();
 </script>
-
-
-<!-- <div class="col-md-6">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">
-                            <span class="label-icon">
-                                <i class="bi bi-chat-left-text"></i>
-                            </span>
-                            <span class="label-text">Priority Note</span>
-                            <span class="required-badge">Required</span>
-                        </label>
-                        <select name="note" class="form-control-modern" required>
-                            <option value="">-- Select Status --</option>
-                            <option value="priority" {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
-                                Priority
-                            </option>
-                            <option value="non_priority" {{ old('note', $order->note ?? '') == 'non_priority' ? 'selected' : '' }}>
-                                Non Priority
-                            </option>
-                        </select>
-                    </div>
-                </div> -->

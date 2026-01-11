@@ -116,9 +116,13 @@
                 </span>
                 <span class="optional-badge">Optional</span>
             </label>
-            <input type="text" name="diamond_sku" class="form-control-modern"
-                placeholder="Enter diamond SKU (e.g., D-12345)"
-                value="{{ old('diamond_sku', $order->diamond_sku ?? '') }}">
+            <div class="sku-input-wrapper">
+                <input type="text" name="diamond_sku" id="diamond_sku_input" class="form-control-modern"
+                    placeholder="Enter diamond SKU (e.g., D-12345)"
+                    value="{{ old('diamond_sku', $order->diamond_sku ?? '') }}" autocomplete="off">
+                <span class="sku-validation-icon" id="sku_validation_icon"></span>
+            </div>
+            <div class="sku-validation-message" id="sku_validation_message"></div>
         </div>
     </div>
 </div>
