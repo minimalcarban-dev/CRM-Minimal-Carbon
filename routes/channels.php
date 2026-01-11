@@ -30,3 +30,14 @@ Broadcast::channel('chat.channel.{id}', function ($user, $id) {
 Broadcast::channel('admin.notifications.{id}', function ($user, $id) {
     return $user instanceof Admin && (int) $user->id === (int) $id;
 });
+
+// Lead inbox channels for real-time messages
+Broadcast::channel('leads.inbox', function ($user) {
+    // Super admins can listen to all lead messages
+    return $user instanceof Admin && $user->is_super;
+});
+
+Broadcast::channel('admin.leads.{adminId}', function ($user, $adminId) {
+    // Agents can listen to their assigned leads
+    return $user instanceof Admin && (int) $user->id === (int) $adminId;
+});

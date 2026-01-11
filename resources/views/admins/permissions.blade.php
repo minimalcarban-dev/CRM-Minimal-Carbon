@@ -48,6 +48,35 @@
             </div>
         </div>
 
+        <!-- Super Admin Toggle Card -->
+        <div class="super-admin-card mb-4">
+            <div class="super-admin-icon">
+                <i class="bi bi-shield-shaded"></i>
+            </div>
+            <div class="super-admin-info">
+                <h5 class="super-admin-title">
+                    <i class="bi bi-stars me-2"></i>Super Admin Access
+                </h5>
+                <p class="super-admin-desc">
+                    Enable this to grant full access to all features. Super Admins can view and manage everything without any permission restrictions.
+                </p>
+            </div>
+            <div class="super-admin-toggle">
+                <div class="form-check form-switch">
+                    <input class="form-check-input super-admin-switch" 
+                            type="checkbox" 
+                            id="isSuperAdmin"
+                            name="is_super"
+                            value="1"
+                            form="permissionsForm"
+                            {{ $admin->is_super ? 'checked' : '' }}>
+                    <label class="form-check-label" for="isSuperAdmin">
+                        {{ $admin->is_super ? 'Active' : 'Inactive' }}
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <!-- Control Bar -->
         <div class="control-bar mb-4">
             <div class="control-group">
@@ -72,11 +101,14 @@
         <form method="POST" action="{{ route('admins.permissions.update', $admin) }}" id="permissionsForm">
             @csrf
             @method('PUT')
+            
+            <!-- Hidden input for Super Admin status (synced via JS from the toggle above) -->
+            <input type="hidden" name="is_super" id="isSuperHidden" value="{{ $admin->is_super ? '1' : '0' }}">
 
             <div class="permissions-grid">
                 @foreach ($permissionsByCategory as $category => $permissions)
                     <div class="permission-category-card" data-category="{{ $category }}">
-                        <div class="category-header">
+                        <div class="category-header" onclick="toggleCategory(this)">
                             <div class="category-info">
                                 <div class="category-icon">
                                     <i class="bi bi-{{ $loop->iteration % 2 == 0 ? 'star' : 'lightning' }}-fill"></i>
@@ -91,7 +123,7 @@
                                 </div>
                             </div>
                             <div class="category-actions">
-                                <div class="form-check form-switch">
+                                <div class="form-check form-switch" onclick="event.stopPropagation()">
                                     <input class="form-check-input category-select-all" 
                                             type="checkbox" 
                                             id="select-all-{{ $category }}"
@@ -100,6 +132,9 @@
                                         Select All
                                     </label>
                                 </div>
+                                <!-- <div class="collapse-toggle">
+                                    <i class="bi bi-chevron-down"></i>
+                                </div> -->
                             </div>
                         </div>
 
@@ -169,6 +204,104 @@
                 gap: 1.5rem;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
                 border: 2px solid var(--border);
+            }
+
+            /* Super Admin Card */
+            .super-admin-card {
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
+                border-radius: 16px;
+                padding: 1.5rem 2rem;
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+                box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
+                border: 2px solid #f59e0b;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .super-admin-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 100%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+                pointer-events: none;
+            }
+
+            .super-admin-icon {
+                width: 64px;
+                height: 64px;
+                border-radius: 16px;
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.75rem;
+                flex-shrink: 0;
+                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+            }
+
+            .super-admin-info {
+                flex: 1;
+            }
+
+            .super-admin-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #92400e;
+                margin: 0 0 0.25rem 0;
+                display: flex;
+                align-items: center;
+            }
+
+            .super-admin-title i {
+                color: #d97706;
+            }
+
+            .super-admin-desc {
+                font-size: 0.875rem;
+                color: #a16207;
+                margin: 0;
+                line-height: 1.5;
+            }
+
+            .super-admin-toggle {
+                display: flex;
+                align-items: center;
+            }
+
+            .super-admin-toggle .form-check.form-switch {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin: 0;
+                padding: 0;
+            }
+
+            .super-admin-toggle .super-admin-switch {
+                width: 60px;
+                height: 32px;
+                cursor: pointer;
+                border: 2px solid #d97706;
+                background-color: #fef3c7;
+                background-image: none;
+            }
+
+            .super-admin-toggle .super-admin-switch:checked {
+                background-color: #16a34a;
+                border-color: #15803d;
+            }
+
+            .super-admin-toggle .form-check-label {
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: #92400e;
+                cursor: pointer;
+                min-width: 60px;
             }
 
             .admin-avatar {
@@ -320,6 +453,7 @@
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
                 gap: 1.5rem;
+                align-items: start;
             }
 
             .permission-category-card {
@@ -419,8 +553,61 @@
                 cursor: pointer;
             }
 
-            /* Category Body */
+            /* Collapse Toggle Icon */
+            .collapse-toggle {
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+                background: var(--light-gray);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 1rem;
+                transition: all 0.3s ease;
+            }
+
+            .collapse-toggle i {
+                font-size: 1.25rem;
+                color: var(--gray);
+                transition: transform 0.3s ease;
+            }
+
+            .permission-category-card.expanded .collapse-toggle i {
+                transform: rotate(180deg);
+            }
+
+            .permission-category-card.expanded .collapse-toggle {
+                background: var(--primary);
+            }
+
+            .permission-category-card.expanded .collapse-toggle i {
+                color: white;
+            }
+
+            /* Category Header clickable */
+            .category-header {
+                cursor: pointer;
+            }
+
+            .category-header:hover .collapse-toggle {
+                background: var(--primary);
+            }
+
+            .category-header:hover .collapse-toggle i {
+                color: white;
+            }
+
+            /* Category Body - collapsed by default */
             .category-body {
+                padding: 1.5rem;
+                max-height: 0;
+                overflow: hidden;
+                padding: 0 1.5rem;
+                transition: all 0.3s ease;
+            }
+
+            .permission-category-card.expanded .category-body {
+                max-height: 2000px;
                 padding: 1.5rem;
             }
 
@@ -593,6 +780,14 @@
 
     @push('scripts')
         <script>
+            // Toggle category card expand/collapse
+            function toggleCategory(headerElement) {
+                const card = headerElement.closest('.permission-category-card');
+                if (card) {
+                    card.classList.toggle('expanded');
+                }
+            }
+
             document.addEventListener('DOMContentLoaded', function() {
                 try {
                     // Elements
@@ -734,6 +929,22 @@
                             categoryCheckboxes.length === checkedBoxes.length;
                         selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && 
                             checkedBoxes.length < categoryCheckboxes.length;
+                    }
+
+                    // Super Admin toggle - sync with hidden input inside form
+                    const superAdminSwitch = document.getElementById('isSuperAdmin');
+                    const superAdminHidden = document.getElementById('isSuperHidden');
+                    if (superAdminSwitch && superAdminHidden) {
+                        superAdminSwitch.addEventListener('change', function() {
+                            // Update hidden input value
+                            superAdminHidden.value = this.checked ? '1' : '0';
+                            
+                            // Update label text
+                            const label = this.nextElementSibling;
+                            if (label) {
+                                label.textContent = this.checked ? 'Active' : 'Inactive';
+                            }
+                        });
                     }
 
                     // Initialize

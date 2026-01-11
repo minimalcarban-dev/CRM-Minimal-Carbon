@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClosureType;
 use App\Models\Company;
+use App\Models\Diamond;
 use App\Models\MetalType;
 use App\Models\Order;
 use App\Models\RingSize;
@@ -13,6 +14,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Cloudinary\Cloudinary;
 use Cloudinary\Api\Upload\UploadApi;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use App\Services\CurrencyService;
 
 class OrderController extends Controller
 {
@@ -40,21 +44,57 @@ class OrderController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
-        // 2. Start the query
-        $query = Order::query()->with(['company', 'creator']);
+        // Define shipped statuses
+        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
 
-        if ($admin->id !== 1) {
-            $query->where('submitted_by', $admin->id);
+        // 2. Start the base query (apply admin + search filters first)
+        $baseQuery = Order::query()->with(['company', 'creator']);
+
+        // Super admin sees all orders, regular admin sees only their submitted orders
+        if (!$admin->is_super) {
+            $baseQuery->where('submitted_by', $admin->id);
         }
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('client_details', 'like', "%$search%")
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('client_name', 'like', "%$search%")
+                    ->orWhere('client_email', 'like', "%$search%")
+                    ->orWhere('client_address', 'like', "%$search%")
                     ->orWhere('jewellery_details', 'like', "%$search%")
                     ->orWhere('diamond_details', 'like', "%$search%")
                     ->orWhereHas('company', fn($c) => $c->where('name', 'like', "%$search%"));
             });
+        }
+
+        // Count shipped orders (before excluding from base)
+        $shippedOrdersCount = (clone $baseQuery)
+            ->whereIn('diamond_status', $shippedStatuses)
+            ->count();
+
+        // Compute totals and breakdowns EXCLUDING shipped orders
+        $nonShippedQuery = (clone $baseQuery)->whereNotIn('diamond_status', $shippedStatuses);
+        $totalOrders = $nonShippedQuery->count();
+        $orderTypeCounts = (clone $nonShippedQuery)
+            ->select('order_type', DB::raw('count(*) as total'))
+            ->groupBy('order_type')
+            ->pluck('total', 'order_type')
+            ->toArray();
+        $statusCounts = (clone $nonShippedQuery)
+            ->select('diamond_status', DB::raw('count(*) as total'))
+            ->groupBy('diamond_status')
+            ->pluck('total', 'diamond_status')
+            ->toArray();
+
+        // Now apply optional filters for the listing
+        $query = clone $baseQuery;
+
+        // If shipped filter is applied, show only shipped orders
+        if ($request->filled('shipped') && $request->shipped == '1') {
+            $query->whereIn('diamond_status', $shippedStatuses);
+        } else {
+            // Otherwise, hide shipped orders from main listing
+            $query->whereNotIn('diamond_status', $shippedStatuses);
         }
 
         if ($request->filled('order_type')) {
@@ -65,14 +105,16 @@ class OrderController extends Controller
             $query->where('diamond_status', $request->diamond_status);
         }
 
-        // Correctly calculate stats before pagination
-        $totalOrders = (clone $query)->count();
-        $orderTypeCounts = (clone $query)->select('order_type', \DB::raw('count(*) as total'))->groupBy('order_type')->pluck('total', 'order_type');
-        $statusCounts = (clone $query)->select('diamond_status', \DB::raw('count(*) as total'))->groupBy('diamond_status')->pluck('total', 'diamond_status');
-
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
 
         $orders = $query->latest()->paginate(10);
-        return view('orders.index', compact('orders', 'totalOrders', 'orderTypeCounts', 'statusCounts'));
+        return view('orders.index', compact('orders', 'totalOrders', 'orderTypeCounts', 'statusCounts', 'shippedOrdersCount'));
     }
 
     /**
@@ -91,31 +133,108 @@ class OrderController extends Controller
         try {
             $validated = $this->validateOrder($request);
 
-            // Upload files to Cloudinary
-            $images = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
-            $pdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
+            // Check if diamond SKU is provided and validate it's not already sold
+            if (!empty($validated['diamond_sku'])) {
+                $diamond = Diamond::where('sku', $validated['diamond_sku'])->first();
 
-            // Create and save the order
+                if (!$diamond) {
+                    return back()->withInput()->with('error', 'Diamond with SKU "' . $validated['diamond_sku'] . '" not found.');
+                }
+
+                if ($diamond->is_sold_out === 'Sold') {
+                    return back()->withInput()->with('error', 'Diamond with SKU "' . $validated['diamond_sku'] . '" is already sold. Please select a different diamond.');
+                }
+            }
+
+            DB::beginTransaction();
+
+            // Create the order first
             $order = new Order();
             $this->assignOrderFields($order, $validated);
-            $order->images = json_encode($images);
-            $order->order_pdfs = json_encode($pdfs);
             $order->submitted_by = Auth::guard('admin')->id();
-
             $order->save();
+
+            // Upload files to Cloudinary (wrapped in try-catch for cleanup)
+            try {
+                $images = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
+                $pdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
+
+                $order->images = json_encode($images);
+                $order->order_pdfs = json_encode($pdfs);
+                $order->save();
+
+            } catch (\Exception $e) {
+                // If upload fails after order created, still commit order but log the upload failure
+                Log::error('File upload failed during order creation', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+                $images = [];
+                $pdfs = [];
+            }
+
+            // If diamond SKU is provided, mark it as sold
+            if (!empty($validated['diamond_sku'])) {
+                Log::info('Attempting to mark diamond as sold', [
+                    'sku' => $validated['diamond_sku'],
+                    'sold_price' => $validated['gross_sell'] ?? 0
+                ]);
+
+                $diamondController = new DiamondController();
+                // Convert sold price from INR to USD before marking diamond as sold
+                $currencyService = app(CurrencyService::class);
+                $soldPriceInr = $validated['gross_sell'] ?? 0;
+                $soldPriceUsd = $currencyService->inrToUsd((float) $soldPriceInr) ?? 0;
+                $result = $diamondController->markSoldOutBySku($validated['diamond_sku'], $soldPriceUsd);
+
+                if ($result) {
+                    Log::info('Diamond successfully marked as sold', ['diamond_id' => $result->id]);
+
+                    // Notify all admins about the diamond sale
+                    $currentAdmin = Auth::guard('admin')->user();
+                    $allAdmins = \App\Models\Admin::where('id', '!=', $currentAdmin->id)->get();
+
+                    foreach ($allAdmins as $admin) {
+                        try {
+                            $admin->notify(new \App\Notifications\DiamondSoldNotification($result, $currentAdmin));
+                        } catch (\Throwable $e) {
+                            Log::error('Failed to send diamond sold notification', [
+                                'admin_id' => $admin->id,
+                                'diamond_id' => $result->id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                } else {
+                    Log::warning('Failed to mark diamond as sold - diamond not found or error occurred', [
+                        'sku' => $validated['diamond_sku']
+                    ]);
+                }
+            }
+
+            DB::commit();
 
             Log::info('Order created successfully', [
                 'order_id' => $order->id,
+                'order_type' => $order->order_type,
                 'images_count' => count($images),
-                'pdfs_count' => count($pdfs)
+                'pdfs_count' => count($pdfs),
+                'diamond_sku' => $validated['diamond_sku'] ?? null,
+                'created_by' => Auth::guard('admin')->id()
             ]);
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order created successfully! ' . count($images) . ' images and ' . count($pdfs) . ' PDFs uploaded to Cloudinary.');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation errors - pass through
+            throw $e;
         } catch (\Exception $e) {
-            Log::error('Order creation failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            DB::rollBack();
+            Log::error('Order creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'admin_id' => Auth::guard('admin')->id()
             ]);
 
             return back()->withInput()->with('error', 'Failed to create order: ' . $e->getMessage());
@@ -138,6 +257,8 @@ class OrderController extends Controller
         try {
             $validated = $this->validateOrder($request);
 
+            DB::beginTransaction();
+
             // Handle new file uploads to Cloudinary
             $newImages = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
             $newPdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
@@ -150,23 +271,63 @@ class OrderController extends Controller
             $order->images = json_encode(array_merge($existingImages, $newImages));
             $order->order_pdfs = json_encode(array_merge($existingPdfs, $newPdfs));
 
+            // Track if diamond SKU changed
+            $oldDiamondSku = $order->diamond_sku;
+            $newDiamondSku = $validated['diamond_sku'] ?? null;
+
+            // Validate new diamond SKU is not already sold (if changed)
+            if (!empty($newDiamondSku) && $newDiamondSku !== $oldDiamondSku) {
+                $diamond = Diamond::where('sku', $newDiamondSku)->first();
+
+                if (!$diamond) {
+                    DB::rollBack();
+                    return back()->withInput()->with('error', 'Diamond with SKU "' . $newDiamondSku . '" not found.');
+                }
+
+                if ($diamond->is_sold_out === 'Sold') {
+                    DB::rollBack();
+                    return back()->withInput()->with('error', 'Diamond with SKU "' . $newDiamondSku . '" is already sold. Please select a different diamond.');
+                }
+            }
+
             // Update other fields
             $this->assignOrderFields($order, $validated);
-            $order->submitted_by = Auth::guard('admin')->id();
+            // Track who modified this order (original creator in submitted_by stays unchanged)
+            $order->last_modified_by = Auth::guard('admin')->id();
 
             $order->save();
+
+            // If diamond SKU changed or was newly added, mark the new one as sold
+            if (!empty($newDiamondSku) && $newDiamondSku !== $oldDiamondSku) {
+                $diamondController = new DiamondController();
+                // Convert sold price from INR to USD before marking diamond as sold
+                $currencyService = app(CurrencyService::class);
+                $soldPriceInr = $validated['gross_sell'] ?? 0;
+                $soldPriceUsd = $currencyService->inrToUsd((float) $soldPriceInr) ?? 0;
+                $diamondController->markSoldOutBySku($newDiamondSku, $soldPriceUsd);
+            }
+
+            DB::commit();
 
             Log::info('Order updated successfully', [
                 'order_id' => $order->id,
                 'new_images' => count($newImages),
-                'new_pdfs' => count($newPdfs)
+                'new_pdfs' => count($newPdfs),
+                'old_diamond_sku' => $oldDiamondSku,
+                'new_diamond_sku' => $newDiamondSku,
+                'updated_by' => Auth::guard('admin')->id()
             ]);
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order updated successfully! Added ' . count($newImages) . ' new images and ' . count($newPdfs) . ' new PDFs.');
 
         } catch (\Exception $e) {
-            Log::error('Order update failed: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Order update failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+                'admin_id' => Auth::guard('admin')->id()
+            ]);
             return back()->withInput()->with('error', 'Failed to update order: ' . $e->getMessage());
         }
     }
@@ -178,16 +339,19 @@ class OrderController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
-        // If not super admin AND not the creator, abort
-        if ($admin->id !== 1 && $order->submitted_by !== $admin->id) {
+        // Super admin can view all orders, regular admin can only view their own
+        if (!$admin->is_super && $order->submitted_by !== $admin->id) {
             abort(403, 'Unauthorized action.');
         }
 
-        $metalTypes = MetalType::all();
-        $ringSizes = RingSize::all();
-        $settingTypes = SettingType::all();
-        $closureTypes = ClosureType::all();
-        $companies = Company::all();
+        // Eager load relationships
+        $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator']);
+
+        $metalTypes = Cache::remember('metal_types_all', 3600, fn() => MetalType::all());
+        $ringSizes = Cache::remember('ring_sizes_all', 3600, fn() => RingSize::all());
+        $settingTypes = Cache::remember('setting_types_all', 3600, fn() => SettingType::all());
+        $closureTypes = Cache::remember('closure_types_all', 3600, fn() => ClosureType::all());
+        $companies = Cache::remember('companies_all', 3600, fn() => Company::all());
 
         return view('orders.show', compact(
             'order',
@@ -204,12 +368,18 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        $orderId = $order->id;
+        $deletedImages = 0;
+        $deletedPdfs = 0;
+
         try {
             // Delete images from Cloudinary
             $images = is_string($order->images) ? json_decode($order->images, true) : ($order->images ?? []);
             foreach ($images as $image) {
                 if (isset($image['public_id'])) {
-                    $this->deleteFromCloudinary($image['public_id'], 'image');
+                    if ($this->deleteFromCloudinary($image['public_id'], 'image')) {
+                        $deletedImages++;
+                    }
                 }
             }
 
@@ -217,18 +387,30 @@ class OrderController extends Controller
             $pdfs = is_string($order->order_pdfs) ? json_decode($order->order_pdfs, true) : ($order->order_pdfs ?? []);
             foreach ($pdfs as $pdf) {
                 if (isset($pdf['public_id'])) {
-                    $this->deleteFromCloudinary($pdf['public_id'], 'raw');
+                    if ($this->deleteFromCloudinary($pdf['public_id'], 'raw')) {
+                        $deletedPdfs++;
+                    }
                 }
             }
 
             $order->delete();
 
-            Log::info('Order deleted successfully', ['order_id' => $order->id]);
+            Log::info('Order deleted successfully', [
+                'order_id' => $orderId,
+                'deleted_images' => $deletedImages,
+                'deleted_pdfs' => $deletedPdfs,
+                'deleted_by' => Auth::guard('admin')->id()
+            ]);
 
             return redirect()->route('orders.index')->with('success', 'Order and all associated files deleted successfully from Cloudinary.');
 
         } catch (\Exception $e) {
-            Log::error('Order deletion failed: ' . $e->getMessage());
+            Log::error('Order deletion failed', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+                'deleted_images' => $deletedImages,
+                'deleted_pdfs' => $deletedPdfs
+            ]);
             return back()->with('error', 'Failed to delete order: ' . $e->getMessage());
         }
     }
@@ -240,12 +422,18 @@ class OrderController extends Controller
     {
         $rules = [
             'order_type' => 'required|in:ready_to_ship,custom_diamond,custom_jewellery',
-            'client_details' => 'required|string',
-            'diamond_status' => 'nullable|string|in:processed,completed,diamond_purchased,factory_making,diamond_completed',
+            'client_name' => 'required|string|max:191',
+            'client_address' => 'required|string',
+            'client_mobile' => 'nullable|string|max:40',
+            'client_tax_id' => 'nullable|string|max:100',
+            'client_email' => 'required|email|max:191',
+            'diamond_sku' => 'nullable|string|max:191',
+            'diamond_status' => 'nullable|string|in:r_order_in_process,r_order_shipped,d_diamond_in_discuss,d_diamond_in_making,d_diamond_completed,d_diamond_in_certificate,d_order_shipped,j_diamond_in_progress,j_diamond_completed,j_diamond_in_discuss,j_cad_in_progress,j_cad_done,j_order_completed,j_order_in_qc,j_qc_done,j_order_shipped,j_order_hold',
             'company_id' => 'required|exists:companies,id',
             'gross_sell' => 'nullable|numeric|min:0',
             'dispatch_date' => 'nullable|date',
             'note' => 'nullable|in:priority,non_priority',
+            'special_notes' => 'nullable|string|max:2000',
             'shipping_company_name' => 'nullable|string',
             'tracking_number' => 'nullable|string',
             'tracking_url' => 'nullable|url',
@@ -258,6 +446,7 @@ class OrderController extends Controller
                 $rules += [
                     'jewellery_details' => 'nullable|string',
                     'diamond_details' => 'nullable|string',
+                    'product_other' => 'nullable|string|max:191',
                     'gold_detail_id' => 'nullable|exists:metal_types,id',
                     'ring_size_id' => 'nullable|exists:ring_sizes,id',
                     'setting_type_id' => 'nullable|exists:setting_types,id',
@@ -275,6 +464,7 @@ class OrderController extends Controller
                 $rules += [
                     'jewellery_details' => 'required|string',
                     'diamond_details' => 'nullable|string',
+                    'product_other' => 'nullable|string|max:191',
                     'gold_detail_id' => 'nullable|exists:metal_types,id',
                     'ring_size_id' => 'nullable|exists:ring_sizes,id',
                     'setting_type_id' => 'nullable|exists:setting_types,id',
@@ -292,17 +482,24 @@ class OrderController extends Controller
     private function assignOrderFields(Order $order, array $validated): void
     {
         $order->order_type = $validated['order_type'];
-        $order->client_details = $validated['client_details'];
+        $order->client_name = $validated['client_name'] ?? null;
+        $order->client_address = $validated['client_address'] ?? null;
+        $order->client_mobile = $validated['client_mobile'] ?? null;
+        $order->client_tax_id = $validated['client_tax_id'] ?? null;
+        $order->client_email = $validated['client_email'] ?? null;
         $order->jewellery_details = $validated['jewellery_details'] ?? null;
         $order->diamond_details = $validated['diamond_details'] ?? null;
+        $order->diamond_sku = $validated['diamond_sku'] ?? null;
         $order->gold_detail_id = $validated['gold_detail_id'] ?? null;
         $order->ring_size_id = $validated['ring_size_id'] ?? null;
         $order->setting_type_id = $validated['setting_type_id'] ?? null;
         $order->earring_type_id = $validated['earring_type_id'] ?? null;
+        $order->product_other = $validated['product_other'] ?? null;
         $order->diamond_status = $validated['diamond_status'] ?? null;
         $order->gross_sell = $validated['gross_sell'] ?? 0;
         $order->company_id = $validated['company_id'];
         $order->note = $validated['note'] ?? null;
+        $order->special_notes = $validated['special_notes'] ?? null;
         $order->shipping_company_name = $validated['shipping_company_name'] ?? null;
         $order->tracking_number = $validated['tracking_number'] ?? null;
         $order->tracking_url = $validated['tracking_url'] ?? null;
@@ -450,11 +647,11 @@ class OrderController extends Controller
             $order = Order::find($request->id);
         }
 
-        $companies = Company::all();
-        $metalTypes = MetalType::all();
-        $ringSizes = RingSize::all();
-        $settingTypes = SettingType::all();
-        $closureTypes = ClosureType::all();
+        $companies = Cache::remember('companies_all', 3600, fn() => Company::all());
+        $metalTypes = Cache::remember('metal_types_all', 3600, fn() => MetalType::all());
+        $ringSizes = Cache::remember('ring_sizes_all', 3600, fn() => RingSize::all());
+        $settingTypes = Cache::remember('setting_types_all', 3600, fn() => SettingType::all());
+        $closureTypes = Cache::remember('closure_types_all', 3600, fn() => ClosureType::all());
 
         return view($view, compact(
             'order',

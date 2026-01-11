@@ -64,10 +64,10 @@
                     </div>
                 @endif
 
-                <form action="{{ route('companies.update', $company->id) }}" method="POST" id="companyForm">
+                <form action="{{ route('companies.update', $company->id) }}" method="POST" id="companyForm" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
-                    @include('companies.form')
+                    @include('companies.form', ['company' => $company])
 
                     <div class="form-actions">
                         <a href="{{ route('companies.index') }}" class="btn-cancel">

@@ -3,24 +3,67 @@
 @section('title', 'Create Closure Type')
 
 @section('content')
-    <h3>Create Closure Type</h3>
-
-    <form method="POST" action="{{ route('closure_types.store') }}">
-        @csrf
-
-        <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" value="{{ old('name') }}">
-            @error('name') <div class="text-danger">{{ $message }}</div> @enderror
+    <div class="attr-form-container">
+        <div class="attr-page-header">
+            <div class="attr-header-content">
+                <div class="attr-header-left">
+                    <div class="attr-breadcrumb-nav">
+                        <a href="{{ route('admin.dashboard') }}" class="attr-breadcrumb-link"><i
+                                class="bi bi-house-door"></i> Dashboard</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <a href="{{ route('closure_types.index') }}" class="attr-breadcrumb-link">Closure Types</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <span class="attr-breadcrumb-current">Create</span>
+                    </div>
+                    <h1 class="attr-page-title"><i class="bi bi-plus-circle"></i> Create Closure Type</h1>
+                    <p class="attr-page-subtitle">Add a new closure type to your inventory</p>
+                </div>
+                <div class="attr-header-right">
+                    <a href="{{ route('closure_types.index') }}" class="attr-btn-back"><i class="bi bi-arrow-left"></i> Back
+                        to List</a>
+                </div>
+            </div>
         </div>
 
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {{ old('is_active') ? 'checked' : '' }}>
-            <label class="form-check-label" for="is_active">Active</label>
+        <div class="attr-form-card">
+            <div class="attr-form-card-header">
+                <div class="attr-form-card-icon"><i class="bi bi-lock"></i></div>
+                <div class="attr-form-card-title">
+                    <h2>Closure Type Details</h2>
+                    <p>Enter the information for the new closure type</p>
+                </div>
+            </div>
+            <div class="attr-form-card-body">
+                <form method="POST" action="{{ route('closure_types.store') }}">
+                    @csrf
+                    <div class="attr-form-group">
+                        <label class="attr-form-label"><i class="bi bi-tag"></i> Name <span
+                                class="attr-required">*</span></label>
+                        <input type="text" name="name" class="attr-form-input @error('name') is-invalid @enderror"
+                            value="{{ old('name') }}" placeholder="e.g., Lobster, Spring Ring, Toggle" required autofocus>
+                        @error('name')<div class="attr-error-message"><i class="bi bi-exclamation-circle"></i>
+                        {{ $message }}</div>@enderror
+                    </div>
+                    <div class="attr-form-group">
+                        <label class="attr-form-label"><i class="bi bi-toggle-on"></i> Status</label>
+                        <div class="attr-status-toggle-group">
+                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }}>
+                                <div class="attr-toggle-indicator active"><i class="bi bi-check-circle"></i> Active</div>
+                            </label>
+                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="0" {{ old('is_active') == '0' ? 'checked' : '' }}>
+                                <div class="attr-toggle-indicator inactive"><i class="bi bi-x-circle"></i> Inactive</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="attr-form-actions">
+                        <a href="{{ route('closure_types.index') }}" class="attr-btn-cancel"><i class="bi bi-x-circle"></i>
+                            Cancel</a>
+                        <button type="submit" class="attr-btn-submit"><i class="bi bi-check-circle"></i> Create Closure
+                            Type</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <button class="btn btn-primary">Create</button>
-        <a href="{{ route('closure_types.index') }}" class="btn btn-secondary">Back</a>
-    </form>
-
+    </div>
+    @include('partials.attribute-styles')
 @endsection

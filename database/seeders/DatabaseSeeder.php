@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
         // Grant chat access to admins
         $this->call(ChatPermissionSeeder::class);
         // Seed default chat channels and attach admins
-        $this->call(\Database\Seeders\ChatDefaultSeeder::class);
+        $this->call(ChatDefaultSeeder::class);
         
         // Seed attribute data
         $this->call(CompanySeeder::class);
@@ -46,5 +46,7 @@ class DatabaseSeeder extends Seeder
         $this->call(StoneTypeSeeder::class);
         $this->call(StoneShapeSeeder::class);
         $this->call(StoneColorSeeder::class);
+        $this->call(InvoicePermissionSeeder::class);
+        $this->call(PartySeeder::class);
     }
 }

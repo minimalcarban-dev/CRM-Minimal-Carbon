@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('diamonds', function (Blueprint $table) {
+            $table->decimal('offer_calculation', 10, 2)->nullable()->after('listing_price');
+            $table->decimal('actual_listing_price', 10, 2)->nullable()->after('offer_calculation');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('diamonds', function (Blueprint $table) {
+            $table->dropColumn(['offer_calculation', 'actual_listing_price']);
+        });
+    }
+};

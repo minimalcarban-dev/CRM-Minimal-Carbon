@@ -2,86 +2,48 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\MetalType;
 
-class MetalTypeController extends Controller
+/**
+ * Metal Type Resource Controller
+ * Manages metal types (Gold, Silver, Platinum, etc.)
+ */
+class MetalTypeController extends BaseResourceController
 {
-    public function index(Request $request)
+    protected function getModelClass(): string
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('metal_types.view')) {
-            abort(403);
-        }
-
-        $query = MetalType::query();
-        if ($q = $request->query('search')) {
-            $query->where('name', 'like', "%{$q}%");
-        }
-
-        $items = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
-        return view('metal_types.index', compact('items'));
+        return MetalType::class;
     }
-
-    public function create()
+    
+    protected function getViewPath(): string
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('metal_types.create')) abort(403);
-        return view('metal_types.create');
+        return 'metal_types';
     }
-
-    public function store(Request $request)
+    
+    protected function getRouteName(): string
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('metal_types.create')) abort(403);
-
-        $data = $request->validate([
+        return 'metal_types';
+    }
+    
+    protected function getPermissionPrefix(): ?string
+    {
+        return 'metal_types';
+    }
+    
+    protected function getStoreRules(): array
+    {
+        return [
             'name' => 'required|string|max:255|unique:metal_types,name',
             'is_active' => 'nullable|boolean',
-        ]);
-
-        $data['is_active'] = $request->has('is_active');
-        MetalType::create($data);
-
-        return redirect()->route('metal_types.index')->with('success', 'Metal type created.');
+        ];
     }
-
-    public function show(MetalType $metal_type)
+    
+    protected function getUpdateRules($id): array
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('metal_types.view')) abort(403);
-        return view('metal_types.show', ['item' => $metal_type]);
-    }
-
-    public function edit(MetalType $metal_type)
-    {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('metal_types.edit')) abort(403);
-        return view('metal_types.edit', ['item' => $metal_type]);
-    }
-
-    public function update(Request $request, MetalType $metal_type)
-    {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('metal_types.edit')) abort(403);
-
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:metal_types,name,' . $metal_type->id,
+        return [
+            'name' => 'required|string|max:255|unique:metal_types,name,' . $id,
             'is_active' => 'nullable|boolean',
-        ]);
-
-        $data['is_active'] = $request->has('is_active');
-        $metal_type->update($data);
-
-        return redirect()->route('metal_types.index')->with('success', 'Metal type updated.');
-    }
-
-    public function destroy(MetalType $metal_type)
-    {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('metal_types.delete')) abort(403);
-        $metal_type->delete();
-        return redirect()->route('metal_types.index')->with('success', 'Deleted.');
+        ];
     }
 }
 

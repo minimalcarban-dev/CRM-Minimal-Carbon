@@ -14,7 +14,7 @@
 
         <div id="app" class="h-100">
             <chat 
-                :user-id="{{ auth()->guard('admin')->id() }}"
+                :user-id="@json(auth()->guard('admin')->id())"
                 pusher-key="{{ config('broadcasting.connections.pusher.key') }}"
                 pusher-cluster="{{ config('broadcasting.connections.pusher.options.cluster') }}"
             ></chat>
@@ -24,9 +24,12 @@
 
 @push('scripts')
 <script>
-    window.userId = {{ auth()->guard('admin')->id() }};
-    window.authAdminName = "{{ auth()->guard('admin')->user()->name ?? 'Admin' }}";
-    console.log('Chat view loaded, user ID: ' + {{ auth()->guard('admin')->id() }});
+    window.userId = @json(auth()->guard('admin')->id());
+    window.authAdminName = @json(auth()->guard('admin')->user()->name ?? 'Admin');
+    console.log('Chat view loaded, user ID:', window.userId);
+    // Fallbacks for Echo when VITE_* env vars are missing at build time
+    window.chatPusherKey = "{{ config('broadcasting.connections.pusher.key') }}";
+    window.chatPusherCluster = "{{ config('broadcasting.connections.pusher.options.cluster') }}";
 </script>
 @endpush
 @endsection
@@ -44,7 +47,7 @@
         height: 100%;
         background: white;
         border-radius: 20px;
-        margin: 1rem;
+        /* margin: 1rem; */
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
         overflow: hidden;
         border: 2px solid #e2e8f0;

@@ -55,7 +55,7 @@
                                     <span class="required-badge">Required</span>
                                 </label>
                                 <input type="email" name="email" class="form-control-modern" value="{{ old('email') }}"
-                                    placeholder="admin@example.com" required>
+                                    placeholder="admin@example.com" autocomplete="off" required>
                             </div>
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                                 </label>
                                 <div class="password-input-wrapper">
                                     <input id="password" type="password" name="password" class="form-control-modern"
-                                        placeholder="Enter secure password" required>
+                                        placeholder="Enter secure password" autocomplete="new-password" required>
                                     <button type="button" id="togglePassword" class="password-toggle-btn"
                                         title="Show/Hide password">
                                         <i class="bi bi-eye"></i>
@@ -152,6 +152,16 @@
                                 </label>
                                 <input type="text" name="phone_number" maxlength="10" class="form-control-modern"
                                     value="{{ old('phone_number') }}" placeholder="1234567890" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <i class="bi bi-person-lines-fill me-2"></i>Family Member Phone
+                                </label>
+                                <input type="text" name="family_member_phone" maxlength="10" class="form-control-modern"
+                                    value="{{ old('family_member_phone') }}" placeholder="1234567890">
+                                <small class="form-text text-muted">For security purposes</small>
                             </div>
                         </div>
                         <div class="col-md-6">

@@ -3,245 +3,98 @@
 @section('title', 'Setting Types')
 
 @section('content')
-<div class="setting-type-index-container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="header-content">
-            <div class="header-left">
-                <div class="breadcrumb-nav">
-                    <a href="{{ url('/') }}" class="breadcrumb-link">
-                        <i class="bi bi-house-door"></i> Dashboard
-                    </a>
-                    <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                    <span class="breadcrumb-current">Setting Types</span>
-                </div>
-                <h1 class="page-title">
-                    <i class="bi bi-sliders"></i>
-                    Setting Types
-                </h1>
-                <p class="page-subtitle">Manage your setting types and configurations</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Action Bar -->
-    <div class="action-bar">
-        <div class="action-bar-content">
-            <div class="search-section">
-                <form method="GET" class="search-form">
-                    <div class="search-input-wrapper">
-                        <i class="bi bi-search search-icon"></i>
-                        <input 
-                            type="text" 
-                            name="search" 
-                            class="search-input" 
-                            placeholder="Search setting types..." 
-                            value="{{ request('search') }}">
-                        @if(request('search'))
-                            <a href="{{ route('setting_types.index') }}" class="search-clear">
-                                <i class="bi bi-x-lg"></i>
-                            </a>
-                        @endif
+    <div class="attr-list-container">
+        <div class="attr-list-header">
+            <div class="attr-header-content">
+                <div class="attr-header-left">
+                    <div class="attr-breadcrumb-nav">
+                        <a href="{{ route('admin.dashboard') }}" class="attr-breadcrumb-link"><i
+                                class="bi bi-house-door"></i> Dashboard</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <span class="attr-breadcrumb-current">Setting Types</span>
                     </div>
-                    <button type="submit" class="btn-search">
-                        <i class="bi bi-search"></i>
-                        <span>Search</span>
-                    </button>
-                </form>
-            </div>
-            
-            <div class="action-buttons">
+                    <h1 class="attr-list-title"><i class="bi bi-sliders"></i> Setting Types</h1>
+                    <p class="attr-list-subtitle">Manage all setting types in your inventory</p>
+                </div>
                 @if ($currentAdmin && $currentAdmin->hasPermission('setting_types.create'))
-                    <a href="{{ route('setting_types.create') }}" class="btn-create">
-                        <i class="bi bi-plus-circle"></i>
-                        <span>Create New Type</span>
-                    </a>
+                    <div class="attr-header-right">
+                        <a href="{{ route('setting_types.create') }}" class="attr-btn-create"><i class="bi bi-plus-circle"></i>
+                            Add Setting Type</a>
+                    </div>
                 @endif
             </div>
         </div>
-    </div>
 
-    <!-- Table Card -->
-    <div class="table-card">
-        @if($items->count() > 0)
-            <div class="table-wrapper">
-                <table class="data-table">
+        <div class="attr-filter-section">
+            <form method="GET" class="attr-filter-form">
+                <div class="attr-search-box"><i class="bi bi-search attr-search-icon"></i><input type="text" name="search"
+                        class="attr-search-input" placeholder="Search..." value="{{ request('search') }}"></div>
+                <button type="submit" class="attr-btn-filter"><i class="bi bi-funnel"></i> Filter</button>
+                @if(request('search'))<a href="{{ route('setting_types.index') }}" class="attr-btn-reset"><i
+                class="bi bi-arrow-counterclockwise"></i> Reset</a>@endif
+            </form>
+        </div>
+
+        <div class="attr-table-card">
+            @if($items->count() > 0)
+                <table class="attr-table">
                     <thead>
                         <tr>
-                            <th class="th-id">
-                                <div class="th-content">
-                                    <i class="bi bi-hash"></i>
-                                    <span>ID</span>
-                                </div>
+                            <th>
+                                <div class="attr-th"><i class="bi bi-hash"></i> ID</div>
                             </th>
-                            <th class="th-name">
-                                <div class="th-content">
-                                    <i class="bi bi-tag"></i>
-                                    <span>Name</span>
-                                </div>
+                            <th>
+                                <div class="attr-th"><i class="bi bi-tag"></i> Name</div>
                             </th>
-                            <th class="th-status">
-                                <div class="th-content">
-                                    <i class="bi bi-toggle2-on"></i>
-                                    <span>Status</span>
-                                </div>
+                            <th>
+                                <div class="attr-th"><i class="bi bi-toggle-on"></i> Status</div>
                             </th>
-                            <th class="th-date">
-                                <div class="th-content">
-                                    <i class="bi bi-calendar3"></i>
-                                    <span>Created</span>
-                                </div>
+                            <th>
+                                <div class="attr-th"><i class="bi bi-calendar"></i> Created</div>
                             </th>
-                            <th class="th-actions">
-                                <div class="th-content">
-                                    <i class="bi bi-gear"></i>
-                                    <span>Actions</span>
-                                </div>
+                            <th class="attr-th-actions">
+                                <div class="attr-th"><i class="bi bi-gear"></i> Actions</div>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($items as $item)
-                            <tr class="table-row">
-                                <td class="td-id">
-                                    <span class="id-badge">#{{ $item->id }}</span>
-                                </td>
-                                <td class="td-name">
-                                    <div class="name-cell">
-                                        <span class="name-text">{{ $item->name }}</span>
-                                    </div>
-                                </td>
-                                <td class="td-status">
-                                    @if($item->is_active)
-                                        <span class="status-badge status-active">
-                                            <i class="bi bi-check-circle-fill"></i>
-                                            <span>Active</span>
-                                        </span>
-                                    @else
-                                        <span class="status-badge status-inactive">
-                                            <i class="bi bi-x-circle-fill"></i>
-                                            <span>Inactive</span>
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="td-date">
-                                    <div class="date-cell">
-                                        <i class="bi bi-calendar3"></i>
-                                        <span>{{ $item->created_at?->format('M d, Y') ?? '—' }}</span>
-                                    </div>
-                                </td>
-                                <td class="td-actions">
-                                    <div class="action-buttons-cell">
-                                        @if ($currentAdmin && $currentAdmin->hasPermission('setting_types.view'))
-                                            <a href="{{ route('setting_types.show', $item->id) }}" 
-                                                class="action-btn btn-view"
-                                                title="View Details">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        @endif
-                                        @if ($currentAdmin && $currentAdmin->hasPermission('setting_types.edit'))
-                                            <a href="{{ route('setting_types.edit', $item->id) }}" 
-                                                class="action-btn btn-edit"
-                                                title="Edit">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        @endif
-                                        @if ($currentAdmin && $currentAdmin->hasPermission('setting_types.delete'))
-                                            <form action="{{ route('setting_types.destroy', $item->id) }}" 
-                                                method="POST" 
-                                                class="delete-form"
-                                                onsubmit="return confirm('Are you sure you want to delete this setting type?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                    class="action-btn btn-delete"
-                                                    title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
+                            <tr class="attr-row">
+                                <td><span class="attr-id-badge">#{{ $item->id }}</span></td>
+                                <td><span class="attr-name">{{ $item->name }}</span></td>
+                                <td><span class="attr-status {{ $item->is_active ? 'active' : 'inactive' }}"><i
+                                            class="bi bi-{{ $item->is_active ? 'check-circle' : 'x-circle' }}"></i>
+                                        {{ $item->is_active ? 'Active' : 'Inactive' }}</span></td>
+                                <td><span class="attr-date">{{ $item->created_at?->format('M d, Y') ?? '—' }}</span></td>
+                                <td class="attr-actions">
+                                    @if ($currentAdmin && $currentAdmin->hasPermission('setting_types.view'))<a
+                                        href="{{ route('setting_types.show', $item->id) }}" class="attr-action-btn view"><i
+                                    class="bi bi-eye"></i></a>@endif
+                                    @if ($currentAdmin && $currentAdmin->hasPermission('setting_types.edit'))<a
+                                        href="{{ route('setting_types.edit', $item->id) }}" class="attr-action-btn edit"><i
+                                    class="bi bi-pencil"></i></a>@endif
+                                    @if ($currentAdmin && $currentAdmin->hasPermission('setting_types.delete'))
+                                        <form action="{{ route('setting_types.destroy', $item->id) }}" method="POST"
+                                            class="d-inline delete-form">@csrf @method('DELETE')<button type="submit"
+                                    class="attr-action-btn delete"><i class="bi bi-trash"></i></button></form>@endif
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Pagination -->
-            @if($items->hasPages())
-                <div class="pagination-footer">
-                    <div class="pagination-info">
-                        <i class="bi bi-info-circle"></i>
-                        <span>Showing {{ $items->firstItem() }} to {{ $items->lastItem() }} of {{ $items->total() }} entries</span>
-                    </div>
-                    <div class="pagination-links">
-                        {{ $items->links() }}
-                    </div>
+            @else
+                <div class="attr-empty-state">
+                    <div class="attr-empty-icon"><i class="bi bi-inbox"></i></div>
+                    <h3>No setting types found</h3>
+                    <p>Get started by adding your first setting type.</p><a href="{{ route('setting_types.create') }}"
+                        class="attr-btn-create"><i class="bi bi-plus-circle"></i> Add Setting Type</a>
                 </div>
             @endif
-        @else
-            <!-- Empty State -->
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="bi bi-inbox"></i>
-                </div>
-                <h3 class="empty-title">No setting types found</h3>
-                <p class="empty-description">
-                    @if(request('search'))
-                        No results match your search criteria. Try adjusting your search terms.
-                    @else
-                        Get started by creating your first setting type to organize your settings.
-                    @endif
-                </p>
-                <div class="empty-actions">
-                    @if(request('search'))
-                        <a href="{{ route('setting_types.index') }}" class="btn-empty-action">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                            <span>Clear Search</span>
-                        </a>
-                    @elseif($currentAdmin && $currentAdmin->hasPermission('setting_types.create'))
-                        <a href="{{ route('setting_types.create') }}" class="btn-empty-action primary">
-                            <i class="bi bi-plus-circle"></i>
-                            <span>Create First Setting Type</span>
-                        </a>
-                    @endif
-                </div>
-            </div>
-        @endif
+            @if($items->hasPages())
+                <div class="attr-pagination">{{ $items->links('pagination::bootstrap-5') }}</div>
+            @endif
+        </div>
     </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-focus search input if there's a search query
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput && searchInput.value) {
-            searchInput.focus();
-        }
-
-        // Add animation to table rows on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.table-row').forEach((row, index) => {
-            row.style.opacity = '0';
-            row.style.transform = 'translateY(20px)';
-            row.style.transition = `all 0.4s ease ${index * 0.05}s`;
-            observer.observe(row);
-        });
-    });
-</script>
-
+    @include('partials.attribute-index-styles')
+    <script>document.querySelectorAll('.delete-form').forEach(form => { form.addEventListener('submit', function (e) { e.preventDefault(); if (confirm('Delete this item?')) this.submit(); }); });</script>
 @endsection

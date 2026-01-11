@@ -1,0 +1,824 @@
+/* Tracker Module CSS - Purchase & Expense Tracker
+   Scoped to .tracker-page to avoid affecting other modules
+*/
+
+/* Stats Grid - Scoped */
+.tracker-page .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.tracker-page .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #6366f1;
+    transition: all 0.3s ease;
+}
+
+.tracker-page .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tracker-page .stat-card-primary {
+    border-left-color: #6366f1;
+}
+.tracker-page .stat-card-success {
+    border-left-color: #10b981;
+}
+.tracker-page .stat-card-info {
+    border-left-color: #3b82f6;
+}
+.tracker-page .stat-card-danger {
+    border-left-color: #ef4444;
+}
+
+.tracker-page .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.tracker-page .stat-card-primary .stat-icon {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+.tracker-page .stat-card-success .stat-icon {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+.tracker-page .stat-card-info .stat-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+.tracker-page .stat-card-danger .stat-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.tracker-page .stat-content {
+    flex: 1;
+}
+.tracker-page .stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+.tracker-page .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Compact Stats for Reports */
+.tracker-page .stats-grid-compact .stat-card {
+    padding: 1rem 1.25rem;
+}
+.tracker-page .stats-grid-compact .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+}
+.tracker-page .stats-grid-compact .stat-label {
+    font-size: 0.75rem;
+}
+.tracker-page .stats-grid-compact .stat-value {
+    font-size: 1.25rem;
+}
+
+/* Filter Section - Scoped */
+.tracker-page .tracker-filter {
+    background: white;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tracker-page .tracker-filter-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tracker-page .tracker-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 140px;
+    flex: 1;
+}
+
+.tracker-page .tracker-filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.tracker-page .tracker-filter-label i {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.tracker-page .tracker-filter-input,
+.tracker-page .tracker-filter-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background: white;
+    width: 100%;
+}
+
+.tracker-page .tracker-filter-input:focus,
+.tracker-page .tracker-filter-select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.tracker-page .tracker-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.tracker-page .tracker-result-count {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    white-space: nowrap;
+    padding-right: 0.5rem;
+    border-right: 1px solid #e2e8f0;
+    margin-right: 0.5rem;
+}
+
+.tracker-page .btn-tracker-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tracker-page .btn-tracker-reset:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.tracker-page .btn-tracker-apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background: #6366f1;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tracker-page .btn-tracker-apply:hover {
+    background: #4f46e5;
+}
+
+/* Table Card - Scoped */
+.tracker-page .tracker-table-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.tracker-page .tracker-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tracker-page .tracker-table thead {
+    background: #f1f5f9;
+}
+
+.tracker-page .tracker-table th {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.tracker-page .tracker-table th i {
+    margin-right: 0.375rem;
+    font-size: 0.85rem;
+}
+
+.tracker-page .tracker-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+    color: #1e293b;
+    vertical-align: middle;
+}
+
+.tracker-page .tracker-table tbody tr {
+    transition: background 0.2s;
+}
+.tracker-page .tracker-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.03);
+}
+
+/* Badges - Scoped */
+.tracker-page .tracker-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tracker-page .tracker-badge-primary {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+.tracker-page .tracker-badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+.tracker-page .tracker-badge-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+.tracker-page .tracker-badge-secondary {
+    background: #f1f5f9;
+    color: #64748b;
+}
+.tracker-page .tracker-badge-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Action Buttons - Scoped */
+.tracker-page .tracker-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tracker-page .tracker-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.tracker-page .tracker-action-view {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+.tracker-page .tracker-action-view:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.tracker-page .tracker-action-edit {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+.tracker-page .tracker-action-edit:hover {
+    background: #6366f1;
+    color: white;
+}
+
+.tracker-page .tracker-action-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+.tracker-page .tracker-action-delete:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* Empty State - Scoped */
+.tracker-page .tracker-empty {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+.tracker-page .tracker-empty-icon {
+    font-size: 3rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+.tracker-page .tracker-empty-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.5rem;
+}
+.tracker-page .tracker-empty-desc {
+    color: #64748b;
+    margin: 0 0 1.5rem;
+}
+
+/* Amount Colors - Scoped */
+.tracker-page .tracker-amount-in {
+    color: #10b981;
+    font-weight: 700;
+    font-size: 1rem;
+}
+.tracker-page .tracker-amount-out {
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Income/Expense row highlights */
+.tracker-page .tracker-income-row {
+    background: rgba(16, 185, 129, 0.03);
+}
+.tracker-page .tracker-expense-row {
+    background: rgba(239, 68, 68, 0.03);
+}
+.tracker-page .tracker-income-row:hover {
+    background: rgba(16, 185, 129, 0.08) !important;
+}
+.tracker-page .tracker-expense-row:hover {
+    background: rgba(239, 68, 68, 0.08) !important;
+}
+
+/* Charts - Scoped */
+.tracker-page .tracker-charts-row,
+.tracker-page .tracker-tables-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.tracker-page .tracker-chart-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tracker-page .tracker-chart-card canvas {
+    max-width: 280px;
+    max-height: 280px;
+    margin: 0 auto;
+    display: block;
+}
+
+.tracker-page .tracker-chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Transaction Type Toggle - Scoped */
+.tracker-page .tracker-type-toggle {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.tracker-page .tracker-type-option input {
+    display: none;
+}
+
+.tracker-page .tracker-type-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem 2rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+    text-align: center;
+    min-width: 140px;
+}
+
+.tracker-page .tracker-type-btn i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #64748b;
+}
+.tracker-page .tracker-type-btn strong {
+    font-size: 1rem;
+    color: #1e293b;
+}
+.tracker-page .tracker-type-btn small {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.tracker-page .tracker-type-in input:checked + .tracker-type-btn {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+.tracker-page .tracker-type-in input:checked + .tracker-type-btn i {
+    color: #10b981;
+}
+
+.tracker-page .tracker-type-out input:checked + .tracker-type-btn {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+.tracker-page .tracker-type-out input:checked + .tracker-type-btn i {
+    color: #ef4444;
+}
+
+/* Payment Toggle - Scoped */
+.tracker-page .tracker-payment-toggle {
+    display: flex;
+    gap: 0.75rem;
+}
+.tracker-page .tracker-toggle-option input {
+    display: none;
+}
+
+.tracker-page .tracker-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.tracker-page .tracker-toggle-option input:checked + .tracker-toggle-btn {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+    color: #6366f1;
+}
+
+/* Form Actions - Scoped */
+.tracker-page .tracker-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.tracker-page .tracker-form-full {
+    grid-column: 1 / -1;
+}
+
+/* Detail Grid - Scoped */
+.tracker-page .tracker-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+}
+
+.tracker-page .tracker-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+.tracker-page .tracker-detail-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.tracker-page .tracker-detail-value {
+    font-size: 1rem;
+    color: #1e293b;
+    font-weight: 600;
+}
+.tracker-page .tracker-detail-notes {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Header Right Actions - Scoped */
+.tracker-page .tracker-header-right {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tracker-page .tracker-actions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.tracker-page .tracker-actions-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Cash Flow Row */
+.tracker-page .tracker-cashflow-row {
+    background: rgba(99, 102, 241, 0.03);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tracker-page .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .tracker-page .tracker-filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .tracker-page .tracker-filter-actions {
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+    .tracker-page .tracker-charts-row,
+    .tracker-page .tracker-tables-row {
+        grid-template-columns: 1fr;
+    }
+    .tracker-page .tracker-form-actions {
+        flex-direction: column;
+    }
+    .tracker-page .tracker-form-actions > * {
+        width: 100%;
+        justify-content: center;
+    }
+    .tracker-page .tracker-type-toggle {
+        flex-direction: column;
+    }
+    .tracker-page .tracker-type-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .tracker-page .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .tracker-page .stat-card {
+        padding: 1rem;
+    }
+    .tracker-page .stat-value {
+        font-size: 1.25rem;
+    }
+}
+
+/* Transaction Type Toggle */
+.tracker-page .transaction-type-toggle {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tracker-page .transaction-type-toggle .type-option {
+    flex: 1;
+    min-width: 200px;
+    cursor: pointer;
+}
+
+.tracker-page .transaction-type-toggle .type-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tracker-page .transaction-type-toggle .type-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.tracker-page .transaction-type-toggle .type-btn i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.tracker-page .transaction-type-toggle .type-btn strong {
+    font-size: 1rem;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.tracker-page .transaction-type-toggle .type-btn small {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* Money In - Green when selected */
+.tracker-page .transaction-type-toggle .type-in input:checked + .type-btn {
+    border-color: #10b981;
+    background: linear-gradient(
+        135deg,
+        rgba(16, 185, 129, 0.1),
+        rgba(16, 185, 129, 0.05)
+    );
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+.tracker-page .transaction-type-toggle .type-in input:checked + .type-btn i,
+.tracker-page
+    .transaction-type-toggle
+    .type-in
+    input:checked
+    + .type-btn
+    strong {
+    color: #10b981;
+}
+
+/* Money Out - Red when selected */
+.tracker-page .transaction-type-toggle .type-out input:checked + .type-btn {
+    border-color: #ef4444;
+    background: linear-gradient(
+        135deg,
+        rgba(239, 68, 68, 0.1),
+        rgba(239, 68, 68, 0.05)
+    );
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+}
+
+.tracker-page .transaction-type-toggle .type-out input:checked + .type-btn i,
+.tracker-page
+    .transaction-type-toggle
+    .type-out
+    input:checked
+    + .type-btn
+    strong {
+    color: #ef4444;
+}
+
+/* Hover states */
+.tracker-page .transaction-type-toggle .type-option:hover .type-btn {
+    border-color: #94a3b8;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 576px) {
+    .tracker-page .transaction-type-toggle {
+        flex-direction: column;
+    }
+    .tracker-page .transaction-type-toggle .type-option {
+        min-width: 100%;
+    }
+}
+
+/* Detail Grid for Show Page */
+.tracker-page .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.tracker-page .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.tracker-page .detail-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tracker-page .detail-value {
+    font-size: 1rem;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.tracker-page .detail-notes {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.tracker-page .text-success {
+    color: #10b981 !important;
+}
+
+.tracker-page .text-danger {
+    color: #ef4444 !important;
+}
+
+/* Payment Toggle for Purchases */
+.tracker-page .payment-toggle {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tracker-page .payment-toggle .toggle-option {
+    cursor: pointer;
+}
+
+.tracker-page .payment-toggle .toggle-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tracker-page .payment-toggle .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #64748b;
+    min-width: 100px;
+}
+
+.tracker-page .payment-toggle .toggle-btn i {
+    font-size: 1.1rem;
+}
+
+.tracker-page .payment-toggle .toggle-option input:checked + .toggle-btn {
+    border-color: #6366f1;
+    background: linear-gradient(
+        135deg,
+        rgba(99, 102, 241, 0.1),
+        rgba(99, 102, 241, 0.05)
+    );
+    color: #6366f1;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.tracker-page .payment-toggle .toggle-option:hover .toggle-btn {
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+}
+
+/* Full width form group for Notes */
+.tracker-page .form-group-full {
+    grid-column: 1 / -1;
+}
+
+.tracker-page .form-group-full textarea.form-control {
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+}

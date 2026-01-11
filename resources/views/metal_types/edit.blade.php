@@ -3,118 +3,68 @@
 @section('title', 'Edit Metal Type')
 
 @section('content')
-    <div class="metal-types-management-container">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <div class="breadcrumb-nav">
-                        <a href="{{ route('admin.dashboard') }}" class="breadcrumb-link">
-                            <i class="bi bi-house-door"></i> Dashboard
-                        </a>
-                        <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                        <a href="{{ route('metal_types.index') }}" class="breadcrumb-link">
-                            Metal Types
-                        </a>
-                        <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                        <span class="breadcrumb-current">Edit: {{ $item->name }}</span>
+    <div class="attr-form-container">
+        <div class="attr-page-header">
+            <div class="attr-header-content">
+                <div class="attr-header-left">
+                    <div class="attr-breadcrumb-nav">
+                        <a href="{{ route('admin.dashboard') }}" class="attr-breadcrumb-link"><i
+                                class="bi bi-house-door"></i> Dashboard</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <a href="{{ route('metal_types.index') }}" class="attr-breadcrumb-link">Metal Types</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <span class="attr-breadcrumb-current">Edit</span>
                     </div>
-                    <h1 class="page-title">
-                        <i class="bi bi-pencil-square"></i>
-                        Edit Metal Type
-                    </h1>
-                    <p class="page-subtitle">Update the metal type information below</p>
+                    <h1 class="attr-page-title"><i class="bi bi-pencil-square"></i> Edit Metal Type</h1>
+                    <p class="attr-page-subtitle">Update metal type information</p>
                 </div>
-                <div class="header-right">
-                    <a href="{{ route('metal_types.index') }}" class="btn-secondary-custom">
-                        <i class="bi bi-arrow-left"></i>
-                        <span>Back to List</span>
-                    </a>
+                <div class="attr-header-right">
+                    <a href="{{ route('metal_types.index') }}" class="attr-btn-back"><i class="bi bi-arrow-left"></i> Back
+                        to List</a>
                 </div>
             </div>
         </div>
 
-        <form method="POST" action="{{ route('metal_types.update', $item->id) }}" id="metalTypeForm">
-            @csrf
-            @method('PUT')
-
-            <!-- Metal Type Form Card -->
-            <div class="form-section-card">
-                <div class="section-header">
-                    <div class="section-info">
-                        <div class="section-icon">
-                            <i class="bi bi-award"></i>
-                        </div>
-                        <div>
-                            <h5 class="section-title">Metal Type Information</h5>
-                            <p class="section-description">Update the metal type details below</p>
-                        </div>
-                    </div>
+        <div class="attr-form-card">
+            <div class="attr-form-card-header">
+                <div class="attr-form-card-icon"><i class="bi bi-award"></i></div>
+                <div class="attr-form-card-title">
+                    <h2>Metal Type Details</h2>
+                    <p>Update the metal type information</p>
                 </div>
-                <div class="section-body">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="name" class="form-label">
-                                Name <span class="required">*</span>
+            </div>
+            <div class="attr-form-card-body">
+                <form method="POST" action="{{ route('metal_types.update', $item->id) }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="attr-form-group">
+                        <label class="attr-form-label"><i class="bi bi-tag"></i> Name <span
+                                class="attr-required">*</span></label>
+                        <input type="text" name="name" class="attr-form-input @error('name') is-invalid @enderror"
+                            value="{{ old('name', $item->name) }}" required>
+                        @error('name')<div class="attr-error-message"><i class="bi bi-exclamation-circle"></i>
+                        {{ $message }}</div>@enderror
+                    </div>
+                    <div class="attr-form-group">
+                        <label class="attr-form-label"><i class="bi bi-toggle-on"></i> Status</label>
+                        <div class="attr-status-toggle-group">
+                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="1" {{ old('is_active', $item->is_active) == '1' ? 'checked' : '' }}>
+                                <div class="attr-toggle-indicator active"><i class="bi bi-check-circle"></i> Active</div>
                             </label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-tag input-icon"></i>
-                                <input type="text" 
-                                       id="name" 
-                                       name="name" 
-                                       class="form-control @error('name') is-invalid @enderror" 
-                                       value="{{ old('name', $item->name) }}"
-                                       placeholder="e.g., Gold, Silver, Platinum"
-                                       required>
-                            </div>
-                            @error('name')
-                                <div class="error-message">
-                                    <i class="bi bi-exclamation-circle"></i>
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                            <div class="form-hint">
-                                <i class="bi bi-info-circle"></i>
-                                Enter the name of the metal type
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Status</label>
-                            <div class="toggle-switch-container">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" 
-                                           name="is_active" 
-                                           id="is_active" 
-                                           {{ old('is_active', $item->is_active) ? 'checked' : '' }}>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <label for="is_active" class="toggle-label">
-                                    <span class="status-text">Active</span>
-                                    <span class="status-description">Enable this metal type for use</span>
-                                </label>
-                            </div>
-                            <div class="form-hint">
-                                <i class="bi bi-info-circle"></i>
-                                Toggle to activate or deactivate this metal type
-                            </div>
+                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="0" {{ old('is_active', $item->is_active) == '0' ? 'checked' : '' }}>
+                                <div class="attr-toggle-indicator inactive"><i class="bi bi-x-circle"></i> Inactive</div>
+                            </label>
                         </div>
                     </div>
-                </div>
+                    <div class="attr-form-actions">
+                        <a href="{{ route('metal_types.index') }}" class="attr-btn-cancel"><i class="bi bi-x-circle"></i>
+                            Cancel</a>
+                        <button type="submit" class="attr-btn-submit"><i class="bi bi-check-circle"></i> Update Metal
+                            Type</button>
+                    </div>
+                </form>
             </div>
-
-            <!-- Action Footer -->
-            <div class="action-footer">
-                <button type="submit" class="btn-primary-custom">
-                    <i class="bi bi-check-circle"></i>
-                    <span>Update Metal Type</span>
-                </button>
-                <a href="{{ route('metal_types.index') }}" class="btn-secondary-custom">
-                    <i class="bi bi-x-circle"></i>
-                    <span>Cancel</span>
-                </a>
-            </div>
-        </form>
+        </div>
     </div>
-
-    @endsection
+    @include('partials.attribute-styles')
+@endsection

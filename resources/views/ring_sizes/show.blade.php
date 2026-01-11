@@ -1,26 +1,70 @@
 @extends('layouts.admin')
 
-@section('title', 'Ring Size')
+@section('title', 'View Ring Size')
 
 @section('content')
-    <h3>Ring Size</h3>
+    <div class="attr-form-container">
+        <div class="attr-page-header">
+            <div class="attr-header-content">
+                <div class="attr-header-left">
+                    <div class="attr-breadcrumb-nav">
+                        <a href="{{ route('admin.dashboard') }}" class="attr-breadcrumb-link"><i
+                                class="bi bi-house-door"></i> Dashboard</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <a href="{{ route('ring_sizes.index') }}" class="attr-breadcrumb-link">Ring Sizes</a>
+                        <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
+                        <span class="attr-breadcrumb-current">{{ $item->name }}</span>
+                    </div>
+                    <h1 class="attr-page-title"><i class="bi bi-eye"></i> Ring Size Details</h1>
+                    <p class="attr-page-subtitle">View ring size information</p>
+                </div>
+                <div class="attr-header-right">
+                    <a href="{{ route('ring_sizes.index') }}" class="attr-btn-back"><i class="bi bi-arrow-left"></i> Back to
+                        List</a>
+                </div>
+            </div>
+        </div>
 
-    <dl class="row">
-        <dt class="col-sm-3">ID</dt>
-        <dd class="col-sm-9">{{ $item->id }}</dd>
-
-        <dt class="col-sm-3">Name</dt>
-        <dd class="col-sm-9">{{ $item->name }}</dd>
-
-        <dt class="col-sm-3">Active</dt>
-        <dd class="col-sm-9">{{ $item->is_active ? 'Yes' : 'No' }}</dd>
-
-        <dt class="col-sm-3">Created</dt>
-        <dd class="col-sm-9">{{ $item->created_at?->format('Y-m-d') ?? '—' }}</dd>
-    </dl>
-
-    <a href="{{ route('ring_sizes.index') }}" class="btn btn-secondary">Back</a>
-    @if ($currentAdmin && $currentAdmin->hasPermission('ring_sizes.edit'))
-        <a href="{{ route('ring_sizes.edit', $item->id) }}" class="btn btn-primary">Edit</a>
-    @endif
+        <div class="attr-detail-card">
+            <div class="attr-detail-header">
+                <div class="attr-detail-info">
+                    <div class="attr-detail-icon"><i class="bi bi-circle"></i></div>
+                    <div class="attr-detail-title">
+                        <h2>{{ $item->name }}</h2>
+                        <p>Ring Size Information</p>
+                    </div>
+                </div>
+                <div class="attr-status-badge {{ $item->is_active ? 'active' : 'inactive' }}">
+                    <i class="bi bi-{{ $item->is_active ? 'check-circle' : 'x-circle' }}"></i>
+                    {{ $item->is_active ? 'Active' : 'Inactive' }}
+                </div>
+            </div>
+            <div class="attr-detail-body">
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label"><i class="bi bi-hash"></i> ID</div>
+                    <div class="attr-detail-value">{{ $item->id }}</div>
+                </div>
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label"><i class="bi bi-tag"></i> Name</div>
+                    <div class="attr-detail-value">{{ $item->name }}</div>
+                </div>
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label"><i class="bi bi-calendar"></i> Created</div>
+                    <div class="attr-detail-value">{{ $item->created_at?->format('M d, Y H:i') ?? 'N/A' }}</div>
+                </div>
+                <div class="attr-detail-row">
+                    <div class="attr-detail-label"><i class="bi bi-clock"></i> Updated</div>
+                    <div class="attr-detail-value">{{ $item->updated_at?->format('M d, Y H:i') ?? 'N/A' }}</div>
+                </div>
+                <div class="attr-detail-actions">
+                    <a href="{{ route('ring_sizes.edit', $item->id) }}" class="attr-btn-edit"><i class="bi bi-pencil"></i>
+                        Edit</a>
+                    <form action="{{ route('ring_sizes.destroy', $item->id) }}" method="POST" style="display:inline;"
+                        onsubmit="return confirm('Are you sure?')">@csrf @method('DELETE')<button type="submit"
+                            class="attr-btn-delete"><i class="bi bi-trash"></i> Delete</button></form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @include('partials.attribute-styles')
 @endsection

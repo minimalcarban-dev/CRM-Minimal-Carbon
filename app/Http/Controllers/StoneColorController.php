@@ -3,84 +3,46 @@
 namespace App\Http\Controllers;
 
 use App\Models\StoneColor;
-use Illuminate\Http\Request;
 
-class StoneColorController extends Controller
+/**
+ * Stone Color Resource Controller
+ * Manages stone colors (Red, Blue, Green, etc.)
+ */
+class StoneColorController extends BaseResourceController
 {
-    public function index(Request $request)
+    protected function getModelClass(): string
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('stone_colors.view')) abort(403);
-
-        $query = StoneColor::query();
-        if ($q = $request->query('search')) {
-            $query->where('name', 'like', "%{$q}%");
-        }
-
-        $items = $query->orderByDesc('id')->paginate(15)->withQueryString();
-        return view('stone_colors.index', compact('items'));
+        return StoneColor::class;
     }
-
-    public function create()
+    
+    protected function getViewPath(): string
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('stone_colors.create')) abort(403);
-        return view('stone_colors.create');
+        return 'stone_colors';
     }
-
-    public function store(Request $request)
+    
+    protected function getRouteName(): string
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('stone_colors.create')) abort(403);
-
-        $data = $request->validate([
+        return 'stone_colors';
+    }
+    
+    protected function getPermissionPrefix(): ?string
+    {
+        return 'stone_colors';
+    }
+    
+    protected function getStoreRules(): array
+    {
+        return [
             'name' => 'required|string|max:255|unique:stone_colors,name',
             'is_active' => 'nullable|boolean',
-        ]);
-
-        $data['is_active'] = $request->has('is_active');
-        StoneColor::create($data);
-
-        return redirect()->route('stone_colors.index')->with('success', 'Stone color created');
+        ];
     }
-
-    public function show(StoneColor $stone_color)
+    
+    protected function getUpdateRules($id): array
     {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('stone_colors.view')) abort(403);
-        return view('stone_colors.show', ['item' => $stone_color]);
-    }
-
-    public function edit(StoneColor $stone_color)
-    {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('stone_colors.edit')) abort(403);
-        return view('stone_colors.edit', ['item' => $stone_color]);
-    }
-
-    public function update(Request $request, StoneColor $stone_color)
-    {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('stone_colors.edit')) abort(403);
-
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:stone_colors,name,' . $stone_color->id,
+        return [
+            'name' => 'required|string|max:255|unique:stone_colors,name,' . $id,
             'is_active' => 'nullable|boolean',
-        ]);
-
-        $data['is_active'] = $request->has('is_active');
-        $stone_color->update($data);
-
-        return redirect()->route('stone_colors.index')->with('success', 'Stone color updated');
-    }
-
-    public function destroy(StoneColor $stone_color)
-    {
-        $current = $this->currentAdmin();
-        if (!$current || !$current->hasPermission('stone_colors.delete')) abort(403);
-
-        $stone_color->delete();
-
-        return redirect()->route('stone_colors.index')->with('success', 'Stone color deleted');
+        ];
     }
 }

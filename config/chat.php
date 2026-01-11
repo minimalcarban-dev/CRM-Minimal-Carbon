@@ -9,7 +9,8 @@ return [
     'allowed_mime_types' => array_values(array_filter(array_map('trim', explode(',', (string) env('CHAT_ALLOWED_MIMES',
         implode(',', [
             'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-            'application/pdf',
+            // 'application/pdf',
+            'application/octet-stream',
             'text/plain',
         ])
     ))))),

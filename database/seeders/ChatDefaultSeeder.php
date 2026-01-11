@@ -27,19 +27,9 @@ class ChatDefaultSeeder extends Seeder
             ]
         );
 
-        // Public channel (public)
-        $public = Channel::firstOrCreate(
-            ['name' => 'Public'],
-            [
-                'type' => 'public',
-                'description' => 'Public announcement channel',
-                'created_by' => $creatorId,
-            ]
-        );
 
         // Attach all admins to both channels idempotently
         $adminIds = Admin::pluck('id')->all();
         $general->users()->syncWithoutDetaching($adminIds);
-        $public->users()->syncWithoutDetaching($adminIds);
     }
 }

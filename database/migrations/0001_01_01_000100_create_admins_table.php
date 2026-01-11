@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('aadhar_front_image')->nullable();
             $table->string('aadhar_back_image')->nullable();
             $table->string('bank_passbook_image')->nullable();
+            $table->string('family_member_phone')->nullable();
             $table->timestamps();
         });
     }

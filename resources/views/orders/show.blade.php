@@ -56,6 +56,20 @@
                     <span class="status-value">{{ $order->company->name }}</span>
                 </div>
             @endif
+
+            @if($order->creator)
+                <div class="status-card">
+                    <span class="status-label">Created By</span>
+                    <span class="status-value">{{ $order->creator->name }}</span>
+                </div>
+            @endif
+
+            @if($order->lastModifier)
+                <div class="status-card">
+                    <span class="status-label">Last Edited By</span>
+                    <span class="status-value">{{ $order->lastModifier->name }}</span>
+                </div>
+            @endif
         </div>
 
         <!-- Main Content Grid -->
@@ -69,7 +83,20 @@
                         <i class="bi bi-person-circle"></i> Client Details
                     </h3>
                     <div class="section-content">
-                        <p>{{ $order->client_details }}</p>
+                        <div class="client-details-grid">
+                            <div class="detail-row"><strong>Name:</strong>
+                                {{ $order->display_client_name ?? ($order->client_details ?? '') }}</div>
+                            <div class="detail-row"><strong>Email:</strong> {{ $order->display_client_email ?? '' }}</div>
+                            @if($order->display_client_mobile)
+                                <div class="detail-row"><strong>Mobile:</strong> {{ $order->display_client_mobile }}</div>
+                            @endif
+                            <div class="detail-row"><strong>Address:</strong>
+                                <p style="margin:0">{{ $order->display_client_address ?? '' }}</p>
+                            </div>
+                            @if($order->display_client_tax_id)
+                                <div class="detail-row"><strong>Tax ID:</strong> {{ $order->display_client_tax_id }}</div>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -115,7 +142,7 @@
                                 @if($order->ringSize)
                                     <div class="spec-item">
                                         <span class="spec-label">Ring Size</span>
-                                        <span class="spec-value">{{ $order->ringSize->size }}</span>
+                                        <span class="spec-value">{{ $order->ringSize->name }}</span>
                                     </div>
                                 @endif
 
@@ -126,10 +153,10 @@
                                     </div>
                                 @endif
 
-                                @if($order->earringType)
+                                @if($order->earringDetail)
                                     <div class="spec-item">
                                         <span class="spec-label">Earring Type</span>
-                                        <span class="spec-value">{{ $order->earringType->name }}</span>
+                                        <span class="spec-value">{{ $order->earringDetail->name }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -141,13 +168,25 @@
                 @if($order->gross_sell)
                     <div class="info-section">
                         <h3 class="section-title">
-                            <i class="bi bi-currency-rupee"></i> Pricing
+                            <i class="bi bi-currency-dollar"></i> Pricing
                         </h3>
                         <div class="section-content">
                             <div class="price-display">
                                 <span class="price-label">Gross Sell Amount</span>
-                                <span class="price-value">₹{{ number_format($order->gross_sell, 2) }}</span>
+                                <span class="price-value">$ {{ number_format($order->gross_sell, 2) }}</span>
                             </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Admin Notes -->
+                @if($order->special_notes)
+                    <div class="info-section">
+                        <h3 class="section-title">
+                            <i class="bi bi-journal-text"></i> Special Notes
+                        </h3>
+                        <div class="section-content">
+                            <p style="white-space: pre-wrap;">{{ $order->special_notes }}</p>
                         </div>
                     </div>
                 @endif
@@ -210,7 +249,8 @@
                         <div class="section-content">
                             <div class="images-grid">
                                 @foreach($images as $index => $image)
-                                    <div class="image-item" onclick="openLightbox({{ $index }})">
+                                    <div class="image-item"
+                                        onclick="viewImage('{{ $image['url'] }}', '{{ addslashes($image['name'] ?? 'Image') }}')">
                                         <img src="{{ $image['url'] }}" alt="{{ $image['name'] ?? 'Image' }}" loading="lazy">
                                         <div class="image-overlay">
                                             <i class="bi bi-eye"></i>
@@ -246,12 +286,16 @@
                                             </small>
                                         </div>
                                         <div class="pdf-actions no-print">
-                                            <a href="{{ $pdf['url'] }}" target="_blank" class="pdf-btn" title="View">
+                                            <button type="button" class="pdf-btn"
+                                                onclick="viewPDF('{{ $pdf['url'] }}', '{{ addslashes($pdf['name'] ?? 'Document.pdf') }}')"
+                                                title="View PDF">
                                                 <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ $pdf['url'] }}" download class="pdf-btn" title="Download">
+                                            </button>
+                                            <button type="button" class="pdf-btn"
+                                                onclick="downloadPDF('{{ $pdf['url'] }}', '{{ addslashes($pdf['name'] ?? 'Document.pdf') }}')"
+                                                title="Download PDF">
                                                 <i class="bi bi-download"></i>
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 @endforeach
@@ -276,6 +320,39 @@
             <i class="bi bi-chevron-right"></i>
         </button>
         <div class="lightbox-counter" id="lightbox-counter"></div>
+    </div>
+
+    <!-- Image Viewer Modal -->
+    <div id="imageModal" class="pdf-modal no-print" onclick="closeImageModal()">
+        <div class="pdf-modal-content" onclick="event.stopPropagation()">
+            <div class="pdf-modal-header">
+                <h3 id="imageModalTitle">Image Viewer</h3>
+                <button class="pdf-modal-close" onclick="closeImageModal()" title="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="pdf-modal-body" style="background: #000;">
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <img id="imageViewer" src="" style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        alt="Image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Viewer Modal -->
+    <div id="pdfModal" class="pdf-modal no-print" onclick="closePDFModal()">
+        <div class="pdf-modal-content" onclick="event.stopPropagation()">
+            <div class="pdf-modal-header">
+                <h3 id="pdfModalTitle">Document Viewer</h3>
+                <button class="pdf-modal-close" onclick="closePDFModal()" title="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="pdf-modal-body">
+                <iframe id="pdfViewer" src="" frameborder="0"></iframe>
+            </div>
+        </div>
     </div>
 
     <style>
@@ -790,6 +867,101 @@
             border-radius: 20px;
         }
 
+        /* PDF Modal */
+        .pdf-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .pdf-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pdf-modal-content {
+            background: var(--white);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        .pdf-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 2px solid var(--border);
+            background: var(--light);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .pdf-modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pdf-modal-close {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 0.5rem;
+            line-height: 1;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .pdf-modal-close:hover {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .pdf-modal-body {
+            flex: 1;
+            padding: 0;
+            overflow: hidden;
+            background: var(--light);
+            border-radius: 0 0 12px 12px;
+        }
+
+        .pdf-modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: var(--white);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
         /* Print Styles */
         @media print {
             .no-print {
@@ -911,6 +1083,101 @@
                 if (e.key === 'ArrowLeft') navigateLightbox(-1);
                 if (e.key === 'ArrowRight') navigateLightbox(1);
             }
+
+            const imageModal = document.getElementById('imageModal');
+            if (imageModal.classList.contains('active')) {
+                if (e.key === 'Escape') closeImageModal();
+            }
+
+            const pdfModal = document.getElementById('pdfModal');
+            if (pdfModal.classList.contains('active')) {
+                if (e.key === 'Escape') closePDFModal();
+            }
         });
+
+        // Image Viewer functionality
+        function viewImage(url, name) {
+            const modal = document.getElementById('imageModal');
+            const viewer = document.getElementById('imageViewer');
+            const title = document.getElementById('imageModalTitle');
+
+            viewer.src = url;
+            title.textContent = name || 'Image Viewer';
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            const viewer = document.getElementById('imageViewer');
+
+            modal.classList.remove('active');
+            viewer.src = '';
+            document.body.style.overflow = '';
+        }
+
+        // PDF Viewer functionality
+        function viewPDF(url, name) {
+            const modal = document.getElementById('pdfModal');
+            const viewer = document.getElementById('pdfViewer');
+            const title = document.getElementById('pdfModalTitle');
+
+            // Use Google Docs Viewer for better compatibility
+            const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+            viewer.src = viewerUrl;
+            title.textContent = name || 'Document Viewer';
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePDFModal() {
+            const modal = document.getElementById('pdfModal');
+            const viewer = document.getElementById('pdfViewer');
+
+            modal.classList.remove('active');
+            viewer.src = '';
+            document.body.style.overflow = '';
+        }
+
+        // Download PDF with proper filename
+        async function downloadPDF(url, filename) {
+            try {
+                // Show loading state
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                btn.disabled = true;
+
+                // Fetch the PDF file
+                const response = await fetch(url);
+                const blob = await response.blob();
+
+                // Create download link
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Clean up
+                window.URL.revokeObjectURL(downloadUrl);
+
+                // Restore button
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            } catch (error) {
+                console.error('Download failed:', error);
+                alert('Failed to download PDF. Please try again.');
+
+                // Restore button on error
+                const btn = event.target.closest('button');
+                btn.innerHTML = '<i class="bi bi-download"></i>';
+                btn.disabled = false;
+            }
+        }
     </script>
 @endsection

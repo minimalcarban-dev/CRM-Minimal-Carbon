@@ -27,6 +27,7 @@ class Admin extends Authenticatable
         'aadhar_front_image',
         'aadhar_back_image',
         'bank_passbook_image',
+        'family_member_phone',
         'is_super',
     ];
 
@@ -126,5 +127,13 @@ class Admin extends Authenticatable
 
         // Agar Super Admin nahi hai, toh check karo ki in permissions mein se koi bhi hai ya nahi
         return $this->hasAnyPermission($slugs);
+    }
+
+    /**
+     * Get the broadcast channel name that is used for this admin's notifications.
+     */
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'admin.notifications.' . $this->id;
     }
 }
