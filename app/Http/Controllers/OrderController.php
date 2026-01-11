@@ -43,12 +43,8 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $admin = Auth::guard('admin')->user();
-
-        // Define shipped statuses
-        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
-
-        // 2. Start the base query (apply admin + search filters first)
-        $baseQuery = Order::query()->with(['company', 'creator']);
+        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped']; // Define shipped statuses
+        $baseQuery = Order::query()->with(['company', 'creator']); // Start the base query (apply admin + search filters first)
 
         // Super admin sees all orders, regular admin sees only their submitted orders
         if (!$admin->is_super) {
@@ -117,17 +113,11 @@ class OrderController extends Controller
         return view('orders.index', compact('orders', 'totalOrders', 'orderTypeCounts', 'statusCounts', 'shippedOrdersCount'));
     }
 
-    /**
-     * Show the form for creating a new order.
-     */
     public function create()
     {
         return view('orders.create');
     }
 
-    /**
-     * Store a newly created order in storage.
-     */
     public function store(Request $request)
     {
         try {
@@ -138,11 +128,15 @@ class OrderController extends Controller
                 $diamond = Diamond::where('sku', $validated['diamond_sku'])->first();
 
                 if (!$diamond) {
-                    return back()->withInput()->with('error', 'Diamond with SKU "' . $validated['diamond_sku'] . '" not found.');
+                    $errorMsg = 'Diamond with SKU "' . $validated['diamond_sku'] . '" not found.';
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => $errorMsg], 422);
+                    }
+                    return back()->withInput()->with('error', $errorMsg);
                 }
 
                 if ($diamond->is_sold_out === 'Sold') {
-                    return back()->withInput()->with('error', 'Diamond with SKU "' . $validated['diamond_sku'] . '" is already sold. Please select a different diamond.');
+                    $errorMsg = 'Diamond with SKU "' . $validated['diamond_sku'] . '" is already sold. Please select a different diamond.';
                 }
             }
 
@@ -223,8 +217,18 @@ class OrderController extends Controller
                 'created_by' => Auth::guard('admin')->id()
             ]);
 
-            return redirect()->route('orders.index')
-                ->with('success', 'Order created successfully! ' . count($images) . ' images and ' . count($pdfs) . ' PDFs uploaded to Cloudinary.');
+            $successMsg = 'Order created successfully! ' . count($images) . ' images and ' . count($pdfs) . ' PDFs uploaded.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMsg,
+                    'redirect' => route('orders.index'),
+                    'order_id' => $order->id
+                ]);
+            }
+
+            return redirect()->route('orders.index')->with('success', $successMsg);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Validation errors - pass through
@@ -237,7 +241,11 @@ class OrderController extends Controller
                 'admin_id' => Auth::guard('admin')->id()
             ]);
 
-            return back()->withInput()->with('error', 'Failed to create order: ' . $e->getMessage());
+            $errorMsg = 'Failed to create order: ' . $e->getMessage();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 500);
+            }
+            return back()->withInput()->with('error', $errorMsg);
         }
     }
 

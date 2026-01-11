@@ -3,8 +3,9 @@
 @section('title', 'Create New Order')
 
 @section('content')
+
+    <!-- Page Content -->
     <div class="container-fluid">
-        <!-- Page Header -->
         <div class="page-header mb-4">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div>
@@ -26,7 +27,6 @@
         </div>
 
         <!-- Errors are displayed via the unified flash partial in layout -->
-
         <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" id="orderForm">
             @csrf
 
@@ -114,6 +114,7 @@
         </form>
     </div>
 
+    <!-- CSS -->
     @push('styles')
         <style>
             :root {
@@ -528,8 +529,117 @@
                     flex-direction: column;
                 }
             }
+
+            /* Diamond SKU Real-time Validation Styles */
+            .sku-input-wrapper {
+                position: relative;
+            }
+
+            .sku-input-wrapper .form-control-modern {
+                padding-right: 2.75rem;
+            }
+
+            .sku-validation-icon {
+                position: absolute;
+                right: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 1.25rem;
+                line-height: 1;
+            }
+
+            .sku-validation-message {
+                margin-top: 0.5rem;
+                font-size: 0.8125rem;
+                min-height: 1.25rem;
+            }
+
+            .form-control-modern.sku-valid {
+                border-color: var(--success) !important;
+                box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            }
+
+            .form-control-modern.sku-invalid {
+                border-color: var(--danger) !important;
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+            }
+
+            .text-success {
+                color: var(--success) !important;
+            }
+
+            .text-danger {
+                color: var(--danger) !important;
+            }
+
+            .sku-spin {
+                animation: skuSpin 1s linear infinite;
+                color: var(--primary);
+            }
+
+            @keyframes skuSpin {
+                100% {
+                    transform: translateY(-50%) rotate(360deg);
+                }
+            }
+
+            /* Inline Validation Error Styles */
+            .is-invalid {
+                border-color: var(--danger) !important;
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+            }
+
+            .invalid-feedback {
+                color: var(--danger);
+                font-size: 0.8125rem;
+                margin-top: 0.5rem;
+                display: block;
+            }
+
+            .error-banner {
+                margin-bottom: 1.5rem;
+                animation: slideDown 0.3s ease;
+            }
+
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
         </style>
     @endpush
+
+    <!-- JavaScript -->
     @push('scripts')
         <script>
             (function () {
@@ -566,13 +676,13 @@
                                 o.id = '__simple_block_loader';
                                 o.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(30,41,59,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;';
                                 o.innerHTML = `
-                                            <div style="background:white;border-radius:16px;padding:2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                                                <div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
-                                                <div style="font-size:1.25rem;font-weight:700;color:#1e293b;margin-bottom:0.5rem;">Creating Order</div>
-                                                <div style="color:#64748b;font-size:0.95rem;">Please wait — processing your order...</div>
-                                            </div>
-                                            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-                                        `;
+                                                                    <div style="background:white;border-radius:16px;padding:2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                                                                        <div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+                                                                        <div style="font-size:1.25rem;font-weight:700;color:#1e293b;margin-bottom:0.5rem;">Creating Order</div>
+                                                                        <div style="color:#64748b;font-size:0.95rem;">Please wait — processing your order...</div>
+                                                                    </div>
+                                                                    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+                                                                `;
                                 document.body.appendChild(o);
                             }
                         }
@@ -586,23 +696,138 @@
                 }
 
                 form.addEventListener('submit', function (e) {
+                    e.preventDefault(); // Always prevent default - we handle via AJAX
+
                     if (form.dataset.submitting === '1') {
-                        e.preventDefault();
                         return;
                     }
                     form.dataset.submitting = '1';
-                    // disable native buttons immediately
+
+                    // Disable buttons
                     const externalBtns = document.querySelectorAll(`button[type="submit"][form="${form.id}"]`);
                     const internalBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-                    Array.from(externalBtns).concat(Array.from(internalBtns)).forEach(b => b.disabled = true);
-                    showBlockingLoader();
-                });
-            })();
-        </script>
-    @endpush
+                    const allBtns = Array.from(externalBtns).concat(Array.from(internalBtns));
+                    allBtns.forEach(b => b.disabled = true);
 
-    @push('scripts')
-        <script>
+                    showBlockingLoader();
+
+                    // Clear previous errors
+                    clearFormErrors();
+
+                    // Submit via AJAX
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                        .then(async response => {
+                            const data = await response.json();
+
+                            if (response.ok && data.success) {
+                                // Success - redirect
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: data.message,
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        window.location.href = data.redirect || '/admin/orders';
+                                    });
+                                } else {
+                                    showToastNotification(data.message, 'success');
+                                    setTimeout(() => {
+                                        window.location.href = data.redirect || '/admin/orders';
+                                    }, 1500);
+                                }
+                            } else {
+                                // Error - show inline
+                                hideLoader();
+                                form.dataset.submitting = '0';
+                                allBtns.forEach(b => b.disabled = false);
+
+                                if (data.errors) {
+                                    // Validation errors - show inline for each field
+                                    displayValidationErrors(data.errors);
+                                } else if (data.message) {
+                                    // General error message
+                                    showErrorBanner(data.message);
+                                }
+
+                                // Scroll to first error
+                                const firstError = document.querySelector('.is-invalid, .error-banner');
+                                if (firstError) {
+                                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Form submission error:', error);
+                            hideLoader();
+                            form.dataset.submitting = '0';
+                            allBtns.forEach(b => b.disabled = false);
+                            showErrorBanner('Network error. Please check your connection and try again.');
+                        });
+                });
+
+                // Helper: Clear all form errors
+                function clearFormErrors() {
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+                    document.querySelectorAll('.error-banner').forEach(el => el.remove());
+                }
+
+                // Helper: Display validation errors inline
+                function displayValidationErrors(errors) {
+                    for (const [field, messages] of Object.entries(errors)) {
+                        // Find the input by name
+                        const input = form.querySelector(`[name="${field}"], [name="${field}[]"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'invalid-feedback';
+                            errorDiv.style.display = 'block';
+                            errorDiv.textContent = Array.isArray(messages) ? messages[0] : messages;
+                            input.parentNode.appendChild(errorDiv);
+                        }
+                    }
+                }
+
+                // Helper: Show error banner at top of form container
+                function showErrorBanner(message) {
+                    const banner = document.createElement('div');
+                    banner.className = 'error-banner alert-card danger';
+                    banner.innerHTML = `
+                                        <div class="alert-icon">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                        </div>
+                                        <div class="alert-content">
+                                            <h5 class="alert-title">Error</h5>
+                                            <p class="mb-0">${message}</p>
+                                        </div>
+                                    `;
+                    const formContainer = document.getElementById('orderFormFields');
+                    if (formContainer) {
+                        formContainer.insertBefore(banner, formContainer.firstChild);
+                    }
+                }
+
+                // Helper: Hide loader
+                function hideLoader() {
+                    if (window.Swal) {
+                        Swal.close();
+                    }
+                    const loader = document.getElementById('__simple_block_loader');
+                    if (loader) loader.remove();
+                }
+            })();
+
             (function () {
                 const orderTypeInputs = document.querySelectorAll('input[name="order_type"]');
                 const formContainer = document.getElementById('orderFormFields');
@@ -621,11 +846,11 @@
                 function loadOrderForm(type) {
                     // Show loading state
                     formContainer.innerHTML = `
-                                                                        <div class="loading-state">
-                                                                            <div class="loading-spinner"></div>
-                                                                            <p class="loading-text">Loading order form...</p>
-                                                                        </div>
-                                                                    `;
+                                <div class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                    <p class="loading-text">Loading order form...</p>
+                                </div>
+                            `;
 
                     // Fetch form
                     fetch(`/admin/orders/form/${type}`)
@@ -661,6 +886,9 @@
                             }
                             if (submitButton) submitButton.style.display = 'flex';
 
+                            // Initialize Diamond SKU validation for the loaded form
+                            initSkuValidation();
+
                             // Smooth scroll to form
                             setTimeout(() => {
                                 formContainer.scrollIntoView({
@@ -674,19 +902,69 @@
                         .catch(error => {
                             console.error('Error loading form:', error);
                             formContainer.innerHTML = `
-                                                                                <div class="alert-card danger">
-                                                                                    <div class="alert-icon">
-                                                                                        <i class="bi bi-exclamation-triangle-fill"></i>
-                                                                                    </div>
-                                                                                    <div class="alert-content">
-                                                                                        <h5 class="alert-title">Error Loading Form</h5>
-                                                                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            `;
+                                <div class="alert-card danger">
+                                    <div class="alert-icon">
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                    </div>
+                                    <div class="alert-content">
+                                        <h5 class="alert-title">Error Loading Form</h5>
+                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
+                                    </div>
+                                </div>
+                            `;
                             if (submitButton) submitButton.style.display = 'none';
                             showToastNotification('Failed to load order form', 'error');
                         });
+                }
+
+                // Diamond SKU Real-time Validation
+                function initSkuValidation() {
+                    const skuInput = document.getElementById('diamond_sku_input');
+                    const validationIcon = document.getElementById('sku_validation_icon');
+                    const validationMessage = document.getElementById('sku_validation_message');
+
+                    if (!skuInput || !validationIcon || !validationMessage) return;
+
+                    let debounceTimer;
+
+                    skuInput.addEventListener('input', function () {
+                        const sku = this.value.trim();
+
+                        // Clear previous validation
+                        clearTimeout(debounceTimer);
+                        validationIcon.innerHTML = '';
+                        validationMessage.innerHTML = '';
+                        skuInput.classList.remove('sku-valid', 'sku-invalid');
+
+                        if (!sku) return;
+
+                        // Show loading spinner
+                        validationIcon.innerHTML = '<i class="bi bi-arrow-repeat sku-spin"></i>';
+
+                        // Debounce: wait 500ms after user stops typing
+                        debounceTimer = setTimeout(() => {
+                            fetch(`/admin/diamonds/check-sku?sku=${encodeURIComponent(sku)}`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.available) {
+                                        skuInput.classList.add('sku-valid');
+                                        validationIcon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                                        const d = data.diamond;
+                                        const price = d.listing_price ? `$${parseFloat(d.listing_price).toLocaleString()}` : 'N/A';
+                                        validationMessage.innerHTML = `<span class="text-success">✓ ${data.message} - ${d.carat || '?'}ct ${d.shape || ''} ${d.clarity || ''} ${d.color || ''} (${price})</span>`;
+                                    } else {
+                                        skuInput.classList.add('sku-invalid');
+                                        validationIcon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+                                        validationMessage.innerHTML = `<span class="text-danger">✗ ${data.message}</span>`;
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('SKU validation error:', err);
+                                    validationIcon.innerHTML = '';
+                                    validationMessage.innerHTML = '<span class="text-danger">✗ Error checking SKU</span>';
+                                });
+                        }, 500);
+                    });
                 }
 
                 function showToastNotification(message, type) {
@@ -719,30 +997,6 @@
                 }
             })();
         </script>
-        <style>
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-        </style>
     @endpush
+
 @endsection

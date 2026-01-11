@@ -461,6 +461,11 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::get('diamonds/jobs/{id}/download', [DiamondController::class, 'jobDownload'])
         ->name('diamond.job.download');
 
+    // Diamond SKU availability check for orders (real-time validation)
+    Route::get('diamonds/check-sku', [DiamondController::class, 'checkSkuAvailability'])
+        ->name('diamond.check-sku')
+        ->middleware('admin.permission:orders.create');
+
     // Diamond CRUD 
     Route::get('diamonds/create', [DiamondController::class, 'create'])
         ->name('diamond.create')

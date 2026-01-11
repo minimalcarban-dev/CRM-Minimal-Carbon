@@ -1198,5 +1198,51 @@ class DiamondController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Check if a diamond SKU is available for order.
+     * Used for real-time validation in order creation forms.
+     * Returns diamond details if available, error if not found or sold.
+     */
+    public function checkSkuAvailability(Request $request)
+    {
+        $sku = trim($request->input('sku', ''));
+
+        if (empty($sku)) {
+            return response()->json([
+                'available' => false,
+                'message' => 'SKU is required'
+            ], 400);
+        }
+
+        $diamond = Diamond::where('sku', $sku)->first();
+
+        if (!$diamond) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Diamond with SKU "' . $sku . '" not found'
+            ]);
+        }
+
+        if ($diamond->is_sold_out === 'Sold') {
+            return response()->json([
+                'available' => false,
+                'message' => 'Diamond "' . $sku . '" is already sold'
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'message' => 'Diamond Available',
+            'diamond' => [
+                'sku' => $diamond->sku,
+                'carat' => $diamond->weight,
+                'shape' => $diamond->shape,
+                'clarity' => $diamond->clarity,
+                'color' => $diamond->color,
+                'listing_price' => $diamond->listing_price
+            ]
+        ]);
+    }
 }
 
