@@ -39,7 +39,7 @@ class Channel extends Model
      */
     public function messages()
     {
-        return $this->hasMany(Message::class)->orderBy('created_at', 'asc');
+        return $this->hasMany(Message::class);
     }
 
     /**
