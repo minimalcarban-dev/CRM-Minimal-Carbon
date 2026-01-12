@@ -22,8 +22,8 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.1/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
-    <!-- Date Range Picker -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="{{ asset('css/diamond.css') }}" rel="stylesheet">
     <link href="{{ asset('css/attributes.css') }}" rel="stylesheet">
@@ -1376,12 +1376,40 @@
                     </li>
                 @endif
 
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['chat.access']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"
+                            href="{{ route('chat.index') }}" data-tooltip="Chat" id="chatSidebarLink">
+                            <i class="bi bi-chat-dots"></i>
+                            <span>Chat</span>
+                            <span id="chatUnreadBadge" class="hidden"></span>
+                        </a>
+                    </li>
+                @endif
+
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}"
                             href="{{ route('orders.index') }}" data-tooltip="Orders">
                             <i class="bi bi-basket"></i>
                             <span>Orders</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('diamond.index') || (request()->routeIs('diamond.*') && !request()->routeIs('diamond.job.*')) ? 'active' : '' }}"
+                            href="{{ route('diamond.index') }}" data-tooltip="Diamonds">
+                            <i class="bi bi-gem"></i>
+                            <span>Stock List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active' : '' }}"
+                            href="{{ route('diamond.job.history') }}" data-tooltip="Job History">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Job History</span>
                         </a>
                     </li>
                 @endif
@@ -1404,19 +1432,7 @@
                             <span>Parties</span>
                         </a>
                     </li>
-                @endif
-
-
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['chat.access']))
-                    <li>
-                        <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"
-                            href="{{ route('chat.index') }}" data-tooltip="Chat" id="chatSidebarLink">
-                            <i class="bi bi-chat-dots"></i>
-                            <span>Chat</span>
-                            <span id="chatUnreadBadge" class="hidden"></span>
-                        </a>
-                    </li>
-                @endif
+                @endif                
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['leads.view', 'leads.create']))
                     <li>
@@ -1438,22 +1454,7 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create']))
-                    <li>
-                        <a class="nav-link {{ request()->routeIs('diamond.index') || (request()->routeIs('diamond.*') && !request()->routeIs('diamond.job.*')) ? 'active' : '' }}"
-                            href="{{ route('diamond.index') }}" data-tooltip="Diamonds">
-                            <i class="bi bi-gem"></i>
-                            <span>Stock List</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active' : '' }}"
-                            href="{{ route('diamond.job.history') }}" data-tooltip="Job History">
-                            <i class="bi bi-clock-history"></i>
-                            <span>Job History</span>
-                        </a>
-                    </li>
-                @endif
+                
 
                 @php
                     $expensesActive = request()->routeIs(['purchases.*', 'expenses.*']);
