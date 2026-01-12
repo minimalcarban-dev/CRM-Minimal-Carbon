@@ -453,13 +453,17 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
     // Background Job Routes
     Route::get('diamonds/jobs/history', [DiamondController::class, 'jobHistory'])
-        ->name('diamond.job.history');
+        ->name('diamond.job.history')
+        ->middleware('admin.permission:diamond_jobs.view');
     Route::get('diamonds/jobs/{id}', [DiamondController::class, 'jobStatus'])
-        ->name('diamond.job.status');
+        ->name('diamond.job.status')
+        ->middleware('admin.permission:diamond_jobs.view');
     Route::get('diamonds/jobs/{id}/status-json', [DiamondController::class, 'jobStatusJson'])
-        ->name('diamond.job.status.json');
+        ->name('diamond.job.status.json')
+        ->middleware('admin.permission:diamond_jobs.view');
     Route::get('diamonds/jobs/{id}/download', [DiamondController::class, 'jobDownload'])
-        ->name('diamond.job.download');
+        ->name('diamond.job.download')
+        ->middleware('admin.permission:diamond_jobs.view');
 
     // Diamond SKU availability check for orders (real-time validation)
     Route::get('diamonds/check-sku', [DiamondController::class, 'checkSkuAvailability'])
