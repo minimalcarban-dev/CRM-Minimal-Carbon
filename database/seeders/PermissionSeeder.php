@@ -93,6 +93,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Delete Diamonds', 'slug' => 'diamonds.delete', 'description' => 'Delete diamonds', 'category' => 'diamonds'],
             ['name' => 'Assign Diamonds', 'slug' => 'diamonds.assign', 'description' => 'Assign diamonds to admins', 'category' => 'diamonds'],
             ['name' => 'View Diamond Pricing', 'slug' => 'diamonds.view_pricing', 'description' => 'View diamond pricing details (per_ct, purchase_price, margin)', 'category' => 'diamonds'],
+            ['name' => 'View Job History', 'slug' => 'diamond_jobs.view', 'description' => 'View background job history', 'category' => 'diamonds'],
 
             // Companies
             ['name' => 'View Companies', 'slug' => 'companies.view', 'description' => 'View companies list and details', 'category' => 'companies'],

@@ -1404,10 +1404,13 @@
                             <span>Stock List</span>
                         </a>
                     </li>
+                @endif
+
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_jobs.view']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active' : '' }}"
                             href="{{ route('diamond.job.history') }}" data-tooltip="Job History">
-                            <i class="bi bi-clock-history"></i>
+                            <i class="fi fi-rr-time-past"></i>
                             <span>Job History</span>
                         </a>
                     </li>
