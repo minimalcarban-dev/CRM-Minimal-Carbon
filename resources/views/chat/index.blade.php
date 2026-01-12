@@ -46,8 +46,8 @@
             height: calc(100vh - 70px) !important;
             max-height: calc(100vh - 70px) !important;
             /* min-height: auto !important; */
-            margin-top: 80px !important;
-            padding: 1rem !important;
+            margin-top: 70px !important;
+            padding: 0rem !important;
             box-sizing: border-box !important;
         }
 
