@@ -99,6 +99,40 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     });
 
     // ─────────────────────────────────────────────────────────────
+    // Order Reminder Trigger (called by JS timer - no cron needed)
+    // ─────────────────────────────────────────────────────────────
+    Route::post('trigger-reminders', function () {
+        $admin = auth()->guard('admin')->user();
+        if (!$admin) {
+            return response()->json(['status' => 'unauthenticated'], 401);
+        }
+
+        $cacheKey = "order_reminder_{$admin->id}";
+
+        // Check cooldown (4 hours between reminders)
+        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+            return response()->json(['status' => 'cooldown', 'message' => 'Already reminded recently']);
+        }
+
+        // Check for pending drafts
+        $draftCount = \App\Models\OrderDraft::where('admin_id', $admin->id)
+            ->notExpired()
+            ->count();
+
+        if ($draftCount > 0) {
+            $admin->notify(new \App\Notifications\DraftCompletionReminder($draftCount));
+        }
+
+        // Send productivity reminder
+        $admin->notify(new \App\Notifications\OrderProductivityReminder());
+
+        // Set cooldown cache (4 hours)
+        \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(4));
+
+        return response()->json(['status' => 'sent', 'draft_count' => $draftCount]);
+    })->name('admin.trigger-reminders');
+
+    // ─────────────────────────────────────────────────────────────
     // Admin management (CRUD)
     // ─────────────────────────────────────────────────────────────
     Route::get('admins', [AdminController::class, 'index'])
