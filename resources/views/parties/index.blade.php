@@ -29,37 +29,6 @@
             </div>
         </div>
 
-        <!-- Stats Overview -->
-        <div class="stats-overview">
-            <div class="stat-box stat-primary">
-                <div class="stat-icon">
-                    <i class="bi bi-people"></i>
-                </div>
-                <div class="stat-details">
-                    <div class="stat-label">Total Parties</div>
-                    <div class="stat-value">{{ $parties->total() }}</div>
-                </div>
-            </div>
-            <div class="stat-box stat-success">
-                <div class="stat-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                <div class="stat-details">
-                    <div class="stat-label">Active Today</div>
-                    <div class="stat-value">{{ $parties->count() }}</div>
-                </div>
-            </div>
-            <div class="stat-box stat-info">
-                <div class="stat-icon">
-                    <i class="bi bi-geo-alt"></i>
-                </div>
-                <div class="stat-details">
-                    <div class="stat-label">Locations</div>
-                    <div class="stat-value">{{ $parties->pluck('state')->unique()->count() }}</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Success Alert -->
         @if(session('success'))
             <div class="success-alert">

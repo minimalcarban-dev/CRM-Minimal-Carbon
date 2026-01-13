@@ -2502,7 +2502,7 @@
                     format: 'MMM D, YYYY'
                 }
             }, function (start, end, label) {
-                $('#diamondDateFrom').val(start.format('YYYY-MM-DD'));  
+                $('#diamondDateFrom').val(start.format('YYYY-MM-DD'));
                 $('#diamondDateTo').val(end.format('YYYY-MM-DD'));
                 $('#diamondDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
             });
