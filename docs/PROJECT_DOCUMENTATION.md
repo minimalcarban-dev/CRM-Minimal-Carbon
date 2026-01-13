@@ -1,314 +1,566 @@
-# Project Documentation: CRM-Minimal-Carbon
+# CRM-Minimal-Carbon - Complete Project Documentation
 
-**Version:** 1.0  
-**Date:** 2025-12-12
+> **Project Name:** CRM-Minimal-Carbon  
+> **Technology Stack:** Laravel 11 + MySQL + Pusher (WebSocket) + Cloudinary  
+> **Last Updated:** January 13, 2026
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#1-project-overview)
+2. [Technology Stack](#2-technology-stack)
+3. [Project Architecture](#3-project-architecture)
+4. [Module Overview](#4-module-overview)
+5. [Authentication & Authorization](#5-authentication--authorization)
+6. [Core Modules](#6-core-modules)
+7. [Database Schema](#7-database-schema)
+8. [File Structure](#8-file-structure)
+9. [Third-Party Integrations](#9-third-party-integrations)
+10. [Recent Features](#10-recent-features)
+11. [Development Setup](#11-development-setup)
+12. [Common Tasks](#12-common-tasks)
 
 ---
 
 ## 1. Project Overview
 
-### 1.1. Introduction
+**CRM-Minimal-Carbon** is a comprehensive Customer Relationship Management system designed for jewelry/diamond businesses. It manages:
 
-CRM-Minimal-Carbon is a bespoke, robust, and scalable Customer Relationship Management (CRM) system built on the Laravel framework. It is specifically tailored for the jewelry industry, with a focus on managing a diamond inventory, customer orders, and internal communications.
-
-The application provides a secure administrative backend, a real-time chat system for team collaboration, and powerful tools for bulk data management, making it a central hub for all business operations.
-
-### 1.2. Business Objective
-
-The primary goal of this project is to streamline and centralize the key business processes of a jewelry company. By providing a single platform for inventory management, order tracking, and communication, the application aims to:
-
--   **Increase Operational Efficiency:** Automate and simplify tasks like inventory updates and data entry.
--   **Enhance Team Collaboration:** Provide a real-time chat platform for seamless internal communication.
--   **Improve Data Accuracy:** Ensure a single source of truth for diamond inventory and order information.
--   **Provide Business Insights:** Lay the groundwork for future reporting and analytics features.
+-   **Diamond Inventory** - Stock management, bulk import/export, pricing
+-   **Order Management** - Multi-type orders (Ready to Ship, Custom Diamond, Custom Jewellery)
+-   **Invoice Generation** - PDF invoices with multi-currency support
+-   **Lead Management** - Facebook/Instagram integration via Meta API
+-   **Team Chat** - Real-time messaging with channels
+-   **Expense Tracking** - Purchases and office expenses
 
 ---
 
-## 2. Major Features Implemented
+## 2. Technology Stack
 
-This application comes with a rich set of features designed to meet the demands of a modern jewelry business.
-
-### 2.1. Secure Admin & User Management
-
--   **Role-Based Access Control:** A sophisticated permission system allows for granular control over what admins can see and do.
--   **Admin Authentication:** Separate, secure login and session management for administrators.
--   **Super Admin Role:** A top-level admin with the ability to manage other admin accounts and their permissions.
-
-### 2.2. Real-time Chat
-
--   **Internal Communication:** A built-in chat system allows admins to communicate in real-time.
--   **Channels:** Conversations can be organized into different channels.
--   **File Attachments & Mentions:** Supports sending attachments and mentioning other users to notify them.
--   **Real-time Notifications:** Utilizes WebSockets for instant message delivery and read receipts.
-
-### 2.3. Diamond Inventory Management
-
--   **CRUD Operations:** Full capabilities to Create, Read, Update, and Delete diamond records.
--   **Detailed Attributes:** Tracks numerous properties for each diamond, including shape, cut, clarity, color, and more.
--   **Asynchronous Import/Export:**
-    -   **Excel Import:** Admins can upload an Excel file to bulk-add or update diamond records. The import process runs in the background to handle large files without tying up the user interface.
-    -   **Excel Export:** The entire diamond inventory can be exported to an Excel file, also as a background process.
--   **Job Tracking:** The progress of import/export jobs is tracked, and admins are notified upon completion.
-
-### 2.4. Order Management
-
--   **Order Tracking:** The system can manage customer orders, linking them to specific inventory items.
--   **Custom Attributes:** Supports various jewelry-specific properties like metal type, ring size, etc.
-
-### 2.5. Audit & Logging
-
--   **Audit Trails:** The application keeps a log of important events, providing an audit trail for key actions taken within the system. This is crucial for accountability and security.
-
-### 2.6. Notifications
-
--   **In-App and External Notifications:** A system for notifying users about important events, such as being assigned a diamond or mentioned in a chat.
+| Layer              | Technology                      |
+| ------------------ | ------------------------------- |
+| **Backend**        | Laravel 11 (PHP 8.2+)           |
+| **Database**       | MySQL 8.0                       |
+| **Frontend**       | Blade Templates + Vanilla JS    |
+| **CSS**            | Custom CSS (no framework)       |
+| **Real-time**      | Pusher (WebSocket)              |
+| **File Storage**   | Cloudinary                      |
+| **PDF Generation** | DomPDF                          |
+| **Queue**          | Laravel Queue (Database driver) |
+| **Cache**          | File Cache                      |
 
 ---
 
-## 3. System Architecture
+## 3. Project Architecture
 
-The application is built using a modern technology stack, ensuring performance, scalability, and maintainability.
+```mermaid
+flowchart TB
+    subgraph Client["Browser"]
+        UI["Blade Views"]
+        JS["JavaScript"]
+    end
 
--   **Backend:** **Laravel (PHP)** - A robust and elegant PHP framework that provides the core structure (MVC), routing, ORM (Eloquent), and other essential features.
--   **Frontend:** **Vue.js & Blade** - The frontend is a mix of traditional Laravel Blade templates and dynamic Vue.js components for interactive features like the chat.
--   **Database:** Assumed to be **MySQL/PostgreSQL**, managed via Laravel's migration system.
--   **Real-time Communication:** **Laravel Echo, Pusher, and WebSockets** are used to power the real-time features of the application, such as the chat.
--   **Job Queues:** **Laravel Queues** are used to handle long-running tasks like importing and exporting large data files, ensuring the application remains responsive.
+    subgraph Server["Laravel Application"]
+        Routes["Routes (web.php)"]
+        Middleware["Middleware"]
+        Controllers["Controllers"]
+        Models["Eloquent Models"]
+        Services["Services"]
+    end
 
----
+    subgraph External["External Services"]
+        Pusher["Pusher (WebSocket)"]
+        Cloudinary["Cloudinary (Files)"]
+        Meta["Meta API (Leads)"]
+    end
 
-## 4. UI Flow & Wireframes (Text-based)
+    subgraph Database["MySQL"]
+        Tables["57+ Tables"]
+    end
 
-This section provides a textual representation of the user interface and flow for key features.
-
-### 4.1. Admin Login Flow
-
-```
-/login
-+--------------------------------------+
-|                                      |
-|          CRM LOGIN                   |
-|                                      |
-|  Email:    [__________________]      |
-|  Password: [__________________]      |
-|                                      |
-|            [  LOGIN  ]               |
-|                                      |
-+--------------------------------------+
-        |
-        | (Successful Login)
-        V
-/admin/dashboard
-+--------------------------------------------------+
-|  NAV: Dashboard | Diamonds | Orders | Chat       |
-+--------------------------------------------------+
-|                                                  |
-|              Welcome, [Admin Name]!              |
-|                                                  |
-|   +----------------+   +----------------+        |
-|   | Recent Orders  |   | Chat Activity  |        |
-|   +----------------+   +----------------+        |
-|                                                  |
-+--------------------------------------------------+
-```
-
-### 4.2. Chat Interface
-
-```
-/admin/chat
-+-------------------------------------------------------------------+
-|  NAV: Dashboard | Diamonds | Orders | Chat (Active)                |
-+-------------------------------------------------------------------+
-| CHANNELS        |  Channel: #general                              |
-|-----------------|-------------------------------------------------|
-| #general        |  User1: Hi team, any updates?   [10:00 AM]      |
-| #sales          |                                                 |
-| #support        |  You: I'm working on the new order. [10:01 AM]  |
-|                 |                                                 |
-|                 |  User2: @You can you check the diamond? [10:02 AM] |
-|                 |                                                 |
-|                 |                                                 |
-|                 |                                                 |
-|                 |                                                 |
-|-----------------|-------------------------------------------------|
-|                 |  Message #general: [____________________] [Send] |
-+-------------------------------------------------------------------+
-```
-
-### 4.3. Diamond Management Dashboard
-
-```
-/admin/diamonds
-+---------------------------------------------------------------------------------+
-|  NAV: Dashboard | Diamonds (Active) | Orders | Chat                             |
-+---------------------------------------------------------------------------------+
-|                                                                                 |
-|  [ Import Diamonds ] [ Export Diamonds ] [ Add New Diamond ]                    |
-|                                                                                 |
-|  Filter: [Shape v] [Color v] [Clarity v] [ Search by Barcode... ] [Apply]        |
-|                                                                                 |
-|---------------------------------------------------------------------------------|
-| Barcode | Shape | Cut   | Color | Clarity | Price      | Status    | Actions     |
-|---------|-------|-------|-------|---------|------------|-----------|-------------|
-| 12345   | Round | Excel | G     | VS1     | $5,000     | Available | [View][Edit]|
-| 12346   | Pear  | Good  | D     | SI2     | $4,200     | Sold      | [View][Edit]|
-| ...     | ...   | ...   | ...   | ...     | ...        | ...       | ...         |
-+---------------------------------------------------------------------------------+
+    UI --> Routes
+    JS --> Routes
+    Routes --> Middleware
+    Middleware --> Controllers
+    Controllers --> Models
+    Controllers --> Services
+    Models --> Tables
+    Controllers --> Pusher
+    Controllers --> Cloudinary
+    Controllers --> Meta
 ```
 
 ---
 
-## 5. Project File Structure (Simplified)
+## 4. Module Overview
+
+| Module          | Description             | Controller                                          | Key Features                                   |
+| --------------- | ----------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| **Admin/Auth**  | User management & login | `AdminController`, `AdminAuthController`            | Login, super admin, avatar upload              |
+| **Permissions** | RBAC system             | `PermissionController`, `AdminPermissionController` | Granular permissions, categories               |
+| **Chat**        | Team messaging          | `ChatController`                                    | Channels, DMs, threads, file sharing, mentions |
+| **Orders**      | Order management        | `OrderController`, `OrderDraftController`           | 3 order types, drafts, auto-save               |
+| **Diamonds**    | Inventory management    | `DiamondController`                                 | Bulk import/export, pricing, assignment        |
+| **Invoices**    | Invoice generation      | `InvoiceController`                                 | PDF export, multi-currency, item lines         |
+| **Parties**     | Client/vendor contacts  | `PartyController`                                   | Company associations                           |
+| **Leads**       | Lead capture            | `LeadController`                                    | Meta integration, activities                   |
+| **Expenses**    | Expense tracking        | `ExpenseController`                                 | Categories, attachments                        |
+| **Purchases**   | Purchase tracking       | `PurchaseController`                                | Vendor, amounts                                |
+| **Companies**   | Company profiles        | `CompanyController`                                 | Banking details, logos                         |
+| **Clients**     | Client database         | `ClientController`                                  | Auto-created from orders                       |
+| **Attributes**  | Lookup tables           | Multiple controllers                                | Metal types, ring sizes, etc.                  |
+
+---
+
+## 5. Authentication & Authorization
+
+### Admin Authentication
+
+-   **Guard:** `admin` (custom guard in `config/auth.php`)
+-   **Middleware:** `admin.auth` - checks `Auth::guard('admin')->check()`
+-   **Model:** `App\Models\Admin`
+-   **Login:** `/admin/login`
+
+### Permission System
+
+-   **Middleware:** `admin.permission:{permission_key}`
+-   **Model:** `App\Models\Permission`
+-   **Pivot Table:** `admin_permission`
+-   **Super Admin:** `is_super = true` bypasses all permission checks
+
+### Permission Categories
+
+```
+admins.*          - Admin management
+permissions.*     - Permission management
+orders.*          - Order CRUD
+diamonds.*        - Diamond CRUD
+invoices.*        - Invoice CRUD
+parties.*         - Party CRUD
+chat.*            - Chat access
+leads.*           - Lead management
+purchases.*       - Purchase tracking
+expenses.*        - Expense tracking
+companies.*       - Company management
+clients.*         - Client management
+{attribute}.*     - Each attribute type
+```
+
+---
+
+## 6. Core Modules
+
+### 6.1 Orders Module
+
+**Order Types:**
+
+1. **Ready to Ship** - Pre-made items
+2. **Custom Diamond** - Custom diamond orders
+3. **Custom Jewellery** - Custom jewellery with specifications
+
+**Key Features:**
+
+-   Dynamic form loading via AJAX partials
+-   File upload to Cloudinary (images + PDFs)
+-   Diamond SKU linking (marks diamond as sold)
+-   Auto-save drafts (NEW - Jan 2026)
+-   Status workflow per order type
+
+**Order Statuses:**
+
+```
+Ready to Ship: r_order_in_process → r_order_shipped
+Custom Diamond: d_diamond_in_discuss → d_diamond_in_making → d_diamond_completed → d_diamond_in_certificate → d_order_shipped
+Custom Jewellery: j_diamond_in_progress → j_cad_in_progress → j_cad_done → j_order_in_qc → j_qc_done → j_order_completed → j_order_shipped
+```
+
+---
+
+### 6.2 Diamonds Module
+
+**Key Features:**
+
+-   Bulk import via Excel/CSV
+-   Bulk export with filters
+-   Barcode generation
+-   Price calculation (cost + margin = list price)
+-   Multi-admin assignment
+-   Sold status tracking
+-   Job tracking history
+
+**Diamond Fields:**
+
+```
+sku, shape, carat, color, clarity, cut, polish, symmetry,
+fluorescence, measurements, depth, table, crown, pavilion,
+girdle, culet, grading_lab, certificate_url, video_url,
+cost_price, margin_percentage, listing_price, is_sold_out,
+sold_price, sold_at, assigned_to (many-to-many with admins)
+```
+
+---
+
+### 6.3 Chat Module
+
+**Real-time messaging system using Pusher.**
+
+**Features:**
+
+-   Public/Private channels
+-   Direct messages
+-   Thread replies
+-   File attachments (Cloudinary)
+-   @mentions with notifications
+-   Message search (full-text)
+-   Unread count badges
+
+**Events:**
+
+```php
+MessageSent::class     // New message in channel
+ChannelRead::class     // User marked channel as read
+```
+
+---
+
+### 6.4 Invoices Module
+
+**PDF invoice generation with DomPDF.**
+
+**Features:**
+
+-   Multi-currency (INR/USD)
+-   Company branding (logo, bank details)
+-   Line items with quantity/price
+-   Copy types (Original, Duplicate, Triplicate)
+-   Mark as done
+-   PDF download
+
+---
+
+### 6.5 Leads Module (Meta Integration)
+
+**Facebook/Instagram lead capture via Meta Webhooks.**
+
+**Features:**
+
+-   Meta OAuth connection
+-   Webhook handling for messages
+-   Conversation threading
+-   Lead activities tracking
+-   Status workflow
+-   Reply to leads (via Meta API)
+
+**Meta Integration Tables:**
+
+```
+meta_accounts      - Connected FB/IG accounts
+meta_conversations - Conversation threads
+meta_messages      - Individual messages
+meta_message_logs  - Webhook logs for debugging
+```
+
+---
+
+### 6.6 Expenses & Purchases
+
+**Financial tracking modules.**
+
+**Expenses:**
+
+-   Categories (rent, utilities, salaries, etc.)
+-   File attachments
+-   Date filtering
+-   Soft delete
+
+**Purchases:**
+
+-   Vendor tracking
+-   Amount + description
+-   Date filtering
+
+---
+
+## 7. Database Schema
+
+### Core Tables (57 total)
+
+**Authentication:**
+
+```
+admins                  - Admin users
+permissions             - Available permissions
+admin_permission        - Pivot: admin ↔ permission
+sessions                - Laravel sessions
+```
+
+**Orders:**
+
+```
+orders                  - Main orders table
+order_drafts            - Auto-saved drafts (NEW)
+```
+
+**Diamonds:**
+
+```
+diamonds                - Diamond inventory
+diamond_admin           - Pivot: diamond ↔ admin (assignment)
+job_tracks              - Import/export job history
+diamond_clarities       - Lookup: clarity grades
+diamond_cuts            - Lookup: cut grades
+```
+
+**Chat:**
+
+```
+channels               - Chat channels
+messages               - Chat messages
+message_attachments    - File attachments
+message_links          - Extracted URLs
+message_reads          - Read receipts
+```
+
+**Invoices:**
+
+```
+invoices               - Invoice headers
+invoice_items          - Invoice line items
+parties                - Clients/vendors
+```
+
+**Leads:**
+
+```
+leads                  - Lead records
+lead_activities        - Activity log
+meta_accounts          - Connected Meta accounts
+meta_conversations     - Conversation threads
+meta_messages          - Individual messages
+meta_message_logs      - Debug logs
+message_templates      - Quick reply templates
+```
+
+**Financial:**
+
+```
+purchases              - Purchase records
+expenses               - Expense records
+```
+
+**Lookups (Attributes):**
+
+```
+companies              - Company profiles
+clients                - Client database
+metal_types            - Gold/silver/platinum
+setting_types          - Prong/bezel/channel
+closure_types          - Earring closures
+ring_sizes             - Ring size chart
+stone_types            - Diamond/ruby/etc
+stone_shapes           - Round/princess/etc
+stone_colors           - Color grades
+```
+
+---
+
+## 8. File Structure
 
 ```
 CRM-Minimal-Carbon/
 ├── app/
-│   ├── Console/         # Artisan commands
-│   ├── Events/          # Real-time events (e.g., MessageSent)
-│   ├── Exports/         # Classes for exporting data (e.g., DiamondsExport)
 │   ├── Http/
-│   │   ├── Controllers/ # Application controllers (DiamondController, ChatController)
-│   │   └── Middleware/  # Request middleware
-│   ├── Imports/         # Classes for importing data (e.g., DiamondsImport)
-│   ├── Jobs/            # Background jobs (ProcessDiamondImport)
-│   ├── Models/          # Eloquent models (Diamond, Order, User, Message)
-│   ├── Notifications/   # Notification classes
-│   └── Providers/       # Service providers
-├── config/              # Application configuration files
+│   │   ├── Controllers/       # 29 controllers
+│   │   └── Middleware/        # admin.auth, admin.permission
+│   ├── Models/                # 36 Eloquent models
+│   ├── Notifications/         # Notification classes
+│   ├── Services/              # Business logic (CurrencyService, etc.)
+│   └── Events/                # Broadcast events
+│
+├── config/
+│   ├── auth.php               # Admin guard configuration
+│   ├── broadcasting.php       # Pusher configuration
+│   └── cloudinary.php         # Cloudinary configuration
+│
 ├── database/
-│   ├── factories/       # Model factories for testing
-│   ├── migrations/      # Database schema migrations
-│   └── seeders/         # Database seeders
-├── public/              # Publicly accessible files
+│   └── migrations/            # 57 migration files
+│
+├── public/
+│   ├── css/                   # Compiled CSS
+│   ├── js/                    # JavaScript files
+│   │   └── order-autosave.js  # Auto-save functionality
+│   └── images/                # Static images
+│
 ├── resources/
-│   ├── js/              # JavaScript source files (including Vue components)
-│   └── views/           # Blade templates
+│   └── views/
+│       ├── layouts/           # admin.blade.php (main layout)
+│       ├── admin/             # Dashboard
+│       ├── admins/            # Admin CRUD views
+│       ├── orders/            # Order views + drafts/
+│       ├── diamonds/          # Diamond views
+│       ├── invoices/          # Invoice views
+│       ├── chat/              # Chat interface
+│       ├── leads/             # Lead management
+│       └── {module}/          # Other module views
+│
 ├── routes/
-│   ├── web.php          # Web routes
-│   └── channels.php     # Broadcast channel routes
-├── storage/             # Storage for logs, cache, and uploaded files
-├── tests/               # Application tests
-├── composer.json        # Backend dependencies
-└── package.json         # Frontend dependencies
+│   ├── web.php                # All web routes
+│   └── channels.php           # Broadcasting channels
+│
+└── .env                       # Environment configuration
 ```
 
 ---
 
-## 6. Database Schema Overview
+## 9. Third-Party Integrations
 
-The database contains several key tables that model the application's domain:
+### Pusher (Real-time)
 
--   `admins`: Stores administrator accounts and their credentials.
--   `users`: Stores standard user/customer accounts.
--   `permissions`: Defines the available permissions in the system.
--   `admin_permission`: Links admins to their assigned permissions (many-to-many).
--   `diamonds`: The main inventory table, with columns for all diamond attributes.
--   `orders`: Stores information about customer orders.
--   `channels`, `messages`, `message_attachments`: Power the real-time chat system.
--   `jobs`, `job_tracks`: Manage and track the status of background jobs.
--   `audit_logs`: Records significant actions performed by users for auditing.
--   `notifications`: Stores notifications sent to users.
+```env
+PUSHER_APP_ID=xxx
+PUSHER_APP_KEY=xxx
+PUSHER_APP_SECRET=xxx
+PUSHER_APP_CLUSTER=ap2
+```
 
----
+### Cloudinary (File Storage)
 
-## 7. Unsolved Issues & Future Improvements
+```env
+CLOUDINARY_CLOUD_NAME=xxx
+CLOUDINARY_API_KEY=xxx
+CLOUDINARY_API_SECRET=xxx
+```
 
-The following is a list of known issues, security hardening tasks, and potential feature improvements that are currently pending. These are drawn from the project's `TODO.md` file.
+### Meta API (Leads)
 
-### Critical/High Priority
+```env
+META_APP_ID=xxx
+META_APP_SECRET=xxx
+META_VERIFY_TOKEN=xxx
+```
 
--   **Security Hardening:**
-    -   Implement a dedicated admin guard and strengthen session/cookie configurations.
-    -   Properly register and enforce authorization middleware (`EnsureAdminHasPermission`) across all sensitive routes and controller actions.
--   **File Upload Vulnerabilities:**
-    -   Replace direct `public_path` file uploads with Laravel's `Storage` facade to prevent directory traversal and other attacks.
-    -   Enforce strict validation on file MIME types and sizes.
+### Currency API
 
-### Medium Priority
-
--   **Authorization System:**
-    -   The `spatie/laravel-permission` package is included but may not be fully integrated. A decision is needed to either fully implement it or remove it.
-    -   Permission checks are missing from several controllers and Blade views.
--   **UI/UX:**
-    -   The admin layout needs to be updated to a modern sidebar navigation.
-    -   Placeholder text and non-functional UI elements need to be fixed.
--   **Testing:**
-    -   Test coverage is low. Feature tests for admin auth, permissions, and file uploads are needed.
-
-### Future Improvements
-
--   **Reporting & Analytics:** Develop a dashboard to visualize sales trends, inventory turnover, and other KPIs.
--   **Advanced Search:** Implement a more powerful search engine (e.g., Elasticsearch) for the diamond inventory.
--   **CI/CD Pipeline:** Configure a Continuous Integration/Continuous Deployment pipeline to automate testing and deployment.
--   **API for Mobile App:** Develop a RESTful API to allow a future mobile application to connect to the system.
+```env
+EXCHANGE_RATE_API_KEY=xxx
+```
 
 ---
 
-## 8. Setup and Installation Guide
+## 10. Recent Features (Jan 2026)
 
-Follow these steps to set up the project in a local development environment.
+### Order Draft System (Latest)
+
+-   **Auto-save**: Every 30 seconds to server
+-   **Error recovery**: Drafts created on validation/server errors
+-   **Management UI**: `/admin/orders/drafts`
+-   **Login popup**: Notification for pending drafts
+-   **Files**: `OrderDraft.php`, `OrderDraftController.php`, `order-autosave.js`
+
+### Client Database
+
+-   Clients auto-created from order submissions
+-   Linked via `client_id` foreign key on orders
+-   Deduplicated by email
+
+### Bug Fixes
+
+-   MySQL integer column error for nullable foreign keys
+-   Route ordering for draft routes vs `{order}` wildcard
+
+---
+
+## 11. Development Setup
 
 ### Prerequisites
 
--   PHP (>= 8.1)
+-   PHP 8.2+
 -   Composer
--   Node.js & npm
--   A database server (e.g., MySQL)
+-   MySQL 8.0
+-   Node.js (for asset compilation if needed)
 
-### Installation Steps
+### Installation
 
-1.  **Clone the repository:**
+```bash
+# Clone repository
+git clone <repo-url>
+cd CRM-Minimal-Carbon
 
-    ```bash
-    git clone <repository-url>
-    cd CRM-Minimal-Carbon
-    ```
+# Install dependencies
+composer install
 
-2.  **Install backend dependencies:**
+# Copy environment file
+cp .env.example .env
 
-    ```bash
-    composer install
-    ```
+# Generate app key
+php artisan key:generate
 
-3.  **Install frontend dependencies:**
+# Configure database in .env
+DB_DATABASE=minimal_crm
+DB_USERNAME=root
+DB_PASSWORD=
 
-    ```bash
-    npm install
-    ```
+# Run migrations
+php artisan migrate
 
-4.  **Create environment file:**
+# Seed initial data (if seeders exist)
+php artisan db:seed
 
-    ```bash
-    cp .env.example .env
-    ```
+# Start server
+php artisan serve
+```
 
-5.  **Generate application key:**
+### Default Super Admin
 
-    ```bash
-    php artisan key:generate
-    ```
+```
+Email: superadmin@example.com
+Password: Password!123!
+```
 
-6.  **Configure `.env` file:**
+---
 
-    -   Set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` to connect to your local database.
-    -   Configure your `MAIL_` settings.
-    -   Configure your broadcast driver (e.g., `PUSHER_APP_ID`, `PUSHER_APP_KEY`).
+## 12. Common Tasks
 
-7.  **Run database migrations and seeders:**
+### Adding a New Permission
 
-    ```bash
-    php artisan migrate --seed
-    ```
+1. Insert into `permissions` table with `key`, `name`, `category`
+2. Assign to admins via `admin_permission` pivot
+3. Use middleware: `->middleware('admin.permission:your.key')`
 
-8.  **Compile frontend assets:**
+### Adding a New Attribute
 
-    ```bash
-    npm run dev
-    ```
+1. Create migration: `php artisan make:migration create_{name}_table`
+2. Create model: `php artisan make:model {Name}`
+3. Create controller extending `BaseResourceController`
+4. Add routes in `web.php`
+5. Create views: `index`, `create`, `edit`, `partials/_form`
 
-9.  **Start the development server:**
-    ```bash
-    php artisan serve
-    ```
+### Creating a New Module
 
-The application should now be running, typically at `http://127.0.0.1:8000`.
+1. **Migration** - Define table schema
+2. **Model** - Create Eloquent model with relationships
+3. **Controller** - CRUD operations
+4. **Views** - Blade templates
+5. **Routes** - Add to `web.php` with middleware
+6. **Sidebar** - Add link in `layouts/admin.blade.php`
+7. **Permissions** - Create and assign permissions
+
+---
+
+## Quick Links
+
+| Resource              | Path                                           |
+| --------------------- | ---------------------------------------------- |
+| Main Layout           | `resources/views/layouts/admin.blade.php`      |
+| Routes                | `routes/web.php`                               |
+| Auth Config           | `config/auth.php`                              |
+| Admin Model           | `app/Models/Admin.php`                         |
+| Permission Middleware | `app/Http/Middleware/CheckAdminPermission.php` |
+| Chat Controller       | `app/Http/Controllers/ChatController.php`      |
+| Diamond Controller    | `app/Http/Controllers/DiamondController.php`   |
+| Order Controller      | `app/Http/Controllers/OrderController.php`     |
+
+---
+
+_This documentation provides an overview of the entire CRM system. For specific module details, refer to the code comments and individual controller/model files._

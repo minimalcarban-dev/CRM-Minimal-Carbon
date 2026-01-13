@@ -147,7 +147,7 @@
 
             <div class="auth-form bg-white">
                 <div class="mb-3 text-center">
-                    <img src="/uploads/logo.png" alt="logo" style="height:44px;object-fit:contain;"
+                    <img src="{{ asset('images/Luxurious-Logo.png') }}" alt="logo" style="height:44px;object-fit:contain;"
                         onerror="this.style.display='none'">
                 </div>
                 <h4 class="mb-1">Super Admin Login</h4>

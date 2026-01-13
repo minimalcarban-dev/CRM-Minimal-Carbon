@@ -480,7 +480,7 @@
         }
 
         /* Ensure forms inside the actions row behave like the other action buttons
-                       so the delete button aligns and sizes consistently with anchors. */
+                           so the delete button aligns and sizes consistently with anchors. */
         .admin-actions form.d-inline {
             display: flex;
             flex: 1;

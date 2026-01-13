@@ -1,8 +1,7 @@
 @extends('layouts.admin')
-
 @section('title', 'Dashboard')
-
 @section('content')
+
     <div class="dashboard-container">
         <!-- Header -->
         <div class="dashboard-header">
@@ -17,7 +16,7 @@
         </div>
 
         <!-- Quick Stats -->
-        {{-- <div class="stats-grid">
+        <!-- <div class="stats-grid">
             <div class="stat-card stat-primary">
                 <div class="stat-icon">
                     <i class="bi bi-people-fill"></i>
@@ -69,7 +68,7 @@
                     </div>
                 </div>
             </div>
-        </div> --}}
+        </div> -->
 
         <!-- Welcome Card -->
         <div class="welcome-card">
@@ -93,20 +92,14 @@
             @endif
 
             <div class="welcome-actions">
-                @if (
-                        auth()->guard('admin')->user() && auth()->guard('admin')
-                            ->user()->canAccessAny(['admins.view', 'admins.create'])
-                    )
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create']))
                     <a href="{{ route('admins.index') }}" class="btn-primary-modern">
                         <i class="bi bi-people"></i>
                         Manage Admins
                     </a>
                 @endif
 
-                @if (
-                        auth()->guard('admin')->user() && auth()->guard('admin')
-                            ->user()->canAccessAny(['permissions.view', 'permissions.create'])
-                    )
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['permissions.view', 'permissions.create']))
                     <a href="{{ route('permissions.index') }}" class="btn-secondary-modern">
                         <i class="bi bi-shield-lock"></i>
                         View Permissions
@@ -123,10 +116,7 @@
 
         <div class="quick-links-grid">
 
-            @if (
-                    auth()->guard('admin')->user() && auth()->guard('admin')
-                        ->user()->canAccessAny(['admins.create'])
-                )
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['admins.create']))
                 <a href="{{ route('admins.create') }}" class="quick-link-card">
                     <div class="quick-link-icon icon-primary">
                         <i class="bi bi-person-plus"></i>
@@ -139,10 +129,7 @@
                 </a>
             @endif
 
-            @if (
-                    auth()->guard('admin')->user() && auth()->guard('admin')
-                        ->user()->canAccessAny(['permissions.create'])
-                )
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['permissions.create']))
                 <a href="{{ route('permissions.create') }}" class="quick-link-card">
                     <div class="quick-link-icon icon-success">
                         <i class="bi bi-shield-plus"></i>
@@ -155,10 +142,7 @@
                 </a>
             @endif
 
-            @if (
-                    auth()->guard('admin')->user() && auth()->guard('admin')
-                        ->user()->canAccessAny(['orders.view', 'orders.create'])
-                )
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create']))
                 <a href="{{ route('orders.index') }}" class="quick-link-card">
                     <div class="quick-link-icon icon-warning">
                         <i class="bi bi-basket"></i>
@@ -171,10 +155,7 @@
                 </a>
             @endif
 
-            @if (
-                    auth()->guard('admin')->user() && auth()->guard('admin')
-                        ->user()->canAccessAny(['chat.access'])
-                )
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['chat.access']))
                 <a href="{{ route('chat.index') }}" class="quick-link-card">
                     <div class="quick-link-icon icon-info">
                         <i class="bi bi-chat-dots"></i>

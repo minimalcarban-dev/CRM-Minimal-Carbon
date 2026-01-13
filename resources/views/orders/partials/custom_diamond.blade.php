@@ -923,4 +923,86 @@
             }, 500);
         });
     })();
+
+    // Client Autocomplete
+    (function () {
+        const clientNameInput = document.querySelector('input[name="client_name"]');
+        if (!clientNameInput) return;
+
+        let autocompleteList = null;
+        let debounceTimer = null;
+
+        function createAutocompleteList() {
+            if (autocompleteList) return;
+            autocompleteList = document.createElement('div');
+            autocompleteList.className = 'client-autocomplete-list';
+            autocompleteList.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid #e2e8f0;border-radius:10px;max-height:200px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
+            clientNameInput.parentElement.style.position = 'relative';
+            clientNameInput.parentElement.appendChild(autocompleteList);
+        }
+
+        createAutocompleteList();
+
+        clientNameInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            const term = this.value.trim();
+
+            if (term.length < 2) {
+                autocompleteList.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/admin/clients/search?term=${encodeURIComponent(term)}`)
+                    .then(res => res.json())
+                    .then(clients => {
+                        if (clients.length === 0) {
+                            autocompleteList.style.display = 'none';
+                            return;
+                        }
+
+                        autocompleteList.innerHTML = clients.map(c => `
+                            <div class="autocomplete-item" style="padding:12px;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background 0.2s;" 
+                                 data-name="${c.name || ''}" 
+                                 data-email="${c.email || ''}" 
+                                 data-mobile="${c.mobile || ''}" 
+                                 data-address="${c.address || ''}" 
+                                 data-tax="${c.tax_id || ''}">
+                                <div style="font-weight:600;color:#1e293b;">${c.name || 'No Name'}</div>
+                                <div style="font-size:0.85rem;color:#64748b;">${c.email || ''} ${c.mobile ? '• ' + c.mobile : ''}</div>
+                            </div>
+                        `).join('');
+
+                        autocompleteList.style.display = 'block';
+
+                        autocompleteList.querySelectorAll('.autocomplete-item').forEach(item => {
+                            item.addEventListener('mouseenter', () => item.style.background = '#f8fafc');
+                            item.addEventListener('mouseleave', () => item.style.background = '#fff');
+                            item.addEventListener('click', () => {
+                                clientNameInput.value = item.dataset.name;
+
+                                const emailInput = document.querySelector('input[name="client_email"]');
+                                const mobileInput = document.querySelector('input[name="client_mobile"]');
+                                const addressInput = document.querySelector('textarea[name="client_address"]');
+                                const taxInput = document.querySelector('input[name="client_tax_id"]');
+
+                                if (emailInput) emailInput.value = item.dataset.email;
+                                if (mobileInput) mobileInput.value = item.dataset.mobile;
+                                if (addressInput) addressInput.value = item.dataset.address;
+                                if (taxInput) taxInput.value = item.dataset.tax;
+
+                                autocompleteList.style.display = 'none';
+                            });
+                        });
+                    })
+                    .catch(() => autocompleteList.style.display = 'none');
+            }, 300);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!clientNameInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+                autocompleteList.style.display = 'none';
+            }
+        });
+    })();
 </script>

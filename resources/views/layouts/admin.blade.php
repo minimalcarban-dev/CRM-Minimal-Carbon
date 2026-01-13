@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel')</title>
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/Luxurious-Logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/Luxurious-Logo.png') }}">
 
     <!-- Set global admin data for JavaScript -->
     <script>
@@ -19,7 +19,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.1/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.1/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
@@ -27,6 +28,7 @@
     <link href="{{ asset('css/diamond.css') }}" rel="stylesheet">
     <link href="{{ asset('css/attributes.css') }}" rel="stylesheet">
     <link href="{{ asset('css/tracker.css') }}" rel="stylesheet">
+
     @stack('styles')
 
     <style>
@@ -565,6 +567,42 @@
             line-height: 0;
             border: 2px solid white;
             box-shadow: 0 0 0 1px var(--danger);
+        }
+
+        /* Nav Badge for Drafts */
+        .nav-badge {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--warning);
+            color: var(--dark);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .nav-link.active .nav-badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+        .sidebar.collapsed .nav-badge {
+            display: block;
+            right: 10px;
+            top: 8px;
+            transform: none;
+            padding: 0;
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            min-height: 8px;
+            font-size: 0;
+            line-height: 0;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px var(--warning);
         }
 
         /* Dropdown Menu Styles */
@@ -1335,6 +1373,7 @@
 
     <!-- Sidebar -->
     <nav id="sidebar" class="sidebar">
+
         <!-- Sidebar Header -->
         <!-- <div class="sidebar-header">
             <div class="logo-section">
@@ -1388,7 +1427,7 @@
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('orders.*') && !request()->routeIs('orders.drafts.*') ? 'active' : '' }}"
                             href="{{ route('orders.index') }}" data-tooltip="Orders">
                             <i class="bi bi-basket"></i>
                             <span>Orders</span>
@@ -1410,7 +1449,7 @@
                     <li>
                         <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active' : '' }}"
                             href="{{ route('diamond.job.history') }}" data-tooltip="Job History">
-                            <i class="fi fi-rr-time-past"></i>
+                            <i class="bi bi-clock-history"></i>
                             <span>Job History</span>
                         </a>
                     </li>
@@ -1432,6 +1471,16 @@
                             href="{{ route('parties.index') }}" data-tooltip="Parties">
                             <i class="bi bi-people"></i>
                             <span>Parties</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"
+                            href="{{ route('clients.index') }}" data-tooltip="Clients">
+                            <i class="bi bi-person-lines-fill"></i>
+                            <span>Clients</span>
                         </a>
                     </li>
                 @endif
@@ -1496,179 +1545,152 @@
                         </div>
                     </div>
                 @endif
+
+
+                @php
+                    $attributesActive = request()->routeIs([
+                        'companies.*',
+                        'metal_types.*',
+                        'setting_types.*',
+                        'closure_types.*',
+                        'ring_sizes.*',
+                        'stone_types.*',
+                        'stone_shapes.*',
+                        'stone_colors.*',
+                        'diamond_clarities.*',
+                        'diamond_cuts.*',
+                    ]);
+                @endphp
+                <div class="nav-dropdown">
+                    <button class="dropdown-toggle-link {{ $attributesActive ? 'active' : '' }}" id="attributesDropdown"
+                        data-tooltip="Attributes" data-initial-open="{{ $attributesActive ? '1' : '0' }}" type="button"
+                        aria-expanded="false" style="padding-left: 23px;">
+                        <div class="left-content">
+                            <i class="bi bi-grid main-icon"></i>
+                            <span style="padding-left: 15px">Attributes</span>
+                        </div>
+                        <i class="bi bi-chevron-down chevron-icon"></i>
+                    </button>
+                    <div class="dropdown-menu-custom {{ $attributesActive ? 'show' : '' }}" id="attributesMenu">
+                        <ul class="nav">
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['companies.view', 'companies.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}"
+                                        href="{{ route('companies.index') }}" data-tooltip="Companies">
+                                        <i class="bi bi-buildings"></i>
+                                        <span>Company</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['metal_types.view', 'metal_types.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('metal_types.*') ? 'active' : '' }}"
+                                        href="{{ route('metal_types.index') }}" data-tooltip="Metal Types">
+                                        <i class="bi bi-award"></i>
+                                        <span>Metal Types</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['setting_types.view', 'setting_types.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('setting_types.*') ? 'active' : '' }}"
+                                        href="{{ route('setting_types.index') }}" data-tooltip="Setting Types">
+                                        <i class="bi bi-gear"></i>
+                                        <span>Setting Types</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['closure_types.view', 'closure_types.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('closure_types.*') ? 'active' : '' }}"
+                                        href="{{ route('closure_types.index') }}" data-tooltip="Closure Types">
+                                        <i class="bi bi-link-45deg"></i>
+                                        <span>Closure Types</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['ring_sizes.view', 'ring_sizes.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('ring_sizes.*') ? 'active' : '' }}"
+                                        href="{{ route('ring_sizes.index') }}" data-tooltip="Ring Sizes">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Ring Sizes</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_types.view', 'stone_types.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('stone_types.*') ? 'active' : '' }}"
+                                        href="{{ route('stone_types.index') }}" data-tooltip="Stone Types">
+                                        <i class="bi bi-gem"></i>
+                                        <span>Stone Types</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_shapes.view', 'stone_shapes.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('stone_shapes.*') ? 'active' : '' }}"
+                                        href="{{ route('stone_shapes.index') }}" data-tooltip="Stone Shapes">
+                                        <i class="bi bi-square"></i>
+                                        <span>Stone Shapes</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_colors.view', 'stone_colors.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('stone_colors.*') ? 'active' : '' }}"
+                                        href="{{ route('stone_colors.index') }}" data-tooltip="Stone Colors">
+                                        <i class="bi bi-droplet"></i>
+                                        <span>Stone Colors</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_clarities.view', 'diamond_clarities.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('diamond_clarities.*') ? 'active' : '' }}"
+                                        href="{{ route('diamond_clarities.index') }}" data-tooltip="Diamond Clarities">
+                                        <i class="bi bi-card-list"></i>
+                                        <span>Diamond Clarities</span>
+                                    </a>
+                                </li>
+                            @endif
+    
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_cuts.view', 'diamond_cuts.create']))
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('diamond_cuts.*') ? 'active' : '' }}"
+                                        href="{{ route('diamond_cuts.index') }}" data-tooltip="Diamond Cuts">
+                                        <i class="bi bi-scissors"></i>
+                                        <span>Diamond Cuts</span>
+                                    </a>
+                                </li>
+                            @endif
+                        </ul>
+                    </div>
+                </div>
             </ul>
 
-            @php
-                $attributesActive = request()->routeIs([
-                    'companies.*',
-                    'metal_types.*',
-                    'setting_types.*',
-                    'closure_types.*',
-                    'ring_sizes.*',
-                    'stone_types.*',
-                    'stone_shapes.*',
-                    'stone_colors.*',
-                    'diamond_clarities.*',
-                    'diamond_cuts.*',
-                ]);
-            @endphp
-            <div class="nav-dropdown">
-                <button class="dropdown-toggle-link {{ $attributesActive ? 'active' : '' }}" id="attributesDropdown"
-                    data-tooltip="Attributes" data-initial-open="{{ $attributesActive ? '1' : '0' }}" type="button"
-                    aria-expanded="false" style="padding-left: 23px;">
-                    <div class="left-content">
-                        <i class="bi bi-grid main-icon"></i>
-                        <span style="padding-left: 15px">Attributes</span>
-                    </div>
-                    <i class="bi bi-chevron-down chevron-icon"></i>
-                </button>
-                <div class="dropdown-menu-custom {{ $attributesActive ? 'show' : '' }}" id="attributesMenu">
-                    <ul class="nav">
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['companies.view', 'companies.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}"
-                                    href="{{ route('companies.index') }}" data-tooltip="Companies">
-                                    <i class="bi bi-buildings"></i>
-                                    <span>Company</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['metal_types.view', 'metal_types.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('metal_types.*') ? 'active' : '' }}"
-                                    href="{{ route('metal_types.index') }}" data-tooltip="Metal Types">
-                                    <i class="bi bi-award"></i>
-                                    <span>Metal Types</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['setting_types.view', 'setting_types.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('setting_types.*') ? 'active' : '' }}"
-                                    href="{{ route('setting_types.index') }}" data-tooltip="Setting Types">
-                                    <i class="bi bi-gear"></i>
-                                    <span>Setting Types</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['closure_types.view', 'closure_types.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('closure_types.*') ? 'active' : '' }}"
-                                    href="{{ route('closure_types.index') }}" data-tooltip="Closure Types">
-                                    <i class="bi bi-link-45deg"></i>
-                                    <span>Closure Types</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['ring_sizes.view', 'ring_sizes.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('ring_sizes.*') ? 'active' : '' }}"
-                                    href="{{ route('ring_sizes.index') }}" data-tooltip="Ring Sizes">
-                                    <i class="bi bi-circle"></i>
-                                    <span>Ring Sizes</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['stone_types.view', 'stone_types.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('stone_types.*') ? 'active' : '' }}"
-                                    href="{{ route('stone_types.index') }}" data-tooltip="Stone Types">
-                                    <i class="bi bi-gem"></i>
-                                    <span>Stone Types</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['stone_shapes.view', 'stone_shapes.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('stone_shapes.*') ? 'active' : '' }}"
-                                    href="{{ route('stone_shapes.index') }}" data-tooltip="Stone Shapes">
-                                    <i class="bi bi-square"></i>
-                                    <span>Stone Shapes</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['stone_colors.view', 'stone_colors.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('stone_colors.*') ? 'active' : '' }}"
-                                    href="{{ route('stone_colors.index') }}" data-tooltip="Stone Colors">
-                                    <i class="bi bi-droplet"></i>
-                                    <span>Stone Colors</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['diamond_clarities.view', 'diamond_clarities.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('diamond_clarities.*') ? 'active' : '' }}"
-                                    href="{{ route('diamond_clarities.index') }}" data-tooltip="Diamond Clarities">
-                                    <i class="bi bi-card-list"></i>
-                                    <span>Diamond Clarities</span>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if (
-                                auth()->guard('admin')->user() && auth()->guard('admin')
-                                    ->user()->canAccessAny(['diamond_cuts.view', 'diamond_cuts.create'])
-                            )
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('diamond_cuts.*') ? 'active' : '' }}"
-                                    href="{{ route('diamond_cuts.index') }}" data-tooltip="Diamond Cuts">
-                                    <i class="bi bi-scissors"></i>
-                                    <span>Diamond Cuts</span>
-                                </a>
-                            </li>
-                        @endif
-                    </ul>
-                </div>
-            </div>
         </div>
     </nav>
 
     <!-- Top Navbar with Notifications -->
     <div class="top-navbar">
         <div class="navbar-content">
+
             <div class="navbar-left">
                 <button class="top-sidebar-toggle" id="topSidebarToggle" title="Toggle sidebar">
                     <i class="bi bi-chevron-left"></i>
                 </button>
                 <h2 class="navbar-title">@yield('title', 'Admin Panel')</h2>
             </div>
+
             <div class="navbar-right">
                 <!-- Notifications Dropdown -->
                 <div class="notification-dropdown">
@@ -1858,8 +1880,16 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- SweetAlert2 Script -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
+    
     <!-- Date Range Picker -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
@@ -1912,9 +1942,7 @@
                 }, 4500);
             });
         });
-    </script>
-
-    <script>
+    
         // Toast Helper
         function showToast(message, delay = 3000) {
             try {
@@ -2172,12 +2200,7 @@
             }
         `;
         document.head.appendChild(style);
-    </script>
-
-    <!-- SweetAlert2 Script -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
-
-    <script>
+    
         // Global alert helper function
         window.showAlert = function (message, type = 'info', title = null) {
             const typeConfig = {
@@ -2264,7 +2287,87 @@
         });
     </script>
 
+    <!-- Draft Notification Popup on Login -->
+    @if(auth()->guard('admin')->check())
+    <script>
+        (function() {
+            // Check if we should show the draft notification
+            // Only show once per session (use sessionStorage)
+            const DRAFT_POPUP_KEY = 'draft_popup_shown_{{ auth()->guard('admin')->id() }}';
+            
+            // Check if popup was already shown this session
+            if (sessionStorage.getItem(DRAFT_POPUP_KEY)) {
+                return;
+            }
 
+            // Fetch drafts for current admin
+            fetch('{{ route("orders.drafts.my-drafts") }}', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.count > 0) {
+                    // Mark as shown for this session
+                    sessionStorage.setItem(DRAFT_POPUP_KEY, 'true');
+                    
+                    // Build the drafts list HTML
+                    let draftsHtml = '<div style="text-align: left; max-height: 200px; overflow-y: auto;">';
+                    data.drafts.forEach(draft => {
+                        const hasError = draft.has_error 
+                            ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>' 
+                            : '';
+                        draftsHtml += `
+                            <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                    <div style="font-size: 0.8rem; color: #64748b;">
+                                        ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                    </div>
+                                </div>
+                                <a href="${draft.resume_url}" 
+                                   style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                    Resume
+                                </a>
+                            </div>
+                        `;
+                    });
+                    draftsHtml += '</div>';
+                    
+                    // Show the popup
+                    Swal.fire({
+                        title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
+                        html: `
+                            <p style="color: #64748b; margin-bottom: 1rem;">
+                                You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                            </p>
+                            ${draftsHtml}
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
+                        cancelButtonText: 'Dismiss',
+                        confirmButtonColor: '#6366f1',
+                        cancelButtonColor: '#64748b',
+                        width: 450,
+                        customClass: {
+                            popup: 'draft-notification-popup'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '{{ route("orders.drafts.index") }}';
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.log('[DraftNotification] Error fetching drafts:', error);
+            });
+        })();
+    </script>
+    @endif
 
     @stack('scripts')
 </body>
