@@ -2330,19 +2330,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                    <div>
-                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                        <div style="font-size: 0.8rem; color: #64748b;">
-                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                        <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                <div style="font-size: 0.8rem; color: #64748b;">
+                                                    ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                </div>
+                                            </div>
+                                            <a href="${draft.resume_url}" 
+                                               style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                Resume
+                                            </a>
                                         </div>
-                                    </div>
-                                    <a href="${draft.resume_url}" 
-                                       style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                        Resume
-                                    </a>
-                                </div>
-                            `;
+                                    `;
                             });
                             draftsHtml += '</div>';
 
@@ -2350,11 +2350,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                <p style="color: #64748b; margin-bottom: 1rem;">
-                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                </p>
-                                ${draftsHtml}
-                            `,
+                                        <p style="color: #64748b; margin-bottom: 1rem;">
+                                            You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                        </p>
+                                        ${draftsHtml}
+                                    `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',
@@ -2377,6 +2377,70 @@
             })();
         </script>
     @endif
+
+    {{-- Order Reminder Timer (No cron needed - runs via JS) --}}
+    <script>
+        (function () {
+            const REMINDER_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+            const INITIAL_DELAY = 30 * 1000; // 30 seconds after page load
+
+            async function triggerReminders() {
+                try {
+                    const response = await fetch('{{ route("admin.trigger-reminders") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    // If reminder was sent, show notifications directly
+                    if (data.status === 'sent') {
+                        // Show toast
+                        if (typeof showToast === 'function') {
+                            const draftMsg = data.draft_count > 0
+                                ? `📋 You have ${data.draft_count} draft(s) waiting!`
+                                : `🛒 Don't forget to log any new orders!`;
+                            showToast(draftMsg, 8000);
+                        }
+
+                        // Update notification badge
+                        const badge = document.querySelector('.notification-badge');
+                        if (badge) {
+                            let count = parseInt(badge.innerText) || 0;
+                            badge.innerText = count + (data.draft_count > 0 ? 2 : 1);
+                        }
+
+                        // Play sound
+                        if (typeof window.playNotificationSound === 'function') {
+                            window.playNotificationSound();
+                        }
+
+                        // Show browser notification
+                        if (Notification.permission === 'granted') {
+                            new Notification('Order Reminder', {
+                                body: data.draft_count > 0
+                                    ? `You have ${data.draft_count} draft(s) + new orders to enter!`
+                                    : `Do you have any new orders to enter?`,
+                                icon: '/images/Luxurious-Logo.png'
+                            });
+                        }
+                    }
+                } catch (error) {
+                    // Silent fail - don't spam console
+                }
+            }
+
+            // Trigger after initial delay, then every 4 hours
+            setTimeout(() => {
+                triggerReminders();
+                setInterval(triggerReminders, REMINDER_INTERVAL);
+            }, INITIAL_DELAY);
+        })();
+    </script>
 
     @stack('scripts')
 </body>
