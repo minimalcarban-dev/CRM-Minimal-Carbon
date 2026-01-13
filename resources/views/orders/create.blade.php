@@ -30,6 +30,31 @@
         <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" id="orderForm">
             @csrf
 
+            @if(isset($draft) && $draft)
+                <!-- Draft Resume Banner -->
+                <input type="hidden" name="draft_id" value="{{ $draft->id }}">
+                <div class="draft-resume-banner">
+                    <div class="draft-banner-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="draft-banner-content">
+                        <h5 class="draft-banner-title">Resuming Draft #D-{{ $draft->id }}</h5>
+                        @if($draft->error_message)
+                            <p class="draft-banner-error">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                {{ Str::limit($draft->error_message, 150) }}
+                            </p>
+                        @endif
+                        <p class="draft-banner-description">
+                            Your previous data has been loaded. Make corrections and submit again.
+                        </p>
+                    </div>
+                    <a href="{{ route('orders.drafts.index') }}" class="draft-banner-action">
+                        <i class="bi bi-arrow-left"></i> Back to Drafts
+                    </a>
+                </div>
+            @endif
+
             <!-- Order Type Selection Card -->
             <div class="form-section-card mb-4">
                 <div class="section-header">
@@ -129,7 +154,80 @@
                 --warning: #f59e0b;
             }
 
-            /* Custom Button Styles */
+            /* Draft Resume Banner */
+            .draft-resume-banner {
+                background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+                border: 2px solid rgba(99, 102, 241, 0.3);
+                border-radius: 16px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .draft-banner-icon {
+                background: var(--primary);
+                color: white;
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                flex-shrink: 0;
+            }
+
+            .draft-banner-content {
+                flex: 1;
+            }
+
+            .draft-banner-title {
+                font-weight: 700;
+                color: var(--dark);
+                margin: 0 0 0.5rem 0;
+            }
+
+            .draft-banner-error {
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.2);
+                color: var(--danger);
+                padding: 0.5rem 0.75rem;
+                border-radius: 8px;
+                font-size: 0.875rem;
+                margin: 0.5rem 0;
+                display: flex;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .draft-banner-description {
+                color: var(--gray);
+                font-size: 0.875rem;
+                margin: 0;
+            }
+
+            .draft-banner-action {
+                background: white;
+                color: var(--gray);
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                border: 2px solid var(--border);
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 0.875rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+                white-space: nowrap;
+            }
+
+            .draft-banner-action:hover {
+                background: var(--light-gray);
+                color: var(--dark);
+            }
+
             .header-actions {
                 display: flex;
                 align-items: center;
@@ -636,6 +734,161 @@
                     opacity: 0;
                 }
             }
+
+            /* Auto-Save Indicator */
+            .autosave-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                background: white;
+                border: 2px solid var(--border);
+                border-radius: 10px;
+                font-size: 0.8125rem;
+                font-weight: 600;
+                color: var(--gray);
+                margin-bottom: 1rem;
+                transition: all 0.3s ease;
+            }
+
+            .autosave-indicator.saving {
+                border-color: var(--primary);
+                color: var(--primary);
+            }
+
+            .autosave-indicator.saved {
+                border-color: var(--success);
+                color: var(--success);
+            }
+
+            .autosave-indicator.error {
+                border-color: var(--danger);
+                color: var(--danger);
+            }
+
+            .autosave-indicator.unsaved {
+                border-color: var(--warning);
+                color: var(--warning);
+            }
+
+            .autosave-icon::before {
+                content: '\F7D8';
+                font-family: 'bootstrap-icons';
+            }
+
+            .autosave-indicator.saving .autosave-icon::before {
+                content: '\F130';
+                animation: spin 1s linear infinite;
+            }
+
+            .autosave-indicator.saved .autosave-icon::before {
+                content: '\F26B';
+            }
+
+            .autosave-indicator.error .autosave-icon::before {
+                content: '\F33A';
+            }
+
+            .autosave-indicator.unsaved .autosave-icon::before {
+                content: '\F4CA';
+            }
+
+            /* Auto-Save Restore Modal */
+            .autosave-restore-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(30, 41, 59, 0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease;
+            }
+
+            .autosave-restore-content {
+                background: white;
+                border-radius: 20px;
+                padding: 2.5rem;
+                max-width: 420px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            }
+
+            .autosave-restore-icon {
+                color: var(--primary);
+                margin-bottom: 1rem;
+            }
+
+            .autosave-restore-content h3 {
+                font-size: 1.375rem;
+                font-weight: 700;
+                color: var(--dark);
+                margin: 0 0 0.75rem 0;
+            }
+
+            .autosave-restore-content p {
+                color: var(--gray);
+                font-size: 0.95rem;
+                margin: 0 0 0.5rem 0;
+            }
+
+            .autosave-restore-hint {
+                font-weight: 600;
+                color: var(--dark) !important;
+            }
+
+            .autosave-restore-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+
+            .autosave-restore-actions button {
+                flex: 1;
+                padding: 0.75rem 1.5rem;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .btn-restore-discard {
+                background: white;
+                color: var(--gray);
+                border: 2px solid var(--border);
+            }
+
+            .btn-restore-discard:hover {
+                border-color: var(--danger);
+                color: var(--danger);
+            }
+
+            .btn-restore-load {
+                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                color: white;
+                border: none;
+                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            }
+
+            .btn-restore-load:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+
+                to {
+                    opacity: 1;
+                }
+            }
         </style>
     @endpush
 
@@ -676,13 +929,13 @@
                                 o.id = '__simple_block_loader';
                                 o.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(30,41,59,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;';
                                 o.innerHTML = `
-                                                                    <div style="background:white;border-radius:16px;padding:2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                                                                        <div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
-                                                                        <div style="font-size:1.25rem;font-weight:700;color:#1e293b;margin-bottom:0.5rem;">Creating Order</div>
-                                                                        <div style="color:#64748b;font-size:0.95rem;">Please wait — processing your order...</div>
-                                                                    </div>
-                                                                    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-                                                                `;
+                                                                                                                        <div style="background:white;border-radius:16px;padding:2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                                                                                                                            <div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+                                                                                                                            <div style="font-size:1.25rem;font-weight:700;color:#1e293b;margin-bottom:0.5rem;">Creating Order</div>
+                                                                                                                            <div style="color:#64748b;font-size:0.95rem;">Please wait — processing your order...</div>
+                                                                                                                        </div>
+                                                                                                                        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+                                                                                                                    `;
                                 document.body.appendChild(o);
                             }
                         }
@@ -804,14 +1057,14 @@
                     const banner = document.createElement('div');
                     banner.className = 'error-banner alert-card danger';
                     banner.innerHTML = `
-                                        <div class="alert-icon">
-                                            <i class="bi bi-exclamation-triangle-fill"></i>
-                                        </div>
-                                        <div class="alert-content">
-                                            <h5 class="alert-title">Error</h5>
-                                            <p class="mb-0">${message}</p>
-                                        </div>
-                                    `;
+                                                                                            <div class="alert-icon">
+                                                                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                                            </div>
+                                                                                            <div class="alert-content">
+                                                                                                <h5 class="alert-title">Error</h5>
+                                                                                                <p class="mb-0">${message}</p>
+                                                                                            </div>
+                                                                                        `;
                     const formContainer = document.getElementById('orderFormFields');
                     if (formContainer) {
                         formContainer.insertBefore(banner, formContainer.firstChild);
@@ -834,6 +1087,10 @@
                 const submitButton = document.getElementById('submitButtonContainer');
                 let currentType = '';
 
+                // Draft data for resuming (if available)
+                const draftData = @json($draftData ?? []);
+                const isDraftResume = Object.keys(draftData).length > 0;
+
                 orderTypeInputs.forEach(input => {
                     input.addEventListener('change', function () {
                         if (this.checked) {
@@ -843,14 +1100,63 @@
                     });
                 });
 
-                function loadOrderForm(type) {
+                // Auto-load form if resuming from draft
+                if (isDraftResume && draftData.order_type) {
+                    // Select the correct order type radio
+                    const orderTypeRadio = document.getElementById('type_' + draftData.order_type.replace('_to_ship', '').replace('custom_', ''));
+                    if (orderTypeRadio) {
+                        orderTypeRadio.checked = true;
+                        currentType = draftData.order_type;
+                        // Load the form and populate data
+                        setTimeout(() => {
+                            loadOrderFormWithDraft(draftData.order_type, draftData);
+                        }, 100);
+                    }
+                }
+
+                function loadOrderFormWithDraft(type, data) {
+                    loadOrderForm(type, function () {
+                        // Populate form fields from draft data
+                        populateFormFromDraft(data);
+                    });
+                }
+
+                function populateFormFromDraft(data) {
+                    if (!data || typeof data !== 'object') return;
+
+                    Object.keys(data).forEach(key => {
+                        const value = data[key];
+                        if (value === null || value === undefined) return;
+
+                        // Find the input by name
+                        const input = document.querySelector(`[name="${key}"]`);
+                        if (!input) return;
+
+                        if (input.type === 'checkbox') {
+                            input.checked = !!value;
+                        } else if (input.type === 'radio') {
+                            const radioInput = document.querySelector(`[name="${key}"][value="${value}"]`);
+                            if (radioInput) radioInput.checked = true;
+                        } else if (input.tagName === 'SELECT') {
+                            input.value = value;
+                        } else if (input.tagName === 'TEXTAREA') {
+                            input.value = value;
+                        } else {
+                            input.value = value;
+                        }
+                    });
+
+                    showToastNotification('Draft data loaded successfully', 'success');
+                }
+
+                function loadOrderForm(type, callback = null) {
                     // Show loading state
                     formContainer.innerHTML = `
-                                <div class="loading-state">
-                                    <div class="loading-spinner"></div>
-                                    <p class="loading-text">Loading order form...</p>
-                                </div>
-                            `;
+                                                                                    <div class="loading-state">
+                                                                                        <div class="loading-spinner"></div>
+                                                                                        <p class="loading-text">Loading order form...</p>
+                                                                                    </div>
+                                                                                `;
 
                     // Fetch form
                     fetch(`/admin/orders/form/${type}`)
@@ -898,20 +1204,25 @@
                             }, 100);
 
                             showToastNotification('Order form loaded successfully', 'success');
+
+                            // Execute callback if provided (for draft population)
+                            if (typeof callback === 'function') {
+                                setTimeout(() => callback(), 200);
+                            }
                         })
                         .catch(error => {
                             console.error('Error loading form:', error);
                             formContainer.innerHTML = `
-                                <div class="alert-card danger">
-                                    <div class="alert-icon">
-                                        <i class="bi bi-exclamation-triangle-fill"></i>
-                                    </div>
-                                    <div class="alert-content">
-                                        <h5 class="alert-title">Error Loading Form</h5>
-                                        <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
-                                    </div>
-                                </div>
-                            `;
+                                                                                    <div class="alert-card danger">
+                                                                                        <div class="alert-icon">
+                                                                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                                        </div>
+                                                                                        <div class="alert-content">
+                                                                                            <h5 class="alert-title">Error Loading Form</h5>
+                                                                                            <p class="mb-0">Unable to load the order form. Please try again or contact support if the problem persists.</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                `;
                             if (submitButton) submitButton.style.display = 'none';
                             showToastNotification('Failed to load order form', 'error');
                         });
@@ -997,6 +1308,9 @@
                 }
             })();
         </script>
+
+        <!-- Auto-Save System -->
+        <script src="{{ asset('js/order-autosave.js') }}"></script>
     @endpush
 
 @endsection

@@ -56,7 +56,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('chat.index')
         ->middleware('admin.permission:chat.access');
 
+    // ─────────────────────────────────────────────────────────────
     // Chat routes
+    // ─────────────────────────────────────────────────────────────
     Route::prefix('chat')->middleware('admin.permission:chat.access')->group(function () {
         Route::post('/channels', [ChatController::class, 'createChannel']);
         Route::get('/channels', [ChatController::class, 'getChannels']);
@@ -85,7 +87,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::delete('/channels/{channel}', [ChatController::class, 'deleteChannel']);
     });
 
+    // ─────────────────────────────────────────────────────────────
     // Notification routes
+    // ─────────────────────────────────────────────────────────────
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
@@ -94,7 +98,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
 
+    // ─────────────────────────────────────────────────────────────
     // Admin management (CRUD)
+    // ─────────────────────────────────────────────────────────────
     Route::get('admins', [AdminController::class, 'index'])
         ->name('admins.index')
         ->middleware('admin.permission:admins.view');
@@ -117,7 +123,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('admins.destroy')
         ->middleware('admin.permission:admins.delete');
 
+    // ─────────────────────────────────────────────────────────────
     // Admin Permissions Management (consolidated)
+    // ─────────────────────────────────────────────────────────────
     Route::get('admins/{admin}/permissions', [AdminPermissionController::class, 'show'])
         ->name('admins.permissions.show')
         ->middleware('admin.permission:admins.assign_permissions');
@@ -125,7 +133,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('admins.permissions.update')
         ->middleware('admin.permission:admins.assign_permissions');
 
+    // ─────────────────────────────────────────────────────────────
     // Permission management (CRUD)
+    // ─────────────────────────────────────────────────────────────
     Route::get('permissions', [PermissionController::class, 'index'])
         ->name('permissions.index')
         ->middleware('admin.permission:permissions.view');
@@ -148,7 +158,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('permissions.delete')
         ->middleware('admin.permission:permissions.delete');
 
+    // ─────────────────────────────────────────────────────────────
     // Orders
+    // ─────────────────────────────────────────────────────────────
     Route::get('orders', [OrderController::class, 'index'])
         ->name('orders.index')
         ->middleware('admin.permission:orders.view');
@@ -158,6 +170,50 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::post('orders', [OrderController::class, 'store'])
         ->name('orders.store')
         ->middleware('admin.permission:orders.create');
+    Route::get('orders/form/{type}', [OrderController::class, 'loadFormPartial'])
+        ->name('orders.loadFormPartial')
+        ->middleware('admin.permission:orders.create');
+
+    // ─────────────────────────────────────────────────────────────
+    // Order Drafts Module (MUST be before {order} wildcard routes!)
+    // ─────────────────────────────────────────────────────────────
+    Route::prefix('orders/drafts')->name('orders.drafts.')->middleware('admin.permission:orders.create')->group(function () {
+        // Drafts listing page
+        Route::get('/', [\App\Http\Controllers\OrderDraftController::class, 'index'])
+            ->name('index');
+
+        // AJAX: Auto-save draft
+        Route::post('/save', [\App\Http\Controllers\OrderDraftController::class, 'save'])
+            ->name('save');
+
+        // AJAX: Get draft count for badge
+        Route::get('/count', [\App\Http\Controllers\OrderDraftController::class, 'count'])
+            ->name('count');
+
+        // AJAX: Get current admin's drafts for notification popup
+        Route::get('/my-drafts', [\App\Http\Controllers\OrderDraftController::class, 'myDrafts'])
+            ->name('my-drafts');
+
+        // Resume editing a draft
+        Route::get('/{draft}/resume', [\App\Http\Controllers\OrderDraftController::class, 'resume'])
+            ->name('resume');
+
+        // Preview draft
+        Route::get('/{draft}', [\App\Http\Controllers\OrderDraftController::class, 'show'])
+            ->name('show');
+
+        // Delete draft
+        Route::delete('/{draft}', [\App\Http\Controllers\OrderDraftController::class, 'destroy'])
+            ->name('destroy');
+
+        // AJAX: Delete draft
+        Route::delete('/{draft}/ajax', [\App\Http\Controllers\OrderDraftController::class, 'ajaxDestroy'])
+            ->name('ajax-destroy');
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // Order CRUD with {order} parameter (AFTER specific routes)
+    // ─────────────────────────────────────────────────────────────
     Route::get('orders/{order}', [OrderController::class, 'show'])
         ->name('orders.show')
         ->middleware('admin.permission:orders.view');
@@ -170,9 +226,25 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])
         ->name('orders.destroy')
         ->middleware('admin.permission:orders.delete');
-    Route::get('orders/form/{type}', [OrderController::class, 'loadFormPartial'])
-        ->name('orders.loadFormPartial')
+
+    // ─────────────────────────────────────────────────────────────
+    // Client Dashboard Module
+    // ─────────────────────────────────────────────────────────────
+    Route::get('clients', [\App\Http\Controllers\ClientController::class, 'index'])
+        ->name('clients.index')
+        ->middleware('admin.permission:clients.view');
+    Route::get('clients/data', [\App\Http\Controllers\ClientController::class, 'data'])
+        ->name('clients.data')
+        ->middleware('admin.permission:clients.view');
+    Route::get('clients/export', [\App\Http\Controllers\ClientController::class, 'export'])
+        ->name('clients.export')
+        ->middleware('admin.permission:clients.export');
+    Route::get('clients/search', [\App\Http\Controllers\ClientController::class, 'search'])
+        ->name('clients.search')
         ->middleware('admin.permission:orders.create');
+    Route::get('clients/{client}', [\App\Http\Controllers\ClientController::class, 'show'])
+        ->name('clients.show')
+        ->middleware('admin.permission:clients.view');
 
     // Invoices (basic CRUD)
     Route::get('invoices', [InvoiceController::class, 'index'])

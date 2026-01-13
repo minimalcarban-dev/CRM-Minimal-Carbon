@@ -12,6 +12,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_type',
+        'client_id',
         'client_name',
         'client_address',
         'client_mobile',
@@ -50,6 +51,11 @@ class Order extends Model
     /**
      * Relations
      */
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
 
     public function company()
     {

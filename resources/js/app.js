@@ -3,13 +3,9 @@ import { createApp } from "vue";
 import Chat from "./components/Chat.vue";
 import axios from "axios";
 
-console.log("Vue app initializing...");
-
 // Make axios available in components
 const app = createApp({});
 app.config.globalProperties.$axios = axios;
-
-console.log("Chat component:", Chat); // Debug log
 
 // Register components
 app.component("chat", Chat);
@@ -36,9 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const userId = window.authAdminId;
     if (!userId) {
-        console.log(
-            "User is not authenticated. Skipping global notification setup."
-        );
         return;
     }
 
@@ -80,24 +73,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const notificationChannel = window.Echo.private(
             `admin.notifications.${userId}`
         );
-        console.log(
-            "[DEBUG] Subscribing to notification channel:",
-            `admin.notifications.${userId}`
-        );
 
         notificationChannel.listen(
             ".Illuminate\\Notifications\\Events\\BroadcastNotificationCreated",
             (e) => {
-                console.log("[DEBUG] Notification received:", e);
-                console.log("[DEBUG] Notification type:", e.type);
-                console.log("[DEBUG] Notification message:", e.message);
-
                 // 1. Update Badge
                 const badge = document.querySelector(".notification-badge");
                 if (badge) {
                     let count = parseInt(badge.innerText) || 0;
                     badge.innerText = count + 1;
-                    console.log("[DEBUG] Badge updated to:", count + 1);
                 } else {
                     const btn = document.getElementById("notificationBtn");
                     if (btn) {
@@ -105,7 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         newBadge.className = "notification-badge";
                         newBadge.innerText = "1";
                         btn.appendChild(newBadge);
-                        console.log("[DEBUG] Badge created with count: 1");
                     }
                 }
 
@@ -191,12 +174,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     // Insert at top
                     list.insertBefore(item, list.firstChild);
-                    console.log("[DEBUG] Notification added to dropdown list");
                 }
 
                 // 3. Show Toast/Notification for ALL notifications (including mentions)
                 // We prioritize this specific listener for Mentions because it has better text ("You were mentioned...")
-                console.log("[DEBUG] Showing toast and desktop notification");
+
                 if (typeof window.showToast === "function") {
                     window.showToast(e.message || "New Notification");
                 } else {
@@ -209,16 +191,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (typeof window.playNotificationSound === "function") {
                     window.playNotificationSound();
-                    console.log("[DEBUG] Notification sound played");
                 } else {
                     console.warn(
                         "[DEBUG] window.playNotificationSound is not available"
                     );
                 }
             }
-        );
-        console.log(
-            `[OK] Subscribed to notification channel: admin.notifications.${userId}`
         );
     } catch (err) {
         console.error("Error subscribing to notification channel:", err);
@@ -232,21 +210,12 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.pathname.includes("/admin/chat") ||
             document.querySelector(".chat-container")
         ) {
-            console.log(
-                "[DEBUG] On chat page, skipping global chat listeners (Chat.vue will handle)"
-            );
             return;
         }
 
         try {
             const response = await window.axios.get("/admin/chat/channels");
             const channels = response.data || [];
-
-            console.log(
-                "[DEBUG] Setting up global chat listeners for",
-                channels.length,
-                "channels"
-            );
 
             channels.forEach((channel) => {
                 window.Echo.private(`chat.channel.${channel.id}`).listen(
@@ -275,10 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             currentCount++;
                             chatBadge.innerText = currentCount;
                             chatBadge.classList.remove("hidden");
-                            console.log(
-                                "[DEBUG] Chat badge updated to:",
-                                currentCount
-                            );
                         }
 
                         // Show in-app toast
@@ -309,9 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 );
             });
-            console.log(
-                `[OK] Subscribed to ${channels.length} chat channels for background notifications.`
-            );
 
             // Fetch and display initial unread count
             fetchChatUnreadCount();
@@ -330,7 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (chatBadge && count > 0) {
                 chatBadge.innerText = count;
                 chatBadge.classList.remove("hidden");
-                console.log("[DEBUG] Initial chat unread count:", count);
             }
         } catch (error) {
             console.error("Failed to fetch chat unread count:", error);

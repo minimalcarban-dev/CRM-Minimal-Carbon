@@ -9,6 +9,7 @@ use App\Models\MetalType;
 use App\Models\Order;
 use App\Models\RingSize;
 use App\Models\SettingType;
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +18,7 @@ use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Services\CurrencyService;
+use App\Models\OrderDraft;
 
 class OrderController extends Controller
 {
@@ -113,9 +115,20 @@ class OrderController extends Controller
         return view('orders.index', compact('orders', 'totalOrders', 'orderTypeCounts', 'statusCounts', 'shippedOrdersCount'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('orders.create');
+        $draft = null;
+        $draftData = [];
+
+        // Check if resuming from a draft
+        if ($request->has('draft_id')) {
+            $draft = OrderDraft::find($request->draft_id);
+            if ($draft) {
+                $draftData = $draft->form_data ?? [];
+            }
+        }
+
+        return view('orders.create', compact('draft', 'draftData'));
     }
 
     public function store(Request $request)
@@ -146,6 +159,31 @@ class OrderController extends Controller
             $order = new Order();
             $this->assignOrderFields($order, $validated);
             $order->submitted_by = Auth::guard('admin')->id();
+
+            // Auto-create or reuse client
+            $clientId = null;
+            if (!empty($validated['client_email']) || !empty($validated['client_name'])) {
+                $client = Client::firstOrCreate(
+                    ['email' => $validated['client_email'] ?? null],
+                    [
+                        'name' => $validated['client_name'] ?? null,
+                        'address' => $validated['client_address'] ?? null,
+                        'mobile' => $validated['client_mobile'] ?? null,
+                        'tax_id' => $validated['client_tax_id'] ?? null,
+                        'created_by' => Auth::guard('admin')->id(),
+                    ]
+                );
+                // Update client if any fields differ
+                $client->update([
+                    'name' => $validated['client_name'] ?? $client->name,
+                    'address' => $validated['client_address'] ?? $client->address,
+                    'mobile' => $validated['client_mobile'] ?? $client->mobile,
+                    'tax_id' => $validated['client_tax_id'] ?? $client->tax_id,
+                ]);
+                $clientId = $client->id;
+            }
+            $order->client_id = $clientId;
+
             $order->save();
 
             // Upload files to Cloudinary (wrapped in try-catch for cleanup)
@@ -219,6 +257,17 @@ class OrderController extends Controller
 
             $successMsg = 'Order created successfully! ' . count($images) . ' images and ' . count($pdfs) . ' PDFs uploaded.';
 
+            // Order created successfully - clear any auto-save drafts for this admin
+            OrderDraftController::clearAutoSaveDraft(
+                Auth::guard('admin')->id(),
+                $validated['order_type'] ?? null
+            );
+
+            // Also delete the specific draft if resuming from one
+            if ($request->has('draft_id')) {
+                OrderDraft::where('id', $request->draft_id)->delete();
+            }
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
@@ -231,7 +280,8 @@ class OrderController extends Controller
             return redirect()->route('orders.index')->with('success', $successMsg);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Validation errors - pass through
+            // Validation errors - save as draft and pass through
+            $this->saveDraftOnError($request, $e->getMessage());
             throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -242,10 +292,59 @@ class OrderController extends Controller
             ]);
 
             $errorMsg = 'Failed to create order: ' . $e->getMessage();
+
+            // Save draft on error
+            $draft = $this->saveDraftOnError($request, $errorMsg);
+
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $errorMsg], 500);
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMsg,
+                    'draft_id' => $draft?->id
+                ], 500);
             }
+
+            // Redirect to draft edit if saved successfully
+            if ($draft) {
+                return redirect()->route('orders.drafts.resume', $draft->id)
+                    ->with('error', $errorMsg)
+                    ->with('info', 'Your order has been saved as a draft. You can resume editing from here.');
+            }
+
             return back()->withInput()->with('error', $errorMsg);
+        }
+    }
+
+    /**
+     * Save order data as draft when an error occurs.
+     */
+    private function saveDraftOnError(Request $request, string $errorMessage): ?OrderDraft
+    {
+        try {
+            $formData = $request->except(['_token', '_method', 'images', 'order_pdfs']);
+
+            $draft = new OrderDraft();
+            $draft->admin_id = Auth::guard('admin')->id();
+            $draft->order_type = $request->input('order_type');
+            $draft->form_data = $formData;
+            $draft->error_message = $errorMessage;
+            $draft->source = 'error';
+            $draft->client_name = $request->input('client_name');
+            $draft->company_id = $request->input('company_id');
+            $draft->save();
+
+            Log::info('Order saved as draft due to error', [
+                'draft_id' => $draft->id,
+                'admin_id' => $draft->admin_id,
+                'error' => $errorMessage
+            ]);
+
+            return $draft;
+        } catch (\Exception $e) {
+            Log::error('Failed to save order as draft', [
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 
@@ -281,7 +380,7 @@ class OrderController extends Controller
 
             // Track if diamond SKU changed
             $oldDiamondSku = $order->diamond_sku;
-            $newDiamondSku = $validated['diamond_sku'] ?? null;
+            $newDiamondSku = $validated['diamond_sku'] ?? '';
 
             // Validate new diamond SKU is not already sold (if changed)
             if (!empty($newDiamondSku) && $newDiamondSku !== $oldDiamondSku) {
@@ -490,28 +589,31 @@ class OrderController extends Controller
     private function assignOrderFields(Order $order, array $validated): void
     {
         $order->order_type = $validated['order_type'];
-        $order->client_name = $validated['client_name'] ?? null;
-        $order->client_address = $validated['client_address'] ?? null;
-        $order->client_mobile = $validated['client_mobile'] ?? null;
-        $order->client_tax_id = $validated['client_tax_id'] ?? null;
-        $order->client_email = $validated['client_email'] ?? null;
-        $order->jewellery_details = $validated['jewellery_details'] ?? null;
-        $order->diamond_details = $validated['diamond_details'] ?? null;
-        $order->diamond_sku = $validated['diamond_sku'] ?? null;
-        $order->gold_detail_id = $validated['gold_detail_id'] ?? null;
-        $order->ring_size_id = $validated['ring_size_id'] ?? null;
-        $order->setting_type_id = $validated['setting_type_id'] ?? null;
-        $order->earring_type_id = $validated['earring_type_id'] ?? null;
-        $order->product_other = $validated['product_other'] ?? null;
-        $order->diamond_status = $validated['diamond_status'] ?? null;
+        $order->client_name = $validated['client_name'] ?? '';
+        $order->client_address = $validated['client_address'] ?? '';
+        $order->client_mobile = $validated['client_mobile'] ?? '';
+        $order->client_tax_id = $validated['client_tax_id'] ?? '';
+        $order->client_email = $validated['client_email'] ?? '';
+        $order->jewellery_details = $validated['jewellery_details'] ?? '';
+        $order->diamond_details = $validated['diamond_details'] ?? '';
+        $order->diamond_sku = $validated['diamond_sku'] ?? '';
+
+        // Integer foreign key fields - use null instead of empty string for MySQL compatibility
+        $order->gold_detail_id = !empty($validated['gold_detail_id']) ? $validated['gold_detail_id'] : null;
+        $order->ring_size_id = !empty($validated['ring_size_id']) ? $validated['ring_size_id'] : null;
+        $order->setting_type_id = !empty($validated['setting_type_id']) ? $validated['setting_type_id'] : null;
+        $order->earring_type_id = !empty($validated['earring_type_id']) ? $validated['earring_type_id'] : null;
+
+        $order->product_other = $validated['product_other'] ?? '';
+        $order->diamond_status = $validated['diamond_status'] ?? '';
         $order->gross_sell = $validated['gross_sell'] ?? 0;
         $order->company_id = $validated['company_id'];
-        $order->note = $validated['note'] ?? null;
-        $order->special_notes = $validated['special_notes'] ?? null;
-        $order->shipping_company_name = $validated['shipping_company_name'] ?? null;
-        $order->tracking_number = $validated['tracking_number'] ?? null;
-        $order->tracking_url = $validated['tracking_url'] ?? null;
-        $order->dispatch_date = $validated['dispatch_date'] ?? null;
+        $order->note = $validated['note'] ?? '';
+        $order->special_notes = $validated['special_notes'] ?? '';
+        $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
+        $order->tracking_number = $validated['tracking_number'] ?? '';
+        $order->tracking_url = $validated['tracking_url'] ?? '';
+        $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
     }
 
     /**

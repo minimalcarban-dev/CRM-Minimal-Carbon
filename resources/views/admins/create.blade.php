@@ -907,6 +907,8 @@
                 }
             })();
         </script>
+
+        <!-- CSS -->    
         <style>
             @keyframes slideIn {
                 from {

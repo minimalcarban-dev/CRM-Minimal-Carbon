@@ -5,8 +5,8 @@
 @php
     // Status color mapping
     $statusColors = [
-        'processed' => 'info',
-        'completed' => 'success',
+        'r_order_in_process' => 'info',
+        'r_order_shipped' => 'success',
 
         // Custom Diamond
         'd_diamond_in_discuss' => 'info',
@@ -29,8 +29,8 @@
     ];
 
     $statusIcons = [
-        'processed' => 'bi-arrow-repeat',
-        'completed' => 'bi-check-circle',
+        'r_order_in_process' => 'bi-arrow-repeat',
+        'r_order_shipped' => 'bi-truck',
 
         // Custom Diamond
         'd_diamond_in_discuss' => 'bi-chat-dots',
@@ -53,9 +53,9 @@
     ];
 @endphp
 
-
-
 @section('content')
+
+    <!-- Main Content -->
     <div class="orders-management-container">
         <!-- Page Header -->
         <div class="page-header">
@@ -76,6 +76,16 @@
                     </p>
                 </div>
                 <div class="header-right">
+                    @php
+                        $draftCount = \App\Models\OrderDraft::where('admin_id', auth()->guard('admin')->id())->notExpired()->count();
+                    @endphp
+                    @if($draftCount > 0)
+                        <a href="{{ route('orders.drafts.index') }}" class="btn-drafts-custom">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>Drafts</span>
+                            <span class="draft-count-badge">{{ $draftCount }}</span>
+                        </a>
+                    @endif
                     <a href="{{ route('orders.create') }}" class="btn-primary-custom">
                         <i class="bi bi-plus-circle"></i>
                         <span>Create Order</span>
@@ -83,30 +93,6 @@
                 </div>
             </div>
         </div>
-        <style>
-            .stats-grid a.stat-card {
-                display: flex;
-                gap: 1rem;
-                text-decoration: none;
-                color: inherit;
-                padding: 1rem;
-                border-radius: 12px;
-            }
-
-            .stats-grid .stat-card .stat-icon {
-                flex-shrink: 0;
-            }
-
-            .stats-grid a.stat-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            }
-
-            .stats-grid a.active-filter {
-                outline: 3px solid rgba(99, 102, 241, 0.12);
-                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
-            }
-        </style>
 
         <!-- Stats Cards -->
         <div class="stats-grid">
@@ -552,6 +538,7 @@
         </div>
     </div>
 
+    <!-- CSS -->
     <style>
         :root {
             --primary: #6366f1;
@@ -668,6 +655,47 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
             color: white;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn-drafts-custom {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            position: relative;
+        }
+
+        .btn-drafts-custom:hover {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+            color: white;
+        }
+
+        .draft-count-badge {
+            background: white;
+            color: #d97706;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
         }
 
         /* Stats Grid */
@@ -996,7 +1024,12 @@
         /* Compact column widths to prevent horizontal scroll */
         .orders-table th,
         .orders-table td {
-            padding: 1rem 0.75rem;
+            padding: 1rem 0.6rem;
+        }
+
+        .orders-table th {
+            white-space: normal;
+            vertical-align: bottom;
         }
 
         .date-info {
@@ -1273,6 +1306,29 @@
             margin: 0;
         }
 
+        .stats-grid a.stat-card {
+            display: flex;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .stats-grid .stat-card .stat-icon {
+            flex-shrink: 0;
+        }
+
+        .stats-grid a.stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .stats-grid a.active-filter {
+            outline: 3px solid rgba(99, 102, 241, 0.12);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+        }
+
         /* Responsive */
         @media (max-width: 1400px) {
             .stats-grid {
@@ -1470,45 +1526,10 @@
         }
     </style>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Add stagger animation to table rows
-            const rows = document.querySelectorAll('.table-row');
-            rows.forEach((row, index) => {
-                row.style.animationDelay = `${(index % 10) * 0.05}s`;
-            });
-
-            // Initialize stat cards
-            const statCards = document.querySelectorAll('.stat-card');
-            statCards.forEach((card, index) => {
-                card.style.opacity = '0';
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                }, 100 * (index + 1));
-            });
-
-            // Handle delete confirmations with SweetAlert2
-            document.querySelectorAll('.delete-form').forEach(form => {
-                form.addEventListener('submit', async function (e) {
-                    e.preventDefault();
-
-                    const confirmed = await showConfirm(
-                        'Are you sure you want to delete this order?',
-                        'This action cannot be undone',
-                        'Yes, Delete',
-                        'Cancel'
-                    );
-
-                    if (confirmed) {
-                        this.submit();
-                    }
-                });
-            });
-        });
-    </script>
-
+    <!-- Date Ranege Picker -->
     @include('partials.daterangepicker-styles')
 
+    <!-- JavaScript -->
     @push('scripts')
         <script>
             // Initialize Date Range Picker for Orders
@@ -1552,6 +1573,42 @@
                     $('#orderDateTo').val('');
                 });
             });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // Add stagger animation to table rows
+                const rows = document.querySelectorAll('.table-row');
+                rows.forEach((row, index) => {
+                    row.style.animationDelay = `${(index % 10) * 0.05}s`;
+                });
+
+                // Initialize stat cards
+                const statCards = document.querySelectorAll('.stat-card');
+                statCards.forEach((card, index) => {
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                    }, 100 * (index + 1));
+                });
+
+                // Handle delete confirmations with SweetAlert2
+                document.querySelectorAll('.delete-form').forEach(form => {
+                    form.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+
+                        const confirmed = await showConfirm(
+                            'Are you sure you want to delete this order?',
+                            'This action cannot be undone',
+                            'Yes, Delete',
+                            'Cancel'
+                        );
+
+                        if (confirmed) {
+                            this.submit();
+                        }
+                    });
+                });
+            });
+
         </script>
     @endpush
 

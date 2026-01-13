@@ -95,6 +95,10 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Diamond Pricing', 'slug' => 'diamonds.view_pricing', 'description' => 'View diamond pricing details (per_ct, purchase_price, margin)', 'category' => 'diamonds'],
             ['name' => 'View Job History', 'slug' => 'diamond_jobs.view', 'description' => 'View background job history', 'category' => 'diamonds'],
 
+            // Clients
+            ['name' => 'View Clients', 'slug' => 'clients.view', 'description' => 'View client list and details', 'category' => 'clients'],
+            ['name' => 'Export Clients', 'slug' => 'clients.export', 'description' => 'Export client data to Excel', 'category' => 'clients'],
+
             // Companies
             ['name' => 'View Companies', 'slug' => 'companies.view', 'description' => 'View companies list and details', 'category' => 'companies'],
             ['name' => 'Create Companies', 'slug' => 'companies.create', 'description' => 'Create new companies', 'category' => 'companies'],
