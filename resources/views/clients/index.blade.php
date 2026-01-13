@@ -48,19 +48,6 @@
             </div>
         </div>
 
-        <!-- Stats Overview -->
-        <div class="stats-overview">
-            <div class="stat-box stat-primary">
-                <div class="stat-icon">
-                    <i class="bi bi-people"></i>
-                </div>
-                <div class="stat-details">
-                    <div class="stat-label">Total Clients</div>
-                    <div class="stat-value">{{ $totalClients ?? 0 }}</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Search Bar -->
         <div class="search-bar-card">
             <form method="GET" action="{{ route('clients.index') }}" class="search-form">

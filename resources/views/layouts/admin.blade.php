@@ -1582,7 +1582,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['metal_types.view', 'metal_types.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('metal_types.*') ? 'active' : '' }}"
@@ -1592,7 +1592,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['setting_types.view', 'setting_types.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('setting_types.*') ? 'active' : '' }}"
@@ -1602,7 +1602,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['closure_types.view', 'closure_types.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('closure_types.*') ? 'active' : '' }}"
@@ -1612,7 +1612,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['ring_sizes.view', 'ring_sizes.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('ring_sizes.*') ? 'active' : '' }}"
@@ -1622,7 +1622,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_types.view', 'stone_types.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('stone_types.*') ? 'active' : '' }}"
@@ -1632,7 +1632,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_shapes.view', 'stone_shapes.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('stone_shapes.*') ? 'active' : '' }}"
@@ -1642,7 +1642,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_colors.view', 'stone_colors.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('stone_colors.*') ? 'active' : '' }}"
@@ -1652,7 +1652,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_clarities.view', 'diamond_clarities.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('diamond_clarities.*') ? 'active' : '' }}"
@@ -1662,7 +1662,7 @@
                                     </a>
                                 </li>
                             @endif
-    
+
                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_cuts.view', 'diamond_cuts.create']))
                                 <li>
                                     <a class="nav-link {{ request()->routeIs('diamond_cuts.*') ? 'active' : '' }}"
@@ -1880,16 +1880,16 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
+
     <!-- SweetAlert2 Script -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
-    
+
     <!-- Date Range Picker -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
@@ -1941,8 +1941,17 @@
                     }, 600);
                 }, 4500);
             });
+
+            // Show draft reminder toast on login (from session flash)
+            @if(session('draft_reminder'))
+                setTimeout(function () {
+                    if (typeof showToast === 'function') {
+                        showToast('📋 {{ session("draft_reminder.message") }}', 8000);
+                    }
+                }, 1000);
+            @endif
         });
-    
+
         // Toast Helper
         function showToast(message, delay = 3000) {
             try {
@@ -2200,7 +2209,7 @@
             }
         `;
         document.head.appendChild(style);
-    
+
         // Global alert helper function
         window.showAlert = function (message, type = 'info', title = null) {
             const typeConfig = {
@@ -2289,84 +2298,84 @@
 
     <!-- Draft Notification Popup on Login -->
     @if(auth()->guard('admin')->check())
-    <script>
-        (function() {
-            // Check if we should show the draft notification
-            // Only show once per session (use sessionStorage)
-            const DRAFT_POPUP_KEY = 'draft_popup_shown_{{ auth()->guard('admin')->id() }}';
-            
-            // Check if popup was already shown this session
-            if (sessionStorage.getItem(DRAFT_POPUP_KEY)) {
-                return;
-            }
+        <script>
+            (function () {
+                // Check if we should show the draft notification
+                // Only show once per session (use sessionStorage)
+                const DRAFT_POPUP_KEY = 'draft_popup_shown_{{ auth()->guard('admin')->id() }}';
 
-            // Fetch drafts for current admin
-            fetch('{{ route("orders.drafts.my-drafts") }}', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                // Check if popup was already shown this session
+                if (sessionStorage.getItem(DRAFT_POPUP_KEY)) {
+                    return;
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.count > 0) {
-                    // Mark as shown for this session
-                    sessionStorage.setItem(DRAFT_POPUP_KEY, 'true');
-                    
-                    // Build the drafts list HTML
-                    let draftsHtml = '<div style="text-align: left; max-height: 200px; overflow-y: auto;">';
-                    data.drafts.forEach(draft => {
-                        const hasError = draft.has_error 
-                            ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>' 
-                            : '';
-                        draftsHtml += `
-                            <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                    <div style="font-size: 0.8rem; color: #64748b;">
-                                        ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+
+                // Fetch drafts for current admin
+                fetch('{{ route("orders.drafts.my-drafts") }}', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.count > 0) {
+                            // Mark as shown for this session
+                            sessionStorage.setItem(DRAFT_POPUP_KEY, 'true');
+
+                            // Build the drafts list HTML
+                            let draftsHtml = '<div style="text-align: left; max-height: 200px; overflow-y: auto;">';
+                            data.drafts.forEach(draft => {
+                                const hasError = draft.has_error
+                                    ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
+                                    : '';
+                                draftsHtml += `
+                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                        <div style="font-size: 0.8rem; color: #64748b;">
+                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                        </div>
                                     </div>
+                                    <a href="${draft.resume_url}" 
+                                       style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                        Resume
+                                    </a>
                                 </div>
-                                <a href="${draft.resume_url}" 
-                                   style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                    Resume
-                                </a>
-                            </div>
-                        `;
-                    });
-                    draftsHtml += '</div>';
-                    
-                    // Show the popup
-                    Swal.fire({
-                        title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
-                        html: `
-                            <p style="color: #64748b; margin-bottom: 1rem;">
-                                You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                            </p>
-                            ${draftsHtml}
-                        `,
-                        showCancelButton: true,
-                        confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
-                        cancelButtonText: 'Dismiss',
-                        confirmButtonColor: '#6366f1',
-                        cancelButtonColor: '#64748b',
-                        width: 450,
-                        customClass: {
-                            popup: 'draft-notification-popup'
+                            `;
+                            });
+                            draftsHtml += '</div>';
+
+                            // Show the popup
+                            Swal.fire({
+                                title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
+                                html: `
+                                <p style="color: #64748b; margin-bottom: 1rem;">
+                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                </p>
+                                ${draftsHtml}
+                            `,
+                                showCancelButton: true,
+                                confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
+                                cancelButtonText: 'Dismiss',
+                                confirmButtonColor: '#6366f1',
+                                cancelButtonColor: '#64748b',
+                                width: 450,
+                                customClass: {
+                                    popup: 'draft-notification-popup'
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '{{ route("orders.drafts.index") }}';
+                                }
+                            });
                         }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = '{{ route("orders.drafts.index") }}';
-                        }
+                    })
+                    .catch(error => {
+                        console.log('[DraftNotification] Error fetching drafts:', error);
                     });
-                }
-            })
-            .catch(error => {
-                console.log('[DraftNotification] Error fetching drafts:', error);
-            });
-        })();
-    </script>
+            })();
+        </script>
     @endif
 
     @stack('scripts')

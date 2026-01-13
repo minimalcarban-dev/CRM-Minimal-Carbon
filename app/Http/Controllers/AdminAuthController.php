@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderDraft;
+use App\Notifications\DraftCompletionReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -45,6 +47,22 @@ class AdminAuthController extends Controller
         RateLimiter::clear($throttleKey);
 
         $request->session()->regenerate();
+
+        // Check for pending drafts and send reminder notification
+        $admin = Auth::guard('admin')->user();
+        $draftCount = OrderDraft::where('admin_id', $admin->id)
+            ->notExpired()
+            ->count();
+
+        if ($draftCount > 0) {
+            // Store in session to show toast on next page load
+            session()->flash('draft_reminder', [
+                'count' => $draftCount,
+                'message' => $draftCount === 1
+                    ? "You have 1 incomplete draft waiting. Complete it before it expires!"
+                    : "You have {$draftCount} incomplete drafts waiting. Complete them before they expire!",
+            ]);
+        }
 
         return redirect()->intended(route('admin.dashboard'));
     }
