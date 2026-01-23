@@ -449,8 +449,26 @@
                         <textarea class="form-control" id="note" name="note" rows="3">{{ old('note') }}</textarea>
                     </div>
 
+                    <div class="form-group">
+                        <label for="current_location" class="form-label">
+                            <i class="bi bi-geo-alt"></i> Current Location
+                        </label>
+                        <select class="form-control themed-select" id="current_location" name="current_location">
+                            <option value="">-- Select Country --</option>
+                            @foreach(($countries ?? []) as $country)
+                            <option value="{{ $country }}" {{ old('current_location') == $country ? 'selected' : '' }}>
+                                {{ $country }}
+                            </option>
+                            @endforeach
+                        </select>
+                        <div class="form-hint">
+                            <i class="bi bi-info-circle"></i>
+                            Select the country where diamond is currently stored
+                        </div>
+                    </div>
+
                     @if(Auth::guard('admin')->user() && Auth::guard('admin')->user()->hasPermission('diamonds.assign'))
-                    <div class="form-group full-width">
+                    <div class="form-group">
                         <label for="admin_id" class="form-label">Assign To Admin</label>
                         <select class="form-control" id="admin_id" name="admin_id">
                             <option value="">-- Select Admin --</option>

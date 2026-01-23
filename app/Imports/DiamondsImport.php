@@ -112,6 +112,7 @@ class DiamondsImport implements
                 'barcode_image_url' => $barcodeImageUrl,
                 'description' => $row['description'] ?? null,
                 'note' => $row['note'] ?? null,
+                'current_location' => $row['current_location'] ?? null,
                 'diamond_type' => $row['diamond_type'] ?? null,
                 'admin_id' => $row['admin_id'] ?? null,
             ]);
@@ -179,6 +180,7 @@ class DiamondsImport implements
             'description' => 'nullable|string',
             'note' => 'nullable|string',
             'diamond_type' => 'nullable|string|max:255',
+            'current_location' => 'nullable|string|max:100',
             'barcode_number' => 'nullable|string|max:255',
             'admin_id' => 'nullable|integer|exists:admins,id',
         ];

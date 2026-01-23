@@ -65,7 +65,7 @@
                     </div>
                 </div>
             </div>
-            <div class="stat-card stat-card-info">
+            <!-- <div class="stat-card stat-card-info">
                 <div class="stat-icon"><i class="bi bi-bank"></i></div>
                 <div class="stat-content">
                     <div class="stat-label">All Time Balance</div>
@@ -73,19 +73,20 @@
                         ₹{{ number_format($totalBalance, 0) }}
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
 
         <!-- Filter Section -->
         <div class="tracker-filter">
-            <form method="GET" action="{{ route('expenses.index') }}" class="tracker-filter-form">
-                <div class="tracker-filter-field">
-                    <label class="tracker-filter-label"><i class="bi bi-calendar"></i> From</label>
-                    <input type="date" name="from_date" class="tracker-filter-input" value="{{ request('from_date') }}">
-                </div>
-                <div class="tracker-filter-field">
-                    <label class="tracker-filter-label"><i class="bi bi-calendar"></i> To</label>
-                    <input type="date" name="to_date" class="tracker-filter-input" value="{{ request('to_date') }}">
+            <form method="GET" action="{{ route('expenses.index') }}" class="tracker-filter-form" id="expenseFilterForm">
+                <div class="tracker-filter-field date-range-field">
+                    <label class="tracker-filter-label"><i class="bi bi-calendar-range"></i> Date Range</label>
+                    <div class="date-range-wrapper">
+                        <input type="text" id="expenseDateRange" class="date-range-input" placeholder="Select Date Range"
+                            readonly>
+                        <input type="hidden" name="from_date" id="expenseDateFrom" value="{{ request('from_date') }}">
+                        <input type="hidden" name="to_date" id="expenseDateTo" value="{{ request('to_date') }}">
+                    </div>
                 </div>
                 <div class="tracker-filter-field">
                     <label class="tracker-filter-label"><i class="bi bi-arrow-down-up"></i> Type</label>
@@ -206,4 +207,61 @@
             </div>
         @endif
     </div>
+
+    {{-- Date Range Picker Styles --}}
+    @include('partials.daterangepicker-styles')
+
+    @push('scripts')
+        <script>
+            $(document).ready(function () {
+                var startDate = $('#expenseDateFrom').val() ? moment($('#expenseDateFrom').val()) : null;
+                var endDate = $('#expenseDateTo').val() ? moment($('#expenseDateTo').val()) : null;
+
+                $('#expenseDateRange').daterangepicker({
+                    autoUpdateInput: false,
+                    opens: 'left',
+                    showDropdowns: true,
+                    linkedCalendars: false,
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    },
+                    locale: {
+                        cancelLabel: 'Clear',
+                        applyLabel: 'Apply',
+                        format: 'MMM D, YYYY'
+                    }
+                }, function (start, end, label) {
+                    $('#expenseDateFrom').val(start.format('YYYY-MM-DD'));
+                    $('#expenseDateTo').val(end.format('YYYY-MM-DD'));
+                    $('#expenseDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+                    // Auto-submit the form when date is selected
+                    $('#expenseFilterForm').submit();
+                });
+
+                // Set initial value if dates exist
+                if (startDate && endDate) {
+                    $('#expenseDateRange').val(startDate.format('MMM D, YYYY') + ' - ' + endDate.format('MMM D, YYYY'));
+                }
+
+                // Clear dates on cancel and auto-submit
+                $('#expenseDateRange').on('cancel.daterangepicker', function (ev, picker) {
+                    $(this).val('');
+                    $('#expenseDateFrom').val('');
+                    $('#expenseDateTo').val('');
+                    // Auto-submit to apply the cleared filter
+                    $('#expenseFilterForm').submit();
+                });
+
+                // Auto-submit on transaction type change
+                $('select[name="transaction_type"]').on('change', function () {
+                    $('#expenseFilterForm').submit();
+                });
+            });
+        </script>
+    @endpush
 @endsection

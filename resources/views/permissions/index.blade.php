@@ -37,6 +37,18 @@
         'message' => 'bi-chat-dots',
         'settings' => 'bi-gear',
         'reports' => 'bi-bar-chart',
+        'export' => 'bi-download',
+        'import' => 'bi-upload',
+        'set_targets' => 'bi-bullseye',
+        'manage' => 'bi-sliders',
+        'approve' => 'bi-check2-circle',
+        'reject' => 'bi-x-circle',
+        'restore' => 'bi-arrow-counterclockwise',
+        'archive' => 'bi-archive',
+        'print' => 'bi-printer',
+        'share' => 'bi-share',
+        'upload' => 'bi-cloud-upload',
+        'download' => 'bi-cloud-download',
     ];
 
     // Calculate high-level metrics
@@ -241,9 +253,9 @@
                                         @endif
                                         <div class="permission-meta">
                                             <code class="permission-slug" onclick="copySlug('{{ $perm->slug }}', this)">
-                                                                                                <i class="bi bi-code-slash"></i>
-                                                                                                {{ $perm->slug }}
-                                                                                            </code>
+                                                                                                                        <i class="bi bi-code-slash"></i>
+                                                                                                                        {{ $perm->slug }}
+                                                                                                                    </code>
                                             <span class="permission-type">{{ ucfirst(str_replace('_', ' ', $action)) }}</span>
                                         </div>
                                     </div>
@@ -748,6 +760,66 @@
             color: var(--purple);
         }
 
+        .action-export {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .action-import {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .action-set_targets {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .action-manage {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray);
+        }
+
+        .action-approve {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .action-reject {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .action-restore {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .action-archive {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray);
+        }
+
+        .action-print {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .action-share {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--purple);
+        }
+
+        .action-upload {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .action-download {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
         .collapse-icon {
             font-size: 1.25rem;
             color: var(--gray);
@@ -873,6 +945,81 @@
         .badge-pdf {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
+        }
+
+        .badge-export {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-import {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .badge-set_targets {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-manage {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray);
+        }
+
+        .badge-approve {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-reject {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-restore {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .badge-archive {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray);
+        }
+
+        .badge-print {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .badge-share {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--purple);
+        }
+
+        .badge-upload {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .badge-download {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-message {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .badge-settings {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray);
+        }
+
+        .badge-reports {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--purple);
         }
 
         .permission-actions {

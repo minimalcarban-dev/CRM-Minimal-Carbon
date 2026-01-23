@@ -320,6 +320,21 @@
                         </select>
                     </div>
 
+                    <div class="filter-field">
+                        <label class="filter-label">
+                            <i class="bi bi-geo-alt"></i>
+                            <span>Current Location</span>
+                        </label>
+                        <select name="current_location" class="filter-select">
+                            <option value="">All Locations</option>
+                            @foreach(($countries ?? []) as $country)
+                                <option value="{{ $country }}" {{ request('current_location') === $country ? 'selected' : '' }}>
+                                    {{ $country }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->is_super)
                         <div class="filter-field">
                             <label class="filter-label">
@@ -464,6 +479,12 @@
                         </th>
                         <th>
                             <div class="th-content">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>Location</span>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-content">
                                 <i class="bi bi-upc-scan"></i>
                                 <span>Barcode</span>
                             </div>
@@ -525,6 +546,18 @@
                         <td>
                             <div class="cell-content">
                                 <span class="text-muted">{{ $d->shape ?: '—' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-content">
+                                @if($d->current_location)
+                                    <span class="badge-custom badge-info">
+                                        <i class="bi bi-geo-alt-fill" style="font-size: 0.7rem;"></i>
+                                        {{ $d->current_location }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </div>
                         </td>
                         <td>

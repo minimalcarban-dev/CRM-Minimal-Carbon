@@ -60,7 +60,10 @@ class DiamondController extends Controller
             return DiamondClarity::orderBy('name')->get();
         });
 
-        return view('diamonds.create', compact('admins', 'stoneTypes', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities'));
+        // Get countries list for location dropdown
+        $countries = config('countries', []);
+
+        return view('diamonds.create', compact('admins', 'stoneTypes', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities', 'countries'));
     }
 
     /**
@@ -123,6 +126,11 @@ class DiamondController extends Controller
         // Filter by Diamond Type
         if ($request->filled('diamond_type')) {
             $query->where('diamond_type', $request->diamond_type);
+        }
+
+        // Filter by Current Location (country)
+        if ($request->filled('current_location')) {
+            $query->where('current_location', $request->current_location);
         }
 
         // Filter by Price Range
@@ -190,7 +198,10 @@ class DiamondController extends Controller
             return Admin::orderBy('name')->get();
         });
 
-        return view('diamonds.index', compact('diamonds', 'shapes', 'cuts', 'clarities', 'colors', 'materials', 'diamondTypes', 'admins', 'totalDiamonds', 'inStockCount', 'soldCount', 'allDiamondsCount', 'totalValue', 'avgPrice'));
+        // Get countries list for location filter
+        $countries = config('countries', []);
+
+        return view('diamonds.index', compact('diamonds', 'shapes', 'cuts', 'clarities', 'colors', 'materials', 'diamondTypes', 'admins', 'totalDiamonds', 'inStockCount', 'soldCount', 'allDiamondsCount', 'totalValue', 'avgPrice', 'countries'));
     }
 
     /**
@@ -226,7 +237,10 @@ class DiamondController extends Controller
             return DiamondClarity::orderBy('name')->get();
         });
 
-        return view('diamonds.edit', compact('diamond', 'admins', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities'));
+        // Get countries list for location dropdown
+        $countries = config('countries', []);
+
+        return view('diamonds.edit', compact('diamond', 'admins', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities', 'countries'));
     }
 
     /**
@@ -704,16 +718,9 @@ class DiamondController extends Controller
         // Determine next SKU suffix (e.g., DIA-001 -> DIA-001-A -> DIA-001-B ...)
         $newSku = $this->generateRestockSku($diamond->sku);
 
-        // Derive the next lot number - using PHP to extract numeric parts (MySQL 5.7 compatible)
-        $allLotNos = Diamond::pluck('lot_no')->toArray();
-        $maxLotNo = 0;
-        foreach ($allLotNos as $lotNo) {
-            $numericPart = (int) preg_replace('/[^0-9]/', '', $lotNo);
-            if ($numericPart > $maxLotNo) {
-                $maxLotNo = $numericPart;
-            }
-        }
-        $newLotNo = $maxLotNo + 1;
+        // Generate lot number with suffix to track lineage (e.g., L001 -> L001-A -> L001-B)
+        // This keeps the original lot reference visible in the restocked diamond's lot_no
+        $newLotNo = $this->generateRestockLotNo($diamond->lot_no);
 
         // Generate unique barcode number by finding max existing barcode and incrementing
         $barcodeNumber = $this->generateUniqueBarcodeNumber($newLotNo);
@@ -827,6 +834,29 @@ class DiamondController extends Controller
         }
 
         return implode('', $chars);
+    }
+
+    /**
+     * Generate the next Lot Number for restocked diamonds.
+     * Uses same suffix logic as SKU to maintain visible lineage.
+     * e.g., L001 -> L001-A -> L001-B, or 1001 -> 1001-A -> 1001-B
+     */
+    protected function generateRestockLotNo(string $baseLotNo): string
+    {
+        // Check if already has a suffix (e.g., L001-A)
+        $pattern = '/^(.*?)-(?:[A-Z]+)$/';
+        $root = preg_match($pattern, $baseLotNo, $matches) ? $matches[1] : $baseLotNo;
+
+        // Extract existing suffix if any
+        $suffix = preg_match('/-([A-Z]+)$/', $baseLotNo, $suffixMatch) ? $suffixMatch[1] : '';
+
+        // Keep incrementing suffix until we find a unique lot_no
+        do {
+            $suffix = $this->incrementAlphaSuffix($suffix);
+            $candidate = $root . '-' . $suffix;
+        } while (Diamond::where('lot_no', $candidate)->exists());
+
+        return $candidate;
     }
 
     /**

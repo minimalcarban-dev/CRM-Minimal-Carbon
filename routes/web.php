@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\ClosureTypeController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\FactoryController;
+use App\Http\Controllers\GoldTrackingController;
 use App\Http\Controllers\MetalTypeController;
+use App\Http\Controllers\MetaWebhookController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\RingSizeController;
 use App\Http\Controllers\SettingTypeController;
@@ -109,9 +112,18 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
         $cacheKey = "order_reminder_{$admin->id}";
 
+        // Debug: Check cache status
+        $hasCooldown = \Illuminate\Support\Facades\Cache::has($cacheKey);
+        \Illuminate\Support\Facades\Log::info("Reminder trigger for admin {$admin->id}: cache_exists=" . ($hasCooldown ? 'true' : 'false'));
+
         // Check cooldown (4 hours between reminders)
-        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
-            return response()->json(['status' => 'cooldown', 'message' => 'Already reminded recently']);
+        if ($hasCooldown) {
+            return response()->json([
+                'status' => 'cooldown',
+                'message' => 'Already reminded recently',
+                'cache_key' => $cacheKey,
+                'cache_exists' => true
+            ]);
         }
 
         // Check for pending drafts
@@ -129,7 +141,13 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         // Set cooldown cache (4 hours)
         \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(4));
 
-        return response()->json(['status' => 'sent', 'draft_count' => $draftCount]);
+        \Illuminate\Support\Facades\Log::info("Reminder sent to admin {$admin->id}, cache set for 4 hours");
+
+        return response()->json([
+            'status' => 'sent',
+            'draft_count' => $draftCount,
+            'cache_key' => $cacheKey
+        ]);
     })->name('admin.trigger-reminders');
 
     // ─────────────────────────────────────────────────────────────
@@ -538,6 +556,20 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('companies.destroy')
         ->middleware('admin.permission:companies.delete');
 
+    // Company Sales Dashboard Routes
+    Route::get('companies/{company}/sales-dashboard', [CompanyController::class, 'salesDashboard'])
+        ->name('companies.sales-dashboard')
+        ->middleware('admin.permission:companies.view');
+    Route::post('companies/{company}/set-target', [CompanyController::class, 'setTarget'])
+        ->name('companies.set-target')
+        ->middleware('admin.permission:companies.edit');
+    Route::get('companies/{company}/export-pdf', [CompanyController::class, 'exportPdf'])
+        ->name('companies.export-pdf')
+        ->middleware('admin.permission:companies.view');
+    Route::get('companies/{company}/export-csv', [CompanyController::class, 'exportCsv'])
+        ->name('companies.export-csv')
+        ->middleware('admin.permission:companies.view');
+
     // Diamond Import/Export  (KEEP THESE FIRST)
     // Rate limited: Import is CPU/memory intensive
     Route::post('diamonds/import', [DiamondController::class, 'import'])
@@ -748,6 +780,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::delete('purchases/{purchase}', [PurchaseController::class, 'destroy'])
         ->name('purchases.destroy')
         ->middleware('admin.permission:purchases.delete');
+    Route::post('purchases/{purchase}/complete', [PurchaseController::class, 'complete'])
+        ->name('purchases.complete')
+        ->middleware('admin.permission:purchases.edit');
 
     // ─────────────────────────────────────────────────────────────
     // Office Expense Manager Module
@@ -792,6 +827,56 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('expenses.destroy')
         ->middleware('admin.permission:expenses.delete');
 
+    // ─────────────────────────────────────────────────────────────
+    // Factory Management
+    // ─────────────────────────────────────────────────────────────
+    Route::get('factories', [FactoryController::class, 'index'])
+        ->name('factories.index')
+        ->middleware('admin.permission:factories.view');
+    Route::get('factories/create', [FactoryController::class, 'create'])
+        ->name('factories.create')
+        ->middleware('admin.permission:factories.create');
+    Route::post('factories', [FactoryController::class, 'store'])
+        ->name('factories.store')
+        ->middleware('admin.permission:factories.create');
+    Route::get('factories/{factory}', [FactoryController::class, 'show'])
+        ->name('factories.show')
+        ->middleware('admin.permission:factories.view');
+    Route::get('factories/{factory}/edit', [FactoryController::class, 'edit'])
+        ->name('factories.edit')
+        ->middleware('admin.permission:factories.edit');
+    Route::put('factories/{factory}', [FactoryController::class, 'update'])
+        ->name('factories.update')
+        ->middleware('admin.permission:factories.edit');
+    Route::delete('factories/{factory}', [FactoryController::class, 'destroy'])
+        ->name('factories.destroy')
+        ->middleware('admin.permission:factories.delete');
+
+    // ─────────────────────────────────────────────────────────────
+    // Gold Tracking Module
+    // ─────────────────────────────────────────────────────────────
+    Route::prefix('gold-tracking')->name('gold-tracking.')->middleware('admin.permission:gold_tracking.view')->group(function () {
+        // Dashboard
+        Route::get('/', [GoldTrackingController::class, 'index'])->name('index');
+
+        // Gold Purchases CRUD
+        Route::get('/purchases/create', [GoldTrackingController::class, 'createPurchase'])->name('purchases.create');
+        Route::post('/purchases', [GoldTrackingController::class, 'storePurchase'])->name('purchases.store');
+        Route::get('/purchases/{purchase}', [GoldTrackingController::class, 'showPurchase'])->name('purchases.show');
+        Route::get('/purchases/{purchase}/edit', [GoldTrackingController::class, 'editPurchase'])->name('purchases.edit');
+        Route::put('/purchases/{purchase}', [GoldTrackingController::class, 'updatePurchase'])->name('purchases.update');
+        Route::delete('/purchases/{purchase}', [GoldTrackingController::class, 'destroyPurchase'])->name('purchases.destroy');
+        Route::post('/purchases/{purchase}/complete', [GoldTrackingController::class, 'completePurchase'])->name('purchases.complete');
+
+        // Gold Distribution
+        Route::get('/distribute', [GoldTrackingController::class, 'distribute'])->name('distribute');
+        Route::post('/distribute', [GoldTrackingController::class, 'storeDistribution'])->name('distribute.store');
+
+        // Gold Return
+        Route::get('/return', [GoldTrackingController::class, 'returnGold'])->name('return');
+        Route::post('/return', [GoldTrackingController::class, 'storeReturn'])->name('return.store');
+    });
+
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -800,10 +885,10 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
 Route::prefix('webhook/meta')->group(function () {
     // Webhook verification (GET)
-    Route::get('/', [\App\Http\Controllers\MetaWebhookController::class, 'verify']);
+    Route::get('/', [MetaWebhookController::class, 'verify']);
 
     // Webhook events (POST) - Must exclude from CSRF
-    Route::post('/', [\App\Http\Controllers\MetaWebhookController::class, 'handle'])
+    Route::post('/', [MetaWebhookController::class, 'handle'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });
 

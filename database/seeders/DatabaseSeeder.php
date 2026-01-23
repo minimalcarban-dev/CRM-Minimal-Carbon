@@ -48,5 +48,7 @@ class DatabaseSeeder extends Seeder
         $this->call(StoneColorSeeder::class);
         $this->call(InvoicePermissionSeeder::class);
         $this->call(PartySeeder::class);
+        $this->call(DiamondClaritySeeder::class);
+        $this->call(DiamondCutSeeder::class);
     }
 }

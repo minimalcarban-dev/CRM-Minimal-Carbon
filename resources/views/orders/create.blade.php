@@ -929,13 +929,13 @@
                                 o.id = '__simple_block_loader';
                                 o.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(30,41,59,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;';
                                 o.innerHTML = `
-                                                                                                                        <div style="background:white;border-radius:16px;padding:2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                                                                                                                            <div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
-                                                                                                                            <div style="font-size:1.25rem;font-weight:700;color:#1e293b;margin-bottom:0.5rem;">Creating Order</div>
-                                                                                                                            <div style="color:#64748b;font-size:0.95rem;">Please wait — processing your order...</div>
-                                                                                                                        </div>
-                                                                                                                        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-                                                                                                                    `;
+                                                <div style="background:white;border-radius:16px;padding:2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                                                    <div style="width:50px;height:50px;border:4px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+                                                    <div style="font-size:1.25rem;font-weight:700;color:#1e293b;margin-bottom:0.5rem;">Creating Order</div>
+                                                    <div style="color:#64748b;font-size:0.95rem;">Please wait — processing your order...</div>
+                                                </div>
+                                                <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+                                            `;
                                 document.body.appendChild(o);
                             }
                         }
@@ -1192,8 +1192,8 @@
                             }
                             if (submitButton) submitButton.style.display = 'flex';
 
-                            // Initialize Diamond SKU validation for the loaded form
-                            initSkuValidation();
+                            // Multi-SKU validation is now handled by the multi_sku_selector.blade.php partial
+                            // (old initSkuValidation removed)
 
                             // Smooth scroll to form
                             setTimeout(() => {
@@ -1226,56 +1226,6 @@
                             if (submitButton) submitButton.style.display = 'none';
                             showToastNotification('Failed to load order form', 'error');
                         });
-                }
-
-                // Diamond SKU Real-time Validation
-                function initSkuValidation() {
-                    const skuInput = document.getElementById('diamond_sku_input');
-                    const validationIcon = document.getElementById('sku_validation_icon');
-                    const validationMessage = document.getElementById('sku_validation_message');
-
-                    if (!skuInput || !validationIcon || !validationMessage) return;
-
-                    let debounceTimer;
-
-                    skuInput.addEventListener('input', function () {
-                        const sku = this.value.trim();
-
-                        // Clear previous validation
-                        clearTimeout(debounceTimer);
-                        validationIcon.innerHTML = '';
-                        validationMessage.innerHTML = '';
-                        skuInput.classList.remove('sku-valid', 'sku-invalid');
-
-                        if (!sku) return;
-
-                        // Show loading spinner
-                        validationIcon.innerHTML = '<i class="bi bi-arrow-repeat sku-spin"></i>';
-
-                        // Debounce: wait 500ms after user stops typing
-                        debounceTimer = setTimeout(() => {
-                            fetch(`/admin/diamonds/check-sku?sku=${encodeURIComponent(sku)}`)
-                                .then(res => res.json())
-                                .then(data => {
-                                    if (data.available) {
-                                        skuInput.classList.add('sku-valid');
-                                        validationIcon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
-                                        const d = data.diamond;
-                                        const price = d.listing_price ? `$${parseFloat(d.listing_price).toLocaleString()}` : 'N/A';
-                                        validationMessage.innerHTML = `<span class="text-success">✓ ${data.message} - ${d.carat || '?'}ct ${d.shape || ''} ${d.clarity || ''} ${d.color || ''} (${price})</span>`;
-                                    } else {
-                                        skuInput.classList.add('sku-invalid');
-                                        validationIcon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
-                                        validationMessage.innerHTML = `<span class="text-danger">✗ ${data.message}</span>`;
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error('SKU validation error:', err);
-                                    validationIcon.innerHTML = '';
-                                    validationMessage.innerHTML = '<span class="text-danger">✗ Error checking SKU</span>';
-                                });
-                        }, 500);
-                    });
                 }
 
                 function showToastNotification(message, type) {

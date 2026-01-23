@@ -68,7 +68,10 @@ class AdminPermissionController extends Controller
         $chatPermId = Permission::where('slug', 'chat.access')->value('id');
         $chatAccessAssigned = $chatPermId ? in_array($chatPermId, $newPermissionIds) : false;
 
-        if ($chatAccessAssigned) {
+        // Super admins have implicit access to all features - treat them as having chat access
+        $hasChatAccess = $admin->is_super || $chatAccessAssigned;
+
+        if ($hasChatAccess) {
             // Ensure General channel exists and attach admin as member
             $general = Channel::firstOrCreate(
                 ['name' => 'General'],
@@ -82,7 +85,7 @@ class AdminPermissionController extends Controller
                 $general->users()->attach($admin->id);
             }
         } else {
-            // Policy A: when chat.access revoked, detach from all channels
+            // Policy A: when chat.access revoked (and NOT a super admin), detach from all channels
             // (If you prefer to retain memberships, remove the following line)
             $admin->channels()->detach();
         }
