@@ -12,10 +12,15 @@ class ContentSecurityPolicy
         $response = $next($request);
 
         // Build CSP based on environment
-        $viteUrl = config('app.env') === 'local' ? 'http://localhost:5173' : '';
+        $isLocal = config('app.env') === 'local';
+        $viteUrl = $isLocal ? 'http://localhost:5173' : '';
 
         // Allow self assets + jQuery CDN + inline styles (temporary) and images + ws connections + Vite dev server
-        $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval' https://code.jquery.com https://cdn.jsdelivr.net";
+        // NOTE: 'unsafe-eval' should never be enabled in production (it weakens CSP and may trigger security scanners).
+        $scriptSrc = "'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net";
+        if ($isLocal) {
+            $scriptSrc .= " 'unsafe-eval'";
+        }
         $styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net";
         $connectSrc = "'self' https://* wss:";
 

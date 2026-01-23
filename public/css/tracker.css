@@ -123,6 +123,13 @@
     flex: 1;
 }
 
+/* Date Range Field - Larger width */
+.tracker-page .tracker-filter-field.date-range-field {
+    min-width: 240px;
+    max-width: 280px;
+    flex: 0 0 auto;
+}
+
 .tracker-page .tracker-filter-label {
     font-size: 0.8rem;
     font-weight: 600;
@@ -146,10 +153,44 @@
     transition: all 0.2s;
     background: white;
     width: 100%;
+    height: 42px;
 }
 
 .tracker-page .tracker-filter-input:focus,
 .tracker-page .tracker-filter-select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Date Range Wrapper Styling */
+.tracker-page .date-range-wrapper {
+    position: relative;
+}
+
+.tracker-page .date-range-wrapper .date-range-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 42px;
+}
+
+.tracker-page .date-range-wrapper .date-range-input::placeholder {
+    color: #94a3b8;
+}
+
+.tracker-page .date-range-wrapper .date-range-input:hover {
+    border-color: #6366f1;
+}
+
+.tracker-page .date-range-wrapper .date-range-input:focus {
     outline: none;
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
@@ -160,6 +201,7 @@
     align-items: center;
     gap: 0.5rem;
     margin-left: auto;
+    flex-shrink: 0;
 }
 
 .tracker-page .tracker-result-count {
@@ -270,6 +312,7 @@
     border-radius: 6px;
     font-size: 0.8rem;
     font-weight: 600;
+    gap: 5px;
 }
 
 .tracker-page .tracker-badge-primary {
@@ -771,9 +814,7 @@
 }
 
 .tracker-page .payment-toggle .toggle-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+    display: none;
 }
 
 .tracker-page .payment-toggle .toggle-btn {
@@ -781,15 +822,15 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    padding: 1.3rem 4.5rem;
     border-radius: 10px;
     border: 2px solid #e2e8f0;
     background: #f8fafc;
     transition: all 0.3s ease;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: #64748b;
-    min-width: 100px;
+    white-space: nowrap;
 }
 
 .tracker-page .payment-toggle .toggle-btn i {
@@ -821,4 +862,37 @@
     width: 100%;
     min-height: 100px;
     resize: vertical;
+}
+
+/* Modal Toggle Buttons */
+.modal-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.modal-toggle-btn:hover {
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+}
+
+.modal-toggle-btn i {
+    font-size: 1rem;
+}
+
+input[type="radio"]:checked + .modal-toggle-btn {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
 }

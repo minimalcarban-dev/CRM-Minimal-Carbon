@@ -592,12 +592,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                <div class="preview-header">
-                                                    <i class="bi bi-images"></i>
-                                                    <span>Selected Images (${files.length})</span>
-                                                </div>
-                                                <div class="preview-grid" id="imagePreviewGrid"></div>
-                                            `;
+                                                    <div class="preview-header">
+                                                        <i class="bi bi-images"></i>
+                                                        <span>Selected Images (${files.length})</span>
+                                                    </div>
+                                                    <div class="preview-grid" id="imagePreviewGrid"></div>
+                                                `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -608,9 +608,9 @@
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
                         previewItem.innerHTML = `
-                                                        <img src="${e.target.result}" alt="${file.name}">
-                                                        <div class="file-name">${file.name}</div>
-                                                    `;
+                                                            <img src="${e.target.result}" alt="${file.name}">
+                                                            <div class="file-name">${file.name}</div>
+                                                        `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -629,12 +629,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                <div class="preview-header">
-                                                    <i class="bi bi-file-pdf"></i>
-                                                    <span>Selected PDFs (${files.length})</span>
-                                                </div>
-                                                <div id="pdfPreviewList"></div>
-                                            `;
+                                                    <div class="preview-header">
+                                                        <i class="bi bi-file-pdf"></i>
+                                                        <span>Selected PDFs (${files.length})</span>
+                                                    </div>
+                                                    <div id="pdfPreviewList"></div>
+                                                `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
@@ -644,14 +644,14 @@
                     previewItem.className = 'pdf-preview-item';
                     const fileSize = (file.size / 1024).toFixed(2);
                     previewItem.innerHTML = `
-                                                    <div class="pdf-preview-icon">
-                                                        <i class="bi bi-file-pdf-fill"></i>
-                                                    </div>
-                                                    <div class="pdf-preview-info">
-                                                        <div class="pdf-preview-name">${file.name}</div>
-                                                        <div class="pdf-preview-size">${fileSize} KB</div>
-                                                    </div>
-                                                `;
+                                                        <div class="pdf-preview-icon">
+                                                            <i class="bi bi-file-pdf-fill"></i>
+                                                        </div>
+                                                        <div class="pdf-preview-info">
+                                                            <div class="pdf-preview-name">${file.name}</div>
+                                                            <div class="pdf-preview-size">${fileSize} KB</div>
+                                                        </div>
+                                                    `;
                     list.appendChild(previewItem);
                 });
             }

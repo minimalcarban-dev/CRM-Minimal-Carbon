@@ -16,6 +16,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $perms = [
+            
             // Admins
             ['name' => 'View Admins', 'slug' => 'admins.view', 'description' => 'View admin list and details', 'category' => 'admins'],
             ['name' => 'Create Admins', 'slug' => 'admins.create', 'description' => 'Create new admin records', 'category' => 'admins'],
@@ -44,31 +45,37 @@ class PermissionSeeder extends Seeder
             ['name' => 'Edit Metal Types', 'slug' => 'metal_types.edit', 'description' => 'Edit metal types', 'category' => 'metal_types'],
             ['name' => 'Delete Metal Types', 'slug' => 'metal_types.delete', 'description' => 'Delete metal types', 'category' => 'metal_types'],
 
+            // Setting Type
             ['name' => 'View Setting Types', 'slug' => 'setting_types.view', 'description' => 'View setting types', 'category' => 'setting_types'],
             ['name' => 'Create Setting Types', 'slug' => 'setting_types.create', 'description' => 'Create setting types', 'category' => 'setting_types'],
             ['name' => 'Edit Setting Types', 'slug' => 'setting_types.edit', 'description' => 'Edit setting types', 'category' => 'setting_types'],
             ['name' => 'Delete Setting Types', 'slug' => 'setting_types.delete', 'description' => 'Delete setting types', 'category' => 'setting_types'],
 
+            // Closure Types
             ['name' => 'View Closure Types', 'slug' => 'closure_types.view', 'description' => 'View closure types', 'category' => 'closure_types'],
             ['name' => 'Create Closure Types', 'slug' => 'closure_types.create', 'description' => 'Create closure types', 'category' => 'closure_types'],
             ['name' => 'Edit Closure Types', 'slug' => 'closure_types.edit', 'description' => 'Edit closure types', 'category' => 'closure_types'],
             ['name' => 'Delete Closure Types', 'slug' => 'closure_types.delete', 'description' => 'Delete closure types', 'category' => 'closure_types'],
 
+            // Ring Sizes
             ['name' => 'View Ring Sizes', 'slug' => 'ring_sizes.view', 'description' => 'View ring sizes', 'category' => 'ring_sizes'],
             ['name' => 'Create Ring Sizes', 'slug' => 'ring_sizes.create', 'description' => 'Create ring sizes', 'category' => 'ring_sizes'],
             ['name' => 'Edit Ring Sizes', 'slug' => 'ring_sizes.edit', 'description' => 'Edit ring sizes', 'category' => 'ring_sizes'],
             ['name' => 'Delete Ring Sizes', 'slug' => 'ring_sizes.delete', 'description' => 'Delete ring sizes', 'category' => 'ring_sizes'],
 
+            // Stone Types
             ['name' => 'View Stone Types', 'slug' => 'stone_types.view', 'description' => 'View stone types', 'category' => 'stone_types'],
             ['name' => 'Create Stone Types', 'slug' => 'stone_types.create', 'description' => 'Create stone types', 'category' => 'stone_types'],
             ['name' => 'Edit Stone Types', 'slug' => 'stone_types.edit', 'description' => 'Edit stone types', 'category' => 'stone_types'],
             ['name' => 'Delete Stone Types', 'slug' => 'stone_types.delete', 'description' => 'Delete stone types', 'category' => 'stone_types'],
 
+            // Stone Shapes
             ['name' => 'View Stone Shapes', 'slug' => 'stone_shapes.view', 'description' => 'View stone shapes', 'category' => 'stone_shapes'],
             ['name' => 'Create Stone Shapes', 'slug' => 'stone_shapes.create', 'description' => 'Create stone shapes', 'category' => 'stone_shapes'],
             ['name' => 'Edit Stone Shapes', 'slug' => 'stone_shapes.edit', 'description' => 'Edit stone shapes', 'category' => 'stone_shapes'],
             ['name' => 'Delete Stone Shapes', 'slug' => 'stone_shapes.delete', 'description' => 'Delete stone shapes', 'category' => 'stone_shapes'],
 
+            // Stone Colors
             ['name' => 'View Stone Colors', 'slug' => 'stone_colors.view', 'description' => 'View stone colors', 'category' => 'stone_colors'],
             ['name' => 'Create Stone Colors', 'slug' => 'stone_colors.create', 'description' => 'Create stone colors', 'category' => 'stone_colors'],
             ['name' => 'Edit Stone Colors', 'slug' => 'stone_colors.edit', 'description' => 'Edit stone colors', 'category' => 'stone_colors'],
@@ -104,6 +111,11 @@ class PermissionSeeder extends Seeder
             ['name' => 'Create Companies', 'slug' => 'companies.create', 'description' => 'Create new companies', 'category' => 'companies'],
             ['name' => 'Edit Companies', 'slug' => 'companies.edit', 'description' => 'Edit existing companies', 'category' => 'companies'],
             ['name' => 'Delete Companies', 'slug' => 'companies.delete', 'description' => 'Delete companies', 'category' => 'companies'],
+
+            // Sales & Analytics
+            ['name' => 'View Sales Dashboard', 'slug' => 'sales.view', 'description' => 'View company sales dashboards and analytics', 'category' => 'sales'],
+            ['name' => 'Set Sales Targets', 'slug' => 'sales.set_targets', 'description' => 'Set monthly sales targets for companies', 'category' => 'sales'],
+            ['name' => 'Export Sales Reports', 'slug' => 'sales.export', 'description' => 'Export sales reports as PDF/CSV', 'category' => 'sales'],
 
             // Parties
             ['name' => 'View Parties', 'slug' => 'parties.view', 'description' => 'View parties list and details', 'category' => 'parties'],
@@ -142,6 +154,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'Edit Expenses', 'slug' => 'expenses.edit', 'description' => 'Edit existing expenses', 'category' => 'expenses'],
             ['name' => 'Delete Expenses', 'slug' => 'expenses.delete', 'description' => 'Delete expenses', 'category' => 'expenses'],
             ['name' => 'View Expense Reports', 'slug' => 'expenses.reports', 'description' => 'View monthly and annual expense reports', 'category' => 'expenses'],
+
+            // Factories
+            ['name' => 'View Factories', 'slug' => 'factories.view', 'description' => 'View factories list and details', 'category' => 'factories'],
+            ['name' => 'Create Factories', 'slug' => 'factories.create', 'description' => 'Create new factories', 'category' => 'factories'],
+            ['name' => 'Edit Factories', 'slug' => 'factories.edit', 'description' => 'Edit existing factories', 'category' => 'factories'],
+            ['name' => 'Delete Factories', 'slug' => 'factories.destroy', 'description' => 'Delete factories', 'category' => 'factories'],
+
         ];
 
         foreach ($perms as $p) {

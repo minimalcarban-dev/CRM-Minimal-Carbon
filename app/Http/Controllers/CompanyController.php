@@ -3,13 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\CompanyMonthlyTarget;
+use App\Services\CompanySalesReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Cloudinary\Cloudinary;
 use Cloudinary\Api\Upload\UploadApi;
+use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * Company Resource Controller with custom search filters
@@ -316,5 +321,269 @@ class CompanyController extends BaseResourceController
             return response()->json(['error' => 'Company not found'], 404);
         }
     }
+
+    // ===== SALES DASHBOARD METHODS =====
+
+    /**
+     * Show sales dashboard for a company.
+     */
+    public function salesDashboard($id, Request $request, CompanySalesReportService $service)
+    {
+        // Permission check - explicit permission required (no super admin bypass)
+        $admin = Auth::guard('admin')->user();
+        if (!$admin->hasExplicitPermission('sales.view')) {
+            abort(403, 'You do not have permission to view sales dashboards.');
+        }
+
+        $company = Company::findOrFail($id);
+        $now = Carbon::now();
+        $year = $request->input('year', $now->year);
+        $month = $request->input('month', $now->month);
+
+        // Get periods for filter - default is current month
+        $dateFrom = $request->input('date_from', $now->copy()->startOfMonth()->toDateString());
+        $dateTo = $request->input('date_to', $now->toDateString());
+
+        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+
+        // ===== CALCULATE STATS FROM ORDERS TABLE DIRECTLY =====
+        // Get ALL shipped orders for this company (for accurate total stats)
+        $allShippedOrders = \App\Models\Order::where('company_id', $company->id)
+            ->whereIn('diamond_status', $shippedStatuses)
+            ->get();
+
+        // Today's sales - orders created OR dispatched today
+        $todaysOrders = $allShippedOrders->filter(function ($order) {
+            $today = Carbon::today();
+            $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date)->startOfDay() : null;
+            $createdDate = Carbon::parse($order->created_at)->startOfDay();
+            return ($dispatchDate && $dispatchDate->eq($today)) || (!$dispatchDate && $createdDate->eq($today));
+        });
+        $todaysSales = $todaysOrders->sum('gross_sell');
+        $todaysOrderCount = $todaysOrders->count();
+
+        // Current month stats (month-to-date) - based on dispatch_date or created_at
+        $startOfMonth = $now->copy()->startOfMonth();
+        $monthOrders = $allShippedOrders->filter(function ($order) use ($startOfMonth, $now) {
+            $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date) : null;
+            $createdDate = Carbon::parse($order->created_at);
+            $checkDate = $dispatchDate ?? $createdDate;
+            return $checkDate->between($startOfMonth, $now);
+        });
+        $monthToDate = [
+            'order_count' => $monthOrders->count(),
+            'total_revenue' => $monthOrders->sum('gross_sell'),
+        ];
+
+        // Target calculations
+        $currentTarget = $company->current_month_target;
+        $monthTotal = $monthToDate['total_revenue'];
+        $targetProgress = $currentTarget > 0 ? min(100, round(($monthTotal / $currentTarget) * 100, 1)) : null;
+        $projectedTotal = $service->getProjectedMonthEndFromOrders($company->id, $monthTotal, $now);
+
+        // ===== FILTERED DATE RANGE STATS (for Sales History section) =====
+        $dateFromCarbon = Carbon::parse($dateFrom)->startOfDay();
+        $dateToCarbon = Carbon::parse($dateTo)->endOfDay();
+
+        $filteredOrders = $allShippedOrders->filter(function ($order) use ($dateFromCarbon, $dateToCarbon) {
+            $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date) : null;
+            $createdDate = Carbon::parse($order->created_at);
+            $checkDate = $dispatchDate ?? $createdDate;
+            return $checkDate->between($dateFromCarbon, $dateToCarbon);
+        });
+
+        // Group filtered orders by date for the history table
+        $dailyHistoryWithTotals = $filteredOrders->groupBy(function ($order) {
+            $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date)->format('Y-m-d') : null;
+            return $dispatchDate ?? Carbon::parse($order->created_at)->format('Y-m-d');
+        })->map(function ($dayOrders, $date) use ($company) {
+            $orderTypeBreakdown = $dayOrders->groupBy('order_type')->map->count()->toArray();
+            return (object) [
+                'sales_date' => Carbon::parse($date),
+                'order_count' => $dayOrders->count(),
+                'total_revenue' => $dayOrders->sum('gross_sell'),
+                'order_type_breakdown' => $orderTypeBreakdown,
+                'running_total' => 0,
+                'target_percent' => null,
+            ];
+        })->sortByDesc('sales_date')->values();
+
+        // Calculate running totals
+        $runningTotal = 0;
+        $dailyHistoryWithTotals = $dailyHistoryWithTotals->reverse()->map(function ($day) use (&$runningTotal, $currentTarget) {
+            $runningTotal += $day->total_revenue;
+            $day->running_total = $runningTotal;
+            $day->target_percent = $currentTarget > 0 ? round(($runningTotal / $currentTarget) * 100, 1) : null;
+            return $day;
+        })->reverse()->values();
+
+        // Monthly chart data - calculate from orders table
+        $monthlySummary = $this->getMonthlySummaryFromOrders($company->id, $year, $shippedStatuses);
+
+        return view('companies.sales-dashboard', compact(
+            'company',
+            'todaysSales',
+            'todaysOrderCount',
+            'monthToDate',
+            'currentTarget',
+            'targetProgress',
+            'projectedTotal',
+            'monthlySummary',
+            'dailyHistoryWithTotals',
+            'year',
+            'month',
+            'dateFrom',
+            'dateTo'
+        ));
+    }
+
+    /**
+     * Calculate monthly summary directly from orders table.
+     */
+    private function getMonthlySummaryFromOrders(int $companyId, int $year, array $shippedStatuses): array
+    {
+        $orders = \App\Models\Order::where('company_id', $companyId)
+            ->whereIn('diamond_status', $shippedStatuses)
+            ->whereYear(DB::raw('COALESCE(dispatch_date, created_at)'), $year)
+            ->get();
+
+        $targets = CompanyMonthlyTarget::where('company_id', $companyId)
+            ->where('year', $year)
+            ->pluck('target_amount', 'month')
+            ->toArray();
+
+        $result = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $monthOrders = $orders->filter(function ($order) use ($month, $year) {
+                $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date) : null;
+                $createdDate = Carbon::parse($order->created_at);
+                $checkDate = $dispatchDate ?? $createdDate;
+                return $checkDate->month == $month && $checkDate->year == $year;
+            });
+
+            $result[$month] = [
+                'month' => $month,
+                'month_name' => Carbon::create()->month($month)->format('M'),
+                'orders' => $monthOrders->count(),
+                'revenue' => $monthOrders->sum('gross_sell'),
+                'target' => (float) ($targets[$month] ?? 0),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Set or update monthly target for a company.
+     */
+    public function setTarget(Request $request, $id)
+    {
+        // Permission check - explicit permission required (no super admin bypass)
+        $admin = Auth::guard('admin')->user();
+        if (!$admin->hasExplicitPermission('sales.set_targets')) {
+            abort(403, 'You do not have permission to set sales targets.');
+        }
+
+        $validated = $request->validate([
+            'year' => 'required|integer|min:2020|max:2100',
+            'month' => 'required|integer|min:1|max:12',
+            'target_amount' => 'required|numeric|min:0',
+        ]);
+
+        $company = Company::findOrFail($id);
+
+        CompanyMonthlyTarget::setTarget(
+            $company->id,
+            $validated['year'],
+            $validated['month'],
+            $validated['target_amount']
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Target set successfully',
+            ]);
+        }
+
+        return back()->with('success', 'Monthly target updated successfully!');
+    }
+
+    /**
+     * Export sales report as PDF.
+     */
+    public function exportPdf($id, Request $request, CompanySalesReportService $service)
+    {
+        $company = Company::findOrFail($id);
+        $year = $request->input('year', Carbon::now()->year);
+        $month = $request->input('month');
+
+        $monthlySummary = $service->getMonthlySummary($company->id, $year);
+        $currentTarget = $company->current_month_target;
+
+        $pdf = Pdf::loadView('companies.exports.sales-report-pdf', compact(
+            'company',
+            'monthlySummary',
+            'currentTarget',
+            'year',
+            'month'
+        ));
+
+        $filename = "sales-report-{$company->name}-{$year}" . ($month ? "-{$month}" : '') . ".pdf";
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export sales data as CSV.
+     */
+    public function exportCsv($id, Request $request, CompanySalesReportService $service)
+    {
+        $company = Company::findOrFail($id);
+        $year = $request->input('year', Carbon::now()->year);
+
+        $monthlySummary = $service->getMonthlySummary($company->id, $year);
+
+        $filename = "sales-data-{$company->name}-{$year}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($monthlySummary, $company, $year) {
+            $file = fopen('php://output', 'w');
+
+            // Header
+            fputcsv($file, ["Sales Report - {$company->name} - {$year}"]);
+            fputcsv($file, []); // Empty row
+            fputcsv($file, ['Month', 'Orders', 'Revenue', 'Target', 'Achieved %']);
+
+            foreach ($monthlySummary as $month) {
+                $achieved = $month['target'] > 0
+                    ? round(($month['revenue'] / $month['target']) * 100, 1) . '%'
+                    : 'N/A';
+
+                fputcsv($file, [
+                    $month['month_name'],
+                    $month['orders'],
+                    number_format($month['revenue'], 2),
+                    number_format($month['target'], 2),
+                    $achieved,
+                ]);
+            }
+
+            // Totals
+            $totalOrders = array_sum(array_column($monthlySummary, 'orders'));
+            $totalRevenue = array_sum(array_column($monthlySummary, 'revenue'));
+            fputcsv($file, []);
+            fputcsv($file, ['TOTAL', $totalOrders, number_format($totalRevenue, 2), '', '']);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
+
 

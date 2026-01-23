@@ -114,21 +114,8 @@
                 Include carat weight, cut grade, clarity, and color specifications
             </div>
         </div>
-        <div class="form-group-modern">
-            <label class="form-label-modern">
-                <span class="label-icon">
-                    <i class="bi bi-tag"></i>
-                </span>
-                <span class="label-text">Diamond SKU</span>
-                <span class="optional-badge">Optional</span>
-            </label>
-            <div class="sku-input-wrapper">
-                <input type="text" name="diamond_sku" id="diamond_sku_input" class="form-control-modern"
-                    placeholder="Enter diamond SKU (e.g., D-12345)"
-                    value="{{ old('diamond_sku', $order->diamond_sku ?? '') }}" autocomplete="off">
-                <span class="sku-validation-icon" id="sku_validation_icon"></span>
-            </div>
-            <div class="sku-validation-message" id="sku_validation_message"></div>
+        <div class="mt-3">
+            @include('orders.partials.multi_sku_selector')
         </div>
     </div>
 </div>
@@ -284,9 +271,9 @@
                             <i class="bi bi-check-circle"></i>
                         </span>
                         <span class="label-text">Diamond Status</span>
-                        <span class="optional-badge">Optional</span>
+                        <span class="required-badge">Required</span>
                     </label>
-                    <select name="diamond_status" class="form-control-modern">
+                    <select name="diamond_status" class="form-control-modern" required>
                         <option value="">-- Select Status --</option>
                         <option value="j_diamond_in_progress" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_in_progress' ? 'selected' : '' }}>
                             J - Diamond In Progress

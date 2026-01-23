@@ -133,28 +133,77 @@
             </div>
             <div class="section-body">
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Payment Mode <span class="required">*</span></label>
+                    {{-- Payment Mode - Full Width --}}
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label">Payment Mode <span style="color: #9ca3af; font-weight: 400;">(optional - leave empty for Pending)</span></label>
                         <div class="payment-toggle">
                             <label class="toggle-option">
-                                <input type="radio" name="payment_mode" value="upi" {{ old('payment_mode', 'upi') == 'upi' ? 'checked' : '' }}>
+                                <input type="radio" name="payment_mode" value="upi" {{ old('payment_mode') == 'upi' ? 'checked' : '' }}>
                                 <span class="toggle-btn"><i class="bi bi-phone"></i> UPI</span>
                             </label>
                             <label class="toggle-option">
                                 <input type="radio" name="payment_mode" value="cash" {{ old('payment_mode') == 'cash' ? 'checked' : '' }}>
                                 <span class="toggle-btn"><i class="bi bi-cash"></i> Cash</span>
                             </label>
+                            <label class="toggle-option">
+                                <input type="radio" name="payment_mode" value="bank_transfer" {{ old('payment_mode') == 'bank_transfer' ? 'checked' : '' }}>
+                                <span class="toggle-btn"><i class="bi bi-bank"></i> Bank Transfer</span>
+                            </label>
                         </div>
+                        <small style="display: block; margin-top: 0.5rem; color: #6b7280;"><i class="bi bi-info-circle"></i> If no payment mode selected, purchase will be saved as Pending</small>
                     </div>
 
-                    <div class="form-group" id="upiIdField">
+                    {{-- UPI ID Field - Full Width --}}
+                    <div class="form-group" id="upiIdField" style="display: none; grid-column: 1 / -1;">
                         <label for="upi_id" class="form-label">UPI ID</label>
                         <input type="text" id="upi_id" name="upi_id" 
                             class="form-control @error('upi_id') is-invalid @enderror"
-                            value="{{ old('upi_id') }}" placeholder="example@upi">
+                            value="{{ old('upi_id') }}" placeholder="example@upi" style="max-width: 400px;">
                         @error('upi_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+
+                    {{-- Bank Fields - Full Width --}}
+                    <div id="bankFields" style="display: none; grid-column: 1 / -1;">
+                        <div class="form-grid" style="margin-bottom: 0;">
+                            <div class="form-group">
+                                <label for="bank_account_name" class="form-label">Account Holder Name</label>
+                                <input type="text" id="bank_account_name" name="bank_account_name" 
+                                    class="form-control @error('bank_account_name') is-invalid @enderror"
+                                    value="{{ old('bank_account_name') }}" placeholder="Account holder name">
+                                @error('bank_account_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="bank_name" class="form-label">Bank Name</label>
+                                <input type="text" id="bank_name" name="bank_name" 
+                                    class="form-control @error('bank_name') is-invalid @enderror"
+                                    value="{{ old('bank_name') }}" placeholder="Bank name">
+                                @error('bank_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="bank_account_number" class="form-label">Account Number</label>
+                                <input type="text" id="bank_account_number" name="bank_account_number" 
+                                    class="form-control @error('bank_account_number') is-invalid @enderror"
+                                    value="{{ old('bank_account_number') }}" placeholder="Account number">
+                                @error('bank_account_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="bank_ifsc" class="form-label">IFSC Code</label>
+                                <input type="text" id="bank_ifsc" name="bank_ifsc" 
+                                    class="form-control @error('bank_ifsc') is-invalid @enderror"
+                                    value="{{ old('bank_ifsc') }}" placeholder="IFSC code">
+                                @error('bank_ifsc')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -232,17 +281,19 @@ document.addEventListener('DOMContentLoaded', function() {
     discount.addEventListener('input', calculateTotal);
     calculateTotal();
 
-    // Toggle UPI field
+    // Toggle Payment Mode Fields
     const paymentModes = document.querySelectorAll('input[name="payment_mode"]');
     const upiField = document.getElementById('upiIdField');
+    const bankFields = document.getElementById('bankFields');
     
-    function toggleUpiField() {
+    function togglePaymentFields() {
         const selected = document.querySelector('input[name="payment_mode"]:checked');
         upiField.style.display = selected && selected.value === 'upi' ? 'block' : 'none';
+        bankFields.style.display = selected && selected.value === 'bank_transfer' ? 'block' : 'none';
     }
     
-    paymentModes.forEach(r => r.addEventListener('change', toggleUpiField));
-    toggleUpiField();
+    paymentModes.forEach(r => r.addEventListener('change', togglePaymentFields));
+    togglePaymentFields();
 });
 </script>
 @endsection

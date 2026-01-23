@@ -180,11 +180,68 @@
                     </div>
                 </div>
             </a>
+
+            {{-- Today's Sales (Clickable to toggle Company Progress) - Only visible with sales.view permission --}}
+            @if(auth('admin')->user()->hasExplicitPermission('sales.view'))
+                <div class="stat-card stat-card-sales" id="todaysSalesCard" onclick="toggleCompanyProgress()"
+                    style="cursor: pointer;">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); color: #10b981;">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Today's Sales <i class="bi bi-chevron-down toggle-icon" id="toggleIcon"></i>
+                        </div>
+                        <div class="stat-value">${{ number_format($todaysSales ?? 0, 2) }}</div>
+                        <div class="stat-trend">
+                            <span class="live-badge"><i class="bi bi-circle-fill"></i> Live</span>
+                            {{ $todaysOrderCount ?? 0 }} shipped orders
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
+
+        {{-- Company Monthly Progress Section (Hidden by default, toggle on Today's Sales click) --}}
+        @if(auth('admin')->user()->hasExplicitPermission('sales.view') && isset($companySalesStats) && $companySalesStats->count() > 0)
+            <div class="company-progress-section" id="companyProgressSection" style="display: none;">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        Company Monthly Progress - {{ now()->format('F Y') }}
+                    </h3>
+                </div>
+                <div class="company-progress-grid">
+                    @foreach($companySalesStats as $company)
+                        <a href="{{ route('companies.sales-dashboard', $company['id']) }}" class="company-progress-card-simple">
+                            <div class="company-name-simple">{{ $company['name'] }}</div>
+                            <div class="progress-ring-large">
+                                @if($company['target_progress'] !== null)
+                                    <svg viewBox="0 0 36 36" class="circular-chart-large">
+                                        <path class="circle-bg-large"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="circle-large" stroke-dasharray="{{ min($company['target_progress'], 100) }}, 100"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <text x="18" y="20.35" class="percentage-large">{{ round($company['target_progress']) }}%</text>
+                                    </svg>
+                                @else
+                                    <div class="no-target-large">
+                                        <span>No Target</span>
+                                    </div>
+                                @endif
+                            </div>
+                            <span class="view-report-link-simple">
+                                View Report <i class="bi bi-arrow-right"></i>
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <!-- Filter Section -->
         <div class="filter-section">
-            <form method="GET" action="{{ route('orders.index') }}" class="filter-form">
+            <form method="GET" action="{{ route('orders.index') }}" class="filter-form" id="orderFilterForm">
                 <div class="search-box">
                     <i class="bi bi-search search-icon"></i>
                     <input type="text" name="search" class="search-input"
@@ -244,9 +301,18 @@
 
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
+                        const filterForm = document.getElementById('orderFilterForm');
                         const orderTypeSelect = document.querySelector('select[name="order_type"]');
                         const statusSelect = document.querySelector('select[name="diamond_status"]');
                         const statusOptions = statusSelect.querySelectorAll('.status-option');
+                        const searchInput = document.querySelector('input[name="search"]');
+
+                        // Debounce function for search input
+                        let searchTimeout;
+                        function debounceSearch(fn, delay) {
+                            clearTimeout(searchTimeout);
+                            searchTimeout = setTimeout(fn, delay);
+                        }
 
                         function updateStatusDropdown() {
                             const selectedType = orderTypeSelect.value;
@@ -295,8 +361,31 @@
                         // Run on load
                         updateStatusDropdown();
 
-                        // Run on change
-                        orderTypeSelect.addEventListener('change', updateStatusDropdown);
+                        // Auto-submit on order type change
+                        orderTypeSelect.addEventListener('change', function () {
+                            updateStatusDropdown();
+                            filterForm.submit();
+                        });
+
+                        // Auto-submit on diamond status change
+                        statusSelect.addEventListener('change', function () {
+                            filterForm.submit();
+                        });
+
+                        // Debounced auto-submit on search input (500ms delay)
+                        searchInput.addEventListener('input', function () {
+                            debounceSearch(function () {
+                                filterForm.submit();
+                            }, 500);
+                        });
+
+                        // Also submit on Enter key for search
+                        searchInput.addEventListener('keypress', function (e) {
+                            if (e.key === 'Enter') {
+                                clearTimeout(searchTimeout);
+                                filterForm.submit();
+                            }
+                        });
                     });
                 </script>
 
@@ -698,135 +787,318 @@
             text-align: center;
         }
 
-        /* Stats Grid */
+        /* STATS CARDS - Clean Minimal Design */
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
         }
 
+        /* Allow wrapping on smaller screens */
+        @media (max-width: 768px) {
+            .stats-grid {
+                flex-wrap: wrap;
+            }
+
+            .stats-grid .stat-card {
+                flex: 1 1 30%;
+                min-width: 90px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid .stat-card {
+                flex: 1 1 45%;
+            }
+        }
+
+        /* Stat Card - Clean minimal style */
         .stat-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .stat-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Icon - Compact circular style */
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        /* Content - Clean typography */
+        .stat-content {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 0.125rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-value {
+            font-size: clamp(1.125rem, 2vw, 1.5rem);
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .stat-trend {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 0.125rem;
+            margin-top: 0.125rem;
+            white-space: nowrap;
+        }
+
+        /* Color variants - Subtle icon backgrounds */
+        .stat-card-primary .stat-icon {
+            background: #eef2ff;
+            color: #6366f1;
+        }
+
+        .stat-card-success .stat-icon {
+            background: #ecfdf5;
+            color: #10b981;
+        }
+
+        .stat-card-warning .stat-icon {
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+
+        .stat-card-info .stat-icon {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .stat-card-dark .stat-icon {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        /* Sales card - Subtle highlight */
+        .stat-card-sales {
+            border-color: #d1fae5;
+            background: linear-gradient(to right, #f0fdf4, #ffffff);
+        }
+
+        .stat-card-sales .stat-icon {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .stat-card-sales:hover {
+            border-color: #10b981;
+        }
+
+        /* Live badge - Compact */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            color: #10b981;
+            font-weight: 600;
+            font-size: 0.5rem;
+        }
+
+        .live-badge i {
+            font-size: 0.4rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Company Progress Section */
+        .company-progress-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px var(--shadow);
+        }
+
+        .company-progress-section .section-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .company-progress-section .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        .company-progress-section .section-title i {
+            color: var(--primary);
+        }
+
+        .company-progress-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Simplified Company Progress Cards - Clean design */
+        .company-progress-card-simple {
             background: white;
             border-radius: 16px;
             padding: 1.5rem;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 1.5rem;
-            box-shadow: 0 1px 3px var(--shadow);
+            gap: 0.75rem;
             transition: all 0.3s;
-            border: 2px solid transparent;
+            border: 2px solid var(--border);
+            text-decoration: none;
+            color: inherit;
+            min-width: 140px;
         }
 
-        .stat-card:hover {
+        .company-progress-card-simple:hover {
+            border-color: var(--primary);
             transform: translateY(-4px);
             box-shadow: 0 8px 24px var(--shadow-md);
         }
 
-        .stat-card-primary {
-            border-color: rgba(99, 102, 241, 0.1);
-        }
-
-        .stat-card-primary:hover {
-            border-color: var(--primary);
-        }
-
-        .stat-card-success {
-            border-color: rgba(16, 185, 129, 0.1);
-        }
-
-        .stat-card-success:hover {
-            border-color: var(--success);
-        }
-
-        .stat-card-warning {
-            border-color: rgba(245, 158, 11, 0.1);
-        }
-
-        .stat-card-warning:hover {
-            border-color: var(--warning);
-        }
-
-        .stat-card-info {
-            border-color: rgba(59, 130, 246, 0.1);
-        }
-
-        .stat-card-info:hover {
-            border-color: var(--info);
-        }
-
-        .stat-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.75rem;
-            flex-shrink: 0;
-        }
-
-        .stat-card-primary .stat-icon {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
-            color: var(--primary);
-        }
-
-        .stat-card-success .stat-icon {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
-            color: var(--success);
-        }
-
-        .stat-card-warning .stat-icon {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
-            color: var(--warning);
-        }
-
-        .stat-card-info .stat-icon {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
-            color: var(--info);
-        }
-
-        .stat-card-dark {
-            border-color: rgba(30, 41, 59, 0.1);
-        }
-
-        .stat-card-dark:hover {
-            border-color: var(--dark);
-        }
-
-        .stat-card-dark .stat-icon {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.1), rgba(30, 41, 59, 0.05));
+        .company-name-simple {
+            font-size: 0.75rem;
+            font-weight: 600;
             color: var(--dark);
-        }
-
-        .stat-content {
-            flex: 1;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--gray);
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            text-align: center;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dark);
-            line-height: 1;
-            margin-bottom: 0.5rem;
+        .progress-ring-large {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .stat-trend {
-            font-size: 0.875rem;
+        .circular-chart-large {
+            display: block;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .circle-bg-large {
+            fill: none;
+            stroke: #eee;
+            stroke-width: 3;
+        }
+
+        .circle-large {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 3;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s ease;
+        }
+
+        .percentage-large {
+            fill: var(--dark);
+            font-size: 0.35rem;
+            font-weight: 700;
+            text-anchor: middle;
+            transform: rotate(90deg);
+            transform-origin: center;
+        }
+
+        .no-target-large {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--light-gray);
             color: var(--gray);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .view-report-link-simple {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 0.25rem;
         }
+
+        .view-report-link-simple i {
+            transition: transform 0.2s;
+        }
+
+        .company-progress-card-simple:hover .view-report-link-simple i {
+            transform: translateX(3px);
+        }
+
+        .toggle-icon {
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+            margin-left: 0.25rem;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .company-progress-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: flex-start;
+        }
+
+
 
         /* Filter Section */
         .filter-section {
@@ -1325,7 +1597,7 @@
         }
 
         .stats-grid a.active-filter {
-            outline: 3px solid rgba(99, 102, 241, 0.12);
+            outline: 2px solid rgba(99, 102, 241, 0.2);
             box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
         }
 
@@ -1532,7 +1804,7 @@
     <!-- JavaScript -->
     @push('scripts')
         <script>
-            // Initialize Date Range Picker for Orders
+            // Initialize Date Range Picker for O          rders
             $(document).ready(function () {
                 var startDate = $('#orderDateFrom').val() ? moment($('#orderDateFrom').val()) : null;
                 var endDate = $('#orderDateTo').val() ? moment($('#orderDateTo').val()) : null;
@@ -1559,6 +1831,8 @@
                     $('#orderDateFrom').val(start.format('YYYY-MM-DD'));
                     $('#orderDateTo').val(end.format('YYYY-MM-DD'));
                     $('#orderDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+                    // Auto-submit the form when date is selected
+                    $('#orderFilterForm').submit();
                 });
 
                 // Set initial value if dates exist
@@ -1566,13 +1840,33 @@
                     $('#orderDateRange').val(startDate.format('MMM D, YYYY') + ' - ' + endDate.format('MMM D, YYYY'));
                 }
 
-                // Clear dates on cancel
+                // Clear dates on cancel and auto-submit
                 $('#orderDateRange').on('cancel.daterangepicker', function (ev, picker) {
                     $(this).val('');
                     $('#orderDateFrom').val('');
                     $('#orderDateTo').val('');
+                    // Auto-submit to apply the cleared filter
+                    $('#orderFilterForm').submit();
                 });
             });
+
+            // Toggle Company Progress Section
+            function toggleCompanyProgress() {
+                const section = document.getElementById('companyProgressSection');
+                const icon = document.getElementById('toggleIcon');
+                if (section) {
+                    if (section.style.display === 'none') {
+                        section.style.display = 'block';
+                        if (icon) icon.classList.add('rotated');
+                    } else {
+                        section.style.display = 'none';
+                        if (icon) icon.classList.remove('rotated');
+                    }
+                }
+            }
+
+            // Make toggleCompanyProgress available globally
+            window.toggleCompanyProgress = toggleCompanyProgress;
 
             document.addEventListener('DOMContentLoaded', function () {
                 // Add stagger animation to table rows

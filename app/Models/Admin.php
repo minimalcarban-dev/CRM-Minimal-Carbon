@@ -68,6 +68,15 @@ class Admin extends Authenticatable
         return in_array($slug, $this->cachedPermissionSlugs(), true);
     }
 
+    /**
+     * Check if admin has permission explicitly assigned (no super admin bypass).
+     * Use this for sensitive features like sales that require explicit assignment even for super admins.
+     */
+    public function hasExplicitPermission(string $slug): bool
+    {
+        return in_array($slug, $this->cachedPermissionSlugs(), true);
+    }
+
     public function hasAnyPermission(array $slugs): bool
     {
         if ($this->is_super) {

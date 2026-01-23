@@ -19,9 +19,18 @@ class OrderDraftController extends Controller
      */
     public function index(Request $request)
     {
+        $admin = Auth::guard('admin')->user();
+        $isSuper = $admin->is_super;
+
         $query = OrderDraft::with(['admin', 'company'])
             ->notExpired()
             ->orderBy('updated_at', 'desc');
+
+        // For regular admins, only show their own drafts
+        // Super admins can see all drafts
+        if (!$isSuper) {
+            $query->where('admin_id', $admin->id);
+        }
 
         // Filter by source
         if ($request->filled('source')) {
@@ -33,8 +42,8 @@ class OrderDraftController extends Controller
             $query->where('order_type', $request->order_type);
         }
 
-        // Filter by admin (for super admins to see all)
-        if ($request->filled('admin_id')) {
+        // Filter by admin (for super admins to filter by specific admin)
+        if ($isSuper && $request->filled('admin_id')) {
             $query->where('admin_id', $request->admin_id);
         }
 
@@ -50,11 +59,18 @@ class OrderDraftController extends Controller
 
         $drafts = $query->paginate(15)->withQueryString();
 
-        // Stats
-        $totalDrafts = OrderDraft::notExpired()->count();
-        $errorDrafts = OrderDraft::notExpired()->bySource('error')->count();
-        $autoSaveDrafts = OrderDraft::notExpired()->bySource('auto_save')->count();
-        $expiringSoon = OrderDraft::expiringSoon()->count();
+        // Stats - also filtered by admin for regular admins
+        if ($isSuper) {
+            $totalDrafts = OrderDraft::notExpired()->count();
+            $errorDrafts = OrderDraft::notExpired()->bySource('error')->count();
+            $autoSaveDrafts = OrderDraft::notExpired()->bySource('auto_save')->count();
+            $expiringSoon = OrderDraft::expiringSoon()->count();
+        } else {
+            $totalDrafts = OrderDraft::notExpired()->where('admin_id', $admin->id)->count();
+            $errorDrafts = OrderDraft::notExpired()->bySource('error')->where('admin_id', $admin->id)->count();
+            $autoSaveDrafts = OrderDraft::notExpired()->bySource('auto_save')->where('admin_id', $admin->id)->count();
+            $expiringSoon = OrderDraft::expiringSoon()->where('admin_id', $admin->id)->count();
+        }
 
         return view('orders.drafts.index', compact(
             'drafts',

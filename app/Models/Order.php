@@ -21,6 +21,8 @@ class Order extends Model
         'jewellery_details',
         'diamond_details',
         'diamond_sku',
+        'diamond_skus', // New: supports multiple diamond SKUs
+        'diamond_prices', // Individual prices for each diamond SKU
         'product_other',
         'images',
         'order_pdfs',
@@ -44,6 +46,8 @@ class Order extends Model
     protected $casts = [
         'images' => 'array',
         'order_pdfs' => 'array',
+        'diamond_skus' => 'array', // New: cast to array for multi-SKU support
+        'diamond_prices' => 'array', // Cast JSON to array for diamond prices
         'dispatch_date' => 'date',
         'gross_sell' => 'decimal:2',
     ];

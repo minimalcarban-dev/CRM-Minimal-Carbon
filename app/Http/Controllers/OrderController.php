@@ -71,7 +71,11 @@ class OrderController extends Controller
             ->count();
 
         // Compute totals and breakdowns EXCLUDING shipped orders
-        $nonShippedQuery = (clone $baseQuery)->whereNotIn('diamond_status', $shippedStatuses);
+        // Note: whereNotIn excludes NULL values, so we need to explicitly include them  
+        $nonShippedQuery = (clone $baseQuery)->where(function ($q) use ($shippedStatuses) {
+            $q->whereNotIn('diamond_status', $shippedStatuses)
+                ->orWhereNull('diamond_status');
+        });
         $totalOrders = $nonShippedQuery->count();
         $orderTypeCounts = (clone $nonShippedQuery)
             ->select('order_type', DB::raw('count(*) as total'))
@@ -84,6 +88,31 @@ class OrderController extends Controller
             ->pluck('total', 'diamond_status')
             ->toArray();
 
+        // ===== TODAY'S SALES STATS (NEW) =====
+        $todaysSales = Order::whereDate('created_at', now()->toDateString())
+            ->whereIn('diamond_status', $shippedStatuses)
+            ->sum('gross_sell');
+        $todaysOrderCount = Order::whereDate('created_at', now()->toDateString())
+            ->whereIn('diamond_status', $shippedStatuses)
+            ->count();
+
+        // Get company sales progress for active companies
+        $companySalesStats = \App\Models\Company::where('status', 'active')
+            ->get()
+            ->map(function ($company) {
+                return [
+                    'id' => $company->id,
+                    'name' => $company->name,
+                    'logo' => $company->logo,
+                    'currency_symbol' => $company->currency_symbol,
+                    'todays_orders' => $company->todays_order_count,
+                    'todays_sales' => $company->todays_sales,
+                    'month_to_date' => $company->month_to_date_sales,
+                    'current_target' => $company->current_month_target,
+                    'target_progress' => $company->target_progress,
+                ];
+            });
+
         // Now apply optional filters for the listing
         $query = clone $baseQuery;
 
@@ -92,7 +121,11 @@ class OrderController extends Controller
             $query->whereIn('diamond_status', $shippedStatuses);
         } else {
             // Otherwise, hide shipped orders from main listing
-            $query->whereNotIn('diamond_status', $shippedStatuses);
+            // Note: whereNotIn excludes NULL values, so we need to explicitly include them
+            $query->where(function ($q) use ($shippedStatuses) {
+                $q->whereNotIn('diamond_status', $shippedStatuses)
+                    ->orWhereNull('diamond_status');
+            });
         }
 
         if ($request->filled('order_type')) {
@@ -112,8 +145,18 @@ class OrderController extends Controller
         }
 
         $orders = $query->latest()->paginate(10);
-        return view('orders.index', compact('orders', 'totalOrders', 'orderTypeCounts', 'statusCounts', 'shippedOrdersCount'));
+        return view('orders.index', compact(
+            'orders',
+            'totalOrders',
+            'orderTypeCounts',
+            'statusCounts',
+            'shippedOrdersCount',
+            'todaysSales',
+            'todaysOrderCount',
+            'companySalesStats'
+        ));
     }
+
 
     public function create(Request $request)
     {
@@ -136,12 +179,21 @@ class OrderController extends Controller
         try {
             $validated = $this->validateOrder($request);
 
-            // Check if diamond SKU is provided and validate it's not already sold
-            if (!empty($validated['diamond_sku'])) {
-                $diamond = Diamond::where('sku', $validated['diamond_sku'])->first();
+            // Collect all diamond SKUs to process (from both old single field and new array field)
+            $allSkus = [];
+            if (!empty($validated['diamond_skus']) && is_array($validated['diamond_skus'])) {
+                $allSkus = array_filter(array_unique($validated['diamond_skus']));
+            } elseif (!empty($validated['diamond_sku'])) {
+                $allSkus = [$validated['diamond_sku']];
+            }
+
+            // Validate all diamond SKUs first (before creating order)
+            $validatedDiamonds = [];
+            foreach ($allSkus as $sku) {
+                $diamond = Diamond::where('sku', $sku)->first();
 
                 if (!$diamond) {
-                    $errorMsg = 'Diamond with SKU "' . $validated['diamond_sku'] . '" not found.';
+                    $errorMsg = 'Diamond with SKU "' . $sku . '" not found.';
                     if ($request->expectsJson()) {
                         return response()->json(['success' => false, 'message' => $errorMsg], 422);
                     }
@@ -149,8 +201,14 @@ class OrderController extends Controller
                 }
 
                 if ($diamond->is_sold_out === 'Sold') {
-                    $errorMsg = 'Diamond with SKU "' . $validated['diamond_sku'] . '" is already sold. Please select a different diamond.';
+                    $errorMsg = 'Diamond with SKU "' . $sku . '" is already sold. Please remove it and select a different diamond.';
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => $errorMsg], 422);
+                    }
+                    return back()->withInput()->with('error', $errorMsg);
                 }
+
+                $validatedDiamonds[] = $diamond;
             }
 
             DB::beginTransaction();
@@ -205,42 +263,51 @@ class OrderController extends Controller
                 $pdfs = [];
             }
 
-            // If diamond SKU is provided, mark it as sold
-            if (!empty($validated['diamond_sku'])) {
-                Log::info('Attempting to mark diamond as sold', [
-                    'sku' => $validated['diamond_sku'],
-                    'sold_price' => $validated['gross_sell'] ?? 0
-                ]);
-
+            // Mark all validated diamonds as sold
+            $soldDiamonds = [];
+            if (!empty($validatedDiamonds)) {
                 $diamondController = new DiamondController();
-                // Convert sold price from INR to USD before marking diamond as sold
-                $currencyService = app(CurrencyService::class);
-                $soldPriceInr = $validated['gross_sell'] ?? 0;
-                $soldPriceUsd = $currencyService->inrToUsd((float) $soldPriceInr) ?? 0;
-                $result = $diamondController->markSoldOutBySku($validated['diamond_sku'], $soldPriceUsd);
 
-                if ($result) {
-                    Log::info('Diamond successfully marked as sold', ['diamond_id' => $result->id]);
+                // Get individual diamond prices from request (already in USD)
+                $diamondPrices = $validated['diamond_prices'] ?? [];
 
-                    // Notify all admins about the diamond sale
+                foreach ($validatedDiamonds as $diamond) {
+                    // Get specific price for this diamond (already in USD, no conversion needed)
+                    $soldPriceUsd = (float) ($diamondPrices[$diamond->sku] ?? 0);
+
+                    Log::info('Attempting to mark diamond as sold', [
+                        'sku' => $diamond->sku,
+                        'sold_price' => $soldPriceUsd
+                    ]);
+
+                    $result = $diamondController->markSoldOutBySku($diamond->sku, $soldPriceUsd);
+
+                    if ($result) {
+                        Log::info('Diamond successfully marked as sold', ['diamond_id' => $result->id]);
+                        $soldDiamonds[] = $result;
+                    } else {
+                        Log::warning('Failed to mark diamond as sold', ['sku' => $diamond->sku]);
+                    }
+                }
+
+                // Notify all admins about the diamond sale(s) - batch notification
+                if (!empty($soldDiamonds)) {
                     $currentAdmin = Auth::guard('admin')->user();
                     $allAdmins = \App\Models\Admin::where('id', '!=', $currentAdmin->id)->get();
 
-                    foreach ($allAdmins as $admin) {
-                        try {
-                            $admin->notify(new \App\Notifications\DiamondSoldNotification($result, $currentAdmin));
-                        } catch (\Throwable $e) {
-                            Log::error('Failed to send diamond sold notification', [
-                                'admin_id' => $admin->id,
-                                'diamond_id' => $result->id,
-                                'error' => $e->getMessage()
-                            ]);
+                    foreach ($soldDiamonds as $soldDiamond) {
+                        foreach ($allAdmins as $admin) {
+                            try {
+                                $admin->notify(new \App\Notifications\DiamondSoldNotification($soldDiamond, $currentAdmin));
+                            } catch (\Throwable $e) {
+                                Log::error('Failed to send diamond sold notification', [
+                                    'admin_id' => $admin->id,
+                                    'diamond_id' => $soldDiamond->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
                         }
                     }
-                } else {
-                    Log::warning('Failed to mark diamond as sold - diamond not found or error occurred', [
-                        'sku' => $validated['diamond_sku']
-                    ]);
                 }
             }
 
@@ -407,10 +474,9 @@ class OrderController extends Controller
             // If diamond SKU changed or was newly added, mark the new one as sold
             if (!empty($newDiamondSku) && $newDiamondSku !== $oldDiamondSku) {
                 $diamondController = new DiamondController();
-                // Convert sold price from INR to USD before marking diamond as sold
-                $currencyService = app(CurrencyService::class);
-                $soldPriceInr = $validated['gross_sell'] ?? 0;
-                $soldPriceUsd = $currencyService->inrToUsd((float) $soldPriceInr) ?? 0;
+                // Get specific price for this diamond from diamond_prices (already in USD)
+                $diamondPrices = $validated['diamond_prices'] ?? [];
+                $soldPriceUsd = (float) ($diamondPrices[$newDiamondSku] ?? 0);
                 $diamondController->markSoldOutBySku($newDiamondSku, $soldPriceUsd);
             }
 
@@ -535,6 +601,8 @@ class OrderController extends Controller
             'client_tax_id' => 'nullable|string|max:100',
             'client_email' => 'required|email|max:191',
             'diamond_sku' => 'nullable|string|max:191',
+            'diamond_skus' => 'nullable|array', // New: supports multiple diamond SKUs
+            'diamond_skus.*' => 'nullable|string|max:191', // Each SKU in the array
             'diamond_status' => 'nullable|string|in:r_order_in_process,r_order_shipped,d_diamond_in_discuss,d_diamond_in_making,d_diamond_completed,d_diamond_in_certificate,d_order_shipped,j_diamond_in_progress,j_diamond_completed,j_diamond_in_discuss,j_cad_in_progress,j_cad_done,j_order_completed,j_order_in_qc,j_qc_done,j_order_shipped,j_order_hold',
             'company_id' => 'required|exists:companies,id',
             'gross_sell' => 'nullable|numeric|min:0',
@@ -544,8 +612,10 @@ class OrderController extends Controller
             'shipping_company_name' => 'nullable|string',
             'tracking_number' => 'nullable|string',
             'tracking_url' => 'nullable|url',
-            'images.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:10240',
+            'images.*' => 'nullable|image|mimes:jpg,jpeg,png,avif,gif,webp|max:10240',
             'order_pdfs.*' => 'nullable|mimes:pdf|max:10240',
+            'diamond_prices' => 'nullable|array', // Individual prices for each diamond SKU
+            'diamond_prices.*' => 'nullable|numeric|min:0', // Each price must be numeric
         ];
 
         switch ($request->order_type) {
@@ -588,7 +658,11 @@ class OrderController extends Controller
      */
     private function assignOrderFields(Order $order, array $validated): void
     {
+        // Required fields
         $order->order_type = $validated['order_type'];
+        $order->company_id = $validated['company_id'];
+
+        // String fields (empty string is acceptable for VARCHAR/TEXT)
         $order->client_name = $validated['client_name'] ?? '';
         $order->client_address = $validated['client_address'] ?? '';
         $order->client_mobile = $validated['client_mobile'] ?? '';
@@ -598,21 +672,45 @@ class OrderController extends Controller
         $order->diamond_details = $validated['diamond_details'] ?? '';
         $order->diamond_sku = $validated['diamond_sku'] ?? '';
 
+        // Handle multiple diamond SKUs - store as JSON array
+        // Also keep single diamond_sku for backward compatibility
+        if (!empty($validated['diamond_skus'])) {
+            $skus = array_filter(array_unique($validated['diamond_skus']));
+            $order->diamond_skus = $skus;
+            // Set first SKU as primary for backward compatibility
+            if (empty($order->diamond_sku) && !empty($skus)) {
+                $order->diamond_sku = $skus[0];
+            }
+        } elseif (!empty($validated['diamond_sku'])) {
+            // Single SKU provided - convert to array for new field
+            $order->diamond_skus = [$validated['diamond_sku']];
+        }
+
+        // Store individual diamond prices if provided
+        if (!empty($validated['diamond_prices'])) {
+            $order->diamond_prices = $validated['diamond_prices'];
+        }
+        $order->product_other = $validated['product_other'] ?? '';
+        $order->special_notes = $validated['special_notes'] ?? '';
+        $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
+        $order->tracking_number = $validated['tracking_number'] ?? '';
+        $order->tracking_url = $validated['tracking_url'] ?? '';
+
         // Integer foreign key fields - use null instead of empty string for MySQL compatibility
         $order->gold_detail_id = !empty($validated['gold_detail_id']) ? $validated['gold_detail_id'] : null;
         $order->ring_size_id = !empty($validated['ring_size_id']) ? $validated['ring_size_id'] : null;
         $order->setting_type_id = !empty($validated['setting_type_id']) ? $validated['setting_type_id'] : null;
         $order->earring_type_id = !empty($validated['earring_type_id']) ? $validated['earring_type_id'] : null;
 
-        $order->product_other = $validated['product_other'] ?? '';
-        $order->diamond_status = $validated['diamond_status'] ?? '';
+        // ENUM fields - use null instead of empty string for MySQL compatibility
+        // MySQL ENUM columns reject empty strings, must use null when no value selected
+        $order->diamond_status = !empty($validated['diamond_status']) ? $validated['diamond_status'] : null;
+        $order->note = !empty($validated['note']) ? $validated['note'] : null;
+
+        // Numeric fields
         $order->gross_sell = $validated['gross_sell'] ?? 0;
-        $order->company_id = $validated['company_id'];
-        $order->note = $validated['note'] ?? '';
-        $order->special_notes = $validated['special_notes'] ?? '';
-        $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
-        $order->tracking_number = $validated['tracking_number'] ?? '';
-        $order->tracking_url = $validated['tracking_url'] ?? '';
+
+        // Date fields - use null instead of empty string for MySQL DATE compatibility
         $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
     }
 

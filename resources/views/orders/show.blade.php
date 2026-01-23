@@ -11,15 +11,15 @@
                 <p class="order-date">Created: {{ $order->created_at->format('d M Y, h:i A') }}</p>
             </div>
             <div class="header-actions">
-                <a href="{{ route('orders.index') }}" class="btn-action btn-back">
+                <button onclick="window.history.back()" class="btn-action btn-back">
                     <i class="bi bi-arrow-left"></i> Back
-                </a>
+                </button>
                 <a href="{{ route('orders.edit', $order) }}" class="btn-action btn-edit">
                     <i class="bi bi-pencil"></i> Edit
                 </a>
-                <button onclick="window.print()" class="btn-action btn-print">
+                <!-- <button onclick="window.print()" class="btn-action btn-print">
                     <i class="bi bi-printer"></i> Print
-                </button>
+                </button> -->
             </div>
         </div>
 

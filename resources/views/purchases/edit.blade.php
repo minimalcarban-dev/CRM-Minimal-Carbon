@@ -19,6 +19,15 @@
                     <h1 class="page-title">
                         <i class="bi bi-pencil"></i>
                         Edit Purchase
+                        @if($purchase->isPending())
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 0.5rem; margin-left: 0.75rem; padding: 0.35rem 0.75rem; background: #fef3c7; color: #b45309; border-radius: 20px; font-size: 0.85rem; font-weight: 600;"><i
+                                    class="bi bi-hourglass-split"></i> Pending</span>
+                        @else
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 0.5rem; margin-left: 0.75rem; padding: 0.35rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 20px; font-size: 0.85rem; font-weight: 600;"><i
+                                    class="bi bi-check-circle"></i> Completed</span>
+                        @endif
                     </h1>
                 </div>
                 <div class="header-right">
@@ -95,9 +104,11 @@
                 </div>
                 <div class="section-body">
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Payment Mode <span class="required">*</span></label>
-                            <div class="payment-toggle">
+                        {{-- Payment Mode - Full Width --}}
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label class="form-label">Payment Mode <span style="color: #9ca3af; font-weight: 400;">(optional
+                                    - leave empty for Pending)</span></label>
+                            <div class="payment-toggle" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                                 <label class="toggle-option">
                                     <input type="radio" name="payment_mode" value="upi" {{ old('payment_mode', $purchase->payment_mode) == 'upi' ? 'checked' : '' }}>
                                     <span class="toggle-btn"><i class="bi bi-phone"></i> UPI</span>
@@ -106,13 +117,51 @@
                                     <input type="radio" name="payment_mode" value="cash" {{ old('payment_mode', $purchase->payment_mode) == 'cash' ? 'checked' : '' }}>
                                     <span class="toggle-btn"><i class="bi bi-cash"></i> Cash</span>
                                 </label>
+                                <label class="toggle-option">
+                                    <input type="radio" name="payment_mode" value="bank_transfer" {{ old('payment_mode', $purchase->payment_mode) == 'bank_transfer' ? 'checked' : '' }}>
+                                    <span class="toggle-btn"><i class="bi bi-bank"></i> Bank Transfer</span>
+                                </label>
                             </div>
+                            @if($purchase->isPending())
+                                <small style="display: block; margin-top: 0.5rem; color: #b45309;"><i
+                                        class="bi bi-exclamation-circle"></i> Select payment mode to complete this
+                                    purchase</small>
+                            @endif
                         </div>
-                        <div class="form-group" id="upiIdField">
+
+                        {{-- UPI ID Field - Full Width --}}
+                        <div class="form-group" id="upiIdField" style="display: none; grid-column: 1 / -1;">
                             <label for="upi_id" class="form-label">UPI ID</label>
                             <input type="text" id="upi_id" name="upi_id" class="form-control"
-                                value="{{ old('upi_id', $purchase->upi_id) }}">
+                                value="{{ old('upi_id', $purchase->upi_id) }}" style="max-width: 400px;">
                         </div>
+
+                        <div id="bankFields" style="display: none; grid-column: 1 / -1;">
+                            <div class="form-grid" style="margin-bottom: 0;">
+                                <div class="form-group">
+                                    <label for="bank_account_name" class="form-label">Account Holder Name</label>
+                                    <input type="text" id="bank_account_name" name="bank_account_name" class="form-control"
+                                        value="{{ old('bank_account_name', $purchase->bank_account_name) }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bank_name" class="form-label">Bank Name</label>
+                                    <input type="text" id="bank_name" name="bank_name" class="form-control"
+                                        value="{{ old('bank_name', $purchase->bank_name) }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bank_account_number" class="form-label">Account Number</label>
+                                    <input type="text" id="bank_account_number" name="bank_account_number"
+                                        class="form-control"
+                                        value="{{ old('bank_account_number', $purchase->bank_account_number) }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bank_ifsc" class="form-label">IFSC Code</label>
+                                    <input type="text" id="bank_ifsc" name="bank_ifsc" class="form-control"
+                                        value="{{ old('bank_ifsc', $purchase->bank_ifsc) }}">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="party_name" class="form-label">Party Name <span class="required">*</span></label>
                             <input type="text" id="party_name" name="party_name" class="form-control"
@@ -169,14 +218,19 @@
             weight.addEventListener('input', calculateTotal);
             discount.addEventListener('input', calculateTotal);
 
+            // Toggle Payment Mode Fields
             const paymentModes = document.querySelectorAll('input[name="payment_mode"]');
             const upiField = document.getElementById('upiIdField');
-            function toggleUpiField() {
+            const bankFields = document.getElementById('bankFields');
+
+            function togglePaymentFields() {
                 const selected = document.querySelector('input[name="payment_mode"]:checked');
                 upiField.style.display = selected && selected.value === 'upi' ? 'block' : 'none';
+                bankFields.style.display = selected && selected.value === 'bank_transfer' ? 'block' : 'none';
             }
-            paymentModes.forEach(r => r.addEventListener('change', toggleUpiField));
-            toggleUpiField();
+
+            paymentModes.forEach(r => r.addEventListener('change', togglePaymentFields));
+            togglePaymentFields();
         });
     </script>
 @endsection

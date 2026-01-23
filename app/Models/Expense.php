@@ -21,6 +21,8 @@ class Expense extends Model
         'reference_number',
         'notes',
         'admin_id',
+        'purchase_id',
+        'gold_purchase_id',
     ];
 
     protected $casts = [
@@ -48,6 +50,7 @@ class Expense extends Model
         'miteshbhai_out' => 'Miteshbhai (Out)',
         'shanti_jewellers' => 'Shanti Jewellers',
         'weight_diamond' => 'Diamond Purchase',
+        'gold_purchase' => 'Gold Purchase',
         'tedras' => 'Tedras Work',
         'orenge' => 'Orenge Charges',
         'chithi_ex' => 'Chithi Payment',
@@ -86,12 +89,25 @@ class Expense extends Model
         return $allCategories[$this->category] ?? $this->category;
     }
 
-    /**
-     * Get the admin who created this expense
-     */
     public function admin()
     {
         return $this->belongsTo(Admin::class);
+    }
+
+    /**
+     * Get the linked purchase (if this expense was auto-created from a diamond purchase)
+     */
+    public function purchase()
+    {
+        return $this->belongsTo(Purchase::class);
+    }
+
+    /**
+     * Get the linked gold purchase (if this expense was auto-created from a gold purchase)
+     */
+    public function goldPurchase()
+    {
+        return $this->belongsTo(GoldPurchase::class);
     }
 
     /**

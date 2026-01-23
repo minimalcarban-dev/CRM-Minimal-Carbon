@@ -42,6 +42,7 @@ class Diamond extends Model
         'description',
         'admin_id',
         'note',
+        'current_location',
         'diamond_type',
         'multi_img_upload',
         'assign_by',
