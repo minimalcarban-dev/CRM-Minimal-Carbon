@@ -37,6 +37,7 @@ class GoldPurchase extends Model
         'total_amount',
         'supplier_name',
         'supplier_mobile',
+        'party_id',
         'invoice_number',
         'status',
         'payment_mode',
@@ -45,6 +46,7 @@ class GoldPurchase extends Model
         'bank_account_number',
         'bank_ifsc',
         'notes',
+        'invoice_image',
         'admin_id',
         'expense_id',
     ];
@@ -54,6 +56,7 @@ class GoldPurchase extends Model
         'weight_grams' => 'decimal:3',
         'rate_per_gram' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'invoice_image' => 'array',
     ];
 
     protected $attributes = [
@@ -89,11 +92,54 @@ class GoldPurchase extends Model
     }
 
     /**
+     * Get the linked party (Gold Metal supplier).
+     */
+    public function party()
+    {
+        return $this->belongsTo(Party::class);
+    }
+
+    /**
      * Get the linked expense (auto-created when purchase is completed).
      */
     public function expense()
     {
         return $this->belongsTo(Expense::class);
+    }
+
+    /**
+     * Get invoice image URL from Cloudinary metadata.
+     */
+    public function getInvoiceImageUrlAttribute(): ?string
+    {
+        if (!$this->invoice_image) {
+            return null;
+        }
+        return is_array($this->invoice_image) 
+            ? ($this->invoice_image['url'] ?? null) 
+            : $this->invoice_image;
+    }
+
+    /**
+     * Get invoice image public_id for Cloudinary deletion.
+     */
+    public function getInvoiceImagePublicIdAttribute(): ?string
+    {
+        if (!$this->invoice_image || !is_array($this->invoice_image)) {
+            return null;
+        }
+        return $this->invoice_image['public_id'] ?? null;
+    }
+
+    /**
+     * Check if invoice is a PDF.
+     */
+    public function isInvoicePdf(): bool
+    {
+        if (!$this->invoice_image || !is_array($this->invoice_image)) {
+            return false;
+        }
+        return ($this->invoice_image['format'] ?? '') === 'pdf';
     }
 
     /**

@@ -6,9 +6,12 @@ use App\Models\Factory;
 use App\Models\GoldPurchase;
 use App\Models\GoldDistribution;
 use App\Models\Expense;
+use App\Models\Party;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Log;
 
 class GoldTrackingController extends Controller
 {
@@ -145,7 +148,12 @@ class GoldTrackingController extends Controller
      */
     public function createPurchase()
     {
-        return view('gold-tracking.purchase-create');
+        // Load only Gold Metal category parties as suppliers
+        $suppliers = Party::byCategory(Party::CATEGORY_GOLD_METAL)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'email', 'gst_no', 'address']);
+
+        return view('gold-tracking.purchase-create', compact('suppliers'));
     }
 
     /**
@@ -157,6 +165,7 @@ class GoldTrackingController extends Controller
             'purchase_date' => 'required|date',
             'weight_grams' => 'required|numeric|min:0.001',
             'rate_per_gram' => 'required|numeric|min:0',
+            'party_id' => 'nullable|exists:parties,id',
             'supplier_name' => 'required|string|max:255',
             'supplier_mobile' => 'nullable|string|max:20',
             'invoice_number' => 'nullable|string|max:255',
@@ -166,9 +175,34 @@ class GoldTrackingController extends Controller
             'bank_account_number' => 'nullable|string|max:50',
             'bank_ifsc' => 'nullable|string|max:20',
             'notes' => 'nullable|string',
+            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
         ]);
 
         $validated['admin_id'] = Auth::guard('admin')->id();
+
+        // Handle invoice image upload to Cloudinary
+        if ($request->hasFile('invoice_image')) {
+            try {
+                $uploadedFile = $request->file('invoice_image');
+                $result = Cloudinary::upload($uploadedFile->getRealPath(), [
+                    'folder' => 'invoices/gold-purchases',
+                    'resource_type' => 'auto',
+                ]);
+
+                $validated['invoice_image'] = [
+                    'url' => $result->getSecurePath(),
+                    'public_id' => $result->getPublicId(),
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'format' => $uploadedFile->getClientOriginalExtension(),
+                    'size' => $uploadedFile->getSize(),
+                    'resource_type' => $result->getFileType(),
+                    'uploaded_at' => now()->toISOString(),
+                ];
+            } catch (\Exception $e) {
+                // Log error but continue without image
+                Log::error('Cloudinary upload failed for gold purchase: ' . $e->getMessage());
+            }
+        }
 
         // Determine status based on payment_mode
         if (empty($validated['payment_mode'])) {
@@ -209,7 +243,12 @@ class GoldTrackingController extends Controller
      */
     public function editPurchase(GoldPurchase $purchase)
     {
-        return view('gold-tracking.purchase-edit', compact('purchase'));
+        // Load only Gold Metal category parties as suppliers
+        $suppliers = Party::byCategory(Party::CATEGORY_GOLD_METAL)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'email', 'gst_no', 'address']);
+
+        return view('gold-tracking.purchase-edit', compact('purchase', 'suppliers'));
     }
 
     /**
@@ -221,6 +260,7 @@ class GoldTrackingController extends Controller
             'purchase_date' => 'required|date',
             'weight_grams' => 'required|numeric|min:0.001',
             'rate_per_gram' => 'required|numeric|min:0',
+            'party_id' => 'nullable|exists:parties,id',
             'supplier_name' => 'required|string|max:255',
             'supplier_mobile' => 'nullable|string|max:20',
             'invoice_number' => 'nullable|string|max:255',
@@ -230,7 +270,52 @@ class GoldTrackingController extends Controller
             'bank_account_number' => 'nullable|string|max:50',
             'bank_ifsc' => 'nullable|string|max:20',
             'notes' => 'nullable|string',
+            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'remove_invoice_image' => 'nullable|boolean',
         ]);
+
+        // Handle invoice image
+        if ($request->input('remove_invoice_image') && $purchase->invoice_image_public_id) {
+            try {
+                Cloudinary::destroy($purchase->invoice_image_public_id);
+            } catch (\Exception $e) {
+                Log::error('Cloudinary delete failed: ' . $e->getMessage());
+            }
+            $validated['invoice_image'] = null;
+        } elseif ($request->hasFile('invoice_image')) {
+            // Delete old image if exists
+            if ($purchase->invoice_image_public_id) {
+                try {
+                    Cloudinary::destroy($purchase->invoice_image_public_id);
+                } catch (\Exception $e) {
+                    Log::error('Cloudinary delete failed: ' . $e->getMessage());
+                }
+            }
+
+            try {
+                $uploadedFile = $request->file('invoice_image');
+                $result = Cloudinary::upload($uploadedFile->getRealPath(), [
+                    'folder' => 'invoices/gold-purchases',
+                    'resource_type' => 'auto',
+                ]);
+
+                $validated['invoice_image'] = [
+                    'url' => $result->getSecurePath(),
+                    'public_id' => $result->getPublicId(),
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'format' => $uploadedFile->getClientOriginalExtension(),
+                    'size' => $uploadedFile->getSize(),
+                    'resource_type' => $result->getFileType(),
+                    'uploaded_at' => now()->toISOString(),
+                ];
+            } catch (\Exception $e) {
+                Log::error('Cloudinary upload failed: ' . $e->getMessage());
+                unset($validated['invoice_image']);
+            }
+        } else {
+            unset($validated['invoice_image']);
+        }
+        unset($validated['remove_invoice_image']);
 
         $wasPending = $purchase->isPending();
         $hasPaymentNow = !empty($validated['payment_mode']);

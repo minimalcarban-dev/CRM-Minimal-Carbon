@@ -65,6 +65,28 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Category Field - NEW -->
+            <div class="fields-row" style="margin-top: 1.25rem;">
+                <div class="field-col field-col-full">
+                    <label class="field-label">
+                        <i class="bi bi-tag" style="color: var(--clr-primary); margin-right: 0.25rem;"></i>
+                        Category <span class="req">*</span>
+                    </label>
+                    <div class="select-wrapper">
+                        <i class="bi bi-layers"></i>
+                        <select name="category" class="field-select" required>
+                            <option value="">-- Select Category --</option>
+                            @foreach($categories as $key => $label)
+                                <option value="{{ $key }}" {{ old('category', $party->category ?? '') == $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <span class="field-note">Select the business category for this party. This determines where the party appears in different modules.</span>
+                </div>
+            </div>
         </div>
 
         <!-- Tax Details -->

@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Purchase;
 use App\Models\Expense;
 use App\Models\StoneType;
+use App\Models\Party;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Log;
 
 class PurchaseController extends Controller
 {
@@ -72,7 +75,13 @@ class PurchaseController extends Controller
     public function create()
     {
         $stoneTypes = StoneType::orderBy('name')->pluck('name', 'name');
-        return view('purchases.create', compact('stoneTypes'));
+
+        // Load only Diamond & Gemstone category parties
+        $parties = Party::byCategory(Party::CATEGORY_DIAMOND_GEMSTONE)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'email', 'gst_no', 'address']);
+
+        return view('purchases.create', compact('stoneTypes', 'parties'));
     }
 
     /**
@@ -92,14 +101,39 @@ class PurchaseController extends Controller
             'bank_name' => 'nullable|string|max:255',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_ifsc' => 'nullable|string|max:20',
+            'party_id' => 'nullable|exists:parties,id',
             'party_name' => 'required|string|max:255',
             'party_mobile' => 'nullable|string|max:15',
             'invoice_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
         ]);
 
         $validated['admin_id'] = Auth::guard('admin')->id();
         $validated['discount_percent'] = $validated['discount_percent'] ?? 0;
+
+        // Handle invoice image upload to Cloudinary
+        if ($request->hasFile('invoice_image')) {
+            try {
+                $uploadedFile = $request->file('invoice_image');
+                $result = Cloudinary::upload($uploadedFile->getRealPath(), [
+                    'folder' => 'invoices/purchases',
+                    'resource_type' => 'auto',
+                ]);
+
+                $validated['invoice_image'] = [
+                    'url' => $result->getSecurePath(),
+                    'public_id' => $result->getPublicId(),
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'format' => $uploadedFile->getClientOriginalExtension(),
+                    'size' => $uploadedFile->getSize(),
+                    'resource_type' => $result->getFileType(),
+                    'uploaded_at' => now()->toISOString(),
+                ];
+            } catch (\Exception $e) {
+                Log::error('Cloudinary upload failed for purchase: ' . $e->getMessage());
+            }
+        }
 
         // Determine status based on payment_mode
         if (empty($validated['payment_mode'])) {
@@ -141,7 +175,13 @@ class PurchaseController extends Controller
     public function edit(Purchase $purchase)
     {
         $stoneTypes = StoneType::orderBy('name')->pluck('name', 'name');
-        return view('purchases.edit', compact('purchase', 'stoneTypes'));
+
+        // Load only Diamond & Gemstone category parties
+        $parties = Party::byCategory(Party::CATEGORY_DIAMOND_GEMSTONE)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'email', 'gst_no', 'address']);
+
+        return view('purchases.edit', compact('purchase', 'stoneTypes', 'parties'));
     }
 
     /**
@@ -161,13 +201,59 @@ class PurchaseController extends Controller
             'bank_name' => 'nullable|string|max:255',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_ifsc' => 'nullable|string|max:20',
+            'party_id' => 'nullable|exists:parties,id',
             'party_name' => 'required|string|max:255',
             'party_mobile' => 'nullable|string|max:15',
             'invoice_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'remove_invoice_image' => 'nullable|boolean',
         ]);
 
         $validated['discount_percent'] = $validated['discount_percent'] ?? 0;
+
+        // Handle invoice image
+        if ($request->input('remove_invoice_image') && $purchase->invoice_image_public_id) {
+            try {
+                Cloudinary::destroy($purchase->invoice_image_public_id);
+            } catch (\Exception $e) {
+                Log::error('Cloudinary delete failed: ' . $e->getMessage());
+            }
+            $validated['invoice_image'] = null;
+        } elseif ($request->hasFile('invoice_image')) {
+            // Delete old image if exists
+            if ($purchase->invoice_image_public_id) {
+                try {
+                    Cloudinary::destroy($purchase->invoice_image_public_id);
+                } catch (\Exception $e) {
+                    Log::error('Cloudinary delete failed: ' . $e->getMessage());
+                }
+            }
+
+            try {
+                $uploadedFile = $request->file('invoice_image');
+                $result = Cloudinary::upload($uploadedFile->getRealPath(), [
+                    'folder' => 'invoices/purchases',
+                    'resource_type' => 'auto',
+                ]);
+
+                $validated['invoice_image'] = [
+                    'url' => $result->getSecurePath(),
+                    'public_id' => $result->getPublicId(),
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'format' => $uploadedFile->getClientOriginalExtension(),
+                    'size' => $uploadedFile->getSize(),
+                    'resource_type' => $result->getFileType(),
+                    'uploaded_at' => now()->toISOString(),
+                ];
+            } catch (\Exception $e) {
+                Log::error('Cloudinary upload failed: ' . $e->getMessage());
+                unset($validated['invoice_image']);
+            }
+        } else {
+            unset($validated['invoice_image']);
+        }
+        unset($validated['remove_invoice_image']);
 
         $wasPending = $purchase->isPending();
         $hasPaymentNow = !empty($validated['payment_mode']);
@@ -315,4 +401,3 @@ class PurchaseController extends Controller
         $purchase->update(['expense_id' => $expense->id]);
     }
 }
-
