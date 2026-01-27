@@ -429,6 +429,31 @@
     background: rgba(239, 68, 68, 0.08) !important;
 }
 
+/* Sub-entry styling for related transactions */
+.tracker-page .tracker-sub-entry {
+    background: rgba(241, 245, 249, 0.5);
+    border-left: 3px solid #e2e8f0;
+}
+.tracker-page .tracker-sub-entry td:first-child {
+    padding-left: 10px;
+}
+.tracker-page .tracker-sub-entry:hover {
+    background: rgba(241, 245, 249, 0.8) !important;
+}
+.tracker-page .tracker-sub-entry.tracker-expense-row {
+    border-left-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.02);
+}
+.tracker-page .tracker-sub-entry.tracker-expense-row:hover {
+    background: rgba(239, 68, 68, 0.05) !important;
+}
+
+/* Date separator for visual grouping */
+.tracker-page .tracker-date-separator td {
+    padding: 4px 0 !important;
+    border: none !important;
+}
+
 /* Charts - Scoped */
 .tracker-page .tracker-charts-row,
 .tracker-page .tracker-tables-row {
