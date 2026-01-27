@@ -18,8 +18,10 @@ class Expense extends Model
         'category',
         'payment_method',
         'paid_to_received_from',
+        'party_id',
         'reference_number',
         'notes',
+        'invoice_image',
         'admin_id',
         'purchase_id',
         'gold_purchase_id',
@@ -28,6 +30,7 @@ class Expense extends Model
     protected $casts = [
         'date' => 'date',
         'amount' => 'decimal:2',
+        'invoice_image' => 'array',
     ];
 
     /**
@@ -95,6 +98,14 @@ class Expense extends Model
     }
 
     /**
+     * Get the linked party (Banks / In Person)
+     */
+    public function party()
+    {
+        return $this->belongsTo(Party::class);
+    }
+
+    /**
      * Get the linked purchase (if this expense was auto-created from a diamond purchase)
      */
     public function purchase()
@@ -108,6 +119,41 @@ class Expense extends Model
     public function goldPurchase()
     {
         return $this->belongsTo(GoldPurchase::class);
+    }
+
+    /**
+     * Get invoice image URL from Cloudinary metadata
+     */
+    public function getInvoiceImageUrlAttribute(): ?string
+    {
+        if (!$this->invoice_image) {
+            return null;
+        }
+        return is_array($this->invoice_image) 
+            ? ($this->invoice_image['url'] ?? null) 
+            : $this->invoice_image;
+    }
+
+    /**
+     * Get invoice image public_id for Cloudinary deletion
+     */
+    public function getInvoiceImagePublicIdAttribute(): ?string
+    {
+        if (!$this->invoice_image || !is_array($this->invoice_image)) {
+            return null;
+        }
+        return $this->invoice_image['public_id'] ?? null;
+    }
+
+    /**
+     * Check if invoice is a PDF
+     */
+    public function isInvoicePdf(): bool
+    {
+        if (!$this->invoice_image || !is_array($this->invoice_image)) {
+            return false;
+        }
+        return ($this->invoice_image['format'] ?? '') === 'pdf';
     }
 
     /**

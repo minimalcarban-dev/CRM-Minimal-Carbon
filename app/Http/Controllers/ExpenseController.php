@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\Party;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Log;
 
 class ExpenseController extends Controller
 {
@@ -78,8 +81,14 @@ class ExpenseController extends Controller
         $incomeCategories = Expense::INCOME_CATEGORIES;
         $expenseCategories = Expense::EXPENSE_CATEGORIES;
         $paymentMethods = Expense::PAYMENT_METHODS;
+        
+        // Load only Banks and In Person category parties
+        $parties = Party::byCategories([
+            Party::CATEGORY_BANKS,
+            Party::CATEGORY_IN_PERSON
+        ])->orderBy('name')->get(['id', 'name', 'phone', 'email', 'category']);
 
-        return view('expenses.create', compact('incomeCategories', 'expenseCategories', 'paymentMethods'));
+        return view('expenses.create', compact('incomeCategories', 'expenseCategories', 'paymentMethods', 'parties'));
     }
 
     /**
@@ -89,17 +98,42 @@ class ExpenseController extends Controller
     {
         $validated = $request->validate([
             'date' => 'required|date',
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'transaction_type' => 'required|in:in,out',
-            'category' => 'required|string|max:100',
+            'category' => 'nullable|string|max:100',
             'payment_method' => 'required|in:cash,upi,bank_transfer,cheque',
-            'paid_to_received_from' => 'nullable|string|max:255',
+            'party_id' => 'nullable|exists:parties,id',
+            'paid_to_received_from' => 'required|string|max:255',
             'reference_number' => 'nullable|string|max:100',
             'notes' => 'nullable|string',
+            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
         ]);
 
         $validated['admin_id'] = Auth::guard('admin')->id();
+
+        // Handle invoice image upload to Cloudinary
+        if ($request->hasFile('invoice_image')) {
+            try {
+                $uploadedFile = $request->file('invoice_image');
+                $result = Cloudinary::upload($uploadedFile->getRealPath(), [
+                    'folder' => 'invoices/expenses',
+                    'resource_type' => 'auto',
+                ]);
+                
+                $validated['invoice_image'] = [
+                    'url' => $result->getSecurePath(),
+                    'public_id' => $result->getPublicId(),
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'format' => $uploadedFile->getClientOriginalExtension(),
+                    'size' => $uploadedFile->getSize(),
+                    'resource_type' => $result->getFileType(),
+                    'uploaded_at' => now()->toISOString(),
+                ];
+            } catch (\Exception $e) {
+                Log::error('Cloudinary upload failed for expense: ' . $e->getMessage());
+            }
+        }
 
         Expense::create($validated);
 
@@ -124,8 +158,14 @@ class ExpenseController extends Controller
         $incomeCategories = Expense::INCOME_CATEGORIES;
         $expenseCategories = Expense::EXPENSE_CATEGORIES;
         $paymentMethods = Expense::PAYMENT_METHODS;
+        
+        // Load only Banks and In Person category parties
+        $parties = Party::byCategories([
+            Party::CATEGORY_BANKS,
+            Party::CATEGORY_IN_PERSON
+        ])->orderBy('name')->get(['id', 'name', 'phone', 'email', 'category']);
 
-        return view('expenses.edit', compact('expense', 'incomeCategories', 'expenseCategories', 'paymentMethods'));
+        return view('expenses.edit', compact('expense', 'incomeCategories', 'expenseCategories', 'paymentMethods', 'parties'));
     }
 
     /**
@@ -135,15 +175,61 @@ class ExpenseController extends Controller
     {
         $validated = $request->validate([
             'date' => 'required|date',
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'transaction_type' => 'required|in:in,out',
-            'category' => 'required|string|max:100',
+            'category' => 'nullable|string|max:100',
             'payment_method' => 'required|in:cash,upi,bank_transfer,cheque',
-            'paid_to_received_from' => 'nullable|string|max:255',
+            'party_id' => 'nullable|exists:parties,id',
+            'paid_to_received_from' => 'required|string|max:255',
             'reference_number' => 'nullable|string|max:100',
             'notes' => 'nullable|string',
+            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'remove_invoice_image' => 'nullable|boolean',
         ]);
+
+        // Handle invoice image
+        if ($request->input('remove_invoice_image') && $expense->invoice_image_public_id) {
+            try {
+                Cloudinary::destroy($expense->invoice_image_public_id);
+            } catch (\Exception $e) {
+                Log::error('Cloudinary delete failed: ' . $e->getMessage());
+            }
+            $validated['invoice_image'] = null;
+        } elseif ($request->hasFile('invoice_image')) {
+            // Delete old image if exists
+            if ($expense->invoice_image_public_id) {
+                try {
+                    Cloudinary::destroy($expense->invoice_image_public_id);
+                } catch (\Exception $e) {
+                    Log::error('Cloudinary delete failed: ' . $e->getMessage());
+                }
+            }
+            
+            try {
+                $uploadedFile = $request->file('invoice_image');
+                $result = Cloudinary::upload($uploadedFile->getRealPath(), [
+                    'folder' => 'invoices/expenses',
+                    'resource_type' => 'auto',
+                ]);
+                
+                $validated['invoice_image'] = [
+                    'url' => $result->getSecurePath(),
+                    'public_id' => $result->getPublicId(),
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'format' => $uploadedFile->getClientOriginalExtension(),
+                    'size' => $uploadedFile->getSize(),
+                    'resource_type' => $result->getFileType(),
+                    'uploaded_at' => now()->toISOString(),
+                ];
+            } catch (\Exception $e) {
+                Log::error('Cloudinary upload failed: ' . $e->getMessage());
+                unset($validated['invoice_image']);
+            }
+        } else {
+            unset($validated['invoice_image']);
+        }
+        unset($validated['remove_invoice_image']);
 
         $expense->update($validated);
 

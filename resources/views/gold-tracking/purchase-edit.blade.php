@@ -42,7 +42,7 @@
             </div>
         @endif
 
-        <form action="{{ route('gold-tracking.purchases.update', $purchase) }}" method="POST">
+        <form action="{{ route('gold-tracking.purchases.update', $purchase) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -92,15 +92,55 @@
                 <div class="form-grid"
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
                     <div class="form-group">
-                        <label class="form-label">Supplier Name <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="supplier_name"
-                            class="form-control @error('supplier_name') is-invalid @enderror"
-                            value="{{ old('supplier_name', $purchase->supplier_name) }}" required>
+                        <label class="form-label">Supplier Name <span style="color: #ef4444;">*</span>
+                            <a href="{{ route('parties.create') }}?category=gold_metal&redirect={{ urlencode(request()->url()) }}" 
+                               style="margin-left: 10px; font-size: 0.85rem; font-weight: 500;" title="Add New Gold Metal Party">
+                                <i class="bi bi-plus-lg"></i> Add New
+                            </a>
+                        </label>
+                        <div class="custom-searchable-dropdown" id="supplierDropdownContainer" style="position: relative; width: 100%;">
+                            <div class="dropdown-input-wrapper" style="position: relative; width: 100%;">
+                                <input type="text" name="supplier_name" id="supplier_name"
+                                    class="form-control dropdown-search-input @error('supplier_name') is-invalid @enderror"
+                                    value="{{ old('supplier_name', $purchase->supplier_name) }}" 
+                                    placeholder="Type to search or select..." autocomplete="off" required style="padding-right: 35px;">
+                                <span class="dropdown-arrow" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6b7280;">
+                                    <i class="bi bi-chevron-down"></i>
+                                </span>
+                            </div>
+                            <div class="dropdown-menu-custom" id="supplierDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 9999; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); max-height: 250px; overflow-y: auto; margin-top: 4px;">
+                                @if(isset($parties) && $parties->count())
+                                    @foreach($parties as $party)
+                                        <div class="dropdown-item-custom" 
+                                            data-id="{{ $party->id }}"
+                                            data-name="{{ $party->name }}"
+                                            data-phone="{{ $party->mobile }}"
+                                            style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: all 0.15s;">
+                                            <div style="font-weight: 500; color: #1e293b;">{{ $party->name }}</div>
+                                            @if($party->mobile)
+                                                <div style="font-size: 0.8rem; color: #64748b;">{{ $party->mobile }}</div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="dropdown-empty" style="padding: 14px; text-align: center; color: #94a3b8;">
+                                        <i class="bi bi-inbox"></i> No suppliers found
+                                    </div>
+                                @endif
+                            </div>
+                            <input type="hidden" id="party_id" name="party_id" value="{{ old('party_id', $purchase->party_id) }}">
+                        </div>
+                        @if(!isset($parties) || $parties->isEmpty())
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                No Gold Metal parties found. <a href="{{ route('parties.create') }}?category=gold_metal">Add a party</a>
+                            </small>
+                        @endif
                         @error('supplier_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
                         <label class="form-label">Supplier Mobile</label>
-                        <input type="text" name="supplier_mobile"
+                        <input type="text" name="supplier_mobile" id="supplier_mobile"
                             class="form-control @error('supplier_mobile') is-invalid @enderror"
                             value="{{ old('supplier_mobile', $purchase->supplier_mobile) }}">
                         @error('supplier_mobile') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -166,6 +206,41 @@
                 </div>
             </div>
 
+            <!-- Invoice Image Upload -->
+            <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                    <i class="bi bi-image" style="color: #6366f1;"></i> Invoice Image
+                </h3>
+                @if($purchase->invoice_image_url)
+                    <div class="form-group">
+                        <label class="form-label">Current Image</label>
+                        <div class="current-image-container" style="margin-bottom: 15px;">
+                            <img src="{{ $purchase->invoice_image_url }}" alt="Current Invoice" 
+                                style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #dee2e6;">
+                            <div class="mt-2">
+                                <label class="text-danger" style="cursor: pointer;">
+                                    <input type="checkbox" name="remove_invoice_image" value="1"> 
+                                    <i class="bi bi-trash"></i> Remove current image
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                
+                <div class="form-group">
+                    <label class="form-label">{{ $purchase->invoice_image_url ? 'Replace Image' : 'Upload Image' }}</label>
+                    <input type="file" id="invoice_image" name="invoice_image" 
+                        class="form-control @error('invoice_image') is-invalid @enderror"
+                        accept="image/*">
+                    <small class="text-muted">Accepted formats: JPG, PNG, GIF. Max size: 5MB</small>
+                    @error('invoice_image')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    
+                    <div id="imagePreview" class="mt-3" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #dee2e6;">
+                    </div>
+                </div>
+            </div>
+
             <!-- Notes -->
             <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
                 <div class="form-group">
@@ -197,12 +272,108 @@
                 const paymentMode = document.querySelector('input[name="payment_mode"]:checked')?.value;
                 document.getElementById('bankFields').style.display = paymentMode === 'bank_transfer' ? 'block' : 'none';
             }
+            
+            // Custom Searchable Dropdown for Supplier
+            const suppliersData = @json(isset($parties) ? $parties->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'phone' => $p->mobile]) : []);
+            const supplierInput = document.getElementById('supplier_name');
+            const supplierDropdown = document.getElementById('supplierDropdown');
+            const partyIdField = document.getElementById('party_id');
+            const mobileField = document.getElementById('supplier_mobile');
+            
+            if (supplierInput && supplierDropdown) {
+                // Show dropdown on focus
+                supplierInput.addEventListener('focus', function() {
+                    supplierDropdown.style.display = 'block';
+                    filterSupplierDropdown('');
+                });
+                
+                // Filter dropdown on input
+                supplierInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    filterSupplierDropdown(searchTerm);
+                    supplierDropdown.style.display = 'block';
+                    
+                    // Check if exact match exists
+                    const exactMatch = suppliersData.find(s => s.name.toLowerCase() === searchTerm);
+                    if (!exactMatch) {
+                        partyIdField.value = '';
+                    }
+                });
+                
+                function filterSupplierDropdown(searchTerm) {
+                    const items = supplierDropdown.querySelectorAll('.dropdown-item-custom');
+                    let hasVisible = false;
+                    
+                    items.forEach(item => {
+                        const name = item.dataset.name.toLowerCase();
+                        const phone = (item.dataset.phone || '').toLowerCase();
+                        if (name.includes(searchTerm) || phone.includes(searchTerm)) {
+                            item.style.display = 'block';
+                            hasVisible = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    const emptyMsg = supplierDropdown.querySelector('.dropdown-empty');
+                    if (emptyMsg) {
+                        emptyMsg.style.display = hasVisible ? 'none' : 'block';
+                    }
+                }
+                
+                // Handle item click
+                supplierDropdown.querySelectorAll('.dropdown-item-custom').forEach(item => {
+                    item.addEventListener('click', function() {
+                        supplierInput.value = this.dataset.name;
+                        partyIdField.value = this.dataset.id;
+                        if (this.dataset.phone) {
+                            mobileField.value = this.dataset.phone;
+                        }
+                        supplierDropdown.style.display = 'none';
+                    });
+                    
+                    item.addEventListener('mouseenter', function() {
+                        this.style.background = '#f1f5f9';
+                    });
+                    item.addEventListener('mouseleave', function() {
+                        this.style.background = '#fff';
+                    });
+                });
+                
+                // Close dropdown on outside click
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('#supplierDropdownContainer')) {
+                        supplierDropdown.style.display = 'none';
+                    }
+                });
+            }
 
             document.getElementById('weight_grams').addEventListener('input', calculateTotal);
             document.getElementById('rate_per_gram').addEventListener('input', calculateTotal);
 
             // Initialize on page load
             toggleBankFields();
+            
+            // Image preview
+            const imageInput = document.getElementById('invoice_image');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            
+            if (imageInput) {
+                imageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagePreview.style.display = 'none';
+                    }
+                });
+            }
         </script>
     @endpush
 @endsection

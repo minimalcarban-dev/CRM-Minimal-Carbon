@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <form action="{{ route('expenses.store') }}" method="POST" id="expenseForm">
+    <form action="{{ route('expenses.store') }}" method="POST" id="expenseForm" enctype="multipart/form-data">
         @csrf
 
         <!-- Transaction Type -->
@@ -85,9 +85,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="title" class="form-label">Title / Purpose <span class="required">*</span></label>
+                        <label for="title" class="form-label">Title / Purpose</label>
                         <input type="text" id="title" name="title" class="form-control @error('title') is-invalid @enderror"
-                            value="{{ old('title') }}" placeholder="e.g., Electricity Bill, Customer Payment" required>
+                            value="{{ old('title') }}" placeholder="e.g., Electricity Bill, Customer Payment">
                         @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
@@ -101,14 +101,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="category" class="form-label">Category <span class="required">*</span></label>
-                        <select id="category" name="category" class="form-control @error('category') is-invalid @enderror" required>
+                        <label for="category" class="form-label">Category</label>
+                        <select id="category" name="category" class="form-control @error('category') is-invalid @enderror">
                             <option value="">Select Category</option>
                             <optgroup label="Income" id="incomeCategories">
                                 @foreach($incomeCategories as $key => $label)
                                     <option value="{{ $key }}" {{ old('category') == $key ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
-                            </optgroup>
                             <optgroup label="Expense" id="expenseCategories" style="display:none;">
                                 @foreach($expenseCategories as $key => $label)
                                     <option value="{{ $key }}" {{ old('category') == $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -129,9 +128,44 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="paid_to_received_from" class="form-label">Paid To / Received From</label>
-                        <input type="text" id="paid_to_received_from" name="paid_to_received_from" class="form-control"
-                            value="{{ old('paid_to_received_from') }}" placeholder="Person or Company name">
+                        <label for="paid_to_received_from" class="form-label">Paid To / Received From <span class="required">*</span></label>
+                        <div class="custom-searchable-dropdown" id="expensePartyDropdownContainer" style="position: relative;">
+                            <div class="dropdown-input-wrapper" style="position: relative;">
+                                <input type="text" id="paid_to_received_from" name="paid_to_received_from"
+                                    class="form-control dropdown-search-input @error('paid_to_received_from') is-invalid @enderror"
+                                    value="{{ old('paid_to_received_from') }}" placeholder="Type to search or select..." 
+                                    autocomplete="off" required>
+                                <span class="dropdown-arrow" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6b7280;">
+                                    <i class="bi bi-chevron-down"></i>
+                                </span>
+                            </div>
+                            <div class="dropdown-menu-custom" id="expensePartyDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 9999; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); max-height: 250px; overflow-y: auto; margin-top: 4px;">
+                                @if(isset($parties) && $parties->count())
+                                    @foreach($parties as $party)
+                                        <div class="dropdown-item-custom" 
+                                            data-id="{{ $party->id }}"
+                                            data-name="{{ $party->name }}"
+                                            data-category="{{ $party->category_label }}"
+                                            style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: all 0.15s;">
+                                            <div style="font-weight: 500; color: #1e293b;">{{ $party->name }}</div>
+                                            <div style="font-size: 0.8rem; color: #64748b;">{{ $party->category_label }}</div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="dropdown-empty" style="padding: 14px; text-align: center; color: #94a3b8;">
+                                        <i class="bi bi-inbox"></i> No parties found
+                                    </div>
+                                @endif
+                            </div>
+                            <input type="hidden" id="party_id" name="party_id" value="{{ old('party_id') }}">
+                        </div>
+                        @if(!isset($parties) || $parties->isEmpty())
+                            <small class="text-muted" style="margin-top: 0.25rem; display: block;">
+                                <i class="bi bi-info-circle"></i> 
+                                No parties found. <a href="{{ route('parties.create') }}">Add a party</a>
+                            </small>
+                        @endif
+                        @error('paid_to_received_from')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
@@ -143,6 +177,33 @@
                     <div class="form-group form-group-full">
                         <label for="notes" class="form-label">Notes</label>
                         <textarea id="notes" name="notes" class="form-control" rows="2" placeholder="Additional details...">{{ old('notes') }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Image Upload -->
+        <div class="form-section-card">
+            <div class="section-header">
+                <div class="section-info">
+                    <div class="section-icon"><i class="bi bi-image"></i></div>
+                    <div class="section-text">
+                        <h5 class="section-title">Invoice / Receipt Image</h5>
+                        <p class="section-description">Upload invoice or receipt image (optional)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="section-body">
+                <div class="form-group">
+                    <label for="invoice_image" class="form-label">Upload Image</label>
+                    <input type="file" id="invoice_image" name="invoice_image" 
+                        class="form-control @error('invoice_image') is-invalid @enderror"
+                        accept="image/*">
+                    <small class="text-muted">Accepted formats: JPG, PNG, GIF. Max size: 5MB</small>
+                    @error('invoice_image')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    
+                    <div id="imagePreview" class="mt-3" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #dee2e6;">
                     </div>
                 </div>
             </div>
@@ -187,6 +248,100 @@ document.addEventListener('DOMContentLoaded', function() {
 
     typeRadios.forEach(r => r.addEventListener('change', updateCategories));
     updateCategories();
+    
+    // Custom Searchable Dropdown for Party
+    const partiesData = @json(isset($parties) ? $parties->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'category' => $p->category_label]) : []);
+    const paidToInput = document.getElementById('paid_to_received_from');
+    const expensePartyDropdown = document.getElementById('expensePartyDropdown');
+    const partyIdField = document.getElementById('party_id');
+    
+    if (paidToInput && expensePartyDropdown) {
+        // Show dropdown on focus
+        paidToInput.addEventListener('focus', function() {
+            expensePartyDropdown.style.display = 'block';
+            filterExpensePartyDropdown('');
+        });
+        
+        // Filter dropdown on input
+        paidToInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            filterExpensePartyDropdown(searchTerm);
+            expensePartyDropdown.style.display = 'block';
+            
+            // Check if exact match exists
+            const exactMatch = partiesData.find(p => p.name.toLowerCase() === searchTerm);
+            if (!exactMatch) {
+                partyIdField.value = '';
+            }
+        });
+        
+        function filterExpensePartyDropdown(searchTerm) {
+            const items = expensePartyDropdown.querySelectorAll('.dropdown-item-custom');
+            let hasVisible = false;
+            
+            items.forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const category = (item.dataset.category || '').toLowerCase();
+                if (name.includes(searchTerm) || category.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show/hide empty message
+            const emptyMsg = expensePartyDropdown.querySelector('.dropdown-empty');
+            if (emptyMsg) {
+                emptyMsg.style.display = hasVisible ? 'none' : 'block';
+            }
+        }
+        
+        // Handle item click
+        expensePartyDropdown.querySelectorAll('.dropdown-item-custom').forEach(item => {
+            item.addEventListener('click', function() {
+                paidToInput.value = this.dataset.name;
+                partyIdField.value = this.dataset.id;
+                expensePartyDropdown.style.display = 'none';
+            });
+            
+            // Hover effect
+            item.addEventListener('mouseenter', function() {
+                this.style.background = '#f1f5f9';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.background = '#fff';
+            });
+        });
+        
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#expensePartyDropdownContainer')) {
+                expensePartyDropdown.style.display = 'none';
+            }
+        });
+    }
+    
+    // Image preview
+    const imageInput = document.getElementById('invoice_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+            }
+        });
+    }
 });
 </script>
 @endsection

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use App\Models\ClosureType;
 use App\Models\Company;
 use App\Models\Diamond;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Services\CurrencyService;
 use App\Models\OrderDraft;
+use App\Notifications\DiamondSoldNotification;
 
 class OrderController extends Controller
 {
@@ -97,7 +99,7 @@ class OrderController extends Controller
             ->count();
 
         // Get company sales progress for active companies
-        $companySalesStats = \App\Models\Company::where('status', 'active')
+        $companySalesStats = Company::where('status', 'active')
             ->get()
             ->map(function ($company) {
                 return [
@@ -144,7 +146,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $orders = $query->latest()->paginate(10);
+        $orders = $query->latest()->paginate(20);
         return view('orders.index', compact(
             'orders',
             'totalOrders',
@@ -293,12 +295,12 @@ class OrderController extends Controller
                 // Notify all admins about the diamond sale(s) - batch notification
                 if (!empty($soldDiamonds)) {
                     $currentAdmin = Auth::guard('admin')->user();
-                    $allAdmins = \App\Models\Admin::where('id', '!=', $currentAdmin->id)->get();
+                    $allAdmins = Admin::where('id', '!=', $currentAdmin->id)->get();
 
                     foreach ($soldDiamonds as $soldDiamond) {
                         foreach ($allAdmins as $admin) {
                             try {
-                                $admin->notify(new \App\Notifications\DiamondSoldNotification($soldDiamond, $currentAdmin));
+                                $admin->notify(new DiamondSoldNotification($soldDiamond, $currentAdmin));
                             } catch (\Throwable $e) {
                                 Log::error('Failed to send diamond sold notification', [
                                     'admin_id' => $admin->id,
