@@ -322,7 +322,7 @@
         togglePaymentFields();
 
         // Custom Searchable Dropdown for Party
-        const partiesData = @json(isset($parties) ? $parties - > map(fn($p) => ['id' => $p - > id, 'name' => $p - > name, 'phone' => $p - > mobile]) : []);
+        const partiesData = @json(isset($parties) ? $parties -> map(fn($p) => ['id' => $p -> id, 'name' => $p -> name, 'phone' => $p -> mobile]) : []);
         const partyInput = document.getElementById('party_name');
         const partyDropdown = document.getElementById('partyDropdown');
         const partyIdField = document.getElementById('party_id');
