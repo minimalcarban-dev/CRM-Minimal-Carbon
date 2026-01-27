@@ -712,7 +712,7 @@ class ChatController extends Controller
             ->whereNull('reply_to_id')
             ->with(['sender', 'attachments', 'reads'])
             ->latest()
-            ->paginate(50);
+            ->paginate(5000);
 
         return response()->json($messages);
     }

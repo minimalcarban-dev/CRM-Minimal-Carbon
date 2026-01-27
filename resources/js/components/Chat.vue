@@ -243,6 +243,24 @@
 
                     <!-- Messages List -->
                     <div v-else class="messages-list">
+                        <!-- Load older messages -->
+                        <div
+                            v-if="hasMoreMessages"
+                            class="load-older-messages"
+                        >
+                            <button
+                                class="btn-load-older"
+                                :disabled="loadingMessages"
+                                @click="loadOlderMessages"
+                            >
+                                {{
+                                    loadingMessages
+                                        ? "Loading..."
+                                        : "Load older messages"
+                                }}
+                            </button>
+                        </div>
+
                         <div
                             v-for="(message, idx) in messages"
                             :key="message.id"
@@ -1890,24 +1908,38 @@ export default {
             lastMessagePreview.value[channelId] = { text, time };
         };
 
-        const loadMessages = async (channelId, reset = false) => {
+        const loadMessages = async (channelId, reset = false, markAsRead = true) => {
             if (reset) {
                 messages.value = [];
                 page.value = 1;
                 hasMoreMessages.value = true;
             }
-            if (!hasMoreMessages.value) return;
+            if (!hasMoreMessages.value) return false;
 
             try {
                 loadingMessages.value = true;
                 const response = await axios.get(
                     `/admin/chat/channels/${channelId}/messages?page=${page.value}`
                 );
-                const newMessages = response.data.data;
-                messages.value = [...messages.value, ...newMessages.reverse()];
-                messages.value.sort(
-                    (a, b) => new Date(a.created_at) - new Date(b.created_at)
-                );
+
+                const apiMessages = Array.isArray(response?.data?.data)
+                    ? response.data.data
+                    : [];
+                // API returns newest-first; reverse for UI (oldest-first)
+                const pageMessages = apiMessages.slice().reverse();
+
+                if (reset) {
+                    messages.value = pageMessages;
+                } else {
+                    // Prepend older messages; de-duplicate defensively (page-based pagination can overlap).
+                    const existingIds = new Set(
+                        (messages.value || []).map((m) => String(m.id))
+                    );
+                    const uniqueToAdd = pageMessages.filter(
+                        (m) => !existingIds.has(String(m.id))
+                    );
+                    messages.value = [...uniqueToAdd, ...(messages.value || [])];
+                }
 
                 if (messages.value.length) {
                     updatePreview(
@@ -1919,10 +1951,14 @@ export default {
                 hasMoreMessages.value = response.data.next_page_url !== null;
                 page.value++;
 
-                await axios.post(`/admin/chat/channels/${channelId}/read`);
-                channels.value = channels.value.map((c) =>
-                    c.id === channelId ? { ...c, unread_messages_count: 0 } : c
-                );
+                if (markAsRead) {
+                    await axios.post(`/admin/chat/channels/${channelId}/read`);
+                    channels.value = channels.value.map((c) =>
+                        c.id === channelId
+                            ? { ...c, unread_messages_count: 0 }
+                            : c
+                    );
+                }
                 return true;
             } catch (error) {
                 if (error?.response?.status === 403) {
@@ -2456,12 +2492,56 @@ export default {
             }, 100);
         };
 
-        const onScrollMessages = () => {
+        const loadOlderMessages = async () => {
+            const el = messageContainer.value;
+            if (
+                !el ||
+                !currentChannel.value?.id ||
+                loadingMessages.value ||
+                !hasMoreMessages.value
+            )
+                return;
+
+            const prevScrollHeight = el.scrollHeight;
+            const prevScrollTop = el.scrollTop;
+
+            const ok = await loadMessages(currentChannel.value.id, false, false);
+            if (ok) {
+                await nextTick();
+                el.scrollTop = el.scrollHeight - prevScrollHeight + prevScrollTop;
+            }
+        };
+
+        const onScrollMessages = async () => {
             const el = messageContainer.value;
             if (!el) return;
             const nearBottom =
                 el.scrollHeight - el.scrollTop - el.clientHeight < 120;
             showScrollDown.value = !nearBottom;
+
+            // Infinite scroll upwards to load older pages
+            const nearTop = el.scrollTop < 120;
+            if (
+                nearTop &&
+                currentChannel.value?.id &&
+                hasMoreMessages.value &&
+                !loadingMessages.value
+            ) {
+                const prevScrollHeight = el.scrollHeight;
+                const prevScrollTop = el.scrollTop;
+
+                const ok = await loadMessages(
+                    currentChannel.value.id,
+                    false,
+                    false
+                );
+                if (ok) {
+                    await nextTick();
+                    const newScrollHeight = el.scrollHeight;
+                    // Preserve visual position after prepending older messages
+                    el.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+                }
+            }
         };
 
         const sameDay = (a, b) => {
@@ -3369,6 +3449,8 @@ export default {
             channels,
             currentChannel,
             messages,
+            hasMoreMessages,
+            loadingMessages,
             lastMessagePreview,
             searchQuery,
             searchResults,
@@ -3437,6 +3519,7 @@ export default {
             scrollToMessage,
             scrollToMessageById,
             scrollToBottom,
+            loadOlderMessages,
             shouldShowDateSeparator,
             dayLabel,
             readByOthers,
@@ -5806,5 +5889,33 @@ export default {
     object-fit: contain;
     border-radius: 8px;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Load older messages control */
+.load-older-messages {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+.btn-load-older {
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--gray-300);
+    background: white;
+    color: var(--gray-700);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-load-older:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-load-older:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 </style>
