@@ -9,6 +9,7 @@ use App\Models\Party;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Log;
 
@@ -96,12 +97,15 @@ class PurchaseController extends Controller
             'weight' => 'required|numeric|min:0.01',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'payment_mode' => 'nullable|in:upi,cash,bank_transfer',
-            'upi_id' => 'nullable|string|max:255',
-            'bank_account_name' => 'nullable|string|max:255',
-            'bank_name' => 'nullable|string|max:255',
-            'bank_account_number' => 'nullable|string|max:50',
-            'bank_ifsc' => 'nullable|string|max:20',
-            'party_id' => 'nullable|exists:parties,id',
+            'upi_id' => 'nullable|required_if:payment_mode,upi|string|max:255',
+            'bank_account_name' => 'nullable|required_if:payment_mode,bank_transfer|string|max:255',
+            'bank_name' => 'nullable|required_if:payment_mode,bank_transfer|string|max:255',
+            'bank_account_number' => 'nullable|required_if:payment_mode,bank_transfer|string|max:50',
+            'bank_ifsc' => 'nullable|required_if:payment_mode,bank_transfer|string|max:20',
+            'party_id' => [
+                'nullable',
+                Rule::exists('parties', 'id')->where(fn ($q) => $q->where('category', Party::CATEGORY_DIAMOND_GEMSTONE)),
+            ],
             'party_name' => 'required|string|max:255',
             'party_mobile' => 'nullable|string|max:15',
             'invoice_number' => 'nullable|string|max:255',
@@ -111,6 +115,18 @@ class PurchaseController extends Controller
 
         $validated['admin_id'] = Auth::guard('admin')->id();
         $validated['discount_percent'] = $validated['discount_percent'] ?? 0;
+
+        // If a party is selected, trust the DB record (prevents spoofed names/phones)
+        if (!empty($validated['party_id'])) {
+            $party = Party::query()
+                ->byCategory(Party::CATEGORY_DIAMOND_GEMSTONE)
+                ->find($validated['party_id']);
+
+            if ($party) {
+                $validated['party_name'] = $party->name;
+                $validated['party_mobile'] = $party->phone;
+            }
+        }
 
         // Handle invoice image upload to Cloudinary
         if ($request->hasFile('invoice_image')) {
@@ -196,12 +212,15 @@ class PurchaseController extends Controller
             'weight' => 'required|numeric|min:0.01',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'payment_mode' => 'nullable|in:upi,cash,bank_transfer',
-            'upi_id' => 'nullable|string|max:255',
-            'bank_account_name' => 'nullable|string|max:255',
-            'bank_name' => 'nullable|string|max:255',
-            'bank_account_number' => 'nullable|string|max:50',
-            'bank_ifsc' => 'nullable|string|max:20',
-            'party_id' => 'nullable|exists:parties,id',
+            'upi_id' => 'nullable|required_if:payment_mode,upi|string|max:255',
+            'bank_account_name' => 'nullable|required_if:payment_mode,bank_transfer|string|max:255',
+            'bank_name' => 'nullable|required_if:payment_mode,bank_transfer|string|max:255',
+            'bank_account_number' => 'nullable|required_if:payment_mode,bank_transfer|string|max:50',
+            'bank_ifsc' => 'nullable|required_if:payment_mode,bank_transfer|string|max:20',
+            'party_id' => [
+                'nullable',
+                Rule::exists('parties', 'id')->where(fn ($q) => $q->where('category', Party::CATEGORY_DIAMOND_GEMSTONE)),
+            ],
             'party_name' => 'required|string|max:255',
             'party_mobile' => 'nullable|string|max:15',
             'invoice_number' => 'nullable|string|max:255',
@@ -211,6 +230,18 @@ class PurchaseController extends Controller
         ]);
 
         $validated['discount_percent'] = $validated['discount_percent'] ?? 0;
+
+        // If a party is selected, trust the DB record (prevents spoofed names/phones)
+        if (!empty($validated['party_id'])) {
+            $party = Party::query()
+                ->byCategory(Party::CATEGORY_DIAMOND_GEMSTONE)
+                ->find($validated['party_id']);
+
+            if ($party) {
+                $validated['party_name'] = $party->name;
+                $validated['party_mobile'] = $party->phone;
+            }
+        }
 
         // Handle invoice image
         if ($request->input('remove_invoice_image') && $purchase->invoice_image_public_id) {
@@ -380,6 +411,13 @@ class PurchaseController extends Controller
     {
         // Don't create duplicate expense
         if ($purchase->expense_id) {
+            return;
+        }
+
+        // If an expense already exists for this purchase (e.g., retry/double-submit), link it.
+        $existing = Expense::query()->where('purchase_id', $purchase->id)->first();
+        if ($existing) {
+            $purchase->update(['expense_id' => $existing->id]);
             return;
         }
 

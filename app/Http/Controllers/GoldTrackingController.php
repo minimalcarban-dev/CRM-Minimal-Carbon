@@ -90,7 +90,7 @@ class GoldTrackingController extends Controller
             ->latest('distribution_date')
             ->get();
 
-        // Merge and sort by date
+        // Merge and sort by date (purchases first, then distributions by created_at)
         $transactions = collect();
         foreach ($purchases as $p) {
             $transactions->push([
@@ -103,6 +103,8 @@ class GoldTrackingController extends Controller
                 'status' => $p->status,
                 'admin' => $p->admin,
                 'model' => $p,
+                'created_at' => $p->created_at,
+                'sort_priority' => 0, // Purchases show first within same date
             ]);
         }
         foreach ($distributions as $d) {
@@ -116,9 +118,25 @@ class GoldTrackingController extends Controller
                 'status' => 'completed',
                 'admin' => $d->admin,
                 'model' => $d,
+                'created_at' => $d->created_at,
+                'sort_priority' => 1, // Distributions show after purchases
             ]);
         }
-        $transactions = $transactions->sortByDesc('date')->values();
+        
+        // Sort: by date descending, then by priority (purchases first), then by created_at descending
+        $transactions = $transactions->sort(function ($a, $b) {
+            // First compare dates (descending)
+            $dateCompare = $b['date']->timestamp - $a['date']->timestamp;
+            if ($dateCompare !== 0) {
+                return $dateCompare;
+            }
+            // Same date: purchases first (priority 0 before 1)
+            if ($a['sort_priority'] !== $b['sort_priority']) {
+                return $a['sort_priority'] - $b['sort_priority'];
+            }
+            // Same type: sort by created_at descending
+            return $b['created_at']->timestamp - $a['created_at']->timestamp;
+        })->values();
 
         // Stats
         $ownerStock = GoldDistribution::getAvailableOwnerStock();
@@ -195,7 +213,7 @@ class GoldTrackingController extends Controller
                     'original_name' => $uploadedFile->getClientOriginalName(),
                     'format' => $uploadedFile->getClientOriginalExtension(),
                     'size' => $uploadedFile->getSize(),
-                    'resource_type' => $result->getFileType(),
+                    'resource_type' => $result->getFileType(),  
                     'uploaded_at' => now()->toISOString(),
                 ];
             } catch (\Exception $e) {

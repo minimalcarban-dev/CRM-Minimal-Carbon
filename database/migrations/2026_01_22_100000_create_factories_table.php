@@ -8,20 +8,20 @@ return new class extends Migration {
     /**
      * Run the migrations.
      * 
-     * Creates the factories table with contact fields.
+     * Creates the factories table for managing jewelry manufacturing factories.
      */
     public function up(): void
     {
         Schema::create('factories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->unique();
+            $table->string('code')->unique()->nullable();
             $table->string('contact_person')->nullable();
             $table->string('contact_phone', 20)->nullable();
-            $table->text('location')->nullable();
+            $table->string('location')->nullable();
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('admins')->onDelete('set null');
+            $table->foreignId('created_by')->nullable()->constrained('admins')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -149,9 +149,47 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php $prevDate = null; $dateHasPurchase = false; @endphp
                         @forelse($transactions as $txn)
-                            <tr class="{{ $txn['type'] === 'purchase' ? 'tracker-income-row' : ($txn['type'] === 'return' ? '' : 'tracker-expense-row') }}">
-                                <td>{{ $txn['date']->format('d-M-Y') }}</td>
+                            @php 
+                                $currentDate = $txn['date']->format('Y-m-d');
+                                $isDistribution = in_array($txn['type'], ['distribute', 'return']);
+                                $showDateSeparator = $prevDate !== null && $prevDate !== $currentDate;
+                                
+                                // Reset purchase flag when date changes
+                                if ($showDateSeparator) {
+                                    $dateHasPurchase = false;
+                                }
+                                
+                                // If this is a purchase, mark date as having purchase
+                                if ($txn['type'] === 'purchase') {
+                                    $dateHasPurchase = true;
+                                }
+                                
+                                // Sub-entry styling: if this is distribution AND there's a purchase on same date (before this)
+                                $isSubEntry = $isDistribution && $dateHasPurchase;
+                            @endphp
+                            
+                            @if($showDateSeparator)
+                                {{-- Date separator row for visual grouping --}}
+                                <tr class="tracker-date-separator">
+                                    <td colspan="6" style="padding: 8px 0; background: #f8fafc;">
+                                        <div style="height: 1px; background: linear-gradient(to right, transparent, #e2e8f0, transparent);"></div>
+                                    </td>
+                                </tr>
+                            @endif
+                            
+                            <tr class="{{ $txn['type'] === 'purchase' ? 'tracker-income-row' : ($txn['type'] === 'return' ? '' : 'tracker-expense-row') }} {{ $isSubEntry ? 'tracker-sub-entry' : '' }}">
+                                <td>
+                                    @if($isSubEntry)
+                                        <span style="color: #94a3b8; padding-left: 20px; display: flex; align-items: center; gap: 6px;">
+                                            <span style="color: #cbd5e1;">└</span>
+                                            {{ $txn['date']->format('d-M-Y') }}
+                                        </span>
+                                    @else
+                                        {{ $txn['date']->format('d-M-Y') }}
+                                    @endif
+                                </td>
                                 <td>
                                     @if($txn['type'] === 'purchase')
                                         <span class="tracker-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
@@ -217,6 +255,9 @@
                                     </div>
                                 </td>
                             </tr>
+                            @php 
+                                $prevDate = $currentDate;
+                            @endphp
                         @empty
                             <tr>
                                 <td colspan="6">
