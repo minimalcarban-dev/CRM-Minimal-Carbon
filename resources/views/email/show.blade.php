@@ -44,15 +44,14 @@
                                         $domain = Str::after($email->from_email, '@');
                                         $parts = explode('.', $domain);
                                         $brandDomain = count($parts) > 2 ? $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1] : $domain;
-                                        $logoUrl = "https://logo.clearbit.com/{$brandDomain}";
-                                        $fallbackUrl = "https://www.google.com/s2/favicons?domain={$brandDomain}&sz=128";
+                                        $logoUrl = "https://www.google.com/s2/favicons?domain={$brandDomain}&sz=128";
                                     @endphp
                                     <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm border"
                                         style="width: 48px; height: 48px; min-width: 48px; overflow: hidden;">
                                         <img src="{{ $logoUrl }}"
                                             alt="{{ strtoupper(substr($email->from_name ?: $email->from_email, 0, 1)) }}"
                                             style="width: 100%; height: 100%; object-fit: cover;"
-                                            onerror="this.src='{{ $fallbackUrl }}'; this.onerror=function(){this.style.display='none'; this.nextElementSibling.style.display='flex';};">
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <span class="fw-bold fs-5 text-primary" style="display: none;">
                                             {{ strtoupper(substr($email->from_name ?: $email->from_email, 0, 1)) }}
                                         </span>
@@ -159,6 +158,10 @@
     @include('email._compose_modal')
 
     <style>
+        .email-print-container {
+            display: none;
+        }
+
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -368,8 +371,11 @@
             }
 
             .card {
-                border: none !important;
                 box-shadow: none !important;
+            }
+
+            .email-print-container {
+                display: block !important;
             }
 
             .container-fluid {
@@ -383,206 +389,237 @@
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // --- Direct Professional Print ---
-                        const btnPrint = document.getElementById('btnPrintEmail');
-                        if (btnPrint) {
-                            btnPrint.addEventListener('click', function () {
-                                window.print();
-                            });
-                        }
+                const btnPrint = document.getElementById('btnPrintEmail');
+                if (btnPrint) {
+                    btnPrint.addEventListener('click', function () {
+                        window.print();
+                    });
+                }
 
-                        // --- Delete Functionality ---
-                        const btnDelete = document.getElementById('btnDeleteEmail');
-                        const deleteForm = document.getElementById('deleteEmailForm');
+                // --- Delete Functionality ---
+                const btnDelete = document.getElementById('btnDeleteEmail');
+                const deleteForm = document.getElementById('deleteEmailForm');
 
-                        if (btnDelete) {
-                            btnDelete.addEventListener('click', function () {
-                                Swal.fire({
-                                    title: 'Move to Trash?',
-                                    text: "You can recover this from the Trash folder later.",
-                                    icon: 'warning',
-                                    showCancelButton: true,
-                                    confirmButtonColor: '#ef4444',
-                                    cancelButtonColor: '#64748b',
-                                    confirmButtonText: 'Yes, delete it!',
-                                    cancelButtonText: 'Cancel',
-                                    reverseButtons: true
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        performDelete();
-                                    }
-                                });
-                            });
-                        }
-
-                        async function performDelete() {
-                            const formData = new FormData(deleteForm);
-
-                            try {
-                                const response = await fetch(deleteForm.action, {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'Accept': 'application/json'
-                                    },
-                                    body: formData
-                                });
-
-                                const data = await response.json();
-
-                                if (data.success) {
-                                    Swal.fire({
-                                        title: 'Deleted!',
-                                        text: 'Your email has been moved to trash.',
-                                        icon: 'success',
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    }).then(() => {
-                                        window.location.href = "{{ route('email.inbox', $account->id) }}";
-                                    });
-                                } else {
-                                    Swal.fire('Error', data.message || 'Failed to delete email', 'error');
-                                }
-                            } catch (error) {
-                                console.error('Delete error:', error);
-                                Swal.fire('Error', 'An unexpected error occurred', 'error');
+                if (btnDelete) {
+                    btnDelete.addEventListener('click', function () {
+                        Swal.fire({
+                            title: 'Move to Trash?',
+                            text: "You can recover this from the Trash folder later.",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ef4444',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: 'Yes, delete it!',
+                            cancelButtonText: 'Cancel',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                performDelete();
                             }
-                        }
+                        });
+                    });
+                }
 
-                        // --- Compose Modal Logic (Reply/Forward) ---
-                        const composeModal = document.getElementById('composeModal');
-                        const btnCloseCompose = document.getElementById('btnCloseCompose');
-                        const composeForm = document.getElementById('composeForm');
-                        const btnReply = document.getElementById('btnReply');
-                        const btnForward = document.getElementById('btnForward');
-                        const modalTitle = document.getElementById('composeModalTitle');
-                        const inputTo = document.getElementById('to');
-                        const inputSubject = document.getElementById('subject');
+                async function performDelete() {
+                    const formData = new FormData(deleteForm);
+
+                    try {
+                        const response = await fetch(deleteForm.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: 'Your email has been moved to trash.',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.href = "{{ route('email.inbox', $account->id) }}";
+                            });
+                        } else {
+                            Swal.fire('Error', data.message || 'Failed to delete email', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Delete error:', error);
+                        Swal.fire('Error', 'An unexpected error occurred', 'error');
+                    }
+                }
+
+                // --- Compose Modal Logic (Reply/Forward) ---
+                const composeModal = document.getElementById('composeModal');
+                const btnCloseCompose = document.getElementById('btnCloseCompose');
+                const composeForm = document.getElementById('composeForm');
+                const btnReply = document.getElementById('btnReply');
+                const btnForward = document.getElementById('btnForward');
+                const modalTitle = document.getElementById('composeModalTitle');
+                const inputTo = document.getElementById('to');
+                const inputSubject = document.getElementById('subject');
+                const inputBody = document.getElementById('body'); // The hidden input
+                const editorBody = document.getElementById('editor-body'); // The contenteditable div
+
+                function openCompose(type) {
+                    const originalDate = @json($email->received_at->format('M d, Y, h:i A'));
+                    const originalFrom = @json($email->from_name . ' <' . $email->from_email . '>');
+                    const originalSubject = @json($email->subject);
+
+                    // Use HTML body if available, otherwise plain text with newlines converted
+                    let originalBodyContent = @json($email->body_html);
+                    if (!originalBodyContent) {
+                        const plainText = @json(trim(strip_tags($email->body_plain)));
+                        originalBodyContent = `<pre style="white-space: pre-wrap; font-family: inherit;">${plainText}</pre>`;
+                    }
+
+                    const quotedBodyHeader = `<br><br><div class="gmail_quote"><div dir="ltr" class="gmail_attr">On ${originalDate} ${originalFrom} wrote:<br></div><blockquote class="gmail_quote" style="margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">`;
+                    const quotedBodyFooter = `</blockquote></div>`;
+
+                    const fullQuotedBody = quotedBodyHeader + originalBodyContent + quotedBodyFooter;
+
+                    if (type === 'reply') {
+                        modalTitle.innerText = 'Reply to Message';
+                        inputTo.value = '{{ $email->from_email }}';
+                        inputSubject.value = 'Re: ' + originalSubject;
+                        editorBody.innerHTML = fullQuotedBody;
+                        // Focus at start
+                        editorBody.focus();
+                        // Note: Setting cursor at start strictly is tricky in vanilla JS but focus helps
+                    } else if (type === 'forward') {
+                        modalTitle.innerText = 'Forward Message';
+                        inputTo.value = '';
+                        inputSubject.value = 'Fwd: ' + originalSubject;
+                        editorBody.innerHTML = fullQuotedBody;
+                    }
+
+                    composeModal.style.display = 'flex';
+                }
+
+                if (btnReply) btnReply.addEventListener('click', () => openCompose('reply'));
+                if (btnForward) btnForward.addEventListener('click', () => openCompose('forward'));
+
+                if (btnCloseCompose) {
+                    btnCloseCompose.addEventListener('click', () => {
+                        composeModal.style.display = 'none';
+                    });
+                }
+
+                window.addEventListener('click', (e) => {
+                    if (e.target === composeModal) {
+                        composeModal.style.display = 'none';
+                    }
+                });
+
+                // Handle Sending
+                composeForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    // Sync editor content to hidden input
+                    const editorBody = document.getElementById('editor-body');
+                    const inputBody = document.getElementById('body');
+                    if (editorBody && inputBody) {
+                        inputBody.value = editorBody.innerHTML;
+                    }
+
+                    const btnSend = document.getElementById('btnSend');
+                    const originalContent = btnSend.innerHTML;
+
+                    btnSend.disabled = true;
+                    btnSend.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+
+                    const formData = new FormData(this);
+
+                    try {
+                        const response = await fetch(`/admin/email/{{ $account->id }}/compose/send`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Sent!',
+                                text: 'Email sent successfully!',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                composeModal.style.display = 'none';
+                                composeForm.reset();
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Send error:', error);
+                        Swal.fire('Error', 'Failed to send email.', 'error');
+                    } finally {
+                        btnSend.disabled = false;
+                        btnSend.innerHTML = originalContent;
+                    }
+                });
+
+                // Handle Draft Saving
+                const btnSaveDraft = document.getElementById('btnSaveDraft');
+                if (btnSaveDraft) {
+                    btnSaveDraft.addEventListener('click', async function () {
+
+                        // Sync editor content to hidden input
+                        const editorBody = document.getElementById('editor-body');
                         const inputBody = document.getElementById('body');
-
-                        function openCompose(type) {
-                            const originalDate = '{{ $email->received_at->format('M d, Y, h:i A') }}';
-                            const originalFrom = '{{ $email->from_name }} <{{ $email->from_email }}>';
-                            const originalSubject = '{{ $email->subject }}';
-                            const quotedBody = `\n\n--- Original Message ---\nFrom: ${originalFrom}\nDate: ${originalDate}\nSubject: ${originalSubject}\n\n{{ trim(strip_tags($email->body_plain)) }}`;
-
-                            if (type === 'reply') {
-                                modalTitle.innerText = 'Reply to Message';
-                                inputTo.value = '{{ $email->from_email }}';
-                                inputSubject.value = 'Re: ' + originalSubject;
-                                inputBody.value = quotedBody;
-                            } else if (type === 'forward') {
-                                modalTitle.innerText = 'Forward Message';
-                                inputTo.value = '';
-                                inputSubject.value = 'Fwd: ' + originalSubject;
-                                inputBody.value = quotedBody;
-                            }
-
-                            composeModal.style.display = 'flex';
+                        if (editorBody && inputBody) {
+                            inputBody.value = editorBody.innerHTML;
                         }
 
-                        if (btnReply) btnReply.addEventListener('click', () => openCompose('reply'));
-                        if (btnForward) btnForward.addEventListener('click', () => openCompose('forward'));
+                        const originalContent = this.innerHTML;
+                        this.disabled = true;
+                        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
 
-                        if (btnCloseCompose) {
-                            btnCloseCompose.addEventListener('click', () => {
-                                composeModal.style.display = 'none';
+                        const formData = new FormData(composeForm);
+
+                        try {
+                            const response = await fetch(`/admin/email/{{ $account->id }}/compose/draft`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: formData
                             });
-                        }
 
-                        window.addEventListener('click', (e) => {
-                            if (e.target === composeModal) {
-                                composeModal.style.display = 'none';
-                            }
-                        });
-
-                        // Handle Sending
-                        composeForm.addEventListener('submit', async function (e) {
-                            e.preventDefault();
-                            const btnSend = document.getElementById('btnSend');
-                            const originalContent = btnSend.innerHTML;
-
-                            btnSend.disabled = true;
-                            btnSend.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
-
-                            const formData = new FormData(this);
-
-                            try {
-                                const response = await fetch(`/admin/email/{{ $account->id }}/compose/send`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'Accept': 'application/json'
-                                    },
-                                    body: formData
+                            const data = await response.json();
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Draft Saved',
+                                    text: 'Your message has been saved as a draft.',
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
                                 });
-
-                                const data = await response.json();
-                                if (data.success) {
-                                    Swal.fire({
-                                        title: 'Sent!',
-                                        text: 'Email sent successfully!',
-                                        icon: 'success',
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    }).then(() => {
-                                        composeModal.style.display = 'none';
-                                        composeForm.reset();
-                                    });
-                                } else {
-                                    Swal.fire('Error', data.message, 'error');
-                                }
-                            } catch (error) {
-                                console.error('Send error:', error);
-                                Swal.fire('Error', 'Failed to send email.', 'error');
-                            } finally {
-                                btnSend.disabled = false;
-                                btnSend.innerHTML = originalContent;
+                            } else {
+                                Swal.fire('Error', 'Error saving draft: ' + data.message, 'error');
                             }
-                        });
-
-                        // Handle Draft Saving
-                        const btnSaveDraft = document.getElementById('btnSaveDraft');
-                        if (btnSaveDraft) {
-                            btnSaveDraft.addEventListener('click', async function () {
-                                const originalContent = this.innerHTML;
-                                this.disabled = true;
-                                this.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
-
-                                const formData = new FormData(composeForm);
-
-                                try {
-                                    const response = await fetch(`/admin/email/{{ $account->id }}/compose/draft`, {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                            'Accept': 'application/json'
-                                        },
-                                        body: formData
-                                    });
-
-                                    const data = await response.json();
-                                    if (data.success) {
-                                        Swal.fire({
-                                            title: 'Draft Saved',
-                                            text: 'Your message has been saved as a draft.',
-                                            icon: 'success',
-                                            timer: 1500,
-                                            showConfirmButton: false
-                                        });
-                                    } else {
-                                        Swal.fire('Error', 'Error saving draft: ' + data.message, 'error');
-                                    }
-                                } catch (error) {
-                                    console.error('Draft error:', error);
-                                    Swal.fire('Error', 'Failed to save draft', 'error');
-                                } finally {
-                                    this.disabled = false;
-                                    this.innerHTML = originalContent;
-                                }
-                            });
+                        } catch (error) {
+                            console.error('Draft error:', error);
+                            Swal.fire('Error', 'Failed to save draft', 'error');
+                        } finally {
+                            this.disabled = false;
+                            this.innerHTML = originalContent;
                         }
                     });
-                </script>
+                }
+            });
+        </script>
     @endpush
 @endsection
 ```
