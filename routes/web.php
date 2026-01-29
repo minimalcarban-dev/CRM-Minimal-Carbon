@@ -52,6 +52,11 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     })->name('admin.dashboard');
 
     // DIAGNOSTIC ROUTE
+    Route::get('test-blade', function () {
+        return view('admin.dashboard');
+    });
+
+    // DIAGNOSTIC ROUTE
     Route::any('test-broadcast', [ChatController::class, 'testBroadcast'])->name('admin.test-broadcast');
 
     // Chat routes with middleware
@@ -297,6 +302,8 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::get('clients/{client}', [\App\Http\Controllers\ClientController::class, 'show'])
         ->name('clients.show')
         ->middleware('admin.permission:clients.view');
+
+
 
     // Invoices (basic CRUD)
     Route::get('invoices', [InvoiceController::class, 'index'])
