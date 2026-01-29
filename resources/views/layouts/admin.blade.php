@@ -1425,6 +1425,8 @@
                     </li>
                 @endif
 
+
+
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('orders.*') && !request()->routeIs('orders.drafts.*') ? 'active' : '' }}"
@@ -1503,6 +1505,46 @@
                             <span>Meta Settings</span>
                         </a>
                     </li>
+                @endif
+                
+                @if (auth()->guard('admin')->user())
+                    @php
+                        $emailActive = request()->routeIs('email.*');
+                    @endphp
+                    <div class="nav-dropdown">
+                        <button class="dropdown-toggle-link {{ $emailActive ? 'active' : '' }}" id="emailDropdown"
+                            data-tooltip="Email System" data-initial-open="{{ $emailActive ? '1' : '0' }}" type="button"
+                            aria-expanded="false" style="padding-left: 23px;">
+                            <div class="left-content">
+                                <i class="bi bi-envelope-check main-icon"></i>
+                                <span style="padding-left: 15px">Email System</span>
+                            </div>
+                            <i class="bi bi-chevron-down chevron-icon"></i>
+                        </button>
+                        <div class="dropdown-menu-custom {{ $emailActive ? 'show' : '' }}" id="emailMenu">
+                            <ul class="nav">
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('email.accounts.list') ? 'active' : '' }}"
+                                        href="{{ route('email.accounts.list') }}" data-tooltip="Manage Accounts">
+                                        <i class="bi bi-person-gear"></i>
+                                        <span>Accounts</span>
+                                    </a>
+                                </li>
+                                @php
+                                    $recentAccount = \App\Modules\Email\Models\EmailAccount::where('is_active', true)->first();
+                                @endphp
+                                @if($recentAccount)
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('email.inbox') ? 'active' : '' }}"
+                                        href="{{ route('email.inbox', $recentAccount->id) }}" data-tooltip="Inbox">
+                                        <i class="bi bi-inbox-fill"></i>
+                                        <span>Inbox</span>
+                                    </a>
+                                </li>
+                                @endif
+                            </ul>
+                        </div>
+                    </div>
                 @endif
 
 
@@ -2088,6 +2130,36 @@
                 localStorage.setItem('expensesDropdownOpen', isOpen);
             });
         }
+
+        // Email Dropdown Handler
+        const emailDropdown = document.getElementById('emailDropdown');
+        const emailMenu = document.getElementById('emailMenu');
+
+        if (emailDropdown && emailMenu) {
+            const savedState = localStorage.getItem('emailDropdownOpen');
+            const defaultOpen = (emailDropdown.getAttribute('data-initial-open') === '1');
+            const initialOpen = savedState === null ? defaultOpen : (savedState === 'true');
+
+            if (initialOpen) {
+                emailDropdown.classList.add('active');
+                emailMenu.classList.add('show');
+            } else {
+                emailDropdown.classList.remove('active');
+                emailMenu.classList.remove('show');
+            }
+
+            emailDropdown.addEventListener('click', function (e) {
+                try {
+                    e.preventDefault();
+                    e.stopPropagation();
+                } catch (err) { }
+                const isOpen = emailMenu.classList.toggle('show');
+                this.classList.toggle('active');
+                this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                localStorage.setItem('emailDropdownOpen', isOpen);
+            });
+        }
+
 
         // Close mobile sidebar on link click
         if (window.innerWidth <= 768) {

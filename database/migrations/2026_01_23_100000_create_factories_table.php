@@ -8,19 +8,22 @@ return new class extends Migration {
     /**
      * Run the migrations.
      * 
-     * Adds contact_person and contact_phone columns to existing factories table.
-     * The factories table already exists with: id, name, code, location, notes, is_active, created_by, timestamps, soft_deletes.
+     * Creates the factories table with contact fields.
      */
     public function up(): void
     {
-        Schema::table('factories', function (Blueprint $table) {
-            // Add contact fields if they don't exist
-            if (!Schema::hasColumn('factories', 'contact_person')) {
-                $table->string('contact_person')->nullable()->after('code');
-            }
-            if (!Schema::hasColumn('factories', 'contact_phone')) {
-                $table->string('contact_phone', 20)->nullable()->after('contact_person');
-            }
+        Schema::create('factories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('code')->unique();
+            $table->string('contact_person')->nullable();
+            $table->string('contact_phone', 20)->nullable();
+            $table->text('location')->nullable();
+            $table->text('notes')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->foreignId('created_by')->nullable()->constrained('admins')->onDelete('set null');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -29,13 +32,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('factories', function (Blueprint $table) {
-            if (Schema::hasColumn('factories', 'contact_person')) {
-                $table->dropColumn('contact_person');
-            }
-            if (Schema::hasColumn('factories', 'contact_phone')) {
-                $table->dropColumn('contact_phone');
-            }
-        });
+        Schema::dropIfExists('factories');
     }
 };

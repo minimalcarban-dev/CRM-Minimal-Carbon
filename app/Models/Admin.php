@@ -6,12 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
+use App\Modules\Email\Traits\HasEmailAccounts;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 
 class Admin extends Authenticatable
 {
     use HasFactory;
     use Notifiable;
+    use HasEmailAccounts;
+
 
     protected $fillable = [
         'name',
