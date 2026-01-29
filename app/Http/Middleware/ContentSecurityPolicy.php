@@ -21,7 +21,7 @@ class ContentSecurityPolicy
         if ($isLocal) {
             $scriptSrc .= " 'unsafe-eval'";
         }
-        $styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net";
+        $styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com";
         $connectSrc = "'self' https://* wss:";
 
         if ($viteUrl) {
@@ -30,7 +30,7 @@ class ContentSecurityPolicy
             $connectSrc .= " {$viteUrl} ws://localhost:5173";
         }
 
-        $csp = "default-src 'self'; script-src {$scriptSrc}; style-src {$styleSrc}; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src {$connectSrc}; frame-src 'self' https://res.cloudinary.com https://docs.google.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self';";
+        $csp = "default-src 'self'; script-src {$scriptSrc}; style-src {$styleSrc}; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; connect-src {$connectSrc}; frame-src 'self' https://res.cloudinary.com https://docs.google.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self';";
 
         $response->headers->set('Content-Security-Policy', $csp);
         return $response;

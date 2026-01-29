@@ -25,8 +25,19 @@
                 </div>
                 <div class="form-group-custom body-group">
                     <label for="body">Message</label>
-                    <textarea id="body" name="body" class="form-control-custom textarea-custom"
-                        placeholder="Write your message here..." required></textarea>
+                    <div id="editor-container" class="form-control-custom textarea-custom"
+                        style="overflow-y: auto; max-height: 50vh;"
+                        onclick="document.getElementById('editor-body').focus()">
+                        <div id="editor-body" contenteditable="true" style="min-height: 200px; outline: none;"></div>
+                    </div>
+                    <style>
+                        #editor-body img {
+                            max-width: 100%;
+                            height: auto;
+                            display: block;
+                        }
+                    </style>
+                    <input type="hidden" id="body" name="body" required>
                 </div>
             </div>
             <div class="modal-footer">
