@@ -163,13 +163,10 @@ class PermissionSeeder extends Seeder
 
 
             // Gold Tracking
-            ['name' => 'View Gold Tracking', 'slug' => 'gold.view', 'description' => 'View gold stock and tracking', 'category' => 'gold'],
-            ['name' => 'Create Gold Transaction', 'slug' => 'gold.create', 'description' => 'Create gold purchases or distributions', 'category' => 'gold'],
-            ['name' => 'Edit Gold Transaction', 'slug' => 'gold.edit', 'description' => 'Edit gold transactions', 'category' => 'gold'],
-            ['name' => 'Delete Gold Transaction', 'slug' => 'gold.delete', 'description' => 'Delete gold transactions', 'category' => 'gold'],
-
-            // Factories (Standardization)
-            ['name' => 'Delete Factories', 'slug' => 'factories.delete', 'description' => 'Delete factories', 'category' => 'factories'],
+            ['name' => 'View Gold Tracking', 'slug' => 'gold-tracking.view', 'description' => 'View gold stock and tracking', 'category' => 'gold'],
+            ['name' => 'Create Gold Transaction', 'slug' => 'gold-tracking.create', 'description' => 'Create gold purchases or distributions', 'category' => 'gold'],
+            ['name' => 'Edit Gold Transaction', 'slug' => 'gold-tracking.edit', 'description' => 'Edit gold transactions', 'category' => 'gold'],
+            ['name' => 'Delete Gold Transaction', 'slug' => 'gold-tracking.delete', 'description' => 'Delete gold transactions', 'category' => 'gold'],
 
             // Mail System
             ['name' => 'Access Mail System', 'slug' => 'mail.access', 'description' => 'Access the mail system', 'category' => 'mail'],
