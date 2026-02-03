@@ -732,6 +732,70 @@
                     max-height: 60vh;
                 }
             }
+             @media (max-width: 575px) {
+                #mainContent {
+                    margin-top: 84px;
+                }
+                .header-actions {
+                    flex-direction: column;
+                }
+                .header-actions a, .header-actions button {
+                    width: 100%;
+                }
+                .profile-overview-card {
+                    padding: 10px;
+                }
+                #mainContent .profile-header {
+                    gap: 10px;
+                    padding: 0;
+                    padding-bottom: 7px;
+                }
+                .profile-avatar-large{
+                    width: 40px;
+                    height: 40px;
+                    font-size: 18px;
+                }
+                .profile-name {
+                    font-size: 12px;
+                }
+                p.profile-email {
+                    font-size: 12px;
+                    margin-bottom: 12px;
+                }
+                .meta-badge {
+                    padding: 5px;
+                    font-size: 12px;
+                    gap: 4px;
+                    width: 100%;
+                }
+                .profile-meta {
+                    gap: 5px;
+                }
+                .info-card-header, .info-card-body, .info-item {
+                    padding: 10px;
+                    gap: 5px;
+                }
+                .address-box {
+                    padding: 10px;
+                    align-items: center;
+                    gap: 5px;
+                }
+                .info-label, .info-value {
+                    font-size: 12px;
+                }
+                .info-icon {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 13px;
+                }
+                h5.info-title {
+                    font-size: 13px;
+                }
+                #mainContent .container-fluid {
+                    padding-left: 0;
+                    padding-right: 0;
+                }
+            }
         </style>
     @endpush
 

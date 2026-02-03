@@ -889,6 +889,97 @@
                     opacity: 1;
                 }
             }
+            @media (max-width: 575px) {
+                .sidebar.collapsed~.top-navbar~#mainContent{
+                    margin-left: 0 !important;
+                    padding: 15px 0px;
+                }
+                .btn-primary-custom, .btn-drafts-custom, .btn-secondary-custom {
+                    padding: 10px;
+                    font-size: 13px;
+                }
+                .page-header {
+                    padding: 10px !important;
+                }
+                form#orderForm .section-header {
+                    padding: 10px;
+                }
+                #orderForm .section-icon {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 15px;
+                    border-radius: 7px;
+                }
+                .section-title {
+                    font-size: 13px;
+                }
+                .section-description {
+                    font-size: 12px;
+                }
+                .section-body, .order-type-label, #orderForm .section-body{
+                    padding: 10px;
+                }
+                .order-type-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    font-size: 21px;
+                }
+                .order-type-title {
+                    font-size: 14px;
+                }
+                .order-type-desc {
+                    font-size: 12px;
+                }
+                .order-type-selector {
+                    gap: 12px;
+                }
+                #orderForm .form-group-modern .form-label-modern {
+                    font-size: 12px;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 7px;
+                }
+                #orderForm .required-badge,#orderForm .form-group-modern .optional-badge {
+                    font-size: 8px;
+                    padding: 1px 2px;
+                }
+                #orderForm .form-control-modern {
+                    padding: 3px 5px;
+                    border-radius: 7px;
+                    font-size: 11px;
+                }
+                #orderForm .form-label-modern {
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+                #orderForm .label-text {
+                    font-size: 12px;
+                }
+                #orderForm .badge-info,#orderForm .optional-badge {
+                    padding: 1px 4px;
+                    border-radius: 2px;
+                    font-size: 10px;
+                }
+                #orderForm .section-title{
+                    font-size: 12px;
+                }
+                #orderForm .section-description {
+                    font-size: 10px;
+                }
+                .header-actions {
+                    flex-direction: column;
+                    width: 100%;
+                }
+                .header-actions button, .header-actions a {
+                    width: 100%;
+                }
+                .container-fluid{
+                    padding: 0;
+                }
+            }
         </style>
     @endpush
 

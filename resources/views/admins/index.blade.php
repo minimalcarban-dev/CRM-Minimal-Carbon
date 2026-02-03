@@ -602,6 +602,68 @@
                 grid-template-columns: 1fr;
             }
         }
+        @media (max-width: 575px) {
+            #mainContent {
+                margin-top: 84px;
+            }
+            .page-header {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+            .page-title {
+                font-size: 17px;
+            }
+            .page-subtitle {
+                font-size: 12px;
+            }
+            .btn-primary-custom, .btn-drafts-custom,.btn-search {
+                padding: 10px;
+                font-size: 13px;
+            }
+            .header-content {
+                gap: 1rem;
+            }
+            .filter-select, input#orderDateRange, button.btn-filter {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+            .search-input {
+                padding: 5px 10px 5px 2.75rem;
+                font-size: 12px;
+            }
+            .filter-section {
+                padding: 5px;
+                margin-bottom: 15px;
+            }
+            .admin-card {
+                border-radius: 7px;
+                padding: 15px;
+                gap: 7px;
+            }
+            .admin-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            .admins-grid .badge {
+                font-size: 8px;
+                padding: 4px 6px;
+                border-radius: 5px;
+            }
+            .admin-name {
+                font-size: 12px;
+                margin: 5px 0 5px 0;
+            }
+            .info-item {
+                font-size: 11px;
+            }
+            .admin-info {
+                gap: 0;
+            }
+            .admin-actions {
+                padding-top: 7px;
+            }
+        }
     </style>
 
     <script>

@@ -100,7 +100,7 @@
                     </button>
                 </div>
                 <div class="section-body">
-                    <div class="alert alert-info-modern mb-4">
+                    <div class="alert alert-info-modern mb-2 mb-md-4 mb-xl-4">
                         <i class="bi bi-info-circle me-2"></i>
                         <div>
                             <strong>Password Security</strong>
@@ -278,7 +278,7 @@
                         <!-- Aadhar Front -->
                         <div class="col-md-4">
                             <div class="file-upload-modern-edit">
-                                <label class="form-label-modern mb-3">
+                                <label class="form-label-modern mb-2 mb-lg-3 mb-xl-3 mb-md-3 mb-sm-3">
                                     <i class="bi bi-card-image me-2"></i>Aadhar Front
                                 </label>
                                 @if ($admin->aadhar_front_image)
@@ -874,6 +874,91 @@
 
                 .admin-info-text p {
                     justify-content: center;
+                }
+            }
+            @media (max-width: 575px) {
+                .header-actions {
+                    flex-direction: column;
+                }
+                .header-actions .btn{
+                    width: 100%;
+                }
+                .admin-avatar-small {
+                    width: 40px;
+                    height: 40px;
+                    font-size: 18px;
+                }
+                .admin-info-text h5 {
+                    font-size: 12px;
+                }
+                .admin-info-text p {
+                    font-size: 11px;
+                }
+                .admin-info-banner, .section-body {
+                    padding: 10px;
+                }
+                .form-group-modern .form-label-modern {
+                    font-size: 12px;
+                    flex-direction: row;
+                    align-items: center;
+                    margin-bottom: 7px;
+                }
+                .required-badge, .form-group-modern .optional-badge {
+                    font-size: 8px;
+                    padding: 1px 2px;
+                }
+                .form-control-modern {
+                    padding: 3px 5px;
+                    border-radius: 7px;
+                    font-size: 11px;
+                }
+                .section-icon {
+                    width: 34px;
+                    height: 34px;
+                    font-size: 15px;
+                }
+                #mainContent .section-title, #mainContent .quick-link-title {
+                    font-size: 14px;
+                }
+                p.section-description {
+                    font-size: 12px;
+                }
+                button#suggestPw {
+                    font-size: 11px;
+                }
+                .section-body .alert.alert-info-modern {
+                    padding: 8px 5px;
+                    gap: 5px;
+                    font-size: 14px;
+                }
+                .alert-info-modern i {
+                    font-size: 14px;
+                }
+                .section-body .alert.alert-info-modern p{
+                    font-size: 11px;
+                }
+                .password-toggle-btn {
+                    right: 4px;
+                    width: 20px;
+                    height: 20px;
+                    font-size: 12px;
+                }
+                .row > div:not(:first-child) {
+                    margin-top: 4px;
+                }
+                .form-label-modern {
+                    font-size: 12px;
+                }
+                .action-footer {
+                    padding: 10px;
+                }
+                .action-footer .btn-lg {
+                    padding: 3px 5px;
+                    font-size: 12px;
+                }
+                #mainContent .container-fluid {
+                    padding-left: 0;
+                    padding-right: 0;
                 }
             }
         </style>

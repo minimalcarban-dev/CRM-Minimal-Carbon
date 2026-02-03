@@ -1796,6 +1796,199 @@
             border-color: var(--border);
             opacity: 0.5;
         }
+        @media (max-width: 576px) {
+            #mainContent {
+                margin-left: 0px;
+                padding: 0 0px;
+            }
+            h2.navbar-title, .navbar-right .notification-btn i, .notification-header h6, .notification-empty p,.notification-icon   {
+                font-size: 12px;
+            }
+            .navbar-left button#topSidebarToggle {
+                display: none;
+            }
+            .notification-btn {
+                width: 34px;
+                height: 34px;
+            }
+            .notification-badge {
+                font-size: 7px;
+                padding: 1px 5px;
+            }
+            .profile-btn {
+                padding: 5px 7px;
+                font-size: 13px;
+            }
+            .profile-avatar {
+                width: 23px;
+                height: 23px;
+                font-size: 11px;
+                border-radius: 50%;
+            }
+            .navbar-right {
+                gap: 10px;
+            }
+            .notification-menu {
+                width: calc(100vw - 28px);
+                left: 0;
+                transform: translateX(-63%);
+            }
+            .notification-header {
+                padding: 10px 10px;
+            }
+            .notification-empty i {
+                font-size: 23px;
+            }
+            .notification-divider {
+                padding: 6px 4px;
+                font-size: 13px;
+            }
+            .notification-item {
+                gap: 8px;
+                padding: 8px;
+            }
+            .notification-icon {
+                width: 30px;
+                height: 30px;
+            }
+            .notification-message {
+                font-size: 11PX;
+            }
+            .notification-time {
+                font-size: 10PX;
+            }
+            .notification-footer a {
+                font-size: 12px !important;
+            }
+            .profile-menu {
+                width: calc(100vw - 25px);
+                left: 0;
+                right: 0;
+                transform: translateX(-78%);
+            }
+            .orders-management-container {
+                padding: 10px;
+            }
+            .breadcrumb-current,.breadcrumb-link {
+                font-size: 11px;
+            }
+            .page-title {
+                font-size: 17px;
+            }
+            .page-subtitle {
+                font-size: 12px;
+            }
+            .header-content {
+                gap: 1rem;
+            }
+            .page-header {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            .stats-grid a.stat-card {
+                padding: 5px 12px;
+                gap: 5px;
+            }
+            .stat-icon {
+                display: none;
+            }
+            .stats-grid {
+                margin-bottom: 15px;
+            }
+            .filter-section {
+                padding: 5px;
+                margin-bottom: 15px;
+            }
+            .search-input {
+                padding: 5px 10px 5px 2.75rem;
+                font-size: 12px;
+            }
+            .filter-form {
+                gap: 7px;
+            }
+            .filter-select ,input#orderDateRange, button.btn-filter{
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+            .result-count {
+                font-size: 12px;
+            }
+            .stat-label {
+                font-size: 10px;
+            }
+            .empty-state {
+                padding: 15px 15px;
+            }
+            .empty-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            .empty-title {
+                font-size: 14px;
+                margin: 0 0 8px 0;
+            }
+            .empty-description {
+                margin: 0 0 15px 0;
+                font-size: 14px;
+            }
+            .sidebar.collapsed~.top-navbar~#mainContent {
+                margin-left: 0;
+            }
+            .btn-primary-custom, .btn-drafts-custom {
+                padding: 10px;
+                font-size: 13px;
+            }
+            a.action-btn.action-btn-view{
+                right: 35px;
+            }
+            a.action-btn.action-btn-edit{
+                right: 67px;
+            }
+            form.d-inline.delete-form{
+                right: 3px;
+            }
+            form.d-inline.delete-form, a.action-btn.action-btn-edit, a.action-btn.action-btn-view {
+                z-index: 999;
+                position: fixed;
+                bottom: 7px;
+                width: 30px;
+                height: 30px;
+                font-size: 13px;
+            }
+            form.d-inline.delete-form button{
+                width: 30px;
+                height: 30px;
+                font-size: 13px;
+            }
+            .orders-table-card {
+                margin-bottom: 100px;
+            }
+            .orders-table th, .orders-table td {
+                padding: 7px;
+                line-height: 16px;
+                text-align: center;
+                font-size: 12px;
+                align-items: center;
+            }
+            .orders-table-card .th-content span {
+                font-size: 12px;
+                text-transform: math-auto;
+            }
+            .order-type-badge,span.status-badge.status-info {
+                padding: 5px;
+                border-radius: 5px;
+                font-size: 10px;
+            }
+            .order-id-badge {
+                font-size: 11px;
+            }
+            .creator-avatar {
+                width: 25px;
+                height: 25px;
+                font-size: 16px;
+            }
+        }
     </style>
 
     <!-- Date Ranege Picker -->
