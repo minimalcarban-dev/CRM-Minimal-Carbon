@@ -794,6 +794,7 @@
             transform: translateY(-50%) rotate(360deg);
         }
     }
+    
 </style>
 
 <script>

@@ -1360,6 +1360,141 @@
                 font-size: 1.25rem;
             }
         }
+        @media (max-width: 575px) {
+            #mainContent {
+                margin-left: 0px;
+                padding: 0 10px;
+            }
+            h2.navbar-title, .navbar-right .notification-btn i, .notification-header h6, .notification-empty p,.notification-icon, .page-subtitle   {
+                font-size: 12px;
+            }
+            .navbar-left button#topSidebarToggle {
+                display: none;
+            }
+            .notification-btn {
+                width: 34px;
+                height: 34px;
+            }
+            .notification-badge {
+                font-size: 7px;
+                padding: 1px 5px;
+            }
+            .profile-btn {
+                padding: 5px 7px;
+                font-size: 13px;
+            }
+            .profile-avatar {
+                width: 23px;
+                height: 23px;
+                font-size: 11px;
+                border-radius: 50%;
+            }
+            .navbar-right {
+                gap: 10px;
+            }
+            .notification-menu {
+                width: calc(100vw - 28px);
+                left: 0;
+                transform: translateX(-63%);
+            }
+            .notification-header {
+                padding: 10px 10px;
+            }
+            .notification-empty i {
+                font-size: 23px;
+            }
+            .notification-divider {
+                padding: 6px 4px;
+                font-size: 13px;
+            }
+            .notification-item {
+                gap: 8px;
+                padding: 8px;
+            }
+            .notification-icon {
+                width: 30px;
+                height: 30px;
+            }
+            .notification-message {
+                font-size: 11PX;
+            }
+            .notification-time {
+                font-size: 10PX;
+            }
+            .notification-footer a {
+                font-size: 12px !important;
+            }
+            .profile-menu {
+                width: calc(100vw - 25px);
+                left: 0;
+                right: 0;
+                transform: translateX(-78%);
+            }
+            .breadcrumb-current, .breadcrumb-link {
+                font-size: 11px;
+            }
+            .page-title {
+                font-size: 17px;
+            }
+            .page-header {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            .toast.custom-toast {
+                min-width: 100%;
+                font-size: 19px;
+                width: 100%;
+            }
+            .toast.custom-toast .toast-body, .toast.custom-toast .btn-close{
+                font-size: 12px;
+            }
+            .toast.custom-toast .toast-icon {
+                font-size: 14px;
+            }
+            h1.dashboard-title {
+                font-size: 16px;
+                margin-top: 6px;
+            }
+            p.dashboard-subtitle {
+                font-size: 12px;
+            }
+            .welcome-card .welcome-content {
+                gap: 15px;
+                margin-bottom: 15px;
+            }
+            .welcome-card .welcome-title {
+                font-size: 14px;
+            }
+            #mainContent .welcome-card {
+                padding: 15px;
+                margin-bottom: 13px;
+            }
+            #mainContent .btn-primary-modern,#mainContent .btn-secondary-modern {
+                padding: 5px 9px;
+                font-size: 12px;
+            }
+            #mainContent .welcome-actions{
+                display: unset;
+            }
+            .section-header {
+                padding: 10px;
+            }
+            #mainContent .section-title ,#mainContent .quick-link-title{
+                font-size: 14px;
+            }
+            #mainContent .section-subtitle,#mainContent .quick-link-description{
+                font-size: 11px;
+            }
+            #mainContent .welcome-icon,#mainContent .quick-link-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            #mainContent .quick-link-card {
+                padding: 10px;
+                gap: 10px;
+            }
+        }
     </style>
 
     @stack('head')

@@ -1036,6 +1036,45 @@
                 right: 1rem;
             }
         }
+        @media (max-width: 575px) {
+            .order-details-wrapper {
+                padding: 0;
+                padding-top: 7px;
+            }
+            .order-title{
+                font-size: 16px;
+            }
+            .order-date{
+                font-size: 12px;
+            }
+            button.btn-action.btn-back, a.btn-action.btn-edit{
+                padding: 5px 9px;
+                font-size: 12px;
+            }
+            .order-header {
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            .status-card{
+                padding: 7px;
+                gap: 10px;
+            }
+            span.status-badge.status-r_order_in_process {
+                background-color: #ddfedb;
+            }
+            .status-label{
+                font-size: 11px;
+            }
+            span.status-badge, .status-value {
+                font-size: 10px;
+            }
+            .section-title, .section-content{
+                padding: 7px;
+            }
+            .detail-row {
+                font-size: 13px;
+            }
+        }
     </style>
 
     <script>

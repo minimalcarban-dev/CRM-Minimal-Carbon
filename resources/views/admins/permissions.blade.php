@@ -15,7 +15,7 @@
                     <p class="page-subtitle mb-0">Configure access rights for {{ $admin->name }}</p>
                 </div>
                 <div class="header-right">
-                    <button form="permissionsForm" type="submit" class="btn-primary-custom me-2">
+                    <button form="permissionsForm" type="submit" class="btn-primary-custom me-0 me-lg-2 me-xl-2 me-md-2 me-sm-2">
                         <i class="bi bi-check-circle me-2"></i>
                         Save Permissions
                     </button>
@@ -90,7 +90,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <button class="btn-primary-custom me-2" id="globalSelectAll">
+                <button class="btn-primary-custom me-0 me-lg-2 me-xl-2 me-sm-2 me-md-2" id="globalSelectAll">
                     <i class="bi bi-check-circle me-2"></i>
                     <span>Select All</span>
                 </button>
@@ -773,6 +773,123 @@
 
                 .action-footer .btn-lg {
                     width: 100%;
+                }
+            }
+            @media (max-width: 575px) {
+                #mainContent .container-fluid {
+                    padding-left: 0;
+                    padding-right: 0;
+                }
+                .header-right {
+                    flex-direction: column;
+                }
+                .header-right .btn {
+                    width: 100%;
+                }
+                .admin-info-card {
+                    padding: 10px;
+                    gap: 5px;
+                }
+                .admin-avatar {
+                    width: 40px;
+                    height: 40px;
+                    font-size: 18px;
+                }
+                .admin-details h5 {
+                    font-size: 12px;
+                }
+                .admin-details p{
+                    font-size: 11px;
+                }
+                .admin-stats {
+                    padding: 7px 0;
+                }
+                .super-admin-card {
+                    padding: 8px;
+                    gap: 11px;
+                }
+                .super-admin-icon {
+                    display: none;
+                }
+                .super-admin-title {
+                    font-size: 13px;
+                }
+                p.super-admin-desc {
+                    font-size: 11px;
+                }
+                .super-admin-toggle .form-check.form-switch{
+                    flex-direction: column;
+                }
+                .super-admin-toggle .super-admin-switch {
+                    width: 43px;
+                    height: 19px;
+                    margin-left: -15px;
+                }
+                .control-bar, .permission-category-card.expanded .category-body{
+                    padding: 5px;
+                    gap: 7px;
+                }
+                .search-box .form-control {
+                    padding: 5px 10px 5px 2.75rem;
+                    font-size: 12px;
+                    height: auto;
+                }
+                .btn-primary-custom {
+                    padding: 7px 6px;
+                    font-size: 12px;
+                }
+                .category-header {
+                    padding: 5px 7px;
+                }
+                .category-icon{
+                    width: 29px;
+                    height: 30px;
+                    font-size: 14px;
+                }
+                .category-info {
+                    gap: 6px;
+                }
+                .category-title {
+                    font-size: 12px;
+                }
+                .category-count {
+                    font-size: 10px;
+                }
+                .permissions-grid {
+                    gap: 7px;
+                }
+                .category-actions .form-check.form-switch {
+                    flex-direction: column;
+                }
+                .form-switch .form-check-input {
+                    margin-left: 0;
+                }
+                .category-actions .form-check-label {
+                    font-size: 11px;
+                }
+                .category-actions .form-check.form-switch .form-check-input {
+                    width: 43px;
+                    height: 19px;
+                }
+                .permission-item {
+                    padding: 7px;
+                    border-radius: 9px;
+                }
+                .permission-item .form-check-input {
+                    width: 15px;
+                    height: 15px;
+                }
+                .permission-name {
+                    font-size: 13px;
+                }
+                .permission-slug {
+                    font-size: 11px;
+                }
+                .permission-description {
+                    font-size: 10px;
+                }
+                .permission-management-container {
+                    padding: 0;
                 }
             }
         </style>

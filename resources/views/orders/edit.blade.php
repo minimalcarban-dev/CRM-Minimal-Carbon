@@ -3,8 +3,8 @@
 @section('title', 'Edit Order')
 
 @section('content')
-    <div class="page-header d-flex justify-content-between align-items-center mb-4">
-        <div>
+    <div class="page-header d-block d-sm-flex d-lg-flex d-md-flex d-xl-flex justify-content-between align-items-center mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
+        <div class="mb-lg-0 mb-xl-0 mb-md-0 mb-2">
             <h1 class="page-title">Edit Order #{{ $order->id }}</h1>
             <p class="page-subtitle">Update order details and related information</p>
         </div>
@@ -22,15 +22,15 @@
     <!-- Currently Uploaded Files Section -->
     @if($order->images || $order->order_pdfs)
         <div class="current-files-section mb-4">
-            <div class="card-custom p-4">
-                <h5 class="section-title mb-3">
+            <div class="card-custom p-lg-4 p-xl-4 p-md-4 p-sm-4 p-2">
+                <h5 class="section-title mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
                     <i class="bi bi-folder2-open"></i> Currently Uploaded Files
                 </h5>
 
                 <div class="row">
                     <!-- Current Images -->
                     @if($order->images)
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
                             <div class="file-section">
                                 <div class="file-section-header">
                                     <i class="bi bi-images"></i>
@@ -85,7 +85,7 @@
         </div>
     @endif
 
-    <div class="card-custom p-4">
+    <div class="card-custom p-0 p-lg-4 p-xl-4 p-md-4 p-sm-4">
         <!-- Errors are displayed via the unified flash partial in layout -->
 
         <form action="{{ route('orders.update', $order->id) }}" method="POST" enctype="multipart/form-data"
@@ -525,6 +525,70 @@
 
             .row>div {
                 margin-bottom: 1rem;
+            }
+        }
+        @media (max-width: 575px) {
+            #mainContent{
+                margin-top: 83px;
+            }
+            .btn-primary-custom {
+                padding: 5px 7px;
+                border-radius: 7px;
+                font-size: 11px;
+            }
+            .file-section {
+                padding: 7px;
+            }
+            .file-section-header {
+                font-size: 14px;
+                gap: 5px;
+                margin-bottom: 7px;
+                padding-bottom: 6px;
+            }
+            .section-header {
+                padding: 7px;
+            }
+            .section-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 15px;
+            }
+            p.section-description {
+                font-size: 12px;
+            }
+            .form-group-modern .form-label-modern {
+                font-size: 12px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 7px;
+            }
+            .section-body, .order-type-label, #orderFormFields .section-body {
+                padding: 10px;
+            }
+            .form-control-modern {
+                padding: 3px 5px;
+                border-radius: 7px;
+                font-size: 11px;
+            }
+            #orderFormFields .row>div {
+                margin-bottom: 0;
+            }
+            #orderFormFields .required-badge, #orderFormFields .form-group-modern .optional-badge {
+                font-size: 8px;
+                padding: 1px 2px;
+            }
+            #orderFormFields .badge-info, #orderFormFields .optional-badge {
+                padding: 1px 4px;
+                border-radius: 2px;
+                font-size: 10px;
+            }
+            .section-content .price-display {
+                padding: 0.5rem;
+                border-radius: 5px;
+            }
+            .section-content .price-value {
+                font-size: 15px;
             }
         }
     </style>
