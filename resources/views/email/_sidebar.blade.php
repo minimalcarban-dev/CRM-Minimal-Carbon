@@ -205,10 +205,9 @@
         position: relative;
     }
 
-    .nav-item:hover:not(.disabled) {
-        background: var(--light-gray);
-        color: var(--dark);
-        transform: translateX(2px);
+    .nav-item:hover {
+        background: var(--primary);
+        color: white;
     }
 
     .nav-item.active {
@@ -239,7 +238,7 @@
     }
 
     .nav-badge {
-        display: inline-flex;
+        display: inline-flex;   
         align-items: center;
         justify-content: center;
         min-width: 24px;
@@ -254,6 +253,10 @@
     }
 
     .nav-item.active .nav-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    .nav-item:hover .nav-badge {
         background: rgba(255, 255, 255, 0.2);
         color: white;
     }

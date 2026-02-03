@@ -1641,7 +1641,7 @@
                         </a>
                     </li>
                 @endif
-                
+
                 @if (auth()->guard('admin')->user())
                     @php
                         $emailActive = request()->routeIs('email.*');
@@ -1669,13 +1669,13 @@
                                     $recentAccount = \App\Modules\Email\Models\EmailAccount::where('is_active', true)->first();
                                 @endphp
                                 @if($recentAccount)
-                                <li>
-                                    <a class="nav-link {{ request()->routeIs('email.inbox') ? 'active' : '' }}"
-                                        href="{{ route('email.inbox', $recentAccount->id) }}" data-tooltip="Inbox">
-                                        <i class="bi bi-inbox-fill"></i>
-                                        <span>Inbox</span>
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('email.inbox') ? 'active' : '' }}"
+                                            href="{{ route('email.inbox', $recentAccount->id) }}" data-tooltip="Inbox">
+                                            <i class="bi bi-inbox-fill"></i>
+                                            <span>Inbox</span>
+                                        </a>
+                                    </li>
                                 @endif
                             </ul>
                         </div>
@@ -2553,52 +2553,51 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                            <div     style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                <div    >
-                                                                    <str    ong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                    <div     style="font-size: 0.8rem; color: #64748b;">
-                                                                        ${dr    aft.client_name || 'No client'
-                            } • ${ draft.time_ago } ${ hasError }
-                                                                    </di    v >
-                                                                </di    v >
-                            <a h ref="${draft.resume_url}"
-                                styl e="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                Resu    me
-                            </a>    
-                                                            </di    v >
-                            `;    
-                                    });
-                                    draftsHtml += '</div>';
-
-                                    // Show the popup
-                                    Swal.fire({
-                                        title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
-                                        html: `
-                            < p s    tyle = "color: #64748b; margin-bottom: 1rem;" >
-                            You     have < strong style = "color: #6366f1;" > ${ data.count }</strong > pending order draft${ data.count > 1 ? 's' : '' } that need attention.
-                                                            </p >
-                                ${ dr    aftsHtml }
-                                                        `,
-                                        showCancelButton: true,
-                                        confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
-                                        cancelButtonText: 'Dismiss',
-                                        confirmButtonColor: '#6366f1',
-                                        cancelButtonColor: '#64748b',
-                                        width: 450,
-                                        customClass: {
-                                            popup: 'draft-notification-popup'
-                                        }
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            window.location.href = '{{ route("orders.drafts.index") }}';
-                                        }
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.log('[DraftNotification] Error fetching drafts:', error);
+                                        <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                <div style="font-size: 0.8rem; color: #64748b;">
+                                                    ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                </div>
+                                            </div>
+                                            <a href="${draft.resume_url}"
+                                                style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                Resume
+                                            </a>    
+                                        </div>
+                                    `;
                             });
-                    })();
+                            draftsHtml += '</div>';
+
+                            // Show the popup
+                            Swal.fire({
+                                title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
+                                html: `
+                                        <p style="color: #64748b; margin-bottom: 1rem;">
+                                            You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                        </p>
+                                        ${draftsHtml}
+                                    `,
+                                showCancelButton: true,
+                                confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
+                                cancelButtonText: 'Dismiss',
+                                confirmButtonColor: '#6366f1',
+                                cancelButtonColor: '#64748b',
+                                width: 450,
+                                customClass: {
+                                    popup: 'draft-notification-popup'
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '{{ route("orders.drafts.index") }}';
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.log('[DraftNotification] Error fetching drafts:', error);
+                    });
+            })();
         </script>
     @endif
 
@@ -2626,7 +2625,7 @@
                         // Show toast
                         if (typeof showToast === 'function') {
                             const draftMsg = data.draft_count > 0
-                                ? `📋 You have ${ data.draft_count } draft(s) waiting!`
+                                ? `📋 You have ${data.draft_count} draft(s) waiting!`
                                 : `🛒 Don't forget to log any new orders!`;
                             showToast(draftMsg, 8000);
                         }
@@ -2654,16 +2653,16 @@
                         }
                     }
                 } catch (error) {
-            // Silent fail - don't spam console
-        }
+                    // Silent fail - don't spam console
+                }
             }
 
-        // Trigger after initial delay, then every 4 hours
-        setTimeout(() => {
-            triggerReminders();
-            setInterval(triggerReminders, REMINDER_INTERVAL);
-        }, INITIAL_DELAY);
-        }) ();
+            // Trigger after initial delay, then every 4 hours
+            setTimeout(() => {
+                triggerReminders();
+                setInterval(triggerReminders, REMINDER_INTERVAL);
+            }, INITIAL_DELAY);
+        })();
     </script>
 
     @stack('scripts')

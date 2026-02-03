@@ -86,11 +86,10 @@
                                         $domain = Str::after($senderEmail, '@');
                                         $parts = explode('.', $domain);
                                         $brandDomain = count($parts) > 2 ? $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1] : $domain;
-                                        $logoUrl = "https://logo.clearbit.com/{$brandDomain}";
-                                        $fallbackUrl = "https://www.google.com/s2/favicons?domain={$brandDomain}&sz=128";
+                                        $logoUrl = "https://www.google.com/s2/favicons?domain={$brandDomain}&sz=128";
                                     @endphp
                                     <img src="{{ $logoUrl }}" alt="{{ substr($brandDomain, 0, 1) }}" class="brand-logo"
-                                        onerror="this.src='{{ $fallbackUrl }}'; this.onerror=function(){this.style.display='none'; this.nextElementSibling.style.display='flex';};">
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <span class="avatar-initial" style="display: none;">
                                         @if(isset($folder) && $folder === 'sent')
                                             {{ strtoupper(substr($email->to_recipients ?: '?', 0, 1)) }}
@@ -1119,6 +1118,10 @@
                     btnCompose.addEventListener('click', () => {
                         modalTitle.innerText = 'New Message';
                         composeForm.reset();
+                        // Clear editor
+                        const editorBody = document.getElementById('editor-body');
+                        if (editorBody) editorBody.innerHTML = '';
+
                         composeModal.style.display = 'flex';
                     });
                 }
@@ -1139,6 +1142,14 @@
                 // Handle Sending
                 composeForm.addEventListener('submit', async function (e) {
                     e.preventDefault();
+
+                    // Sync editor
+                    const editorBody = document.getElementById('editor-body');
+                    const inputBody = document.getElementById('body');
+                    if (editorBody && inputBody) {
+                        inputBody.value = editorBody.innerHTML;
+                    }
+
                     const btnSend = document.getElementById('btnSend');
                     const originalContent = btnSend.innerHTML;
 
@@ -1168,6 +1179,8 @@
                             }).then(() => {
                                 composeModal.style.display = 'none';
                                 composeForm.reset();
+                                const editorBody = document.getElementById('editor-body');
+                                if (editorBody) editorBody.innerHTML = '';
                                 window.location.reload();
                             });
                         } else {
@@ -1185,6 +1198,14 @@
                 // Handle Draft Saving
                 const btnSaveDraft = document.getElementById('btnSaveDraft');
                 btnSaveDraft.addEventListener('click', async function () {
+
+                    // Sync editor
+                    const editorBody = document.getElementById('editor-body');
+                    const inputBody = document.getElementById('body');
+                    if (editorBody && inputBody) {
+                        inputBody.value = editorBody.innerHTML;
+                    }
+
                     const originalContent = this.innerHTML;
                     this.disabled = true;
                     this.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
