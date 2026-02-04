@@ -25,6 +25,7 @@
         'destroy' => 'danger',
         'send' => 'success',
         'view_logs' => 'info',
+        'view_team' => 'primary',
     ];
 
     $iconMap = [
@@ -54,7 +55,9 @@
         'download' => 'bi-cloud-download',
         'destroy' => 'bi-trash',
         'send' => 'bi-send',
+
         'view_logs' => 'bi-file-text',
+        'view_team' => 'bi-people-fill',
     ];
 
     // Calculate high-level metrics
@@ -259,9 +262,9 @@
                                         @endif
                                         <div class="permission-meta">
                                             <code class="permission-slug" onclick="copySlug('{{ $perm->slug }}', this)">
-                                                            <i class="bi bi-code-slash"></i>
-                                                            {{ $perm->slug }}
-                                                        </code>
+                                                                                    <i class="bi bi-code-slash"></i>
+                                                                                    {{ $perm->slug }}
+                                                                                </code>
                                             <span class="permission-type">{{ ucfirst(str_replace('_', ' ', $action)) }}</span>
                                         </div>
                                     </div>
@@ -1057,6 +1060,16 @@
         .action-view_logs {
             background: rgba(59, 130, 246, 0.1);
             color: var(--info);
+        }
+
+        .action-view_team {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .badge-view_team {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
         }
 
         .permission-actions {

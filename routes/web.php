@@ -795,13 +795,18 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // Office Expense Manager Module
     // ─────────────────────────────────────────────────────────────
 
-    // Reports (must be before resource route)
     Route::get('expenses/report/monthly', [ExpenseController::class, 'monthlyReport'])
         ->name('expenses.monthly-report')
-        ->middleware('admin.permission:expenses.reports');
+        ->middleware('admin.permission:expenses.view');
+
+    // Meele Diamonds Module
+    Route::resource('meele-parcels', App\Http\Controllers\MeeleParcelController::class);
+    Route::post('meele-parcels/{id}/adjustment', [App\Http\Controllers\MeeleParcelController::class, 'adjustment'])->name('meele-parcels.adjustment');
+
     Route::get('expenses/report/annual', [ExpenseController::class, 'annualReport'])
         ->name('expenses.annual-report')
         ->middleware('admin.permission:expenses.reports');
+
 
     // Excel Exports
     Route::get('expenses/export/monthly', [ExpenseController::class, 'exportMonthly'])

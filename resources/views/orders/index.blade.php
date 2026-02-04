@@ -306,6 +306,19 @@
                     <input type="hidden" name="date_to" id="orderDateTo" value="{{ request('date_to') }}">
                 </div>
 
+                {{-- Overdue Filter Toggle --}}
+                @php
+                    $overdueActive = request('overdue') === '1';
+                    $overdueParams = $overdueActive
+                        ? request()->except(['overdue', 'page'])
+                        : array_merge(request()->except(['page', 'shipped']), ['overdue' => '1']);
+                @endphp
+                <a href="{{ route('orders.index', $overdueParams) }}"
+                    class="btn-overdue-filter {{ $overdueActive ? 'active' : '' }}">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Overdue</span>
+                </a>
+
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
                         const filterForm = document.getElementById('orderFilterForm');
@@ -401,7 +414,7 @@
                     <span>Filter</span>
                 </button>
 
-                @if(request('search') || request('order_type') || request('diamond_status'))
+                @if(request('search') || request('order_type') || request('diamond_status') || request('overdue'))
                     <a href="{{ route('orders.index') }}" class="btn-reset">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Reset</span>
@@ -486,7 +499,15 @@
                         </thead>
                         <tbody>
                             @foreach ($orders as $order)
-                                <tr class="table-row">
+                                @php
+                                    // Check if order is overdue: dispatch_date is in the past AND order is NOT shipped
+                                    $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+                                    $isShipped = in_array($order->diamond_status, $shippedStatuses);
+                                    $isOverdue = $order->dispatch_date &&
+                                        \Carbon\Carbon::parse($order->dispatch_date)->lt(now()->startOfDay()) &&
+                                        !$isShipped;
+                                @endphp
+                                <tr class="table-row {{ $isOverdue ? 'overdue-row' : '' }}">
                                     <td class="td-id">
                                         <span class="order-id-badge">#{{ $order->id }}</span>
                                     </td>
@@ -1229,6 +1250,37 @@
             background: rgba(239, 68, 68, 0.05);
         }
 
+        /* Overdue Filter Button */
+        .btn-overdue-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            background: white;
+            color: #ef4444;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-overdue-filter:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .btn-overdue-filter.active {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-overdue-filter.active:hover {
+            background: #dc2626;
+        }
+
         .filter-info {
             display: flex;
             justify-content: flex-end;
@@ -1328,6 +1380,21 @@
 
         .table-row:hover {
             background: var(--light-gray);
+        }
+
+        /* Overdue order row - red background for orders past dispatch date but not shipped */
+        .table-row.overdue-row {
+            background: #FECECE;
+            border-left: 4px solid #ef4444;
+        }
+
+        .table-row.overdue-row:hover {
+            background: #ffafafff;
+        }
+
+        .table-row.overdue-row .order-id-badge {
+            background: #ffafafff;
+            color: #ff0000ff;
         }
 
         .orders-table td {

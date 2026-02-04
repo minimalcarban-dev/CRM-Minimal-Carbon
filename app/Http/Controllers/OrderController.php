@@ -51,11 +51,17 @@ class OrderController extends Controller
         $baseQuery = Order::query()->with(['company', 'creator']); // Start the base query (apply admin + search filters first)
 
         // Super admin sees all orders, regular admin sees only their submitted orders
+        // Super admin sees all orders, regular admin sees based on permission
         if (!$admin->is_super) {
-            $baseQuery->where('submitted_by', $admin->id);
+            // If admin DOES NOT have 'View Team Orders' permission, strictly filter by their ID.
+            // If they DO have the permission, we skip this check, allowing them to see all orders.
+            if (!$admin->hasPermission('orders.view_team')) {
+                $baseQuery->where('submitted_by', $admin->id);
+            }
 
             // Restrict visibility of dispatched orders:
             // Normal admin cannot see shipped orders older than 10 days
+            // This rule applies regardless of whether they see "My Orders" or "Team Orders"
             $baseQuery->where(function ($q) use ($shippedStatuses) {
                 // 1. Order is NOT in shipped status (or status is null)
                 $q->whereNotIn('diamond_status', $shippedStatuses)
@@ -163,6 +169,16 @@ class OrderController extends Controller
         }
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Overdue filter - show only orders with dispatch_date in past AND not shipped
+        if ($request->filled('overdue') && $request->overdue == '1') {
+            $query->whereNotNull('dispatch_date')
+                ->whereDate('dispatch_date', '<', now()->startOfDay())
+                ->where(function ($q) use ($shippedStatuses) {
+                    $q->whereNotIn('diamond_status', $shippedStatuses)
+                        ->orWhereNull('diamond_status');
+                });
         }
 
         $orders = $query->latest()->paginate(20);
@@ -335,12 +351,35 @@ class OrderController extends Controller
 
             DB::commit();
 
+
+            // Handle Meele Stock Deduction
+            if (!empty($validated['meele_diamond_id'])) {
+                try {
+                    $meeleService = app(\App\Services\MeeleStockService::class);
+                    $parcel = \App\Models\MeeleParcel::findOrFail($validated['meele_diamond_id']);
+
+                    $meeleService->deductStock(
+                        $parcel,
+                        (int) ($validated['meele_pieces'] ?? 0),
+                        (float) ($validated['meele_carat'] ?? 0),
+                        'sale',
+                        Auth::guard('admin')->id(),
+                        'Order #' . $order->id,
+                        $order
+                    );
+                } catch (\Exception $e) {
+                    // If stock deduction fails, rollback transaction
+                    throw new \Exception("Meele Stock Error: " . $e->getMessage());
+                }
+            }
+
             Log::info('Order created successfully', [
                 'order_id' => $order->id,
                 'order_type' => $order->order_type,
                 'images_count' => count($images),
                 'pdfs_count' => count($pdfs),
                 'diamond_sku' => $validated['diamond_sku'] ?? null,
+                'meele_id' => $validated['meele_diamond_id'] ?? null,
                 'created_by' => Auth::guard('admin')->id()
             ]);
 
@@ -649,6 +688,10 @@ class OrderController extends Controller
             'order_pdfs.*' => 'nullable|mimes:pdf|max:10240',
             'diamond_prices' => 'nullable|array', // Individual prices for each diamond SKU
             'diamond_prices.*' => 'nullable|numeric|min:0', // Each price must be numeric
+            'meele_diamond_id' => 'nullable|exists:meele_parcels,id',
+            'meele_pieces' => 'nullable|integer|min:0',
+            'meele_carat' => 'nullable|numeric|min:0',
+            'meele_total_value' => 'nullable|numeric|min:0',
         ];
 
         switch ($request->order_type) {
@@ -745,6 +788,12 @@ class OrderController extends Controller
 
         // Date fields - use null instead of empty string for MySQL DATE compatibility
         $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
+
+        // Meele Fields
+        $order->meele_diamond_id = $validated['meele_diamond_id'] ?? null;
+        $order->meele_pieces = $validated['meele_pieces'] ?? null;
+        $order->meele_carat = $validated['meele_carat'] ?? null;
+        $order->meele_total_value = $validated['meele_total_value'] ?? null;
     }
 
     /**

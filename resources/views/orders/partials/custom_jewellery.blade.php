@@ -117,6 +117,10 @@
         <div class="mt-3">
             @include('orders.partials.multi_sku_selector')
         </div>
+        {{-- Meele Selection --}}
+        <div class="mt-3">
+            @include('orders.partials.meele_selector')
+        </div>
     </div>
 </div>
 
