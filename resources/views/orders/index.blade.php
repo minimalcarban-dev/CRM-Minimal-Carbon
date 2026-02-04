@@ -197,6 +197,13 @@
                             <span class="live-badge"><i class="bi bi-circle-fill"></i> Live</span>
                             {{ $todaysOrderCount ?? 0 }} shipped orders
                         </div>
+                        <div class="stat-month-sales"
+                            style="font-size: 0.7rem; color: #64748b; margin-top: 4px; border-top: 1px solid rgba(16, 185, 129, 0.1); padding-top: 4px;">
+                            <span style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Month:</span>
+                                <span style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             @endif

@@ -28,16 +28,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Create super admin for admin panel
         $this->call(SuperAdminSeeder::class);
-        // Seed permissions
         $this->call(PermissionSeeder::class);
-        // Grant chat access to admins
         $this->call(ChatPermissionSeeder::class);
-        // Seed default chat channels and attach admins
         $this->call(ChatDefaultSeeder::class);
-        
-        // Seed attribute data
         $this->call(CompanySeeder::class);
         $this->call(MetalTypeSeeder::class);
         $this->call(SettingTypeSeeder::class);

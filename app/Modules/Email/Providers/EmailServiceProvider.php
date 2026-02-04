@@ -67,7 +67,7 @@ class EmailServiceProvider extends ServiceProvider
     {
         Route::prefix('admin/email')
             ->name('email.')
-            ->middleware(['web', 'admin.auth'])
+            ->middleware(['web', 'admin.auth', 'admin.permission:mail.access'])
             ->group(base_path('routes/email.php'));
     }
 }

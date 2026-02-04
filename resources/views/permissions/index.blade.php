@@ -22,6 +22,9 @@
         'assign' => 'purple',
         'assign_permissions' => 'purple',
         'access' => 'primary',
+        'destroy' => 'danger',
+        'send' => 'success',
+        'view_logs' => 'info',
     ];
 
     $iconMap = [
@@ -49,6 +52,9 @@
         'share' => 'bi-share',
         'upload' => 'bi-cloud-upload',
         'download' => 'bi-cloud-download',
+        'destroy' => 'bi-trash',
+        'send' => 'bi-send',
+        'view_logs' => 'bi-file-text',
     ];
 
     // Calculate high-level metrics
@@ -253,9 +259,9 @@
                                         @endif
                                         <div class="permission-meta">
                                             <code class="permission-slug" onclick="copySlug('{{ $perm->slug }}', this)">
-                                                                                                                        <i class="bi bi-code-slash"></i>
-                                                                                                                        {{ $perm->slug }}
-                                                                                                                    </code>
+                                                            <i class="bi bi-code-slash"></i>
+                                                            {{ $perm->slug }}
+                                                        </code>
                                             <span class="permission-type">{{ ucfirst(str_replace('_', ' ', $action)) }}</span>
                                         </div>
                                     </div>
@@ -1020,6 +1026,37 @@
         .badge-reports {
             background: rgba(168, 85, 247, 0.1);
             color: var(--purple);
+        }
+
+        /* NEW ACTIONS */
+        .badge-destroy {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .action-destroy {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-send {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .action-send {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-view_logs {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .action-view_logs {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
         }
 
         .permission-actions {

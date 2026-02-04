@@ -53,6 +53,19 @@ class OrderController extends Controller
         // Super admin sees all orders, regular admin sees only their submitted orders
         if (!$admin->is_super) {
             $baseQuery->where('submitted_by', $admin->id);
+
+            // Restrict visibility of dispatched orders:
+            // Normal admin cannot see shipped orders older than 10 days
+            $baseQuery->where(function ($q) use ($shippedStatuses) {
+                // 1. Order is NOT in shipped status (or status is null)
+                $q->whereNotIn('diamond_status', $shippedStatuses)
+                    ->orWhereNull('diamond_status')
+                    // 2. OR Order IS shipped, but dispatch_date is within the last 10 days
+                    ->orWhere(function ($subQ) use ($shippedStatuses) {
+                        $subQ->whereIn('diamond_status', $shippedStatuses)
+                            ->whereDate('dispatch_date', '>=', now()->subDays(10));
+                    });
+            });
         }
 
         if ($request->filled('search')) {
@@ -92,11 +105,17 @@ class OrderController extends Controller
 
         // ===== TODAY'S SALES STATS (NEW) =====
         $todaysSales = Order::whereDate('created_at', now()->toDateString())
-            ->whereIn('diamond_status', $shippedStatuses)
+            // ->whereIn('diamond_status', $shippedStatuses)
             ->sum('gross_sell');
         $todaysOrderCount = Order::whereDate('created_at', now()->toDateString())
-            ->whereIn('diamond_status', $shippedStatuses)
+            // ->whereIn('diamond_status', $shippedStatuses)
             ->count();
+
+        // Month Sales Stats
+        $monthSales = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->whereIn('diamond_status', $shippedStatuses)
+            ->sum('gross_sell');
 
         // Get company sales progress for active companies
         $companySalesStats = Company::where('status', 'active')
@@ -154,6 +173,7 @@ class OrderController extends Controller
             'statusCounts',
             'shippedOrdersCount',
             'todaysSales',
+            'monthSales',
             'todaysOrderCount',
             'companySalesStats'
         ));
@@ -515,8 +535,19 @@ class OrderController extends Controller
         $admin = Auth::guard('admin')->user();
 
         // Super admin can view all orders, regular admin can only view their own
-        if (!$admin->is_super && $order->submitted_by !== $admin->id) {
-            abort(403, 'Unauthorized action.');
+        if (!$admin->is_super) {
+            if ($order->submitted_by !== $admin->id) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            // Check visibility restriction for shipped orders (10 days limit for normal admins)
+            $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+            if (in_array($order->diamond_status, $shippedStatuses)) {
+                // Use startOfDay comparison to be safe with time parts
+                if ($order->dispatch_date && $order->dispatch_date->lt(now()->subDays(10)->startOfDay())) {
+                    abort(403, 'This shipped order is no longer visible (exceeded 10-day viewing window).');
+                }
+            }
         }
 
         // Eager load relationships

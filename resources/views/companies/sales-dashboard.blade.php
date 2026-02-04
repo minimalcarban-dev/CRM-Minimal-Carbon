@@ -42,10 +42,18 @@
             </div>
         </div>
 
+
         <!-- Target Progress Section -->
         <div class="target-progress-section">
             <div class="target-header">
-                <h2>{{ now()->format('F Y') }} Target Progress</h2>
+                <h2>
+                    @if(!($isCurrentMonthFilter ?? true))
+                        {{ \Carbon\Carbon::parse($dateFrom)->format('M d') }} -
+                        {{ \Carbon\Carbon::parse($dateTo)->format('M d, Y') }} Progress
+                    @else
+                        {{ now()->format('F Y') }} Target Progress
+                    @endif
+                </h2>
                 <button type="button" class="btn-set-target" onclick="openTargetModal()">
                     <i class="bi bi-bullseye"></i> Set Target
                 </button>
@@ -53,8 +61,9 @@
             <div class="target-content">
                 <div class="target-ring-wrapper">
                     @php
-                        $targetMonthTotal = ($monthToDate['total_revenue'] ?? 0);
-                        $progress = $currentTarget > 0 ? min(100, round(($targetMonthTotal / $currentTarget) * 100, 1)) : 0;
+                        // Use filtered total for ring chart
+                        $ringTotal = $filteredTotal ?? ($monthToDate['total_revenue'] ?? 0);
+                        $progress = $currentTarget > 0 ? min(100, round(($ringTotal / $currentTarget) * 100, 1)) : 0;
                     @endphp
                     <div class="large-progress-ring">
                         <svg viewBox="0 0 100 100" class="circular-chart-large">
@@ -70,17 +79,24 @@
                         </svg>
                         <div class="ring-content">
                             <span
-                                class="ring-value">{{ $company->currency_symbol }}{{ number_format($targetMonthTotal, 0) }}</span>
+                                class="ring-value">{{ $company->currency_symbol }}{{ number_format($ringTotal, 0) }}</span>
                             <span class="ring-divider">/</span>
                             <span
                                 class="ring-target">{{ $currentTarget ? $company->currency_symbol . number_format($currentTarget, 0) : 'No Target' }}</span>
                         </div>
                     </div>
                     <div class="progress-info">
-                        <div class="progress-percentage">{{ round($progress) }}% of monthly target achieved</div>
-                        <div class="progress-days">{{ now()->day }} of {{ now()->daysInMonth }} days
-                            ({{ round((now()->day / now()->daysInMonth) * 100) }}% of month)</div>
-                        @if($projectedTotal > 0)
+                        <div class="progress-percentage">{{ round($progress) }}% of target achieved</div>
+                        @if($isCurrentMonthFilter ?? true)
+                            <div class="progress-days">{{ now()->day }} of {{ now()->daysInMonth }} days
+                                ({{ round((now()->day / now()->daysInMonth) * 100) }}% of month)</div>
+                        @else
+                            <div class="progress-days">
+                                {{ \Carbon\Carbon::parse($dateFrom)->diffInDays(\Carbon\Carbon::parse($dateTo)) + 1 }} days
+                                selected
+                            </div>
+                        @endif
+                        @if(($isCurrentMonthFilter ?? true) && $projectedTotal > 0)
                             <div
                                 class="progress-projection {{ $projectedTotal >= ($currentTarget ?? 0) ? 'on-track' : 'behind' }}">
                                 <i
@@ -115,11 +131,18 @@
                     <i class="bi bi-calendar-week"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">This Month</div>
-                    @php $monthTotal = ($monthToDate['total_revenue'] ?? 0); @endphp
-                    <div class="stat-value">{{ $company->currency_symbol }}{{ number_format($monthTotal, 0) }}</div>
+                    <div class="stat-label">
+                        @if(!($isCurrentMonthFilter ?? true))
+                            Selected Period
+                        @else
+                            This Month
+                        @endif
+                    </div>
+                    @php $periodTotal = $filteredTotal ?? ($monthToDate['total_revenue'] ?? 0); @endphp
+                    <div class="stat-value">{{ $company->currency_symbol }}{{ number_format($periodTotal, 0) }}</div>
                     <div class="stat-trend">
-                        <i class="bi bi-cart-check"></i> {{ ($monthToDate['order_count'] ?? 0) }} orders
+                        <i class="bi bi-cart-check"></i> {{ $filteredOrderCount ?? ($monthToDate['order_count'] ?? 0) }}
+                        orders
                     </div>
                 </div>
             </div>
@@ -130,11 +153,7 @@
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">Avg Order Value</div>
-                    @php
-                        $totalOrders = ($monthToDate['order_count'] ?? 0);
-                        $avgOrder = $totalOrders > 0 ? $monthTotal / $totalOrders : 0;
-                    @endphp
-                    <div class="stat-value">{{ $company->currency_symbol }}{{ number_format($avgOrder, 0) }}</div>
+                    <div class="stat-value">{{ $company->currency_symbol }}{{ number_format($avgOrderValue ?? 0, 0) }}</div>
                     <div class="stat-trend">
                         <i class="bi bi-calculator"></i> Per order
                     </div>
@@ -148,7 +167,7 @@
                 <div class="stat-content">
                     <div class="stat-label">Target Gap</div>
                     @php
-                        $gap = $currentTarget ? $currentTarget - $monthTotal : 0;
+                        $gap = $targetGap ?? ($currentTarget ? $currentTarget - ($filteredTotal ?? 0) : 0);
                     @endphp
                     <div class="stat-value {{ $gap <= 0 ? 'text-success' : '' }}">
                         {{ $gap <= 0 ? 'Achieved!' : $company->currency_symbol . number_format($gap, 0) }}
