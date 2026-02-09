@@ -41,10 +41,6 @@ class Order extends Model
         'submitted_by',
         'last_modified_by',
         'special_notes',
-        'meele_diamond_id',
-        'meele_pieces',
-        'meele_carat',
-        'meele_total_value',
     ];
 
     protected $casts = [
@@ -100,9 +96,9 @@ class Order extends Model
         return $this->belongsTo(Admin::class, 'last_modified_by');
     }
 
-    public function meeleParcel()
+    public function meleeDiamond()
     {
-        return $this->belongsTo(MeeleParcel::class, 'meele_diamond_id');
+        return $this->belongsTo(MeleeDiamond::class, 'melee_diamond_id');
     }
 
     /**

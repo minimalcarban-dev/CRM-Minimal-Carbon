@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
 use App\Services\CurrencyService;
 use App\Models\OrderDraft;
 use App\Notifications\DiamondSoldNotification;
+use App\Models\MeleeTransaction;
+use App\Models\MeleeDiamond;
 
 class OrderController extends Controller
 {
@@ -51,17 +53,15 @@ class OrderController extends Controller
         $baseQuery = Order::query()->with(['company', 'creator']); // Start the base query (apply admin + search filters first)
 
         // Super admin sees all orders, regular admin sees only their submitted orders
-        // Super admin sees all orders, regular admin sees based on permission
+        // Unless they have 'orders.view_team' permission which allows viewing team orders
         if (!$admin->is_super) {
-            // If admin DOES NOT have 'View Team Orders' permission, strictly filter by their ID.
-            // If they DO have the permission, we skip this check, allowing them to see all orders.
+            // Check if admin has view_team permission
             if (!$admin->hasPermission('orders.view_team')) {
                 $baseQuery->where('submitted_by', $admin->id);
             }
 
             // Restrict visibility of dispatched orders:
             // Normal admin cannot see shipped orders older than 10 days
-            // This rule applies regardless of whether they see "My Orders" or "Team Orders"
             $baseQuery->where(function ($q) use ($shippedStatuses) {
                 // 1. Order is NOT in shipped status (or status is null)
                 $q->whereNotIn('diamond_status', $shippedStatuses)
@@ -117,10 +117,9 @@ class OrderController extends Controller
             // ->whereIn('diamond_status', $shippedStatuses)
             ->count();
 
-        // Month Sales Stats
+        // Month Sales Stats - ALL orders count as sales (prepaid model)
         $monthSales = Order::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
-            ->whereIn('diamond_status', $shippedStatuses)
             ->sum('gross_sell');
 
         // Get company sales progress for active companies
@@ -171,10 +170,9 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        // Overdue filter - show only orders with dispatch_date in past AND not shipped
+        // Overdue filter
         if ($request->filled('overdue') && $request->overdue == '1') {
-            $query->whereNotNull('dispatch_date')
-                ->whereDate('dispatch_date', '<', now()->startOfDay())
+            $query->whereDate('dispatch_date', '<', now()->startOfDay())
                 ->where(function ($q) use ($shippedStatuses) {
                     $q->whereNotIn('diamond_status', $shippedStatuses)
                         ->orWhereNull('diamond_status');
@@ -349,29 +347,26 @@ class OrderController extends Controller
                 }
             }
 
-            DB::commit();
-
-
-            // Handle Meele Stock Deduction
-            if (!empty($validated['meele_diamond_id'])) {
-                try {
-                    $meeleService = app(\App\Services\MeeleStockService::class);
-                    $parcel = \App\Models\MeeleParcel::findOrFail($validated['meele_diamond_id']);
-
-                    $meeleService->deductStock(
-                        $parcel,
-                        (int) ($validated['meele_pieces'] ?? 0),
-                        (float) ($validated['meele_carat'] ?? 0),
-                        'sale',
-                        Auth::guard('admin')->id(),
-                        'Order #' . $order->id,
-                        $order
-                    );
-                } catch (\Exception $e) {
-                    // If stock deduction fails, rollback transaction
-                    throw new \Exception("Meele Stock Error: " . $e->getMessage());
-                }
+            // --- Melee Stock Deduction Logic ---
+            if (!empty($order->melee_diamond_id) && $order->melee_pieces > 0) {
+                \App\Models\MeleeTransaction::create([
+                    'melee_diamond_id' => $order->melee_diamond_id,
+                    'transaction_type' => 'out',
+                    'pieces' => -$order->melee_pieces, // Out is negative pieces usually, but our logic in Transaction handles 'out'. 
+                    // Let's stick to positive here because Model boot event for OUT subtracts it?
+                    // Re-checking MeleeTransaction logic:
+                    // if type==out: diamond->available -= abs(pieces).
+                    // So we can send positive here.
+                    'pieces' => abs($order->melee_pieces),
+                    'carat_weight' => $order->melee_carat ?? 0,
+                    'reference_type' => 'order',
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::guard('admin')->id(),
+                    'notes' => 'Stock used in Order #' . $order->id,
+                ]);
             }
+
+            DB::commit();
 
             Log::info('Order created successfully', [
                 'order_id' => $order->id,
@@ -379,7 +374,7 @@ class OrderController extends Controller
                 'images_count' => count($images),
                 'pdfs_count' => count($pdfs),
                 'diamond_sku' => $validated['diamond_sku'] ?? null,
-                'meele_id' => $validated['meele_diamond_id'] ?? null,
+                'melee_stock_id' => $order->melee_diamond_id,
                 'created_by' => Auth::guard('admin')->id()
             ]);
 
@@ -574,9 +569,11 @@ class OrderController extends Controller
         $admin = Auth::guard('admin')->user();
 
         // Super admin can view all orders, regular admin can only view their own
+        // Unless they have 'orders.view_team' permission which allows viewing team orders
         if (!$admin->is_super) {
-            if ($order->submitted_by !== $admin->id) {
-                abort(403, 'Unauthorized action.');
+            // Check if admin owns the order OR has view_team permission
+            if ($order->submitted_by !== $admin->id && !$admin->hasPermission('orders.view_team')) {
+                abort(403, 'You don\'t have permission to view orders submitted by other admins.');
             }
 
             // Check visibility restriction for shipped orders (10 days limit for normal admins)
@@ -688,10 +685,12 @@ class OrderController extends Controller
             'order_pdfs.*' => 'nullable|mimes:pdf|max:10240',
             'diamond_prices' => 'nullable|array', // Individual prices for each diamond SKU
             'diamond_prices.*' => 'nullable|numeric|min:0', // Each price must be numeric
-            'meele_diamond_id' => 'nullable|exists:meele_parcels,id',
-            'meele_pieces' => 'nullable|integer|min:0',
-            'meele_carat' => 'nullable|numeric|min:0',
-            'meele_total_value' => 'nullable|numeric|min:0',
+
+            // Melee Fields
+            'melee_diamond_id' => 'nullable|exists:melee_diamonds,id',
+            'melee_pieces' => 'nullable|integer|min:1',
+            'melee_carat' => 'nullable|numeric|min:0',
+            'melee_price_per_ct' => 'nullable|numeric|min:0',
         ];
 
         switch ($request->order_type) {
@@ -778,6 +777,21 @@ class OrderController extends Controller
         $order->setting_type_id = !empty($validated['setting_type_id']) ? $validated['setting_type_id'] : null;
         $order->earring_type_id = !empty($validated['earring_type_id']) ? $validated['earring_type_id'] : null;
 
+        // Melee Fields
+        $order->melee_diamond_id = !empty($validated['melee_diamond_id']) ? $validated['melee_diamond_id'] : null;
+        $order->melee_pieces = !empty($validated['melee_pieces']) ? $validated['melee_pieces'] : null;
+        $order->melee_carat = !empty($validated['melee_carat']) ? $validated['melee_carat'] : null;
+        $order->melee_price_per_ct = !empty($validated['melee_price_per_ct']) ? $validated['melee_price_per_ct'] : null;
+
+        // Calculate Melee Total Value if context exists
+        if ($order->melee_carat && $order->melee_price_per_ct) {
+            $order->melee_total_value = $order->melee_carat * $order->melee_price_per_ct;
+        } elseif ($order->melee_pieces && $order->melee_price_per_ct) {
+            // Fallback if priced per piece (rare but possible logic) - usually per carat
+            // For now assuming Price Per Ct as per schema.
+            $order->melee_total_value = 0;
+        }
+
         // ENUM fields - use null instead of empty string for MySQL compatibility
         // MySQL ENUM columns reject empty strings, must use null when no value selected
         $order->diamond_status = !empty($validated['diamond_status']) ? $validated['diamond_status'] : null;
@@ -788,12 +802,6 @@ class OrderController extends Controller
 
         // Date fields - use null instead of empty string for MySQL DATE compatibility
         $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
-
-        // Meele Fields
-        $order->meele_diamond_id = $validated['meele_diamond_id'] ?? null;
-        $order->meele_pieces = $validated['meele_pieces'] ?? null;
-        $order->meele_carat = $validated['meele_carat'] ?? null;
-        $order->meele_total_value = $validated['meele_total_value'] ?? null;
     }
 
     /**

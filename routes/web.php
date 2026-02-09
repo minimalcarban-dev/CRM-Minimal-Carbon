@@ -795,18 +795,13 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // Office Expense Manager Module
     // ─────────────────────────────────────────────────────────────
 
+    // Reports (must be before resource route)
     Route::get('expenses/report/monthly', [ExpenseController::class, 'monthlyReport'])
         ->name('expenses.monthly-report')
-        ->middleware('admin.permission:expenses.view');
-
-    // Meele Diamonds Module
-    Route::resource('meele-parcels', App\Http\Controllers\MeeleParcelController::class);
-    Route::post('meele-parcels/{id}/adjustment', [App\Http\Controllers\MeeleParcelController::class, 'adjustment'])->name('meele-parcels.adjustment');
-
+        ->middleware('admin.permission:expenses.reports');
     Route::get('expenses/report/annual', [ExpenseController::class, 'annualReport'])
         ->name('expenses.annual-report')
         ->middleware('admin.permission:expenses.reports');
-
 
     // Excel Exports
     Route::get('expenses/export/monthly', [ExpenseController::class, 'exportMonthly'])
@@ -887,6 +882,16 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         // Gold Return
         Route::get('/return', [GoldTrackingController::class, 'returnGold'])->name('return');
         Route::post('/return', [GoldTrackingController::class, 'storeReturn'])->name('return.store');
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // Melee Diamond Inventory
+    // ─────────────────────────────────────────────────────────────
+    Route::prefix('melee')->name('melee.')->group(function () {
+        Route::get('/', [App\Http\Controllers\MeleeDiamondController::class, 'index'])->name('index'); // View
+        Route::get('/search', [App\Http\Controllers\MeleeDiamondController::class, 'search'])->name('search');
+        Route::get('/stock/{id}', [App\Http\Controllers\MeleeDiamondController::class, 'getStock'])->name('get-stock');
+        Route::post('/transaction', [App\Http\Controllers\MeleeDiamondController::class, 'transaction'])->name('transaction'); // Stock IN/OUT
     });
 
 });

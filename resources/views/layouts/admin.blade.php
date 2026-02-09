@@ -1447,12 +1447,12 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create']))
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['melee_diamonds.view', 'melee_diamonds.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('meele-parcels.*') ? 'active' : '' }}"
-                            href="{{ route('meele-parcels.index') }}" data-tooltip="Meele Stock">
-                            <i class="bi bi-box-seam"></i>
-                            <span>Meele (Parcels)</span>
+                        <a class="nav-link {{ request()->routeIs('melee.*') ? 'active' : '' }}"
+                            href="{{ route('melee.index') }}" data-tooltip="Melee Inventory">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                            <span>Melee Inventory</span>
                         </a>
                     </li>
                 @endif
@@ -2426,19 +2426,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                    <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                        <div>
-                                                            <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                            <div style="font-size: 0.8rem; color: #64748b;">
-                                                                ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                            <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                                <div>
+                                                                    <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                                    <div style="font-size: 0.8rem; color: #64748b;">
+                                                                        ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                    </div>
+                                                                </div>
+                                                                <a href="${draft.resume_url}"
+                                                                    style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                                    Resume
+                                                                </a>    
                                                             </div>
-                                                        </div>
-                                                        <a href="${draft.resume_url}"
-                                                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                            Resume
-                                                        </a>    
-                                                    </div>
-                                                `;
+                                                        `;
                             });
                             draftsHtml += '</div>';
 
@@ -2446,11 +2446,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                    <p style="color: #64748b; margin-bottom: 1rem;">
-                                                        You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                    </p>
-                                                    ${draftsHtml}
-                                                `,
+                                                            <p style="color: #64748b; margin-bottom: 1rem;">
+                                                                You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                                            </p>
+                                                            ${draftsHtml}
+                                                        `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',

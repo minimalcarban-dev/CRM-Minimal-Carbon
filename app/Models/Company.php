@@ -70,48 +70,35 @@ class Company extends Model
     // ===== SALES ACCESSORS =====
 
     /**
-     * Get shipped statuses array.
+     * Get all orders for sales calculation (prepaid model - all orders count as sales).
+     * No status filter - as soon as order is created, it's a sale.
      */
-    private function getShippedStatuses(): array
+    private function getAllOrdersForSales()
     {
-        return ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+        return $this->orders()->get();
     }
 
     /**
-     * Get all shipped orders for this company.
-     */
-    private function getShippedOrders()
-    {
-        return $this->orders()
-            ->whereIn('diamond_status', $this->getShippedStatuses())
-            ->get();
-    }
-
-    /**
-     * Get today's shipped orders count for this company (live calculation).
-     * Uses dispatch_date if available, otherwise falls back to created_at.
+     * Get today's orders count for this company.
+     * Uses created_at date (when order was placed).
      */
     public function getTodaysOrderCountAttribute(): int
     {
         $today = Carbon::today();
-        return $this->getShippedOrders()->filter(function ($order) use ($today) {
-            $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date)->startOfDay() : null;
-            $createdDate = Carbon::parse($order->created_at)->startOfDay();
-            return ($dispatchDate && $dispatchDate->eq($today)) || (!$dispatchDate && $createdDate->eq($today));
+        return $this->getAllOrdersForSales()->filter(function ($order) use ($today) {
+            return Carbon::parse($order->created_at)->startOfDay()->eq($today);
         })->count();
     }
 
     /**
-     * Get today's sales amount for this company (live calculation from shipped orders).
-     * Uses dispatch_date if available, otherwise falls back to created_at.
+     * Get today's sales amount for this company.
+     * Uses created_at date (when order was placed).
      */
     public function getTodaysSalesAttribute(): float
     {
         $today = Carbon::today();
-        return (float) $this->getShippedOrders()->filter(function ($order) use ($today) {
-            $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date)->startOfDay() : null;
-            $createdDate = Carbon::parse($order->created_at)->startOfDay();
-            return ($dispatchDate && $dispatchDate->eq($today)) || (!$dispatchDate && $createdDate->eq($today));
+        return (float) $this->getAllOrdersForSales()->filter(function ($order) use ($today) {
+            return Carbon::parse($order->created_at)->startOfDay()->eq($today);
         })->sum('gross_sell');
     }
 
@@ -125,19 +112,17 @@ class Company extends Model
     }
 
     /**
-     * Get month-to-date sales total (calculated directly from orders table).
-     * Uses dispatch_date if available, otherwise falls back to created_at.
+     * Get month-to-date sales total (all orders based on created_at).
+     * Prepaid model - all orders count as sales when created.
      */
     public function getMonthToDateSalesAttribute(): array
     {
         $now = Carbon::now();
         $startOfMonth = $now->copy()->startOfMonth();
 
-        $monthOrders = $this->getShippedOrders()->filter(function ($order) use ($startOfMonth, $now) {
-            $dispatchDate = $order->dispatch_date ? Carbon::parse($order->dispatch_date) : null;
+        $monthOrders = $this->getAllOrdersForSales()->filter(function ($order) use ($startOfMonth, $now) {
             $createdDate = Carbon::parse($order->created_at);
-            $checkDate = $dispatchDate ?? $createdDate;
-            return $checkDate->between($startOfMonth, $now);
+            return $createdDate->between($startOfMonth, $now);
         });
 
         return [
