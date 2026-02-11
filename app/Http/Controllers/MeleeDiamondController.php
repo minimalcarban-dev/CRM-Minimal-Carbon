@@ -47,6 +47,39 @@ class MeleeDiamondController extends Controller
     }
 
     /**
+     * Display the V2 inventory dashboard (Test Route).
+     */
+    public function indexV2()
+    {
+        // Load categories with hierarchy for the view
+        // Same logic as index()
+        $labGrownCategories = MeleeCategory::labGrown()
+            ->with([
+                'diamonds' => function ($q) {
+                    $q->orderBy('sieve_size')->orderBy('size_label');
+                }
+            ])
+            ->orderBy('sort_order')
+            ->get();
+
+        $naturalCategories = MeleeCategory::natural()
+            ->with([
+                'diamonds' => function ($q) {
+                    $q->orderBy('sieve_size');
+                }
+            ])
+            ->orderBy('sort_order')
+            ->get();
+
+        // Calculate Totals for Stats Cards
+        $totalParcels = MeleeDiamond::count();
+        $totalCarats = MeleeDiamond::sum('total_carat_weight');
+        $lowStockCount = MeleeDiamond::where('status', 'low_stock')->count();
+
+        return view('melee.index_v2', compact('labGrownCategories', 'naturalCategories', 'totalParcels', 'totalCarats', 'lowStockCount'));
+    }
+
+    /**
      * Search for diamonds (for Autocomplete/Dropdowns).
      */
     public function search(Request $request)
@@ -88,6 +121,25 @@ class MeleeDiamondController extends Controller
 
         try {
             $diamond = MeleeDiamond::lockForUpdate()->find($request->melee_diamond_id);
+
+            // Weighted Average Cost Logic (for Stock IN)
+            if ($request->transaction_type === 'in' && $request->filled('price_per_ct') && $request->price_per_ct > 0) {
+                $currentCarats = $diamond->available_carat_weight; // Use available (on-hand) for valuation
+                $currentPrice = $diamond->purchase_price_per_ct;
+
+                $newCarats = $request->carat_weight;
+                $newPrice = $request->price_per_ct;
+
+                $totalCarats = $currentCarats + $newCarats;
+
+                if ($totalCarats > 0) {
+                    $currentValue = $currentCarats * $currentPrice;
+                    $newValue = $newCarats * $newPrice;
+
+                    $diamond->purchase_price_per_ct = ($currentValue + $newValue) / $totalCarats;
+                    $diamond->save();
+                }
+            }
 
             // Create Transaction
             // Note: Validation of OUT stock (blocking if negative) depends on business rule.

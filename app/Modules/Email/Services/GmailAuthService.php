@@ -15,7 +15,7 @@ class GmailAuthService
     public function __construct()
     {
         $this->client = new Client();
-        
+
         // Fix for SSL certificate issue on Windows
         $caPath = 'C:\tools\php84\cacert.pem';
         $httpClientOptions = [
@@ -30,7 +30,7 @@ class GmailAuthService
         $this->client->setClientId(config('gmail.client_id'));
         $this->client->setClientSecret(config('gmail.client_secret'));
         // Redirect URI is set dynamically when needed to avoid early route resolution errors
-        
+
         foreach (config('gmail.scopes') as $scope) {
             $this->client->addScope($scope);
         }
@@ -64,7 +64,7 @@ class GmailAuthService
     {
         $this->client->setRedirectUri(config('gmail.redirect_uri') ?? route('email.oauth.callback'));
         $token = $this->client->fetchAccessTokenWithAuthCode($code);
-        
+
         if (isset($token['error'])) {
             throw new \Exception('OAuth Error: ' . ($token['error_description'] ?? $token['error']));
         }
@@ -76,16 +76,23 @@ class GmailAuthService
         $userInfo = $oauth2->userinfo->get();
         $emailAddress = $userInfo->email;
 
+        $dataToUpdate = [
+            'access_token' => $token['access_token'],
+            'expires_in' => $token['expires_in'],
+            'token_expires_at' => now()->addSeconds($token['expires_in']),
+            'is_active' => true,
+            'deleted_at' => null,
+            'sync_status' => 'idle', // Reset status on reconnect
+            'sync_error' => null,
+        ];
+
+        if (isset($token['refresh_token'])) {
+            $dataToUpdate['refresh_token'] = $token['refresh_token'];
+        }
+
         $account = EmailAccount::withTrashed()->updateOrCreate(
             ['email_address' => $emailAddress],
-            [
-                'access_token' => $token['access_token'],
-                'refresh_token' => $token['refresh_token'] ?? null,
-                'expires_in' => $token['expires_in'],
-                'token_expires_at' => now()->addSeconds($token['expires_in']),
-                'is_active' => true,
-                'deleted_at' => null,
-            ]
+            $dataToUpdate
         );
 
         // Log the connection
@@ -111,14 +118,36 @@ class GmailAuthService
             throw new \Exception('No refresh token available for account ' . $account->email_address);
         }
 
-        $token = $this->client->fetchAccessTokenWithRefreshToken($account->refresh_token);
+        try {
+            $token = $this->client->fetchAccessTokenWithRefreshToken($account->refresh_token);
+        } catch (\Exception $e) {
+            $errorMsg = $e->getMessage();
+            // Check for specific OAuth errors
+            if (str_contains($errorMsg, 'invalid_grant') || str_contains($errorMsg, 'expired_token')) {
+                $account->update([
+                    'sync_status' => 'error',
+                    'sync_error' => 'Authorization revoked or expired. Please reconnect your account.',
+                    'is_active' => false // deactivate to stop retry loop
+                ]);
+            } else {
+                $account->update([
+                    'sync_status' => 'error',
+                    'sync_error' => 'Token Refresh Failed: ' . $errorMsg
+                ]);
+            }
+            throw $e;
+        }
 
         if (isset($token['error'])) {
+            $errorMsg = $token['error_description'] ?? $token['error'];
             $account->update([
                 'sync_status' => 'error',
-                'sync_error' => 'Token Refresh Failed: ' . ($token['error_description'] ?? $token['error'])
+                'sync_error' => 'Token Refresh Failed: ' . $errorMsg
             ]);
-            throw new \Exception('Token Refresh Failed: ' . ($token['error_description'] ?? $token['error']));
+            if (str_contains($errorMsg, 'invalid_grant')) {
+                $account->update(['is_active' => false]);
+            }
+            throw new \Exception('Token Refresh Failed: ' . $errorMsg);
         }
 
         $account->update([

@@ -125,7 +125,7 @@
                         <div class="info-row">
                             <div class="info-label">
                                 <i class="bi bi-globe"></i>
-                                Tax ID / VAT
+                                Tax ID / VAT ID
                             </div>
                             <div class="info-value">{{ $party->tax_id ?? '—' }}</div>
                         </div>

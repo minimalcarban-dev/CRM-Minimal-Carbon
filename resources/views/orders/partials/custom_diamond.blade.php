@@ -51,11 +51,26 @@
                 <div class="col-md-6">
                     <label class="form-label-modern">
                         <span class="label-icon"><i class="bi bi-file-earmark-text"></i></span>
-                        <span class="label-text">Tax ID</span>
+                        <span class="label-text">Tax ID Type</span>
                         <span class="optional-badge">Optional</span>
                     </label>
-                    <input type="text" name="client_tax_id" class="form-control-modern" placeholder="GST / Tax ID"
-                        value="{{ old('client_tax_id', $order->client_tax_id ?? '') }}">
+                    <div class="row g-2">
+                        <div class="col-5">
+                            <select name="client_tax_id_type" class="form-control-modern">
+                                <option value="">Select Type</option>
+                                @foreach(\App\Models\Order::TAX_ID_TYPES as $value => $label)
+                                    <option value="{{ $value }}" {{ old('client_tax_id_type', $order->client_tax_id_type ?? '') == $value ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-7">
+                            <input type="text" name="client_tax_id" class="form-control-modern"
+                                placeholder="Enter Tax ID"
+                                value="{{ old('client_tax_id', $order->client_tax_id ?? '') }}">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

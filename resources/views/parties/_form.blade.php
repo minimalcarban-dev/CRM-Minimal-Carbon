@@ -112,7 +112,7 @@
                 </div>
 
                 <div class="field-col">
-                    <label class="field-label">Tax ID / VAT</label>
+                    <label class="field-label">Tax ID / VAT ID</label>
                     <div class="input-wrapper">
                         <i class="bi bi-globe"></i>
                         <input 

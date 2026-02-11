@@ -668,6 +668,7 @@ class OrderController extends Controller
             'client_address' => 'required|string',
             'client_mobile' => 'nullable|string|max:40',
             'client_tax_id' => 'nullable|string|max:100',
+            'client_tax_id_type' => 'nullable|in:tax_id,vat_id,ioss_no,uid_vat_no,other',
             'client_email' => 'required|email|max:191',
             'diamond_sku' => 'nullable|string|max:191',
             'diamond_skus' => 'nullable|array', // New: supports multiple diamond SKUs
@@ -742,6 +743,7 @@ class OrderController extends Controller
         $order->client_address = $validated['client_address'] ?? '';
         $order->client_mobile = $validated['client_mobile'] ?? '';
         $order->client_tax_id = $validated['client_tax_id'] ?? '';
+        $order->client_tax_id_type = $validated['client_tax_id_type'] ?? null;
         $order->client_email = $validated['client_email'] ?? '';
         $order->jewellery_details = $validated['jewellery_details'] ?? '';
         $order->diamond_details = $validated['diamond_details'] ?? '';

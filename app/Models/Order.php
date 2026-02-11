@@ -10,6 +10,17 @@ class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Tax ID type options with display labels
+     */
+    public const TAX_ID_TYPES = [
+        'tax_id' => 'TAX ID',
+        'vat_id' => 'VAT ID',
+        'ioss_no' => 'IOSS NO',
+        'uid_vat_no' => 'UID VAT NO',
+        'other' => 'OTHER',
+    ];
+
     protected $fillable = [
         'order_type',
         'client_id',
@@ -17,6 +28,7 @@ class Order extends Model
         'client_address',
         'client_mobile',
         'client_tax_id',
+        'client_tax_id_type',
         'client_email',
         'jewellery_details',
         'diamond_details',

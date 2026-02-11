@@ -44,6 +44,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Region Stats Cards -->
+            @foreach(\App\Models\Invoice::REGIONS as $regionCode => $regionData)
+                @php
+                    $regionStat = $regionStats[$regionCode] ?? null;
+                    $count = $regionStat->count ?? 0;
+                    $total = $regionStat->total ?? 0;
+                @endphp
+                <a href="{{ route('invoices.index', ['region' => $regionCode]) }}"
+                    class="stat-card {{ request('region') == $regionCode ? 'stat-card-active' : 'stat-card-secondary' }}"
+                    style="text-decoration: none; cursor: pointer;">
+                    <div class="stat-icon">
+                        <span style="font-size: 1.5rem;">{{ $regionData['flag'] }}</span>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">{{ $regionData['name'] }}</div>
+                        <div class="stat-value">{{ $count }}</div>
+                        <div class="stat-trend">
+                            {{ $regionData['symbol'] }} {{ number_format($total, 0) }}
+                        </div>
+                    </div>
+                </a>
+            @endforeach
         </div>
 
         <!-- Filter Section -->
@@ -63,12 +86,21 @@
                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
 
+                <select name="region" class="filter-select">
+                    <option value="">All Regions</option>
+                    @foreach(\App\Models\Invoice::REGIONS as $code => $data)
+                        <option value="{{ $code }}" {{ request('region') == $code ? 'selected' : '' }}>
+                            {{ $data['flag'] }} {{ $data['name'] }}
+                        </option>
+                    @endforeach
+                </select>
+
                 <button type="submit" class="btn-filter">
                     <i class="bi bi-funnel"></i>
                     <span>Filter</span>
                 </button>
 
-                @if(request('search') || request('status'))
+                @if(request('search') || request('status') || request('region'))
                     <a href="{{ route('invoices.index') }}" class="btn-reset">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Reset</span>
@@ -121,6 +153,12 @@
                                 </th>
                                 <th>
                                     <div class="th-content">
+                                        <i class="bi bi-globe"></i>
+                                        <span>Region</span>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="th-content">
                                         <i class="bi bi-flag"></i>
                                         <span>Status</span>
                                     </div>
@@ -159,8 +197,20 @@
                                     </td>
                                     <td>
                                         <span class="amount-value">
-                                            $ {{ number_format($inv->total_invoice_value, 2) }}
+                                            {{ $inv->company->currency_symbol ?? '$' }}
+                                            {{ number_format($inv->total_invoice_value, 2) }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        @if($inv->invoice_region && isset(\App\Models\Invoice::REGIONS[$inv->invoice_region]))
+                                            @php $regionInfo = \App\Models\Invoice::REGIONS[$inv->invoice_region]; @endphp
+                                            <span class="region-badge" title="{{ $regionInfo['name'] }}">
+                                                <span class="region-flag">{{ $regionInfo['flag'] }}</span>
+                                                <span class="region-code">{{ $inv->invoice_region }}</span>
+                                            </span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($inv->status == 'draft')

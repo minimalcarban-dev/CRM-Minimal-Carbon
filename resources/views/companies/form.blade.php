@@ -197,13 +197,11 @@
                 Currency
             </label>
             <select name="currency" id="currencySelect" class="form-input @error('currency') error @enderror">
-                <option value="INR" {{ old('currency', optional($company)->currency ?? 'INR') == 'INR' ? 'selected' : '' }}>₹ INR (Indian Rupee)</option>
-                <option value="USD" {{ old('currency', optional($company)->currency ?? '') == 'USD' ? 'selected' : '' }}>$
-                    USD (US Dollar)</option>
-                <option value="GBP" {{ old('currency', optional($company)->currency ?? '') == 'GBP' ? 'selected' : '' }}>£
-                    GBP (British Pound)</option>
-                <option value="EUR" {{ old('currency', optional($company)->currency ?? '') == 'EUR' ? 'selected' : '' }}>€
-                    EUR (Euro)</option>
+                @foreach(config('currencies', []) as $code => $curr)
+                    <option value="{{ $code }}" {{ old('currency', optional($company)->currency ?? 'INR') == $code ? 'selected' : '' }}>
+                        {{ $curr['symbol'] }} {{ $code }} ({{ $curr['name'] }})
+                    </option>
+                @endforeach
             </select>
             <small class="text-muted" style="display: block; margin-top: 5px;">
                 <i class="bi bi-info-circle"></i> Currency auto-selects based on country
@@ -587,6 +585,12 @@
                         currencySelect.value = 'INR';
                     } else if (country.includes('euro') || country.includes('germany') || country.includes('france') || country.includes('italy') || country.includes('spain')) {
                         currencySelect.value = 'EUR';
+                    } else if (country.includes('canada')) {
+                        currencySelect.value = 'CAD';
+                    } else if (country.includes('australia')) {
+                        currencySelect.value = 'AUD';
+                    } else if (country.includes('uae') || country.includes('dubai') || country.includes('united arab') || country.includes('emirates') || country.includes('abu dhabi')) {
+                        currencySelect.value = 'AED';
                     }
                 });
             }

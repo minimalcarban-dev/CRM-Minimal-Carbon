@@ -154,12 +154,7 @@ class Company extends Model
      */
     public function getCurrencySymbolAttribute(): string
     {
-        return match ($this->currency) {
-            'USD' => '$',
-            'GBP' => '£',
-            'INR' => '₹',
-            'EUR' => '€',
-            default => '$', // Default to USD since orders are created in dollars
-        };
+        $currencies = config('currencies', []);
+        return $currencies[$this->currency]['symbol'] ?? '$';
     }
 }

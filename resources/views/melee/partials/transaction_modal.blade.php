@@ -55,15 +55,21 @@
 
                     <!-- Inputs -->
                     <div class="row g-3">
-                        <div class="col-6">
+                        <div class="col-4">
                             <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Pieces</label>
                             <input type="number" name="pieces" class="form-control form-control-lg fw-bold"
                                 placeholder="0" min="1" required>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
                             <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Carats</label>
                             <input type="number" name="carat_weight" step="0.001" class="form-control form-control-lg"
                                 placeholder="0.000" min="0" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Cost $/Ct</label>
+                            <input type="number" name="price_per_ct" step="0.01" class="form-control form-control-lg"
+                                placeholder="0.00" min="0">
+                            <div class="form-text fs-9">For stock IN only</div>
                         </div>
                     </div>
 
