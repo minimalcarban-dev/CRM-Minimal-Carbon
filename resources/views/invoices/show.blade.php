@@ -1,6 +1,14 @@
 @extends('layouts.admin')
 @section('title', 'Invoice #' . $invoice->invoice_no)
 @section('content')
+    @php
+        // Option C: GST hidden when foreign party OR region ≠ India
+        $isForeignInvoice = ($invoice->invoice_region && $invoice->invoice_region !== 'IN')
+            || ($invoice->billedTo && $invoice->billedTo->is_foreign);
+
+        $regionData = \App\Models\Invoice::REGIONS[$invoice->invoice_region ?? 'IN'] ?? \App\Models\Invoice::REGIONS['IN'];
+        $currencySymbol = $regionData['symbol'];
+    @endphp
     <div class="invoice-wrapper">
         <!-- Top Navigation -->
         <nav class="invoice-navbar no-print">
@@ -91,6 +99,20 @@
                     <div class="card-body">
                         <h3>{{ $invoice->billedTo->name ?? '-' }}</h3>
                         <p class="address">{{ $invoice->billedTo->address ?? '-' }}</p>
+                        @if(!$isForeignInvoice)
+                            @if(!empty($invoice->billedTo->gst_no))
+                                <div class="gst-info">
+                                    <span class="label">GST No.</span>
+                                    <span class="value">{{ $invoice->billedTo->gst_no }}</span>
+                                </div>
+                            @endif
+                            @if(!empty($invoice->billedTo->pan_no))
+                                <div class="gst-info">
+                                    <span class="label">PAN No.</span>
+                                    <span class="value">{{ $invoice->billedTo->pan_no }}</span>
+                                </div>
+                            @endif
+                        @endif
                     </div>
                 </div>
 
@@ -108,6 +130,20 @@
                     <div class="card-body">
                         <h3>{{ $invoice->shippedTo->name ?? '-' }}</h3>
                         <p class="address">{{ $invoice->shippedTo->address ?? '-' }}</p>
+                        @if(!$isForeignInvoice)
+                            @if(!empty($invoice->shippedTo->gst_no))
+                                <div class="gst-info">
+                                    <span class="label">GST No.</span>
+                                    <span class="value">{{ $invoice->shippedTo->gst_no }}</span>
+                                </div>
+                            @endif
+                            @if(!empty($invoice->shippedTo->pan_no))
+                                <div class="gst-info">
+                                    <span class="label">PAN No.</span>
+                                    <span class="value">{{ $invoice->shippedTo->pan_no }}</span>
+                                </div>
+                            @endif
+                        @endif
                     </div>
                 </div>
             </div>
@@ -145,14 +181,16 @@
                                     <td class="item-desc">{{ $it->description_of_goods }}</td>
                                     <td class="hsn-code">{{ $it->hsn_code }}</td>
                                     <td class="text-center">{{ $it->pieces }}</td>
-                                    <td class="text-center">{{ $it->carats }}</td>
+                                    <td class="text-center">{{ (float) $it->carats }}</td>
                                     <td class="text-right">
-                                        {{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($it->rate, 2) }}</td>
+                                        {{ $currencySymbol }}{{ number_format($it->rate, 2) }}
+                                    </td>
                                     <td class="text-right item-amount">
-                                        {{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($it->amount, 2) }}</td>
+                                        {{ $currencySymbol }}{{ number_format($it->amount, 2) }}
+                                    </td>
                                 </tr>
                             @endforeach
-                        </tbody>                    
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -186,6 +224,7 @@
                 </div>
 
                 <div class="summary-card">
+
                     <div class="card-title">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="12" y1="1" x2="12" y2="23" />
@@ -196,24 +235,32 @@
                     <div class="summary-rows">
                         <div class="summary-row">
                             <span>Taxable Amount</span>
-                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->taxable_amount, 2) }}</span>
+                            <span>{{ $currencySymbol }}{{ number_format($invoice->taxable_amount, 2) }}</span>
                         </div>
-                        <div class="summary-row">
-                            <span>IGST</span>
-                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->igst_amount, 2) }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>CGST</span>
-                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->cgst_amount, 2) }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>SGST</span>
-                            <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->sgst_amount, 2) }}</span>
-                        </div>
+                        @if(!$isForeignInvoice)
+                            <div class="summary-row">
+                                <span>IGST</span>
+                                <span>{{ $currencySymbol }}{{ number_format($invoice->igst_amount, 2) }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>CGST</span>
+                                <span>{{ $currencySymbol }}{{ number_format($invoice->cgst_amount, 2) }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>SGST</span>
+                                <span>{{ $currencySymbol }}{{ number_format($invoice->sgst_amount, 2) }}</span>
+                            </div>
+                        @endif
+                        @if(isset($invoice->express_shipping) && $invoice->express_shipping > 0)
+                            <div class="summary-row">
+                                <span>Express Shipping</span>
+                                <span>{{ $currencySymbol }}{{ number_format($invoice->express_shipping, 2) }}</span>
+                            </div>
+                        @endif
                     </div>
                     <div class="summary-total">
                         <span>Total Invoice Value</span>
-                        <span>{{ $invoice->company->currency_symbol ?? '₹' }}{{ number_format($invoice->total_invoice_value, 2) }}</span>
+                        <span>{{ $currencySymbol }}{{ number_format($invoice->total_invoice_value, 2) }}</span>
                     </div>
                 </div>
             </div>

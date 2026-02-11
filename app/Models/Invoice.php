@@ -10,8 +10,23 @@ class Invoice extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Invoice regions for country-based separation
+     * Auto-generated from config/currencies.php
+     */
+    const REGIONS = [
+        'IN' => ['name' => 'India', 'flag' => '🇮🇳', 'symbol' => '₹'],
+        'US' => ['name' => 'United States', 'flag' => '🇺🇸', 'symbol' => '$'],
+        'UK' => ['name' => 'United Kingdom', 'flag' => '🇬🇧', 'symbol' => '£'],
+        'EU' => ['name' => 'Europe', 'flag' => '🇪🇺', 'symbol' => '€'],
+        'CA' => ['name' => 'Canada', 'flag' => '🇨🇦', 'symbol' => 'C$'],
+        'AU' => ['name' => 'Australia', 'flag' => '🇦🇺', 'symbol' => 'A$'],
+        'AE' => ['name' => 'UAE', 'flag' => '🇦🇪', 'symbol' => 'د.إ'],
+    ];
+
     protected $fillable = [
         'invoice_no',
+        'invoice_region',
         'invoice_date',
         'company_id',
         'invoice_type',
@@ -24,6 +39,7 @@ class Invoice extends Model
         'cgst_amount',
         'sgst_amount',
         'total_invoice_value',
+        'express_shipping',
         'status',
         'copy_type'
     ];

@@ -48,7 +48,7 @@
             <div class="info-card">
                 <div class="info-icon"><i class="bi bi-receipt"></i></div>
                 <div class="info-content">
-                    <div class="info-label">Tax ID</div>
+                    <div class="info-label">Tax ID / VAT ID</div>
                     <div class="info-value">{{ $client->tax_id ?? '-' }}</div>
                 </div>
             </div>
@@ -258,18 +258,29 @@
             font-size: 1.5rem;
         }
 
+        .info-content {
+            flex: 1;
+            min-width: 0;
+        }
+
         .info-label {
             font-size: 0.8rem;
             color: var(--text-gray);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .info-value {
             font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-dark);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .address-card {

@@ -689,6 +689,10 @@
                 $billed = $invoice->billedTo;
                 $shipped = $invoice->shippedTo;
                 $placeOfSupply = $invoice->place_of_supply ?? ($invoice->company->state ?? '-');
+
+                // Option C: GST hidden when foreign party OR region ≠ India
+                $isForeignInvoice = ($invoice->invoice_region && $invoice->invoice_region !== 'IN')
+                    || ($invoice->billedTo && $invoice->billedTo->is_foreign);
             @endphp
 
             <!-- Invoice Header -->
@@ -789,15 +793,50 @@
                     <div class="address-content">
                         <div class="address-name">{{ optional($invoice->billedTo)->name ?? '-' }}</div>
                         <div>{{ optional($invoice->billedTo)->address ?? '' }}</div>
-                        <div class="address-field"><strong>GSTIN:</strong>
-                            {{ optional($invoice->billedTo)->gst_no ?? '-' }}
-                            &nbsp;|&nbsp; <strong>PAN:</strong> {{ optional($invoice->billedTo)->pan_no ?? '-' }}</div>
-                        <div class="address-field"><strong>State Code:</strong>
-                            {{ optional($invoice->billedTo)->state_code ?? '-' }} &nbsp;|&nbsp; <strong>Place of
-                                Supply:</strong> {{ $placeOfSupply ?? '-' }}</div>
-                        <div class="address-field"><strong>Email:</strong>
-                            {{ optional($invoice->billedTo)->email ?? '-' }}
-                            &nbsp;|&nbsp; <strong>Tel:</strong> {{ optional($invoice->billedTo)->phone ?? '-' }}</div>
+
+                        @if(!$isForeignInvoice)
+                            @if(optional($invoice->billedTo)->gst_no || optional($invoice->billedTo)->pan_no)
+                                <div class="address-field">
+                                    @if(optional($invoice->billedTo)->gst_no)
+                                        <strong>GSTIN:</strong> {{ $invoice->billedTo->gst_no }}
+                                    @endif
+                                    @if(optional($invoice->billedTo)->gst_no && optional($invoice->billedTo)->pan_no)
+                                        &nbsp;|&nbsp;
+                                    @endif
+                                    @if(optional($invoice->billedTo)->pan_no)
+                                        <strong>PAN:</strong> {{ $invoice->billedTo->pan_no }}
+                                    @endif
+                                </div>
+                            @endif
+
+                            @if(optional($invoice->billedTo)->state_code || ($placeOfSupply && $placeOfSupply !== '-'))
+                                <div class="address-field">
+                                    @if(optional($invoice->billedTo)->state_code)
+                                        <strong>State Code:</strong> {{ $invoice->billedTo->state_code }}
+                                    @endif
+                                    @if(optional($invoice->billedTo)->state_code && ($placeOfSupply && $placeOfSupply !== '-'))
+                                        &nbsp;|&nbsp;
+                                    @endif
+                                    @if($placeOfSupply && $placeOfSupply !== '-')
+                                        <strong>Place of Supply:</strong> {{ $placeOfSupply }}
+                                    @endif
+                                </div>
+                            @endif
+                        @endif
+
+                        @if(optional($invoice->billedTo)->email || optional($invoice->billedTo)->phone)
+                            <div class="address-field">
+                                @if(optional($invoice->billedTo)->email)
+                                    <strong>Email:</strong> {{ $invoice->billedTo->email }}
+                                @endif
+                                @if(optional($invoice->billedTo)->email && optional($invoice->billedTo)->phone)
+                                    &nbsp;|&nbsp;
+                                @endif
+                                @if(optional($invoice->billedTo)->phone)
+                                    <strong>Tel:</strong> {{ $invoice->billedTo->phone }}
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -806,15 +845,50 @@
                     <div class="address-content">
                         <div class="address-name">{{ optional($invoice->shippedTo)->name ?? '-' }}</div>
                         <div>{{ optional($invoice->shippedTo)->address ?? '' }}</div>
-                        <div class="address-field"><strong>GSTIN:</strong>
-                            {{ optional($invoice->shippedTo)->gst_no ?? '-' }} &nbsp;|&nbsp; <strong>PAN:</strong>
-                            {{ optional($invoice->shippedTo)->pan_no ?? '-' }}</div>
-                        <div class="address-field"><strong>State Code:</strong>
-                            {{ optional($invoice->shippedTo)->state_code ?? '-' }} &nbsp;|&nbsp; <strong>Place of
-                                Supply:</strong> {{ $placeOfSupply ?? '-' }}</div>
-                        <div class="address-field"><strong>Email:</strong>
-                            {{ optional($invoice->shippedTo)->email ?? '-' }}
-                            &nbsp;|&nbsp; <strong>Tel:</strong> {{ optional($invoice->shippedTo)->phone ?? '-' }}</div>
+
+                        @if(!$isForeignInvoice)
+                            @if(optional($invoice->shippedTo)->gst_no || optional($invoice->shippedTo)->pan_no)
+                                <div class="address-field">
+                                    @if(optional($invoice->shippedTo)->gst_no)
+                                        <strong>GSTIN:</strong> {{ $invoice->shippedTo->gst_no }}
+                                    @endif
+                                    @if(optional($invoice->shippedTo)->gst_no && optional($invoice->shippedTo)->pan_no)
+                                        &nbsp;|&nbsp;
+                                    @endif
+                                    @if(optional($invoice->shippedTo)->pan_no)
+                                        <strong>PAN:</strong> {{ $invoice->shippedTo->pan_no }}
+                                    @endif
+                                </div>
+                            @endif
+
+                            @if(optional($invoice->shippedTo)->state_code || ($placeOfSupply && $placeOfSupply !== '-'))
+                                <div class="address-field">
+                                    @if(optional($invoice->shippedTo)->state_code)
+                                        <strong>State Code:</strong> {{ $invoice->shippedTo->state_code }}
+                                    @endif
+                                    @if(optional($invoice->shippedTo)->state_code && ($placeOfSupply && $placeOfSupply !== '-'))
+                                        &nbsp;|&nbsp;
+                                    @endif
+                                    @if($placeOfSupply && $placeOfSupply !== '-')
+                                        <strong>Place of Supply:</strong> {{ $placeOfSupply }}
+                                    @endif
+                                </div>
+                            @endif
+                        @endif
+
+                        @if(optional($invoice->shippedTo)->email || optional($invoice->shippedTo)->phone)
+                            <div class="address-field">
+                                @if(optional($invoice->shippedTo)->email)
+                                    <strong>Email:</strong> {{ $invoice->shippedTo->email }}
+                                @endif
+                                @if(optional($invoice->shippedTo)->email && optional($invoice->shippedTo)->phone)
+                                    &nbsp;|&nbsp;
+                                @endif
+                                @if(optional($invoice->shippedTo)->phone)
+                                    <strong>Tel:</strong> {{ $invoice->shippedTo->phone }}
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -839,7 +913,7 @@
                             <td>{{ $it->description_of_goods }}</td>
                             <td>{{ $it->hsn_code }}</td>
                             <td>{{ $it->pieces }}</td>
-                            <td class="text-right">{{ $it->carats }}</td>
+                            <td class="text-right">{{ (float) $it->carats }}</td>
                             <td class="text-right">{{ number_format($it->rate, 2) }}</td>
                             <td class="text-right">{{ number_format($it->amount, 2) }}</td>
                         </tr>
@@ -848,27 +922,39 @@
             </table>
 
             <!-- Totals Section -->
+            @php
+                $regionData = \App\Models\Invoice::REGIONS[$invoice->invoice_region ?? 'IN'] ?? \App\Models\Invoice::REGIONS['IN'];
+                $currencySymbol = $regionData['symbol'];
+            @endphp
             <div class="totals-section">
                 <table class="totals-table">
                     <tr class="taxable-row">
-                        <td>Total Taxable Amount {{ $invoice->company->currency_symbol ?? '₹' }}</td>
+                        <td>Total Taxable Amount {{ $currencySymbol }}</td>
                         <td class="text-right">{{ number_format($invoice->taxable_amount ?? 0, 2) }}</td>
                     </tr>
-                    <tr>
-                        <td>IGST{{ isset($invoice->igst_rate) ? ' ' . number_format($invoice->igst_rate, 2) . "%" : '' }}
-                        </td>
-                        <td class="text-right">{{ number_format($invoice->igst_amount ?? 0, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td>CGST{{ isset($invoice->cgst_rate) ? ' ' . number_format($invoice->cgst_rate, 2) . "%" : '' }}
-                        </td>
-                        <td class="text-right">{{ number_format($invoice->cgst_amount ?? 0, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td>SGST{{ isset($invoice->sgst_rate) ? ' ' . number_format($invoice->sgst_rate, 2) . "%" : '' }}
-                        </td>
-                        <td class="text-right">{{ number_format($invoice->sgst_amount ?? 0, 2) }}</td>
-                    </tr>
+                    @if(!$isForeignInvoice)
+                        <tr>
+                            <td>IGST{{ isset($invoice->igst_rate) ? ' ' . number_format($invoice->igst_rate, 2) . "%" : '' }}
+                            </td>
+                            <td class="text-right">{{ number_format($invoice->igst_amount ?? 0, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td>CGST{{ isset($invoice->cgst_rate) ? ' ' . number_format($invoice->cgst_rate, 2) . "%" : '' }}
+                            </td>
+                            <td class="text-right">{{ number_format($invoice->cgst_amount ?? 0, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td>SGST{{ isset($invoice->sgst_rate) ? ' ' . number_format($invoice->sgst_rate, 2) . "%" : '' }}
+                            </td>
+                            <td class="text-right">{{ number_format($invoice->sgst_amount ?? 0, 2) }}</td>
+                        </tr>
+                    @endif
+                    @if(isset($invoice->express_shipping) && $invoice->express_shipping > 0)
+                        <tr>
+                            <td>Express Shipping</td>
+                            <td class="text-right">{{ number_format($invoice->express_shipping, 2) }}</td>
+                        </tr>
+                    @endif
                     <tr class="total-row">
                         <td>Total</td>
                         <td class="text-right">{{ number_format($invoice->total_invoice_value ?? 0, 2) }}</td>
@@ -951,17 +1037,23 @@
             <!-- Amount in Words -->
             <div class="amount-words">
                 @php
-                    $currencySymbol = $invoice->company->currency_symbol ?? '₹';
-                    $currencyName = match ($invoice->company->currency ?? 'INR') {
-                        'USD' => 'Dollars',
-                        'GBP' => 'Pounds',
-                        'EUR' => 'Euros',
-                        default => 'Rupees',
-                    };
+                    // Use invoice_region for currency symbol and terminology
+                    $regionData = \App\Models\Invoice::REGIONS[$invoice->invoice_region ?? 'IN'] ?? \App\Models\Invoice::REGIONS['IN'];
+                    $amountCurrencySymbol = $regionData['symbol'];
+
+                    // Get currency name and cents name from centralized config
+                    $regionCode = $invoice->invoice_region ?? 'IN';
+                    $currencyConfig = collect(config('currencies', []))->firstWhere('region', $regionCode);
+                    $currencyName = $currencyConfig['currency_name'] ?? 'Rupees';
+                    $centsName = $currencyConfig['cents_name'] ?? 'Paise';
+
+                    // Get amount in words and replace terminology
+                    $amountWords = in_words($invoice->total_invoice_value ?? 0);
+                    $amountWords = str_replace(['Rupees', 'Paise'], [$currencyName, $centsName], $amountWords);
                 @endphp
-                <strong>Total Invoice Value (In Words):</strong> Total {{ $currencySymbol }}
+                <strong>Total Invoice Value (In Words):</strong> Total {{ $amountCurrencySymbol }}
                 {{ number_format($invoice->total_invoice_value ?? 0, 2) }} -
-                {{ str_replace('Rupees', $currencyName, in_words($invoice->total_invoice_value ?? 0)) }}
+                {{ $amountWords }}
             </div>
 
             <!-- Bank Details -->
@@ -1065,7 +1157,7 @@
                             @endphp
                             <img src="{{ $sig }}" alt="Signature">
                         @else
-                            <div class="signature-placeholder">Signature</div>
+                            <img src="{{ asset('images/signature.svg') }}" alt="Signature">
                         @endif
                     </div>
                     <div class="signature-info">

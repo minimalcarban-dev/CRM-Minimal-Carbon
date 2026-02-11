@@ -246,6 +246,27 @@
             </div>
         @endif
 
+        {{-- Overdue Orders Alert Banner --}}
+        @if(isset($overdueOrdersCount) && $overdueOrdersCount > 0 && !session('hide_overdue_banner'))
+            <div class="overdue-alert-banner" id="overdueAlertBanner">
+                <div class="overdue-alert-content">
+                    <div class="overdue-alert-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="overdue-alert-text">
+                        <strong>Attention!</strong> You have <span class="overdue-count">{{ $overdueOrdersCount }}</span>
+                        overdue {{ Str::plural('order', $overdueOrdersCount) }} that need attention!
+                    </div>
+                    <a href="{{ route('orders.index', ['overdue' => '1']) }}" class="btn-view-overdue">
+                        <i class="bi bi-eye"></i> View Overdue Orders
+                    </a>
+                </div>
+                <button class="overdue-alert-close" onclick="dismissOverdueBanner()" title="Dismiss for today">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        @endif
+
         <!-- Filter Section -->
         <div class="filter-section">
             <form method="GET" action="{{ route('orders.index') }}" class="filter-form" id="orderFilterForm">
@@ -305,6 +326,19 @@
                     <input type="hidden" name="date_from" id="orderDateFrom" value="{{ request('date_from') }}">
                     <input type="hidden" name="date_to" id="orderDateTo" value="{{ request('date_to') }}">
                 </div>
+
+                {{-- Overdue Filter Toggle --}}
+                @php
+                    $overdueActive = request('overdue') === '1';
+                    $overdueParams = $overdueActive
+                        ? request()->except(['overdue', 'page'])
+                        : array_merge(request()->except(['page', 'shipped']), ['overdue' => '1']);
+                @endphp
+                <a href="{{ route('orders.index', $overdueParams) }}"
+                    class="btn-overdue-filter {{ $overdueActive ? 'active' : '' }}">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Overdue</span>
+                </a>
 
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
@@ -401,7 +435,7 @@
                     <span>Filter</span>
                 </button>
 
-                @if(request('search') || request('order_type') || request('diamond_status'))
+                @if(request('search') || request('order_type') || request('diamond_status') || request('overdue'))
                     <a href="{{ route('orders.index') }}" class="btn-reset">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Reset</span>
@@ -486,7 +520,15 @@
                         </thead>
                         <tbody>
                             @foreach ($orders as $order)
-                                <tr class="table-row">
+                                @php
+                                    // Check if order is overdue: dispatch_date is in the past AND order is NOT shipped
+                                    $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+                                    $isShipped = in_array($order->diamond_status, $shippedStatuses);
+                                    $isOverdue = $order->dispatch_date &&
+                                        \Carbon\Carbon::parse($order->dispatch_date)->lt(now()->startOfDay()) &&
+                                        !$isShipped;
+                                @endphp
+                                <tr class="table-row {{ $isOverdue ? 'overdue-row' : '' }}">
                                     <td class="td-id">
                                         <span class="order-id-badge">#{{ $order->id }}</span>
                                     </td>
@@ -628,7 +670,7 @@
             <!-- Pagination -->
             @if($orders->hasPages())
                 <div class="pagination-container">
-                    {{ $orders->links('pagination::bootstrap-5') }}
+                    {{ $orders->appends(request()->query())->links('pagination::bootstrap-5') }}
                 </div>
             @endif
         </div>
@@ -1107,6 +1149,110 @@
 
 
 
+        /* Overdue Alert Banner */
+        .overdue-alert-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #fca5a5;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .overdue-alert-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .overdue-alert-icon {
+            width: 40px;
+            height: 40px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .overdue-alert-text {
+            color: #7f1d1d;
+            font-size: 0.95rem;
+        }
+
+        .overdue-count {
+            font-weight: 700;
+            color: #dc2626;
+            font-size: 1.1rem;
+        }
+
+        .btn-view-overdue {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-view-overdue:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            color: white;
+        }
+
+        .overdue-alert-close {
+            background: transparent;
+            border: none;
+            color: #b91c1c;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .overdue-alert-close:hover {
+            background: rgba(185, 28, 28, 0.1);
+        }
+
         /* Filter Section */
         .filter-section {
             background: white;
@@ -1229,6 +1375,37 @@
             background: rgba(239, 68, 68, 0.05);
         }
 
+        /* Overdue Filter Button */
+        .btn-overdue-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            background: white;
+            color: #ef4444;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-overdue-filter:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .btn-overdue-filter.active {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-overdue-filter.active:hover {
+            background: #dc2626;
+        }
+
         .filter-info {
             display: flex;
             justify-content: flex-end;
@@ -1328,6 +1505,21 @@
 
         .table-row:hover {
             background: var(--light-gray);
+        }
+
+        /* Overdue order row - red background for orders past dispatch date but not shipped */
+        .table-row.overdue-row {
+            background: #FED4D4;
+            border-left: 4px solid #ef4444;
+        }
+
+        .table-row.overdue-row:hover {
+            background: #ffafafff;
+        }
+
+        .table-row.overdue-row .order-id-badge {
+            background: #ffafafff;
+            color: #ff0000ff;
         }
 
         .orders-table td {
@@ -2067,6 +2259,28 @@
 
             // Make toggleCompanyProgress available globally
             window.toggleCompanyProgress = toggleCompanyProgress;
+
+            // Dismiss overdue banner function
+            function dismissOverdueBanner() {
+                const banner = document.getElementById('overdueAlertBanner');
+                if (banner) {
+                    banner.style.animation = 'slideUp 0.3s ease-out forwards';
+                    setTimeout(() => {
+                        banner.style.display = 'none';
+                        // Store in sessionStorage to hide for this session
+                        sessionStorage.setItem('hideOverdueBanner', 'true');
+                    }, 300);
+                }
+            }
+            window.dismissOverdueBanner = dismissOverdueBanner;
+
+            // Check if banner should be hidden on load
+            document.addEventListener('DOMContentLoaded', function () {
+                if (sessionStorage.getItem('hideOverdueBanner') === 'true') {
+                    const banner = document.getElementById('overdueAlertBanner');
+                    if (banner) banner.style.display = 'none';
+                }
+            });
 
             document.addEventListener('DOMContentLoaded', function () {
                 // Add stagger animation to table rows

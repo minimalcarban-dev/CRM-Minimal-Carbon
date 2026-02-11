@@ -4,6 +4,7 @@ use App\Http\Controllers\ClosureTypeController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\FactoryController;
 use App\Http\Controllers\GoldTrackingController;
+use App\Http\Controllers\MeleeDiamondController;
 use App\Http\Controllers\MetalTypeController;
 use App\Http\Controllers\MetaWebhookController;
 use App\Http\Controllers\PartyController;
@@ -647,6 +648,11 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('diamond.assign')
         ->middleware('admin.permission:diamonds.assign');
 
+    // Melee Inventory V2 (Test Route)
+    Route::get('melee/v2', [MeleeDiamondController::class, 'indexV2'])
+        ->name('melee.index_v2')
+        ->middleware('admin.permission:melee_inventory.view');
+
     // Bulk Edit Routes
     Route::get('diamonds/bulk-edit/diamonds', [DiamondController::class, 'bulkEditDiamonds'])
         ->name('diamond.bulk-edit.diamonds')
@@ -882,6 +888,16 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         // Gold Return
         Route::get('/return', [GoldTrackingController::class, 'returnGold'])->name('return');
         Route::post('/return', [GoldTrackingController::class, 'storeReturn'])->name('return.store');
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // Melee Diamond Inventory
+    // ─────────────────────────────────────────────────────────────
+    Route::prefix('melee')->name('melee.')->group(function () {
+        Route::get('/', [MeleeDiamondController::class, 'index'])->name('index'); // View
+        Route::get('/search', [MeleeDiamondController::class, 'search'])->name('search');
+        Route::get('/stock/{id}', [MeleeDiamondController::class, 'getStock'])->name('get-stock');
+        Route::post('/transaction', [MeleeDiamondController::class, 'transaction'])->name('transaction'); // Stock IN/OUT
     });
 
 });

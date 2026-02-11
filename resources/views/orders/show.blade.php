@@ -83,18 +83,34 @@
                         <i class="bi bi-person-circle"></i> Client Details
                     </h3>
                     <div class="section-content">
-                        <div class="client-details-grid">
-                            <div class="detail-row"><strong>Name:</strong>
-                                {{ $order->display_client_name ?? ($order->client_details ?? '') }}</div>
-                            <div class="detail-row"><strong>Email:</strong> {{ $order->display_client_email ?? '' }}</div>
-                            @if($order->display_client_mobile)
-                                <div class="detail-row"><strong>Mobile:</strong> {{ $order->display_client_mobile }}</div>
-                            @endif
-                            <div class="detail-row"><strong>Address:</strong>
-                                <p style="margin:0">{{ $order->display_client_address ?? '' }}</p>
+                        <div class="client-info-table">
+                            <div class="info-row">
+                                <span class="info-label">Name</span>
+                                <span class="info-value">{{ $order->display_client_name ?? ($order->client_details ?? 'N/A') }}</span>
                             </div>
+
+                            <div class="info-row">
+                                <span class="info-label">Email</span>
+                                <span class="info-value">{{ $order->display_client_email ?? 'N/A' }}</span>
+                            </div>
+
+                            @if($order->display_client_mobile)
+                                <div class="info-row">
+                                    <span class="info-label">Mobile</span>
+                                    <span class="info-value">{{ $order->display_client_mobile }}</span>
+                                </div>
+                            @endif
+
+                            <div class="info-row info-row-address">
+                                <span class="info-label">Address</span>
+                                <span class="info-value">{{ $order->display_client_address ?? 'N/A' }}</span>
+                            </div>
+
                             @if($order->display_client_tax_id)
-                                <div class="detail-row"><strong>Tax ID:</strong> {{ $order->display_client_tax_id }}</div>
+                                <div class="info-row">
+                                    <span class="info-label">Tax ID</span>
+                                    <span class="info-value">{{ $order->display_client_tax_id }}</span>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -527,6 +543,94 @@
             color: #374151;
         }
 
+        /* Ready to Ship Diamond Statuses */
+        .status-r_order_in_process {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-r_order_shipped {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Custom Diamond Statuses */
+        .status-d_diamond_in_discuss {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-d_diamond_in_making {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-d_diamond_completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-d_diamond_in_certificate {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .status-d_order_shipped {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        /* Custom Jewellery Diamond Statuses */
+        .status-j_diamond_in_progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-j_diamond_completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-j_diamond_in_discuss {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .status-j_cad_in_progress {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-j_cad_done {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .status-j_order_completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-j_order_in_qc {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-j_qc_done {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-j_order_shipped {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        .status-j_order_hold {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         /* Content Grid */
         .content-grid {
             display: grid;
@@ -574,6 +678,51 @@
             margin: 0;
             line-height: 1.6;
             color: var(--dark);
+        }
+
+        /* Client Info Table - Clean & Minimal */
+        .client-info-table {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 1.5rem;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid var(--border);
+            align-items: start;
+        }
+
+        .info-row:first-child {
+            padding-top: 0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+        }
+
+        .info-value {
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--dark);
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .info-row-address .info-value {
+            white-space: pre-line;
         }
 
         .detail-group {

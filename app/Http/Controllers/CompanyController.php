@@ -650,7 +650,7 @@ class CompanyController extends BaseResourceController
             'us_account_no' => 'nullable|string|max:50',
             'account_type' => 'nullable|in:checking,savings',
             'beneficiary_address' => 'nullable|string|max:500',
-            'currency' => 'nullable|string|in:USD,GBP,INR,EUR',
+            'currency' => 'nullable|string|in:' . implode(',', array_keys(config('currencies', []))),
             'status' => 'required|in:active,inactive',
         ];
     }
@@ -681,7 +681,7 @@ class CompanyController extends BaseResourceController
             'us_account_no' => 'nullable|string|max:50',
             'account_type' => 'nullable|in:checking,savings',
             'beneficiary_address' => 'nullable|string|max:500',
-            'currency' => 'nullable|string|in:USD,GBP,INR,EUR',
+            'currency' => 'nullable|string|in:' . implode(',', array_keys(config('currencies', []))),
             'status' => 'required|in:active,inactive',
         ];
     }

@@ -92,7 +92,7 @@
                                 </a>
                             </th>
                             <th><i class="bi bi-geo-alt"></i> Address</th>
-                            <th><i class="bi bi-receipt"></i> Tax ID</th>
+                            <th><i class="bi bi-receipt"></i> Tax ID / VAT ID </th>
                             <th>
                                 <a href="{{ sortUrl('orders_count', $currentSort, $currentDir) }}" class="sort-link">
                                     <i class="bi bi-basket"></i> Orders {!! sortIcon('orders_count', $currentSort, $currentDir) !!}

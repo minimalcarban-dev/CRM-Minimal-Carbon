@@ -38,6 +38,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Create Orders', 'slug' => 'orders.create', 'description' => 'Create new orders via admin UI', 'category' => 'orders'],
             ['name' => 'Edit Orders', 'slug' => 'orders.edit', 'description' => 'Edit orders via admin UI', 'category' => 'orders'],
             ['name' => 'Delete Orders', 'slug' => 'orders.delete', 'description' => 'Delete orders via admin UI', 'category' => 'orders'],
+            ['name' => 'View Team Orders', 'slug' => 'orders.view_team', 'description' => 'Allow admin to view orders submitted by other admins (subject to 10-day visibility rule)', 'category' => 'orders'],
 
             // Attribute types
             ['name' => 'View Metal Types', 'slug' => 'metal_types.view', 'description' => 'View metal types', 'category' => 'metal_types'],
