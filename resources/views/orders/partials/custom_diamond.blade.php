@@ -51,11 +51,26 @@
                 <div class="col-md-6">
                     <label class="form-label-modern">
                         <span class="label-icon"><i class="bi bi-file-earmark-text"></i></span>
-                        <span class="label-text">Tax ID</span>
+                        <span class="label-text">Tax ID Type</span>
                         <span class="optional-badge">Optional</span>
                     </label>
-                    <input type="text" name="client_tax_id" class="form-control-modern" placeholder="GST / Tax ID"
-                        value="{{ old('client_tax_id', $order->client_tax_id ?? '') }}">
+                    <div class="row g-2">
+                        <div class="col-5">
+                            <select name="client_tax_id_type" class="form-control-modern">
+                                <option value="">Select Type</option>
+                                @foreach(\App\Models\Order::TAX_ID_TYPES as $value => $label)
+                                    <option value="{{ $value }}" {{ old('client_tax_id_type', $order->client_tax_id_type ?? '') == $value ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-7">
+                            <input type="text" name="client_tax_id" class="form-control-modern"
+                                placeholder="Enter Tax ID"
+                                value="{{ old('client_tax_id', $order->client_tax_id ?? '') }}">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -79,6 +94,68 @@
         </div>
         <div class="mt-3">
             @include('orders.partials.multi_sku_selector')
+        </div>
+
+        <div class="mt-4">
+            <!-- Side Stones / Melee Details Section -->
+            <div class="form-section-card mb-4">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <div class="section-header-text">
+                        <h5 class="section-title">Side Stones / Melee</h5>
+                        <p class="section-description">Select from melee inventory</p>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <span class="label-icon"><i class="bi bi-search"></i></span>
+                                    <span class="label-text">Select Melee Diamond</span>
+                                    <span class="optional-badge">Optional</span>
+                                </label>
+                                <select name="melee_diamond_id" id="melee_diamond_select" class="form-control-modern"
+                                    style="width: 100%;">
+                                    <option value="">-- Search Melee Diamond --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <span class="label-icon"><i class="bi bi-box"></i></span>
+                                    <span class="label-text">Pieces</span>
+                                </label>
+                                <input type="number" name="melee_pieces" class="form-control-modern" placeholder="0"
+                                    min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <span class="label-icon"><i class="bi bi-diamond-half"></i></span>
+                                    <span class="label-text">Carat Weight</span>
+                                </label>
+                                <input type="number" step="0.01" name="melee_carat" class="form-control-modern"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <span class="label-icon"><i class="bi bi-currency-dollar"></i></span>
+                                    <span class="label-text">Price / Ct (Sold)</span>
+                                </label>
+                                <input type="number" step="0.01" name="melee_price_per_ct" id="melee_price_input"
+                                    class="form-control-modern" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1013,5 +1090,36 @@
                 autocompleteList.style.display = 'none';
             }
         });
+    })();
+
+    // Melee Select2 Initialization
+    (function () {
+        if ($.fn.select2) {
+            $('#melee_diamond_select').select2({
+                placeholder: 'Search for melee diamonds...',
+                allowClear: true,
+                ajax: {
+                    url: '{{ route("melee.search") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { term: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0
+            });
+
+            // Auto-fill price when selection changes
+            $('#melee_diamond_select').on('select2:select', function (e) {
+                var data = e.params.data;
+                if (data.price) {
+                    $('#melee_price_input').val(data.price);
+                }
+            });
+        }
     })();
 </script>

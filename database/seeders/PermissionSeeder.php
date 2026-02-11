@@ -16,7 +16,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $perms = [
-            
+
             // Admins
             ['name' => 'View Admins', 'slug' => 'admins.view', 'description' => 'View admin list and details', 'category' => 'admins'],
             ['name' => 'Create Admins', 'slug' => 'admins.create', 'description' => 'Create new admin records', 'category' => 'admins'],
@@ -38,6 +38,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Create Orders', 'slug' => 'orders.create', 'description' => 'Create new orders via admin UI', 'category' => 'orders'],
             ['name' => 'Edit Orders', 'slug' => 'orders.edit', 'description' => 'Edit orders via admin UI', 'category' => 'orders'],
             ['name' => 'Delete Orders', 'slug' => 'orders.delete', 'description' => 'Delete orders via admin UI', 'category' => 'orders'],
+            ['name' => 'View Team Orders', 'slug' => 'orders.view_team', 'description' => 'Allow admin to view orders submitted by other admins (subject to 10-day visibility rule)', 'category' => 'orders'],
 
             // Attribute types
             ['name' => 'View Metal Types', 'slug' => 'metal_types.view', 'description' => 'View metal types', 'category' => 'metal_types'],
@@ -160,6 +161,19 @@ class PermissionSeeder extends Seeder
             ['name' => 'Create Factories', 'slug' => 'factories.create', 'description' => 'Create new factories', 'category' => 'factories'],
             ['name' => 'Edit Factories', 'slug' => 'factories.edit', 'description' => 'Edit existing factories', 'category' => 'factories'],
             ['name' => 'Delete Factories', 'slug' => 'factories.destroy', 'description' => 'Delete factories', 'category' => 'factories'],
+
+
+            // Gold Tracking
+            ['name' => 'View Gold Tracking', 'slug' => 'gold-tracking.view', 'description' => 'View gold stock and tracking', 'category' => 'gold'],
+            ['name' => 'Create Gold Transaction', 'slug' => 'gold-tracking.create', 'description' => 'Create gold purchases or distributions', 'category' => 'gold'],
+            ['name' => 'Edit Gold Transaction', 'slug' => 'gold-tracking.edit', 'description' => 'Edit gold transactions', 'category' => 'gold'],
+            ['name' => 'Delete Gold Transaction', 'slug' => 'gold-tracking.delete', 'description' => 'Delete gold transactions', 'category' => 'gold'],
+
+            // Mail System
+            ['name' => 'Access Mail System', 'slug' => 'mail.access', 'description' => 'Access the mail system', 'category' => 'mail'],
+            ['name' => 'Send Mail', 'slug' => 'mail.send', 'description' => 'Send emails', 'category' => 'mail'],
+            ['name' => 'View Mail Logs', 'slug' => 'mail.view_logs', 'description' => 'View email logs', 'category' => 'mail'],
+            ['name' => 'Mail Settings', 'slug' => 'mail.settings', 'description' => 'Configure mail settings', 'category' => 'mail'],
 
         ];
 

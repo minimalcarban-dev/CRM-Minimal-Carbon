@@ -14,7 +14,7 @@
         <div class="card-body">
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">  
+                    <label class="form-label">
                         <i class="bi bi-hash"></i>
                         Invoice No
                     </label>
@@ -48,6 +48,20 @@
                         <option value="">-- None --</option>
                         <option value="original" {{ (old('copy_type', $invoice->copy_type ?? '') == 'original') ? 'selected' : '' }}>Original - Recipient</option>
                         <option value="duplicate" {{ (old('copy_type', $invoice->copy_type ?? '') == 'duplicate') ? 'selected' : '' }}>Duplicate - Transporter</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="bi bi-globe"></i>
+                        Invoice Region
+                    </label>
+                    <select name="invoice_region" class="form-select">
+                        <option value="">-- Select Region --</option>
+                        @foreach(\App\Models\Invoice::REGIONS as $code => $data)
+                            <option value="{{ $code }}" {{ (old('invoice_region', $invoice->invoice_region ?? '') == $code) ? 'selected' : '' }}>
+                                {{ $data['flag'] }} {{ $data['name'] }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -190,7 +204,7 @@
                                     <td><input name="items[{{$i}}][rate]" class="input-cell rate"
                                             value="{{ $it['rate'] ?? '' }}" placeholder="0.00"></td>
                                     <td><input name="items[{{$i}}][amount]" class="input-cell amount"
-                                            value="{{ $it['amount'] ?? '' }}" readonly></td>
+                                            value="{{ $it['amount'] ?? '' }}"></td>
                                     <td class="td-action">
                                         <button type="button" class="btn-remove remove-row" title="Remove Item">
                                             <i class="bi bi-trash"></i>
@@ -211,8 +225,8 @@
                                             placeholder="0.00"></td>
                                     <td><input name="items[{{$i}}][rate]" class="input-cell rate" value="{{ $it->rate }}"
                                             placeholder="0.00"></td>
-                                    <td><input name="items[{{$i}}][amount]" class="input-cell amount" value="{{ $it->amount }}"
-                                            readonly></td>
+                                    <td><input name="items[{{$i}}][amount]" class="input-cell amount" value="{{ $it->amount }}">
+                                    </td>
                                     <td class="td-action">
                                         <button type="button" class="btn-remove remove-row" title="Remove Item">
                                             <i class="bi bi-trash"></i>
@@ -228,7 +242,7 @@
                                 <td><input name="items[0][pieces]" class="input-cell pieces" placeholder="0"></td>
                                 <td><input name="items[0][carats]" class="input-cell carats" placeholder="0.00"></td>
                                 <td><input name="items[0][rate]" class="input-cell rate" placeholder="0.00"></td>
-                                <td><input name="items[0][amount]" class="input-cell amount" readonly></td>
+                                <td><input name="items[0][amount]" class="input-cell amount"></td>
                                 <td class="td-action">
                                     <button type="button" class="btn-remove remove-row" title="Remove Item">
                                         <i class="bi bi-trash"></i>
@@ -276,6 +290,12 @@
                     <input type="number" step="0.01" min="0" name="igst_rate" id="igst_rate" class="tax-input"
                         value="{{ old('igst_rate', '') }}" placeholder="0">
                 </div>
+                <div class="tax-input-group" id="shipping_group">
+                    <label class="tax-label">Express Shipping</label>
+                    <input type="number" step="0.01" min="0" name="express_shipping" id="express_shipping"
+                        class="tax-input" value="{{ old('express_shipping', $invoice->express_shipping ?? '') }}"
+                        placeholder="0.00">
+                </div>
             </div>
 
             <div class="tax-summary-grid">
@@ -294,6 +314,10 @@
                 <div class="summary-item">
                     <div class="summary-label">IGST</div>
                     <div class="summary-value" id="igst_total">₹ 0.00</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Shipping</div>
+                    <div class="summary-value" id="shipping_total">₹ 0.00</div>
                 </div>
                 <div class="summary-item summary-total">
                     <div class="summary-label">Grand Total</div>
@@ -915,10 +939,57 @@
         color: #94a3b8;
         font-size: 0.75rem;
     }
+
+    /* Hidden class for GST fields when foreign invoice */
+    .tax-input-group.hidden {
+        display: none !important;
+    }
+
+    /* Foreign invoice alert styling */
+    .tax-info-alert.foreign-invoice {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 1px solid #f59e0b;
+        color: #b45309;
+    }
+
+    /* Summary items for GST when hidden */
+    #cgst_total:has(+ .hidden),
+    #sgst_total:has(+ .hidden),
+    #igst_total:has(+ .hidden) {
+        display: none;
+    }
 </style>
 
 <script>
     (function () {
+        // Region data for dynamic currency symbol
+        var REGIONS = {
+            'IN': { name: 'India', symbol: '₹' },
+            'US': { name: 'United States', symbol: '$' },
+            'UK': { name: 'United Kingdom', symbol: '£' },
+            'EU': { name: 'Europe', symbol: '€' },
+            'CA': { name: 'Canada', symbol: 'C$' },
+            'AU': { name: 'Australia', symbol: 'A$' },
+            'AE': { name: 'UAE', symbol: 'د.إ' }
+        };
+
+        // Track if billed party is foreign
+        var billedPartyIsForeign = false;
+
+        // Get current currency symbol based on selected region
+        function getCurrencySymbol() {
+            var regionSelect = document.querySelector('[name="invoice_region"]');
+            var region = regionSelect ? regionSelect.value : 'IN';
+            return (REGIONS[region] && REGIONS[region].symbol) || '₹';
+        }
+
+        // Check if invoice is foreign (non-India region OR foreign party)
+        function isForeignInvoice() {
+            var regionSelect = document.querySelector('[name="invoice_region"]');
+            var region = regionSelect ? regionSelect.value : '';
+            return (region && region !== 'IN') || billedPartyIsForeign;
+        }
+
         function recalcRow($row) {
             var carats = parseFloat($row.querySelector('.carats').value) || 0;
             var rate = parseFloat($row.querySelector('.rate').value) || 0;
@@ -933,11 +1004,13 @@
                 var amt = parseFloat(r.querySelector('.amount').value) || 0;
                 taxable += amt;
             });
-            document.getElementById('taxable_total').innerText = '₹ ' + taxable.toFixed(2);
+            var currencySymbol = getCurrencySymbol();
+            document.getElementById('taxable_total').innerText = currencySymbol + ' ' + taxable.toFixed(2);
 
             var cgst_rate = parseFloat(document.getElementById('cgst_rate').value) || 0;
             var sgst_rate = parseFloat(document.getElementById('sgst_rate').value) || 0;
             var igst_rate = parseFloat(document.getElementById('igst_rate').value) || 0;
+            var shipping = parseFloat(document.getElementById('express_shipping').value) || 0;
 
             var place = document.getElementById('place_of_supply').value || '';
             var companyState = document.getElementById('company_gst').dataset && document.getElementById('company_gst').dataset.state || '';
@@ -946,17 +1019,22 @@
             updateTaxFieldStates(companyState, place);
 
             var cgst = 0, sgst = 0, igst = 0;
-            if (companyState && companyState == place) {
-                cgst = parseFloat((taxable * (cgst_rate / 100)).toFixed(2));
-                sgst = parseFloat((taxable * (sgst_rate / 100)).toFixed(2));
-            } else if (companyState && place) {
-                igst = parseFloat((taxable * (igst_rate / 100)).toFixed(2));
+
+            // If foreign invoice, no taxes apply
+            if (!isForeignInvoice()) {
+                if (companyState && companyState == place) {
+                    cgst = parseFloat((taxable * (cgst_rate / 100)).toFixed(2));
+                    sgst = parseFloat((taxable * (sgst_rate / 100)).toFixed(2));
+                } else if (companyState && place) {
+                    igst = parseFloat((taxable * (igst_rate / 100)).toFixed(2));
+                }
             }
 
-            document.getElementById('cgst_total').innerText = '₹ ' + cgst.toFixed(2);
-            document.getElementById('sgst_total').innerText = '₹ ' + sgst.toFixed(2);
-            document.getElementById('igst_total').innerText = '₹ ' + igst.toFixed(2);
-            document.getElementById('grand_total').innerText = '₹ ' + (taxable + cgst + sgst + igst).toFixed(2);
+            document.getElementById('cgst_total').innerText = currencySymbol + ' ' + cgst.toFixed(2);
+            document.getElementById('sgst_total').innerText = currencySymbol + ' ' + sgst.toFixed(2);
+            document.getElementById('igst_total').innerText = currencySymbol + ' ' + igst.toFixed(2);
+            document.getElementById('shipping_total').innerText = currencySymbol + ' ' + shipping.toFixed(2);
+            document.getElementById('grand_total').innerText = currencySymbol + ' ' + (taxable + cgst + sgst + igst + shipping).toFixed(2);
         }
 
         function updateTaxFieldStates(companyState, placeOfSupply) {
@@ -967,10 +1045,23 @@
             var taxInfoText = document.getElementById('tax_info_text');
 
             // Reset all classes
-            taxInfoAlert.classList.remove('same-state', 'different-state');
-            cgstGroup.classList.remove('disabled');
-            sgstGroup.classList.remove('disabled');
-            igstGroup.classList.remove('disabled');
+            taxInfoAlert.classList.remove('same-state', 'different-state', 'foreign-invoice');
+            cgstGroup.classList.remove('disabled', 'hidden');
+            sgstGroup.classList.remove('disabled', 'hidden');
+            igstGroup.classList.remove('disabled', 'hidden');
+
+            // Check if this is a foreign invoice (foreign party OR non-India region)
+            if (isForeignInvoice()) {
+                taxInfoAlert.classList.add('foreign-invoice');
+                taxInfoText.innerHTML = '<strong>Foreign/Export Invoice</strong> — No GST applies for foreign parties or non-India region.';
+                cgstGroup.classList.add('hidden');
+                sgstGroup.classList.add('hidden');
+                igstGroup.classList.add('hidden');
+                document.getElementById('cgst_rate').value = '';
+                document.getElementById('sgst_rate').value = '';
+                document.getElementById('igst_rate').value = '';
+                return;
+            }
 
             if (!companyState) {
                 taxInfoText.innerHTML = '<strong>Select a company</strong> to see which taxes will apply';
@@ -1024,7 +1115,7 @@
             <td><input name="items[${index}][pieces]" class="input-cell pieces" placeholder="0"></td>
             <td><input name="items[${index}][carats]" class="input-cell carats" placeholder="0.00"></td>
             <td><input name="items[${index}][rate]" class="input-cell rate" placeholder="0.00"></td>
-            <td><input name="items[${index}][amount]" class="input-cell amount" readonly></td>
+            <td><input name="items[${index}][amount]" class="input-cell amount"></td>
             <td class="td-action">
                 <button type="button" class="btn-remove remove-row" title="Remove Item">
                     <i class="bi bi-trash"></i>
@@ -1039,12 +1130,15 @@
             if (e.target.classList.contains('carats') || e.target.classList.contains('rate')) {
                 recalcRow(row);
                 recalcAll();
+            } else if (e.target.classList.contains('amount')) {
+                recalcAll();
             }
         });
 
         document.getElementById('cgst_rate').addEventListener('input', recalcAll);
         document.getElementById('sgst_rate').addEventListener('input', recalcAll);
         document.getElementById('igst_rate').addEventListener('input', recalcAll);
+        document.getElementById('express_shipping').addEventListener('input', recalcAll);
         document.getElementById('place_of_supply').addEventListener('input', recalcAll);
 
         document.getElementById('company_select').addEventListener('change', function () {
@@ -1072,5 +1166,53 @@
 
         // initial recalc
         setTimeout(recalcAll, 200);
+
+        // Handle region change - update currency symbol and GST visibility
+        var regionSelect = document.querySelector('[name="invoice_region"]');
+        if (regionSelect) {
+            regionSelect.addEventListener('change', function () {
+                recalcAll();
+            });
+        }
+
+        // Handle billed party change - check if foreign party
+        var billedSelect = document.getElementById('billed_select');
+        if (billedSelect) {
+            billedSelect.addEventListener('change', function () {
+                var partyId = this.value;
+                if (!partyId) {
+                    billedPartyIsForeign = false;
+                    recalcAll();
+                    return;
+                }
+                // Fetch party details to check is_foreign
+                fetch('/admin/parties/' + partyId, {
+                    headers: { 'Accept': 'application/json' }
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        billedPartyIsForeign = data.is_foreign == 1 || data.is_foreign === true;
+                        recalcAll();
+                    })
+                    .catch(function () {
+                        console.error('Party fetch failed');
+                        billedPartyIsForeign = false;
+                        recalcAll();
+                    });
+            });
+
+            // Check initial billed party on page load
+            if (billedSelect.value) {
+                fetch('/admin/parties/' + billedSelect.value, {
+                    headers: { 'Accept': 'application/json' }
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        billedPartyIsForeign = data.is_foreign == 1 || data.is_foreign === true;
+                        recalcAll();
+                    })
+                    .catch(function () { });
+            }
+        }
     })();
 </script

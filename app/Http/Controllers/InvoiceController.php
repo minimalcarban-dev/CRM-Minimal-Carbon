@@ -30,8 +30,19 @@ class InvoiceController extends Controller
             $query->where('status', $status);
         }
 
+        // Region filter
+        if ($region = $request->get('region')) {
+            $query->where('invoice_region', $region);
+        }
+
+        // Region stats for cards
+        $regionStats = Invoice::selectRaw('invoice_region, COUNT(*) as count, SUM(total_invoice_value) as total')
+            ->groupBy('invoice_region')
+            ->get()
+            ->keyBy('invoice_region');
+
         $invoices = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
-        return view('invoices.index', compact('invoices'));
+        return view('invoices.index', compact('invoices', 'regionStats'));
     }
 
     public function create()
@@ -63,6 +74,7 @@ class InvoiceController extends Controller
         try {
             $invoice = Invoice::create($request->only([
                 'invoice_no',
+                'invoice_region',
                 'invoice_date',
                 'company_id',
                 'invoice_type',
@@ -95,23 +107,34 @@ class InvoiceController extends Controller
             $cgst_rate = (float) $request->input('cgst_rate', 0);
             $sgst_rate = (float) $request->input('sgst_rate', 0);
             $igst_rate = (float) $request->input('igst_rate', 0);
+            $express_shipping = (float) $request->input('express_shipping', 0);
 
             $company = Company::find($invoice->company_id);
+
+            // Check if billed party is foreign - no GST applies
+            $billedParty = $invoice->billed_to_id ? Party::find($invoice->billed_to_id) : null;
+            $isForeignParty = $billedParty && $billedParty->is_foreign;
+
             $igst = 0;
             $cgst = 0;
             $sgst = 0;
-            if ($company && $company->state_code && $company->state_code == $invoice->place_of_supply) {
-                $cgst = round($taxable * ($cgst_rate / 100), 2);
-                $sgst = round($taxable * ($sgst_rate / 100), 2);
-            } else {
-                $igst = round($taxable * ($igst_rate / 100), 2);
+
+            // Skip tax calculation for foreign parties
+            if (!$isForeignParty) {
+                if ($company && $company->state_code && $company->state_code == $invoice->place_of_supply) {
+                    $cgst = round($taxable * ($cgst_rate / 100), 2);
+                    $sgst = round($taxable * ($sgst_rate / 100), 2);
+                } else {
+                    $igst = round($taxable * ($igst_rate / 100), 2);
+                }
             }
 
             $invoice->taxable_amount = $taxable;
             $invoice->igst_amount = $igst;
             $invoice->cgst_amount = $cgst;
             $invoice->sgst_amount = $sgst;
-            $invoice->total_invoice_value = $taxable + $igst + $cgst + $sgst;
+            $invoice->express_shipping = $express_shipping;
+            $invoice->total_invoice_value = $taxable + $igst + $cgst + $sgst + $express_shipping;
             $invoice->save();
 
             DB::commit();
@@ -154,14 +177,17 @@ class InvoiceController extends Controller
         try {
             $invoice->update($request->only([
                 'invoice_no',
+                'invoice_region',
                 'invoice_date',
                 'company_id',
                 'invoice_type',
                 'place_of_supply',
                 'payment_terms',
                 'billed_to_id',
+                'billed_to_id',
                 'shipped_to_id',
-                'copy_type'
+                'copy_type',
+                'express_shipping'
             ]));
 
             // Auto-set status based on invoice type
@@ -183,27 +209,35 @@ class InvoiceController extends Controller
                     'amount' => $amount,
                 ]);
             }
-
+            // Recalculate tax
             $cgst_rate = (float) $request->input('cgst_rate', 0);
             $sgst_rate = (float) $request->input('sgst_rate', 0);
             $igst_rate = (float) $request->input('igst_rate', 0);
+            $express_shipping = (float) $request->input('express_shipping', 0);
 
             $company = Company::find($invoice->company_id);
+            $billedParty = $invoice->billed_to_id ? Party::find($invoice->billed_to_id) : null;
+            $isForeignParty = $billedParty && $billedParty->is_foreign;
+
             $igst = 0;
             $cgst = 0;
             $sgst = 0;
-            if ($company && $company->state_code && $company->state_code == $invoice->place_of_supply) {
-                $cgst = round($taxable * ($cgst_rate / 100), 2);
-                $sgst = round($taxable * ($sgst_rate / 100), 2);
-            } else {
-                $igst = round($taxable * ($igst_rate / 100), 2);
+
+            if (!$isForeignParty) {
+                if ($company && $company->state_code && $company->state_code == $invoice->place_of_supply) {
+                    $cgst = round($taxable * ($cgst_rate / 100), 2);
+                    $sgst = round($taxable * ($sgst_rate / 100), 2);
+                } else {
+                    $igst = round($taxable * ($igst_rate / 100), 2);
+                }
             }
 
             $invoice->taxable_amount = $taxable;
             $invoice->igst_amount = $igst;
             $invoice->cgst_amount = $cgst;
             $invoice->sgst_amount = $sgst;
-            $invoice->total_invoice_value = $taxable + $igst + $cgst + $sgst;
+            $invoice->express_shipping = $express_shipping;
+            $invoice->total_invoice_value = $taxable + $igst + $cgst + $sgst + $express_shipping;
             $invoice->save();
 
             DB::commit();
