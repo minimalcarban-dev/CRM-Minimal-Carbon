@@ -2162,6 +2162,123 @@
             font-size: 1.75rem;
         }
     }
+
+    @media (max-width: 575px) {
+        .diamond-management-container {
+            padding: 15px 0;
+        }
+
+        .page-header {
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .header-content {
+            gap: 1rem;
+        }
+
+        h1.page-title {
+            font-size: 17px;
+        }
+
+        p.page-subtitle {
+            font-size: 12px;
+        }
+
+        a.btn-primary-custom.actions-btn {
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        .actions-row {
+            /* padding: 10px; */
+            /* font-size: 13px; */
+        }
+
+        form#importForm {
+            font-size: 13px;
+            width: 100%;
+            padding: 0;
+        }
+
+        button#exportTrigger,
+        button#importTrigger,
+        button#bulkEditTrigger {
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        .stats-grid {
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            padding: 10px;
+            gap: 10px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+        }
+
+        .stat-label {
+            margin: 0;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 17px;
+            margin-bottom: 5px;
+        }
+
+        span.breakdown-item.breakdown-success {
+            font-size: 12px;
+        }
+
+        span.breakdown-item.breakdown-sold {
+            font-size: 12px;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+        }
+
+        .filter-section {
+            padding: 10px;
+        }
+
+        .filter-header {
+            padding: 7px;
+        }
+
+        .filter-title {
+            font-size: 12px;
+        }
+
+        button#toggleFilters {
+            width: 30px;
+            height: 30px;
+            border-radius: 2px;
+        }
+
+        form#filterForm {
+            padding-top: 15px;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .filter-section-group {
+            margin-bottom: 10px;
+        }
+
+        .filter-section-title {
+            font-size: 12px;
+        }
+    }
 </style>
 
 <!-- Reassign Modal -->

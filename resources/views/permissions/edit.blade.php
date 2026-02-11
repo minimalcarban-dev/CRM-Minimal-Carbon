@@ -786,6 +786,145 @@
                     width: 100%;
                 }
             }
+            @media (max-width: 575px) {
+                .header-actions {
+                    flex-direction: column;
+                }
+                .header-actions button, .header-actions a{
+                    width: 100%;
+                }
+                .permission-info-banner {
+                    padding: 8px;
+                }
+                .section-body .row > .col-12:not(:first-child) {
+                    margin-top: 7px;
+                }
+                .permission-icon-badge {
+                    width: 40px;
+                    height: 40px;
+                    font-size: 18px;
+                }
+                .permission-info-text h5 {
+                    font-size: 12px;
+                    margin-bottom: 5px;
+                }
+                .permission-info-text p {
+                    margin-bottom: 8px;
+                }
+                code.permission-slug-code {
+                    padding: 5px;
+                    font-size: 12px;
+                    width: 100%;
+                }
+                .permission-meta {
+                }
+                .meta-item {
+                    font-size: 11px;
+                }
+                .section-header {
+                    padding: 7px;
+                }
+                .section-icon {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 14px;
+                }
+                .section-info {
+                    gap: 10px;
+                }
+                p.section-description {
+                    font-size: 11px;
+                }
+                .container-fluid {
+                    padding-left: 0;
+                    padding-right: 0;
+                }
+                .section-body {
+                    padding: 10px;
+                }
+                label.form-label-modern {
+                    gap: 1px;
+                    font-size: 12px;
+                    margin-bottom: 5px;
+                }
+                span.required-badge {
+                    font-size: 9px;
+                    padding: 1px 2px;
+                }
+                input#permission_name {
+                    padding: 5px 5px;
+                    font-size: 12px;
+                    border-radius: 6px;
+                }
+                small.form-hint {
+                    font-size: 10px;
+                }
+                .form-control-modern {
+                    padding: 5px 5px;
+                    font-size: 12px;
+                    line-height: 8px;
+                    height: fit-content;
+                    border-radius: 6px;
+                }
+                span.badge-unique {
+                    font-size: 9px;
+                    padding: 1px 3px;
+                }
+                .suggestion-btn {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 6px;
+                    font-size: 16px;
+                }
+                .slug-examples {
+                    padding: 6px;
+                }
+                span.examples-label {
+                    font-size: 12px;
+                }
+                button.example-chip {
+                    padding: 4px 5px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-transform: capitalize;
+                }
+                .form-hint code {
+                    font-size: 11px;
+                }
+                .char-counter {
+                    font-size: 12px;
+                }
+                span.optional-badge {
+                    padding: 1px 3px;
+                    font-size: 9px;
+                }
+                .preview-header {
+                    padding: 7px;
+                }
+                .preview-body {
+                    padding: 6px;
+                }
+                .permission-preview-item {
+                    padding: 5px;
+                    gap: 5px;
+                }
+                .preview-name {
+                    font-size: 12px;
+                }
+                div#preview_slug {
+                    font-size: 11px;
+                    padding: 4px;
+                }
+                div#preview_description {
+                    font-size: 12px;
+                }
+                .preview-badge {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 15px;
+                    border-radius: 6px;
+                }
+            }
         </style>
     @endpush
 

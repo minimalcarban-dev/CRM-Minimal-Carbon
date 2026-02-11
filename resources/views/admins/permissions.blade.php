@@ -888,6 +888,12 @@
                 .permission-description {
                     font-size: 10px;
                 }
+                .header-right .btn.btn-outline-secondary {
+                    padding: 5px 4px;
+                    font-size: 12px;
+                    text-align: center;
+                    justify-content: center;
+                }
                 .permission-management-container {
                     padding: 0;
                 }
