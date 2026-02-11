@@ -1,61 +1,135 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 💎 CRM — Diamond & Jewelry Business Management
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" />
+  <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vue.js-3-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Pusher-Realtime-300D4F?style=for-the-badge&logo=pusher&logoColor=white" />
+  <img src="https://img.shields.io/badge/Status-Production-brightgreen?style=for-the-badge" />
 </p>
 
-## About Laravel
+> **A full-featured, production-grade CRM system** built for the diamond and jewelry industry. Manages the complete business lifecycle — from inventory and procurement to orders, multi-currency invoicing, sales analytics, lead management, and team collaboration.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> ⚠️ **This is a proprietary project.** It is not open for public use, contribution, or redistribution.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🏢 Overview
 
-## Learning Laravel
+This CRM powers the day-to-day operations of a diamond trading business, replacing fragmented tools with a unified, permission-controlled admin panel. It handles everything from stone-level inventory tracking to PDF invoice generation across 7 currencies and 7 international regions.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## ✨ Modules & Capabilities
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+📦 Inventory & Products
 
-## Laravel Sponsors
+- **Diamond Inventory** — Full lifecycle: create, import/export (Excel), bulk edit, SKU-based availability, restock sold stones, admin assignment
+- **Melee Diamonds** — Category-based melee tracking with weighted average cost per carat
+- **Gold Tracking** — Gold stock management with factory distribution, returns, and purchase logging
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 🛒 Sales & Orders
 
-### Premium Partners
+- **Orders** — Multi-type pipeline (rough, polished, jewelry) with status tracking, draft auto-save, and overdue detection
+- **Invoices** — Multi-region PDF invoicing with dynamic tax calculations, amount-in-words, and per-region currency formatting
+- **Sales Dashboards** — Company-level analytics with monthly targets, progress tracking, projections, and PDF/CSV export
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 💱 Multi-Currency Engine
 
-## Contributing
+Centralized currency system supporting **7 currencies** out of the box — extensible by adding a single config entry:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Currency               | Symbol | Region |
+| ---------------------- | ------ | ------ |
+| 🇮🇳 Indian Rupee      | ₹     | IN     |
+| 🇺🇸 US Dollar         | $      | US     |
+| 🇬🇧 British Pound     | £     | UK     |
+| 🇪🇺 Euro              | €     | EU     |
+| 🇨🇦 Canadian Dollar   | C$     | CA     |
+| 🇦🇺 Australian Dollar | A$     | AU     |
+| 🇦🇪 UAE Dirham        | د.إ  | AE     |
 
-## Code of Conduct
+### 👥 CRM & Contacts
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **Companies** — Company profiles with bank details, logo uploads (Cloudinary), and sales dashboards
+- **Vendors** — Vendor management with categorization for billing and supply chain
+- **Shoppers** — Client profiles with associated order/invoice history
+- **Lead Management** — Kanban-style pipeline with analytics, assignment, notes, and WhatsApp integration
 
-## Security Vulnerabilities
+### 💬 Communication
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **Team Chat** — Real-time messaging via Pusher with channels, threads, file sharing, and unread counts
+- **Gmail Integration** — Built-in email inbox with compose, reply, and forward via Google OAuth2
+- **WhatsApp/Meta** — Lead capture via Facebook/WhatsApp webhooks with direct reply capability
+- **Notifications** — In-app bell alerts for overdue orders, draft reminders, and task nudges
 
-## License
+### 🔧 Operations
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **Purchase Tracker** — Diamond and material procurement with completion workflow and expense auto-linking
+- **Office Expenses** — Cash flow tracking with income/expense categorization
+- **Master Data** — CRUDs for Metal Types, Stone Types, Shapes, Colors, Cuts, Clarities, Ring Sizes, Setting Types, Closure Types
+
+### 🔐 Security & Access
+
+- **Role-based Permissions** — Granular per-module control (view/create/edit/delete) with super admin override
+- **Admin-only Auth** — No public registration; admin panel with throttled login
+- **Permission Middleware** — Applied per-route for fine-grained access control
+
+---
+
+## 🏗 Tech Stack
+
+| Layer                         | Technologies                    |
+| ----------------------------- | ------------------------------- |
+| **Backend**             | Laravel 12, PHP 8.2+            |
+| **Frontend**            | Blade, Vue.js 3, Vanilla CSS/JS |
+| **Build Tools**         | Vite 7, TailwindCSS 4           |
+| **Database**            | MySQL                           |
+| **Real-time**           | Pusher, Laravel Echo            |
+| **PDF Generation**      | barryvdh/laravel-dompdf         |
+| **Excel Import/Export** | maatwebsite/excel               |
+| **Full-text Search**    | Laravel Scout + TNTSearch       |
+| **Image Storage**       | Cloudinary                      |
+| **Email**               | Google API (Gmail OAuth2)       |
+| **Messaging**           | Meta/WhatsApp Business API      |
+| **Queue**               | Laravel Queue (database driver) |
+
+---
+
+## 📊 Scale
+
+| Metric               | Count |
+| -------------------- | ----- |
+| Controllers          | 32    |
+| Eloquent Models      | 44    |
+| View Directories     | 33+   |
+| Route Definitions    | ~200+ |
+| Currencies Supported | 7     |
+| Invoice Regions      | 7     |
+| Permission Types     | 50+   |
+
+---
+
+## 📸 Highlights
+
+- 🎯 **Kanban Lead Board** — Drag-and-drop pipeline for leads with WhatsApp messaging
+- 📊 **Sales Ring Charts** — Visual monthly target tracking with projected vs actual
+- 📄 **PDF Invoices** — Auto-generated with amount in words, tax breakdowns, and multi-currency
+- 💬 **Threaded Chat** — Slack-like messaging with channels, threads, and file attachments
+- 📧 **Gmail Inbox** — Read, compose, reply, and forward directly from the CRM
+- 📦 **Excel Import/Export** — Bulk diamond operations with error reporting
+- 🔔 **Smart Notifications** — Overdue order alerts and draft completion reminders
+
+---
+
+## 📜 License
+
+**This project is proprietary and confidential.**
+
+This repository is private and is not licensed for public use, modification, or distribution. All rights are reserved. Unauthorized copying, redistribution, or use of this software is strictly prohibited.
+
+---
+
+<p align="center">
+  Built with ❤️ using Laravel
+</p>

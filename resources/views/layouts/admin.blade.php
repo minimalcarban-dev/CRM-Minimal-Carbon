@@ -1617,7 +1617,7 @@
                         <a class="nav-link {{ request()->routeIs('parties.*') ? 'active' : '' }}"
                             href="{{ route('parties.index') }}" data-tooltip="Parties">
                             <i class="bi bi-people"></i>
-                            <span>Parties</span>
+                            <span>Vendors</span>
                         </a>
                     </li>
                 @endif
@@ -1627,7 +1627,7 @@
                         <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"
                             href="{{ route('clients.index') }}" data-tooltip="Clients">
                             <i class="bi bi-person-lines-fill"></i>
-                            <span>Clients</span>
+                            <span>Shoppers</span>
                         </a>
                     </li>
                 @endif
