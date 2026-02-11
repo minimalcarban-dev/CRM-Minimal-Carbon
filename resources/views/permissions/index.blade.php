@@ -262,9 +262,9 @@
                                         @endif
                                         <div class="permission-meta">
                                             <code class="permission-slug" onclick="copySlug('{{ $perm->slug }}', this)">
-                                                                                    <i class="bi bi-code-slash"></i>
-                                                                                    {{ $perm->slug }}
-                                                                                </code>
+                                                <i class="bi bi-code-slash"></i>
+                                                {{ $perm->slug }}
+                                            </code>
                                             <span class="permission-type">{{ ucfirst(str_replace('_', ' ', $action)) }}</span>
                                         </div>
                                     </div>
@@ -1356,6 +1356,164 @@
                 break-inside: avoid;
                 box-shadow: none;
                 border: 1px solid var(--border);
+            }
+        }
+
+        @media (max-width: 575px) {
+            .permission-management-container {
+                padding: 0;
+            }
+
+            .page-header {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+
+            .page-title {
+                font-size: 17px;
+            }
+
+            .page-subtitle {
+                font-size: 12px;
+            }
+
+            .btn-primary-custom,
+            .btn-drafts-custom,
+            .btn-search {
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            .header-content {
+                gap: 1rem;
+            }
+
+            .stat-card {
+                border-radius: 7px;
+                padding: 15px;
+                /* gap: 7px; */
+            }
+
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+                margin-bottom: 0;
+            }
+
+            .stat-value {
+                font-size: 20px;
+                margin-top: 5px;
+            }
+
+            .stat-trend {
+                font-size: 11px;
+            }
+
+            .filter-section {
+                padding: 8px;
+                margin-bottom: 15px;
+            }
+
+            .search-input {
+                padding: 5px 10px 5px 2.75rem;
+                font-size: 12px;
+            }
+
+            .filter-select {
+                padding: 5px 6px;
+            }
+
+            .result-count {
+                font-size: 12px;
+            }
+
+            .btn-reset {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .module-header {
+                padding: 10px;
+            }
+
+            .module-header {
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .module-info {
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+            .module-title {
+                font-size: 13px;
+            }
+
+            .module-count {
+                padding: 2px 14px;
+                font-size: 11px;
+            }
+
+            .module-actions {
+                justify-content: end;
+            }
+
+            .form-control-modern {
+                padding: 3px 5px;
+                border-radius: 7px;
+                font-size: 11px;
+            }
+
+            .module-body,
+            .permission-card {
+                padding: 15px;
+            }
+
+            .permission-badge {
+                width: 34px;
+                height: 34px;
+                font-size: 15px;
+            }
+
+            .permission-header {
+                margin-bottom: 9px;
+            }
+
+            .permission-name {
+                font-size: 14px;
+            }
+
+            .permission-description {
+                font-size: 12px;
+                margin: 0 0 8px 0;
+            }
+
+            .permission-meta {
+                flex-direction: column;
+                padding-top: 9px;
+                gap: 7px;
+            }
+
+            .permission-slug {
+                font-size: 11px;
+                padding: 8px;
+                width: 100%;
+            }
+
+            .permission-type {
+                font-size: 11px;
+            }
+
+            .permission-icon-large {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
             }
         }
     </style>

@@ -727,6 +727,84 @@
                     width: 100%;
                 }
             }
+            @media (max-width: 575px){
+                h3.permission-name {
+                    font-size: 12px;
+                    margin-bottom: 5px;
+                }
+                #mainContent .container-fluid {
+                    padding-left: 0;
+                    padding-right: 0;
+                }
+                .permission-slug-display {
+                    flex-wrap: nowrap;
+                    margin-bottom: 8px;
+                }
+
+                code.slug-code {
+                    padding: 5px;
+                    font-size: 12px;
+                    width: 100%;
+                }
+                .copy-btn {
+                    width: 34px;
+                    height: 33px;
+                }
+                .permission-icon-large {
+                    width: 40px;
+                    height: 40px;
+                    font-size: 18px;
+                }
+                .permission-header {
+                    gap: 10px;
+                }
+                span.meta-badge {
+                    padding: 2px 5px;
+                    font-size: 11px;
+                }
+                .info-card-header {
+                    padding: 7px;
+                }
+                .info-icon {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 14px;
+                }
+                h5.info-title {
+                    font-size: 14px;
+                }
+                .info-card-body, .detail-item {
+                    padding: 6px;
+                }
+                .detail-value {
+                    font-size: 12px;
+                }
+                .detail-label, .detail-value-text, .guideline-text {
+                    font-size: 13px;
+                }
+                .detail-code {
+                    font-size: 11px;
+                }
+                .detail-item.full-width {
+                    gap: 2px;
+                }
+                .guideline-item {
+                    padding: 8px;
+                    gap: 9px;
+                }
+                .guideline-icon {
+                    width: 27px;
+                    height: 27px;
+                    font-size: 14px;
+                }
+                .action-btn {
+                    width: 100%;
+                }
+                .metadata-item {
+                    padding: 7px;
+                    align-items: center;
+                }
+            }
         </style>
     @endpush
 

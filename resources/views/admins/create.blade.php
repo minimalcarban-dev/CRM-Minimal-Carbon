@@ -811,6 +811,12 @@
                     padding: 3px 5px;
                     font-size: 12px;
                 }
+                .btn-outline-secondary{
+                    padding: 5px 4px;
+                    font-size: 12px;
+                    text-align: center;
+                    justify-content: center;
+                }
             }
         </style>
     @endpush
