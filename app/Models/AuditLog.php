@@ -21,5 +21,14 @@ class AuditLog extends Model
 	protected $casts = [
 		'old_values' => 'array',
 		'new_values' => 'array',
+		'created_at' => 'datetime',
 	];
+
+	/**
+	 * The admin who performed this action.
+	 */
+	public function admin()
+	{
+		return $this->belongsTo(Admin::class, 'user_id');
+	}
 }

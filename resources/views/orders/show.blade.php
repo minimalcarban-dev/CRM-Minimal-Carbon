@@ -18,8 +18,8 @@
                     <i class="bi bi-pencil"></i> Edit
                 </a>
                 <!-- <button onclick="window.print()" class="btn-action btn-print">
-                    <i class="bi bi-printer"></i> Print
-                </button> -->
+                                    <i class="bi bi-printer"></i> Print
+                                </button> -->
             </div>
         </div>
 
@@ -68,6 +68,7 @@
                 <div class="status-card">
                     <span class="status-label">Last Edited By</span>
                     <span class="status-value">{{ $order->lastModifier->name }}</span>
+                    <span class="status-date">{{ $order->updated_at->format('d M Y, h:i A') }}</span>
                 </div>
             @endif
         </div>
@@ -86,7 +87,8 @@
                         <div class="client-info-table">
                             <div class="info-row">
                                 <span class="info-label">Name</span>
-                                <span class="info-value">{{ $order->display_client_name ?? ($order->client_details ?? 'N/A') }}</span>
+                                <span
+                                    class="info-value">{{ $order->display_client_name ?? ($order->client_details ?? 'N/A') }}</span>
                             </div>
 
                             <div class="info-row">
@@ -108,7 +110,7 @@
 
                             @if($order->display_client_tax_id)
                                 <div class="info-row">
-                                    <span class="info-label">Tax ID</span>
+                                    <span class="info-label">{{ \App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? 'Tax ID' }}</span>
                                     <span class="info-value">{{ $order->display_client_tax_id }}</span>
                                 </div>
                             @endif
@@ -312,6 +314,73 @@
                                                 title="Download PDF">
                                                 <i class="bi bi-download"></i>
                                             </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Edit History Timeline (Superadmin Only) --}}
+                @if(Auth::guard('admin')->user()?->is_super && $editHistory->count() > 0)
+                    <div class="info-section">
+                        <h3 class="section-title">
+                            <i class="bi bi-clock-history"></i> Edit History ({{ $editHistory->count() }})
+                        </h3>
+                        <div class="section-content">
+                            <div class="edit-timeline">
+                                @foreach($editHistory as $index => $log)
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot"></div>
+                                        <div class="timeline-content">
+                                            <div class="timeline-header">
+                                                <span class="timeline-admin">
+                                                    <i class="bi bi-person-fill"></i>
+                                                    {{ $log->admin->name ?? 'Unknown Admin' }}
+                                                </span>
+                                                <span class="timeline-time">
+                                                    <i class="bi bi-calendar3"></i>
+                                                    {{ $log->created_at->format('d M Y, h:i A') }}
+                                                </span>
+                                                <span class="timeline-ago">{{ $log->created_at->diffForHumans() }}</span>
+                                            </div>
+                                            @if(!empty($log->old_values) || !empty($log->new_values))
+                                                <div class="timeline-changes">
+                                                    <button type="button" class="changes-toggle"
+                                                        onclick="this.parentElement.classList.toggle('expanded')">
+                                                        <i class="bi bi-list-check"></i>
+                                                        {{ count($log->new_values ?? []) }} field(s) changed
+                                                        <i class="bi bi-chevron-down toggle-icon"></i>
+                                                    </button>
+                                                    <div class="changes-detail">
+                                                        <table class="changes-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Field</th>
+                                                                    <th>Old Value</th>
+                                                                    <th>New Value</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach(($log->new_values ?? []) as $field => $newVal)
+                                                                    <tr>
+                                                                        <td class="field-name">{{ $field }}</td>
+                                                                        <td class="old-val">
+                                                                            <span
+                                                                                class="val-badge val-old">{{ Str::limit($log->old_values[$field] ?? '—', 80) }}</span>
+                                                                        </td>
+                                                                        <td class="new-val">
+                                                                            <span
+                                                                                class="val-badge val-new">{{ Str::limit($newVal ?? '—', 80) }}</span>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -1185,43 +1254,270 @@
                 right: 1rem;
             }
         }
+
         @media (max-width: 575px) {
             .order-details-wrapper {
                 padding: 0;
                 padding-top: 7px;
             }
-            .order-title{
+
+            .order-title {
                 font-size: 16px;
             }
-            .order-date{
+
+            .order-date {
                 font-size: 12px;
             }
-            button.btn-action.btn-back, a.btn-action.btn-edit{
+
+            button.btn-action.btn-back,
+            a.btn-action.btn-edit {
                 padding: 5px 9px;
                 font-size: 12px;
             }
+
             .order-header {
                 margin-bottom: 15px;
                 padding-bottom: 10px;
             }
-            .status-card{
+
+            .status-card {
                 padding: 7px;
                 gap: 10px;
             }
+
             span.status-badge.status-r_order_in_process {
                 background-color: #ddfedb;
             }
-            .status-label{
+
+            .status-label {
                 font-size: 11px;
             }
-            span.status-badge, .status-value {
+
+            span.status-badge,
+            .status-value {
                 font-size: 10px;
             }
-            .section-title, .section-content{
+
+            .section-title,
+            .section-content {
                 padding: 7px;
             }
+
             .detail-row {
                 font-size: 13px;
+            }
+        }
+
+        /* Status Date (for Last Edited By card) */
+        .status-date {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 2px;
+        }
+
+        /* ===== Edit History Timeline ===== */
+        .edit-timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .edit-timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 12px;
+            bottom: 12px;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -20px;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid var(--white);
+            box-shadow: 0 0 0 2px var(--primary-light);
+            z-index: 1;
+        }
+
+        .timeline-item:first-child .timeline-dot {
+            background: var(--success);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+        }
+
+        .timeline-content {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+        }
+
+        .timeline-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-admin {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .timeline-admin i {
+            color: var(--primary);
+        }
+
+        .timeline-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .timeline-ago {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            background: var(--white);
+            border: 1px solid var(--border);
+            padding: 0.125rem 0.5rem;
+            border-radius: 999px;
+        }
+
+        .timeline-changes {
+            margin-top: 0.5rem;
+        }
+
+        .changes-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .changes-toggle:hover {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .toggle-icon {
+            transition: transform 0.2s;
+        }
+
+        .timeline-changes.expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .changes-detail {
+            display: none;
+            margin-top: 0.5rem;
+        }
+
+        .timeline-changes.expanded .changes-detail {
+            display: block;
+        }
+
+        .changes-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+            background: var(--white);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .changes-table th {
+            background: var(--light);
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .changes-table td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .changes-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .field-name {
+            font-weight: 600;
+            color: var(--dark);
+            white-space: nowrap;
+        }
+
+        .val-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            word-break: break-word;
+            max-width: 250px;
+        }
+
+        .val-old {
+            background: #fee2e2;
+            color: #991b1b;
+            text-decoration: line-through;
+        }
+
+        .val-new {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Responsive: timeline on mobile */
+        @media (max-width: 575px) {
+            .timeline-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+
+            .changes-table {
+                font-size: 0.75rem;
+            }
+
+            .val-badge {
+                max-width: 120px;
+                font-size: 0.7rem;
             }
         }
     </style>

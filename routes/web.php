@@ -648,10 +648,6 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('diamond.assign')
         ->middleware('admin.permission:diamonds.assign');
 
-    // Melee Inventory V2 (Test Route)
-    Route::get('melee/v2', [MeleeDiamondController::class, 'indexV2'])
-        ->name('melee.index_v2')
-        ->middleware('admin.permission:melee_inventory.view');
 
     // Bulk Edit Routes
     Route::get('diamonds/bulk-edit/diamonds', [DiamondController::class, 'bulkEditDiamonds'])

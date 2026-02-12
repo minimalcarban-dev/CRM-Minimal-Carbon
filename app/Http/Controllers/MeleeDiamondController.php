@@ -46,38 +46,7 @@ class MeleeDiamondController extends Controller
         return view('melee.index', compact('labGrownCategories', 'naturalCategories', 'totalParcels', 'totalCarats', 'lowStockCount'));
     }
 
-    /**
-     * Display the V2 inventory dashboard (Test Route).
-     */
-    public function indexV2()
-    {
-        // Load categories with hierarchy for the view
-        // Same logic as index()
-        $labGrownCategories = MeleeCategory::labGrown()
-            ->with([
-                'diamonds' => function ($q) {
-                    $q->orderBy('sieve_size')->orderBy('size_label');
-                }
-            ])
-            ->orderBy('sort_order')
-            ->get();
 
-        $naturalCategories = MeleeCategory::natural()
-            ->with([
-                'diamonds' => function ($q) {
-                    $q->orderBy('sieve_size');
-                }
-            ])
-            ->orderBy('sort_order')
-            ->get();
-
-        // Calculate Totals for Stats Cards
-        $totalParcels = MeleeDiamond::count();
-        $totalCarats = MeleeDiamond::sum('total_carat_weight');
-        $lowStockCount = MeleeDiamond::where('status', 'low_stock')->count();
-
-        return view('melee.index_v2', compact('labGrownCategories', 'naturalCategories', 'totalParcels', 'totalCarats', 'lowStockCount'));
-    }
 
     /**
      * Search for diamonds (for Autocomplete/Dropdowns).
