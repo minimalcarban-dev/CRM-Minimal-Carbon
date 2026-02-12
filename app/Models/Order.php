@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\AuditLog;
 
 class Order extends Model
 {
@@ -111,6 +112,14 @@ class Order extends Model
     public function meleeDiamond()
     {
         return $this->belongsTo(MeleeDiamond::class, 'melee_diamond_id');
+    }
+
+    /**
+     * All audit log entries for this order (edit history), newest first.
+     */
+    public function editHistory()
+    {
+        return $this->morphMany(AuditLog::class, 'auditable')->orderByDesc('created_at');
     }
 
     /**

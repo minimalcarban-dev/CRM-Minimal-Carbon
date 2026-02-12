@@ -5,571 +5,416 @@
 @section('content')
 
     <style>
+        /* Custom Styles meant to match orders/index.blade.php */
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
-            --secondary: #64748b;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
             --dark: #1e293b;
             --light: #f8fafc;
             --border: #e2e8f0;
+            --secondary: #64748b;
         }
 
-        .dashboard-header {
-            display: flex;
-            justify_content: space-between;
-            align_items: center;
-            margin-bottom: 1.5rem;
+        .inventory-management-container {
+            padding: 2rem;
+            max-width: 1800px;
+            margin: 0 auto;
+            background: #f8fafc;
+            min-height: 100vh;
         }
 
-        .stats-card {
+        .page-header {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inventory-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar-panel {
+            width: 280px;
+            border-right: 1px solid var(--border);
             padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border);
-            height: 100%;
+            background: #fff;
+            flex-shrink: 0;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .main-panel {
+            flex-grow: 1;
+            padding: 0;
+            background: #fff;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Sidebar Items */
+        .shape-nav-item {
+            display: flex;
             justify-content: space-between;
-        }
-
-        .stats-card .icon-wrapper {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .stats-card.primary .icon-wrapper {
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--primary);
-        }
-
-        .stats-card.success .icon-wrapper {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .stats-card.danger .icon-wrapper {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-
-        .nav-tabs-custom {
-            border-bottom: 2px solid var(--border);
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 2rem;
-        }
-
-        .nav-tab-item {
-            padding: 1rem 0;
-            font-weight: 600;
-            color: var(--secondary);
-            cursor: pointer;
-            position: relative;
-            transition: color 0.2s;
-            text-decoration: none;
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-        }
-
-        .nav-tab-item.active {
-            color: var(--primary);
-        }
-
-        .nav-tab-item.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--primary);
-            border-radius: 3px 3px 0 0;
-        }
-
-        /* Accordion Styles */
-        .category-accordion-item {
-            background: white;
-            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
             border-radius: 12px;
-            margin-bottom: 1rem;
-            overflow: hidden;
-            transition: box-shadow 0.2s;
-        }
-
-        .category-accordion-item:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .accordion-header {
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            color: var(--secondary);
+            font-weight: 500;
             cursor: pointer;
-            background: white;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 0.5rem;
         }
 
-        .accordion-header:hover {
+        .shape-nav-item:hover {
+            background: #f1f5f9;
+            color: var(--dark);
+        }
+
+        .shape-nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .shape-nav-item .badge {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+        }
+
+        .shape-nav-item.active .badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .shape-nav-item:not(.active) .badge {
+            background: #f1f5f9;
+            color: var(--secondary);
+        }
+
+        /* Table */
+        .table-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-custom thead th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--secondary);
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
             background: #f8fafc;
         }
 
-        .accordion-body {
-            display: none;
-            /* JS Toggle */
-            padding: 1.5rem;
-            border-top: 1px solid var(--border);
-            background: #fcfcfc;
+        .table-custom tbody td {
+            padding: 1rem 1.5rem;
+            vertical-align: middle;
+            color: var(--dark);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
         }
 
-        .accordion-body.open {
-            display: block;
+        .table-custom tbody tr:hover {
+            background-color: #f8fafc;
         }
-
-        /* Shape Grid */
-        .shape-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 1rem;
-        }
-
-        .shape-tile {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .shape-tile:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .shape-tile.active {
-            border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.05);
-            font-weight: 600;
-            color: var(--primary);
-        }
-
+        
         .hidden {
             display: none !important;
         }
+        
+        /* Stats Cards Mini */
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
     </style>
 
-    <div class="container-fluid px-4 py-4">
+    <div class="inventory-management-container">
         <!-- Header -->
-        <div class="dashboard-header">
+        <div class="page-header">
             <div>
-                <h2 class="mb-1 fw-bold text-dark">Melee Inventory</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}"
-                                class="text-decoration-none">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Stock Management</li>
-                    </ol>
-                </nav>
+                <h2 class="mb-1 fw-bold text-dark"><i class="bi bi-gem me-2 text-primary"></i>Melee Inventory</h2>
+                <div class="text-secondary small">Manage your melee diamond stock</div>
             </div>
-            <div>
+            
+             <div class="d-flex gap-2">
+                 <!-- Tab Switcher implemented as Buttons -->
+                <button class="btn btn-outline-primary active" id="btn-tab-lab" onclick="switchMainTab('lab-grown')">
+                    Lab Grown
+                </button>
+                <button class="btn btn-outline-secondary" id="btn-tab-natural" onclick="switchMainTab('natural')">
+                    Natural
+                </button>
+                
+                <div class="vr mx-2"></div>
+                
                 <button class="btn btn-primary" onclick="openTransactionModal('in')">
-                    <i class="bi bi-plus-lg me-2"></i>Add Stock (IN)
+                    <i class="bi bi-plus-lg me-2"></i>Add Stock
                 </button>
-                <button class="btn btn-outline-danger ms-2" onclick="openTransactionModal('out')">
-                    <i class="bi bi-dash-lg me-2"></i>Use Stock (OUT)
+                <button class="btn btn-outline-danger" onclick="openTransactionModal('out')">
+                    <i class="bi bi-dash-lg me-2"></i>Use Stock
                 </button>
             </div>
         </div>
 
-        <!-- Stats Row -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="stats-card primary">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="icon-wrapper"><i class="bi bi-box-seam"></i></div>
-                            <h6 class="text-secondary mb-1">Total Parcels</h6>
-                            <h2 class="fw-bold mb-0">{{ number_format($totalParcels) }}</h2>
-                            <small class="text-muted">Distinct SKU groups</small>
-                        </div>
-                    </div>
+        <!-- Main Content Card -->
+        <div class="inventory-card">
+            
+            <!-- LEFT SIDEBAR: Shapes -->
+            <div class="sidebar-panel">
+                <h6 class="text-uppercase text-secondary fs-7 fw-bold mb-3 ps-2">Shapes</h6>
+                
+                <!-- LAB GROWN LIST -->
+                <div id="sidebar-lab-grown">
+                    @foreach($labGrownCategories as $category)
+                        <button class="shape-nav-item cat-btn-{{ $category->id }}" onclick="selectCategory('{{ $category->id }}', this)">
+                            <span>
+                                <i class="bi bi-gem me-2"></i> {{ $category->name }}
+                            </span>
+                            <span class="badge">{{ $category->diamonds->count() }}</span>
+                        </button>
+                    @endforeach
+                </div>
+                
+                <!-- NATURAL LIST (Hidden by default) -->
+                <div id="sidebar-natural" class="hidden">
+                     @foreach($naturalCategories as $category)
+                         <button class="shape-nav-item cat-btn-{{ $category->id }}" onclick="selectCategory('{{ $category->id }}', this)">
+                            <span>
+                                <i class="bi bi-diamond-half me-2"></i> {{ $category->name }}
+                            </span>
+                             <span class="badge">{{ $category->diamonds->count() }}</span>
+                        </button>
+                    @endforeach
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stats-card success">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="icon-wrapper"><i class="bi bi-gem"></i></div>
-                            <h6 class="text-secondary mb-1">Total Carat Weight</h6>
-                            <h2 class="fw-bold mb-0">{{ number_format($totalCarats, 2) }} <small
-                                    class="fs-6 text-muted">ct</small></h2>
-                            <small class="text-muted">Available stock</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stats-card danger">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="icon-wrapper"><i class="bi bi-exclamation-triangle"></i></div>
-                            <h6 class="text-secondary mb-1">Low Stock Alerts</h6>
-                            <h2 class="fw-bold mb-0 text-danger">{{ $lowStockCount }}</h2>
-                            <small class="text-muted">Items below threshold</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs-custom">
-            <button class="nav-tab-item active" onclick="switchTab('lab-grown', this)">
-                <i class="bi bi-stars me-2"></i>Lab Grown Diamonds
-            </button>
-            <button class="nav-tab-item" onclick="switchTab('natural', this)">
-                <i class="bi bi-diamond me-2"></i>Natural Diamonds
-            </button>
-        </div>
-
-        <!-- Tab Content: Lab Grown -->
-        <div id="tab-lab-grown" class="tab-content-area">
-            @foreach($labGrownCategories as $category)
-                <div class="category-accordion-item" id="cat-{{ $category->id }}">
-                    <div class="accordion-header" onclick="toggleAccordion('{{ $category->id }}')">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-light rounded p-2 text-primary">
-                                <i class="bi bi-layers fs-5"></i>
+            <!-- RIGHT PANEL: Data Table -->
+            <div class="main-panel">
+                <!-- Dynamic Content Areas -->
+                @php
+                    $allCategories = $labGrownCategories->concat($naturalCategories);
+                @endphp
+                
+                @foreach($allCategories as $category)
+                    <div id="cat-view-{{ $category->id }}" class="category-view hidden h-100 flex-column">
+                        <!-- Toolbar -->
+                        <div class="table-header">
+                            <div>
+                                <h5 class="fw-bold mb-0">{{ $category->name }}</h5>
+                                <small class="text-muted">Total Stock: {{ $category->diamonds->sum('available_pieces') }} pcs</small>
                             </div>
                             <div>
-                                <h5 class="mb-0 fw-bold">{{ $category->name }}</h5>
-                                <small class="text-muted">{{ count($category->diamonds) }} Stock Listings</small>
+                                <input type="text" class="form-control form-control-sm" placeholder="Search size..."
+                                       aria-label="Search diamonds by size"
+                                       onkeyup="filterCategoryTable('{{ $category->id }}', this.value)">        
                             </div>
                         </div>
-                        <i class="bi bi-chevron-down text-secondary transition-icon" id="icon-{{ $category->id }}"></i>
-                    </div>
 
-                    <div class="accordion-body" id="body-{{ $category->id }}">
-                        <!-- Allowed Shapes Grid -->
-                        @php
-                            // We group diamonds by shape to calculate stock counts
-                            $diamondGroups = collect($category->diamonds)->groupBy('shape');
-                        @endphp
-
-                        <h6 class="text-secondary text-uppercase fs-7 mb-3 ls-1">Select Shape</h6>
-                        <div class="shape-grid mb-4">
-                            @if(is_array($category->allowed_shapes))
-                                @foreach($category->allowed_shapes as $shapeName)
-                                    @php
-                                        // Get diamonds for this shape if any exist
-                                        $shapeDiamonds = $diamondGroups->get($shapeName, collect());
-                                        $stockCount = $shapeDiamonds->sum('available_pieces');
-                                    @endphp
-                                    <div class="shape-tile" onclick="filterTable('{{ $category->id }}', '{{ $shapeName }}', this)">
-                                        <div class="mb-2 text-primary">
-                                            <!-- Simple Icon Logic -->
-                                            @if($shapeName == 'Round') <i class="bi bi-circle"></i>
-                                            @elseif($shapeName == 'Pear') <i class="bi bi-droplet"></i>
-                                            @elseif($shapeName == 'Oval') <i class="bi bi-egg"></i> <!-- closest to oval -->
-                                            @elseif($shapeName == 'Marquise') <i class="bi bi-eye"></i>
-                                                <!-- closest to marquise shape -->
-                                            @elseif($shapeName == 'Baguette') <i class="bi bi-square"></i>
-                                            @else <i class="bi bi-gem"></i>
-                                            @endif
-                                        </div>
-                                        <div class="fw-bold">{{ $shapeName }}</div>
-                                        <small class="text-muted">{{ $stockCount }} pcs</small>
-                                    </div>
-                                @endforeach
-                            @else
-                                <div class="text-muted">No shapes defined.</div>
-                            @endif
-                        </div>
-
-                        <!-- Stock Table Container (Hidden initially or shows all?) -->
-                        <!-- Showing all initially is simpler, filtered by JS -->
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead class="bg-light">
+                        <!-- Table -->
+                        <div class="table-responsive flex-grow-1">
+                            <table class="table table-custom mb-0">
+                                <thead>
                                     <tr>
-                                        <th class="ps-4">Shape</th>
+                                        <th>Shape</th>
                                         <th>Size Label</th>
                                         <th>Sieve</th>
-                                        <th class="text-center">Stock (Pcs)</th>
-                                        <th class="text-center">Avg $/Ct</th>
-                                        <th class="text-end pe-4">Actions</th>
+                                        <th>Stock Status</th>
+                                        <th>Avg $/Ct</th>
+                                        <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($category->diamonds as $diamond)
-                                        <tr class="stock-row cat-row-{{ $category->id }}" data-shape="{{ $diamond->shape }}">
-                                            <td class="ps-4 fw-medium">{{ $diamond->shape }}</td>
-                                            <td>{{ $diamond->size_label }}</td>
+                                        <tr class="searchable-row" data-search="{{ strtolower($diamond->size_label . ' ' . $diamond->shape) }}">
+                                            <td class="fw-medium text-secondary">{{ $diamond->shape }}</td>
+                                            <td class="fw-bold">{{ $diamond->size_label }}</td>
                                             <td class="text-muted">{{ $diamond->sieve_size ?? '-' }}</td>
-                                            <td class="text-center">
-                                                <span
-                                                    class="badge {{ $diamond->available_pieces > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
-                                                    {{ $diamond->available_pieces }}
-                                                </span>
+                                            <td>
+                                                @if($diamond->available_pieces > 0)
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
+                                                        {{ $diamond->available_pieces }} pcs
+                                                    </span>
+                                                @else
+                                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
+                                                        Out of Stock
+                                                    </span>
+                                                @endif
                                             </td>
-                                            <td class="text-center">${{ number_format($diamond->purchase_price_per_ct, 2) }}</td>
-                                            <td class="text-end pe-4">
-                                                <button class="btn btn-sm btn-outline-success border"
-                                                    onclick="openTransactionModal('in', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $category->name }}')">
+                                            <td class="fw-medium">${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}</td>                                            <td class="text-end">
+                                                 <button class="btn btn-sm btn-light text-primary border"
+                                                    data-action="in"
+                                                    data-diamond-id="{{ $diamond->id }}"
+                                                    data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
+                                                    data-category-name="{{ $category->name }}"
+                                                    onclick="openTransactionModal(this.dataset.action, this.dataset.diamondId, this.dataset.diamondName, this.dataset.categoryName)">
                                                     <i class="bi bi-plus-lg"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger border ms-1"
-                                                    onclick="openTransactionModal('out', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $category->name }}')">
+                                                <button class="btn btn-sm btn-light text-danger border ms-1"
+                                                    data-action="out"
+                                                    data-diamond-id="{{ $diamond->id }}"
+                                                    data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
+                                                    data-category-name="{{ $category->name }}"
+                                                    onclick="openTransactionModal(this.dataset.action, this.dataset.diamondId, this.dataset.diamondName, this.dataset.categoryName)">
                                                     <i class="bi bi-dash-lg"></i>
-                                                </button>
-                                            </td>
+                                                </button>                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        <!-- Tab Content: Natural (Placeholder Structure) -->
-        <div id="tab-natural" class="tab-content-area hidden">
-            @foreach($naturalCategories as $category)
-                <div class="category-accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion('{{ $category->id }}')">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-light rounded p-2 text-warning">
-                                <i class="bi bi-diamond-half fs-5"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">{{ $category->name }}</h5>
-                                <small class="text-muted">
-                                    @if($category->has_color_layer)
-                                        Filter by Color & Size
-                                    @else
-                                        {{ count($category->diamonds) }} Stock Listings
-                                    @endif
-                                </small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-down text-secondary" id="icon-{{ $category->id }}"></i>
-                    </div>
-                    <div class="accordion-body" id="body-{{ $category->id }}">
-                        <!-- Allowed Shapes Grid -->
-                        @php
-                            // We group diamonds by shape to calculate stock counts
-                            $diamondGroups = collect($category->diamonds)->groupBy('shape');
-                        @endphp
-
-                        <h6 class="text-secondary text-uppercase fs-7 mb-3 ls-1">Select Shape</h6>
-                        <div class="shape-grid mb-4">
-                            @if(is_array($category->allowed_shapes))
-                                @foreach($category->allowed_shapes as $shapeName)
-                                    @php
-                                        // Get diamonds for this shape if any exist
-                                        $shapeDiamonds = $diamondGroups->get($shapeName, collect());
-                                        $stockCount = $shapeDiamonds->sum('available_pieces');
-                                    @endphp
-                                    <div class="shape-tile" onclick="filterTable('{{ $category->id }}', '{{ $shapeName }}', this)">
-                                        <div class="mb-2 text-primary">
-                                            <!-- Simple Icon Logic -->
-                                            @if($shapeName == 'Round') <i class="bi bi-circle"></i>
-                                            @elseif($shapeName == 'Pear') <i class="bi bi-droplet"></i>
-                                            @elseif($shapeName == 'Oval') <i class="bi bi-egg"></i>
-                                            @elseif($shapeName == 'Marquise') <i class="bi bi-eye"></i>
-                                            @elseif($shapeName == 'Baguette') <i class="bi bi-square"></i>
-                                            @else <i class="bi bi-gem"></i>
-                                            @endif
-                                        </div>
-                                        <div class="fw-bold">{{ $shapeName }}</div>
-                                        <small class="text-muted">{{ $stockCount }} pcs</small>
-                                    </div>
-                                @endforeach
-                            @else
-                                <div class="text-muted">No shapes defined.</div>
+                             @if($category->diamonds->isEmpty())
+                                <div class="text-center py-5">
+                                    <div class="text-muted mb-2"><i class="bi bi-box-seam fs-1"></i></div>
+                                    <p class="text-muted">No inventory records found for this category.</p>
+                                </div>
                             @endif
                         </div>
-
-                        <!-- Stock Table -->
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th class="ps-4">Shape</th>
-                                        <th>Size Label</th>
-                                        <th>Sieve</th>
-                                        <th class="text-center">Stock (Pcs)</th>
-                                        <th class="text-center">Avg $/Ct</th>
-                                        <th class="text-end pe-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($category->diamonds as $diamond)
-                                        <tr class="stock-row cat-row-{{ $category->id }}" data-shape="{{ $diamond->shape }}">
-                                            <td class="ps-4 fw-medium">{{ $diamond->shape }}</td>
-                                            <td>{{ $diamond->size_label }}</td>
-                                            <td class="text-muted">{{ $diamond->sieve_size ?? '-' }}</td>
-                                            <td class="text-center">
-                                                <span
-                                                    class="badge {{ $diamond->available_pieces > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
-                                                    {{ $diamond->available_pieces }}
-                                                </span>
-                                            </td>
-                                            <td class="text-center">${{ number_format($diamond->purchase_price_per_ct, 2) }}</td>
-                                            <td class="text-end pe-4">
-                                                <button class="btn btn-sm btn-outline-success border"
-                                                    onclick="openTransactionModal('in', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $category->name }}')">
-                                                    <i class="bi bi-plus-lg"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger border ms-1"
-                                                    onclick="openTransactionModal('out', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $category->name }}')">
-                                                    <i class="bi bi-dash-lg"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
+                @endforeach
+                
+                <!-- Initial Empty State -->
+                <div id="empty-state-placeholder" class="d-flex align-items-center justify-content-center h-100 flex-column text-muted">
+                    <i class="bi bi-arrow-left-circle fs-1 mb-3"></i>
+                    <h5>Select a category from the sidebar</h5>
                 </div>
-            @endforeach
+            </div>
         </div>
-
     </div>
 
-    <!-- Scripts -->
+    @include('melee.partials.transaction_modal')
+
     <script>
-        function switchTab(tabName, btn) {
-            // Hide all contents
-            document.querySelectorAll('.tab-content-area').forEach(el => el.classList.add('hidden'));
-            // Show selected
-            document.getElementById('tab-' + tabName).classList.remove('hidden');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-select first lab-grown category on load
+            const firstBtn = document.querySelector('#sidebar-lab-grown .shape-nav-item');
+            if(firstBtn) firstBtn.click();
+        });
 
-            // Update Buttons
-            document.querySelectorAll('.nav-tab-item').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        function toggleAccordion(id) {
-            const body = document.getElementById('body-' + id);
-            const icon = document.getElementById('icon-' + id);
-
-            if (body.classList.contains('open')) {
-                body.classList.remove('open');
-                icon.classList.remove('bi-chevron-up');
-                icon.classList.add('bi-chevron-down');
+        function switchMainTab(type) {
+            // Reset buttons
+            document.getElementById('btn-tab-lab').className = 'btn btn-outline-secondary';
+            document.getElementById('btn-tab-natural').className = 'btn btn-outline-secondary';
+            
+            if (type === 'lab-grown') {
+                 document.getElementById('btn-tab-lab').className = 'btn btn-outline-primary active';
+                 document.getElementById('sidebar-lab-grown').classList.remove('hidden');
+                 document.getElementById('sidebar-natural').classList.add('hidden');
+                 
+                 // Auto-click first visible item in this list if nothing active
+                  const first = document.querySelector('#sidebar-lab-grown .shape-nav-item');
+                  if(first) first.click();
             } else {
-                body.classList.add('open');
-                icon.classList.remove('bi-chevron-down');
-                icon.classList.add('bi-chevron-up');
+                 document.getElementById('btn-tab-natural').className = 'btn btn-outline-primary active';
+                 document.getElementById('sidebar-lab-grown').classList.add('hidden');
+                 document.getElementById('sidebar-natural').classList.remove('hidden');
+                 
+                  const first = document.querySelector('#sidebar-natural .shape-nav-item');
+                  if(first) first.click();
             }
         }
 
-        function filterTable(catId, shape, tileBtn) {
-            // Highlight Tile
-            const parent = tileBtn.closest('.shape-grid');
-            parent.querySelectorAll('.shape-tile').forEach(el => el.classList.remove('active'));
-            tileBtn.classList.add('active');
+        function selectCategory(catId, btn) {
+            // 1. Sidebar Active State
+            document.querySelectorAll('.shape-nav-item').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
 
-            // Filter Rows
-            const rows = document.querySelectorAll('.cat-row-' + catId);
+            // 2. Hide all views
+            document.querySelectorAll('.category-view').forEach(el => {
+                el.classList.remove('d-flex');
+                el.classList.add('hidden');
+            });
+            
+            document.getElementById('empty-state-placeholder').classList.add('hidden');
+            document.getElementById('empty-state-placeholder').classList.remove('d-flex');
+
+            // 3. Show target view
+            const target = document.getElementById('cat-view-' + catId);
+            if(target) {
+                target.classList.remove('hidden');
+                target.classList.add('d-flex');
+            }
+        }
+        
+        function filterCategoryTable(catId, term) {
+            term = term.toLowerCase();
+            const rows = document.querySelectorAll('#cat-view-' + catId + ' .searchable-row');
+            
             rows.forEach(row => {
-                if (row.dataset.shape === shape) {
+                const searchData = row.getAttribute('data-search');
+                if(searchData && searchData.includes(term)) {
                     row.classList.remove('hidden');
                 } else {
                     row.classList.add('hidden');
                 }
             });
         }
-
+        
+        // Transaction Modal logic
         function openTransactionModal(type, diamondId, diamondName, categoryName) {
-            // Reset state
             document.getElementById('transactionForm').reset();
-            $('#modal_diamond_select').val(null).trigger('change');
-
-            // Set Type
+            $('#modal_diamond_select').val(null).trigger('change'); // jQuery for Select2
+            
+            // Checkboxes
             if (type === 'in') {
-                document.getElementById('type_in').checked = true;
-                updateModalTheme('in');
+                if(document.getElementById('type_in')) document.getElementById('type_in').checked = true;
             } else {
-                document.getElementById('type_out').checked = true;
-                updateModalTheme('out');
+                if(document.getElementById('type_out')) document.getElementById('type_out').checked = true;
             }
 
             if (diamondId) {
-                // Pre-selected mode
                 setModalSelection(diamondId, diamondName, categoryName);
             } else {
-                // Search mode
                 resetModalSelection();
             }
 
-            var modal = new bootstrap.Modal(document.getElementById('transactionModal'));
-            modal.show();
+            var modalEl = document.getElementById('transactionModal');
+            if(modalEl) {
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
         }
-
+        
         function setModalSelection(id, name, cat) {
-            document.getElementById('modal_diamond_id').value = id;
-            document.getElementById('modal_item_name').textContent = name || 'Unknown Item';
-            document.getElementById('modal_item_cat').textContent = cat || 'Category';
-
-            document.getElementById('selection_context').style.display = 'flex';
-            document.getElementById('diamond_selector_container').style.display = 'none';
+            if(document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = id;
+            if(document.getElementById('modal_item_name')) document.getElementById('modal_item_name').textContent = name || 'Unknown Item';
+            if(document.getElementById('modal_item_cat')) document.getElementById('modal_item_cat').textContent = cat || 'Category';
+            
+            if(document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'flex';
+            if(document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'none';
         }
 
         function resetModalSelection() {
-            document.getElementById('modal_diamond_id').value = '';
-            document.getElementById('selection_context').style.display = 'none';
-            document.getElementById('diamond_selector_container').style.display = 'block';
+            if(document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = '';
+            if(document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'none';
+            if(document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'block';
         }
-
-        // Initialize Select2 & Events
-        document.addEventListener('DOMContentLoaded', function () {
-            if ($.fn.select2) {
-                $('#modal_diamond_select').select2({
-                    dropdownParent: $('#transactionModal'), // Important for modal
-                    placeholder: 'Search Melee (e.g. Round 1.25mm)',
-                    allowClear: true,
-                    ajax: {
-                        url: '{{ route("melee.search") }}',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function (params) { return { term: params.term }; },
-                        processResults: function (data) { return { results: data }; },
-                        cache: true
-                    },
-                    minimumInputLength: 0
-                });
-
-                $('#modal_diamond_select').on('select2:select', function (e) {
-                    var data = e.params.data;
-                    // Extract info from selection (assuming data.text has format "Category - Shape - Size")
-                    // data object should have those fields if controller sends them, or we parse text
-                    // The controller sends: text: "Category - Shape - Size (Stock: N)"
-                    // It also sends: category_name, available_pieces
-
-                    // Ideally, we just use the ID and let the UI show the text
-                    // But to fill our "Selection Context", we can use the text for now
-                    setModalSelection(data.id, data.text.split(' (Stock')[0], data.category_name);
-                });
-            }
-        });
     </script>
-
-    @include('melee.partials.transaction_modal')
 @endsection

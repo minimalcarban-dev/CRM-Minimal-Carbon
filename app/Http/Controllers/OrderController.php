@@ -23,6 +23,7 @@ use App\Models\OrderDraft;
 use App\Notifications\DiamondSoldNotification;
 use App\Models\MeleeTransaction;
 use App\Models\MeleeDiamond;
+use App\Services\AuditLogger;
 
 class OrderController extends Controller
 {
@@ -520,13 +521,79 @@ class OrderController extends Controller
                 }
             }
 
+            // --- Snapshot old values BEFORE assigning new fields (for audit log) ---
+            $auditFields = [
+                'order_type' => 'Order Type',
+                'client_name' => 'Client Name',
+                'client_address' => 'Client Address',
+                'client_mobile' => 'Client Mobile',
+                'client_email' => 'Client Email',
+                'client_tax_id' => 'Client Tax ID',
+                'client_tax_id_type' => 'Tax ID Type',
+                'jewellery_details' => 'Jewellery Details',
+                'diamond_details' => 'Diamond Details',
+                'diamond_sku' => 'Diamond SKU',
+                'product_other' => 'Other Product',
+                'special_notes' => 'Special Notes',
+                'shipping_company_name' => 'Shipping Company',
+                'tracking_number' => 'Tracking Number',
+                'tracking_url' => 'Tracking URL',
+                'diamond_status' => 'Diamond Status',
+                'note' => 'Priority',
+                'gross_sell' => 'Gross Sell',
+                'dispatch_date' => 'Dispatch Date',
+                'company_id' => 'Company',
+                'gold_detail_id' => 'Metal Type',
+                'ring_size_id' => 'Ring Size',
+                'setting_type_id' => 'Setting Type',
+                'earring_type_id' => 'Earring Type',
+                'melee_diamond_id' => 'Melee Diamond',
+                'melee_pieces' => 'Melee Pieces',
+                'melee_carat' => 'Melee Carat',
+                'melee_price_per_ct' => 'Melee Price/CT',
+            ];
+            $oldSnapshot = [];
+            foreach (array_keys($auditFields) as $field) {
+                $oldSnapshot[$field] = $order->getOriginal($field);
+            }
+
             // Update other fields
             $this->assignOrderFields($order, $validated);
             // Track who modified this order (original creator in submitted_by stays unchanged)
             $order->last_modified_by = Auth::guard('admin')->id();
 
+            // --- Compute diff and log audit entry ---
+            $oldValues = [];
+            $newValues = [];
+            // Helper: resolve FK IDs to human-readable names
+            $fkResolvers = [
+                'company_id' => fn($id) => $id ? (Company::find($id)->name ?? "ID:$id") : null,
+                'gold_detail_id' => fn($id) => $id ? (MetalType::find($id)->name ?? "ID:$id") : null,
+                'ring_size_id' => fn($id) => $id ? (RingSize::find($id)->name ?? "ID:$id") : null,
+                'setting_type_id' => fn($id) => $id ? (SettingType::find($id)->name ?? "ID:$id") : null,
+                'earring_type_id' => fn($id) => $id ? (ClosureType::find($id)->name ?? "ID:$id") : null,
+                'melee_diamond_id' => fn($id) => $id ? (MeleeDiamond::find($id)->name ?? "ID:$id") : null,
+            ];
+            foreach ($auditFields as $field => $label) {
+                $oldVal = $oldSnapshot[$field];
+                $newVal = $order->$field;
+                // Normalise for comparison
+                if ((string) $oldVal !== (string) $newVal) {
+                    // Resolve FK values to readable names
+                    if (isset($fkResolvers[$field])) {
+                        $oldVal = $fkResolvers[$field]($oldVal);
+                        $newVal = $fkResolvers[$field]($newVal);
+                    }
+                    $oldValues[$label] = $oldVal;
+                    $newValues[$label] = $newVal;
+                }
+            }
             $order->save();
 
+            // Log audit after save succeeds
+            if (!empty($oldValues) || !empty($newValues)) {
+                AuditLogger::log('updated', $order, Auth::guard('admin')->id(), $oldValues, $newValues);
+            }
             // If diamond SKU changed or was newly added, mark the new one as sold
             if (!empty($newDiamondSku) && $newDiamondSku !== $oldDiamondSku) {
                 $diamondController = new DiamondController();
@@ -587,7 +654,13 @@ class OrderController extends Controller
         }
 
         // Eager load relationships
-        $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator']);
+        $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator', 'lastModifier']);
+
+        // Load edit history for superadmin only
+        $editHistory = collect();
+        if ($admin->is_super) {
+            $editHistory = $order->editHistory()->with('admin')->get();
+        }
 
         $metalTypes = Cache::remember('metal_types_all', 3600, fn() => MetalType::all());
         $ringSizes = Cache::remember('ring_sizes_all', 3600, fn() => RingSize::all());
@@ -601,7 +674,8 @@ class OrderController extends Controller
             'ringSizes',
             'settingTypes',
             'closureTypes',
-            'companies'
+            'companies',
+            'editHistory'
         ));
     }
 
