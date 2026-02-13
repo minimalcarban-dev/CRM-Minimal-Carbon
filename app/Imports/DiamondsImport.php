@@ -75,16 +75,24 @@ class DiamondsImport implements
             $barcodeImageUrl = $this->generateBarcodeDataUri($sku, $barcodeNumber);
 
             // Get price values and convert from INR to USD
-            $perCt = $this->toNumericOrNull($row['per_ct'] ?? null);
-            $purchasePrice = $this->toNumericOrNull($row['purchase_price'] ?? $row['price'] ?? null);
-            $listingPrice = $this->toNumericOrNull($row['listing_price'] ?? null);
+            // Get raw values first to allow calculation before currency conversion
+            $weightRaw = $this->toNumericOrNull($row['weight'] ?? null);
+            $perCtRaw = $this->toNumericOrNull($row['per_ct'] ?? null);
+            $purchasePriceRaw = $this->toNumericOrNull($row['purchase_price'] ?? $row['price'] ?? null);
+
+            // Auto-calculate purchase_price if missing but per_ct and weight exist
+            // This assumes if per_ct is provided in INR, the calculated purchase_price will also be in INR
+            if (empty($purchasePriceRaw) && !empty($perCtRaw) && !empty($weightRaw)) {
+                $purchasePriceRaw = $perCtRaw * $weightRaw;
+            }
+
+            // Get price values and convert from INR to USD
+            $perCt = $this->currencyService->inrToUsd($perCtRaw);
+            $purchasePrice = $this->currencyService->inrToUsd($purchasePriceRaw);
+            $listingPrice = $this->currencyService->inrToUsd($this->toNumericOrNull($row['listing_price'] ?? null));
             $shippingPrice = $this->toNumericOrDefault($row['shipping_price'] ?? null, 0);
             $soldOutPrice = $this->toNumericOrNull($row['sold_out_price'] ?? null);
 
-            // Convert all price fields from INR to USD
-            $perCt = $this->currencyService->inrToUsd($perCt);
-            $purchasePrice = $this->currencyService->inrToUsd($purchasePrice);
-            $listingPrice = $this->currencyService->inrToUsd($listingPrice);
             $shippingPrice = $this->currencyService->inrToUsd($shippingPrice) ?? 0;
             $soldOutPrice = $this->currencyService->inrToUsd($soldOutPrice);
 
@@ -97,10 +105,10 @@ class DiamondsImport implements
                 'color' => $row['color'] ?? null,
                 'shape' => $row['shape'] ?? null,
                 'measurement' => $row['measurement'] ?? null,
-                'weight' => $this->toNumericOrNull($row['weight'] ?? null),
+                'weight' => $weightRaw,
                 'per_ct' => $perCt,
                 'purchase_price' => $purchasePrice,
-                'margin' => $this->toNumericOrNull($row['margin'] ?? null),
+                'margin' => $this->toNumericOrDefault($row['margin'] ?? null, 0),
                 'listing_price' => $listingPrice,
                 'shipping_price' => $shippingPrice,
                 'purchase_date' => $this->parseExcelDate($row['purchase_date'] ?? null),

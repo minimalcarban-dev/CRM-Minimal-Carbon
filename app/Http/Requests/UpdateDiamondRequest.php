@@ -24,7 +24,7 @@ class UpdateDiamondRequest extends FormRequest
             'color' => 'nullable|string|max:255',
             'shape' => 'nullable|string|max:255',
             'measurement' => 'nullable|string|max:255',
-            'margin' => 'required|numeric|min:0',
+            'margin' => 'nullable|numeric|min:0',
             'listing_price' => 'nullable|numeric|min:0',
             'offer_calculation' => 'nullable|numeric|min:0|max:100',
             'actual_listing_price' => 'nullable|numeric|min:0',
