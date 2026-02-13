@@ -155,6 +155,105 @@
             font-size: 0.875rem;
             font-weight: 600;
         }
+
+        /* ── Select2 Dropdown Styling for Transaction Modal ── */
+        #transactionModal .select2-container--bootstrap-5 .select2-selection--single {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0.55rem 0.85rem;
+            height: auto;
+            min-height: 44px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fff;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-selection--single:focus,
+        #transactionModal .select2-container--bootstrap-5.select2-container--focus .select2-selection--single,
+        #transactionModal .select2-container--bootstrap-5.select2-container--open .select2-selection--single {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            color: var(--dark);
+            font-weight: 500;
+            line-height: 1.5;
+            padding: 0;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            right: 10px;
+        }
+
+        /* Dropdown panel */
+        #transactionModal .select2-container--bootstrap-5 .select2-dropdown {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-search--dropdown {
+            padding: 0.75rem;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+            outline: none;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-results__option {
+            padding: 0.6rem 0.85rem;
+            font-size: 0.9rem;
+            color: var(--dark);
+            border-radius: 6px;
+            margin: 2px 6px;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-results__option--highlighted {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+            color: #fff !important;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-results__option--selected {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-results {
+            max-height: 220px;
+            padding: 4px 0;
+        }
+
+        /* Clear button */
+        #transactionModal .select2-container--bootstrap-5 .select2-selection__clear {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-right: 4px;
+        }
+
+        #transactionModal .select2-container--bootstrap-5 .select2-selection__clear:hover {
+            color: var(--danger);
+        }
     </style>
 
     <div class="inventory-management-container">
@@ -312,10 +411,37 @@
     @include('melee.partials.transaction_modal')
 
     <script>
+        let activeCategoryId = null;
+
         document.addEventListener('DOMContentLoaded', function() {
             // Auto-select first lab-grown category on load
             const firstBtn = document.querySelector('#sidebar-lab-grown .shape-nav-item');
             if(firstBtn) firstBtn.click();
+
+            // Initialize Select2 for the melee diamond search dropdown
+            if ($ && $.fn.select2) {
+                $('#modal_diamond_select').select2({
+                    theme: 'bootstrap-5',
+                    dropdownParent: $('#transactionModal'),
+                    placeholder: 'Search Melee Diamond (Shape, Size, etc.)',
+                    allowClear: true,
+                    ajax: {
+                        url: '{{ route("melee.search") }}',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) { return { term: params.term }; },
+                        processResults: function (data) { return { results: data }; },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
+
+                // When a diamond is selected from dropdown, populate the selection context
+                $('#modal_diamond_select').on('select2:select', function (e) {
+                    var data = e.params.data;
+                    setModalSelection(data.id, data.text.split(' (Stock')[0], data.category_name);
+                });
+            }
         });
 
         function switchMainTab(type) {
@@ -342,6 +468,9 @@
         }
 
         function selectCategory(catId, btn) {
+            // Track active category for modal filtering
+            activeCategoryId = catId;
+
             // 1. Sidebar Active State
             document.querySelectorAll('.shape-nav-item').forEach(el => el.classList.remove('active'));
             btn.classList.add('active');
@@ -380,13 +509,15 @@
         // Transaction Modal logic
         function openTransactionModal(type, diamondId, diamondName, categoryName) {
             document.getElementById('transactionForm').reset();
-            $('#modal_diamond_select').val(null).trigger('change'); // jQuery for Select2
+            $('#modal_diamond_select').val(null).trigger('change'); // Reset Select2
             
-            // Checkboxes
+            // Set type & update theme
             if (type === 'in') {
                 if(document.getElementById('type_in')) document.getElementById('type_in').checked = true;
+                updateModalTheme('in');
             } else {
                 if(document.getElementById('type_out')) document.getElementById('type_out').checked = true;
+                updateModalTheme('out');
             }
 
             if (diamondId) {

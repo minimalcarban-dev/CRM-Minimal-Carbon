@@ -53,17 +53,42 @@ class MeleeDiamondController extends Controller
      */
     public function search(Request $request)
     {
-        $term = $request->term;
+        $term = $request->term ?? '';
+        $categoryId = $request->category_id;
 
-        $diamonds = MeleeDiamond::where('shape', 'LIKE', "%{$term}%")
-            ->orWhere('size_label', 'LIKE', "%{$term}%")
-            ->with('category')
-            ->limit(20)
+        $query = MeleeDiamond::with('category');
+
+        if ($categoryId) {
+            $query->where('melee_category_id', $categoryId);
+        }
+
+        if ($term !== '') {
+            $keywords = explode(' ', $term);
+
+            $query->where(function ($q) use ($keywords) {
+                foreach ($keywords as $keyword) {
+                    if (trim($keyword) === '')
+                        continue;
+
+                    $q->where(function ($subQ) use ($keyword) {
+                        $subQ->where('shape', 'LIKE', "%{$keyword}%")
+                            ->orWhere('size_label', 'LIKE', "%{$keyword}%")
+                            ->orWhereHas('category', function ($catQ) use ($keyword) {
+                                $catQ->where('name', 'LIKE', "%{$keyword}%")
+                                    ->orWhere('type', 'LIKE', "%{$keyword}%");
+                            });
+                    });
+                }
+            });
+        }
+
+        $diamonds = $query->limit(50) // Increased limit to find more results
             ->get()
             ->map(function ($d) {
+                $typeLabel = $d->category->type === 'lab_grown' ? 'Lab Grown' : 'Natural';
                 return [
                     'id' => $d->id,
-                    'text' => "{$d->category->name} - {$d->shape} - {$d->size_label} (Stock: {$d->available_pieces})",
+                    'text' => "[$typeLabel] {$d->category->name} - {$d->shape} - {$d->size_label} (Stock: {$d->available_pieces})",
                     'available_pieces' => $d->available_pieces,
                     'category_name' => $d->category->name,
                     'price' => $d->purchase_price_per_ct // Added for auto-fill

@@ -618,6 +618,93 @@
         --info: #3b82f6;
     }
 
+    /* ── Select2 Dropdown Styling for Order Forms ── */
+    .select2-container--bootstrap-5 .select2-selection--single {
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        padding: 0.55rem 0.85rem;
+        height: auto;
+        min-height: 44px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: #fff;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single:focus,
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection--single,
+    .select2-container--bootstrap-5.select2-container--open .select2-selection--single {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        color: var(--dark);
+        font-weight: 500;
+        line-height: 1.5;
+        padding: 0;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
+    .select2-container--bootstrap-5 .select2-dropdown {
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-top: 4px;
+    }
+
+    .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        outline: none;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option {
+        padding: 0.6rem 0.85rem;
+        font-size: 0.875rem;
+        color: var(--dark);
+        border-radius: 6px;
+        margin: 2px 6px;
+        transition: background-color 0.15s, color 0.15s;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+        color: #fff !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option--selected {
+        background: rgba(99, 102, 241, 0.08);
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .select2-container--bootstrap-5 .select2-results {
+        max-height: 220px;
+        padding: 4px 0;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__clear {
+        color: #94a3b8;
+        font-size: 1.1rem;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__clear:hover {
+        color: var(--danger);
+    }
+
     /* Section Card */
     .form-section-card {
         background: white;
@@ -1046,8 +1133,10 @@
         // Check if jQuery is available (Select2 needs it)
         if (typeof $ !== 'undefined' && $.fn.select2) {
             $('#melee_diamond_select').select2({
+                theme: 'bootstrap-5',
                 placeholder: 'Search for Melee Stock...',
                 allowClear: true,
+                width: '100%',
                 ajax: {
                     url: '{{ route("melee.search") }}',
                     dataType: 'json',

@@ -350,16 +350,11 @@ class OrderController extends Controller
 
             // --- Melee Stock Deduction Logic ---
             if (!empty($order->melee_diamond_id) && $order->melee_pieces > 0) {
-                \App\Models\MeleeTransaction::create([
+                MeleeTransaction::create([
                     'melee_diamond_id' => $order->melee_diamond_id,
                     'transaction_type' => 'out',
-                    'pieces' => -$order->melee_pieces, // Out is negative pieces usually, but our logic in Transaction handles 'out'. 
-                    // Let's stick to positive here because Model boot event for OUT subtracts it?
-                    // Re-checking MeleeTransaction logic:
-                    // if type==out: diamond->available -= abs(pieces).
-                    // So we can send positive here.
                     'pieces' => abs($order->melee_pieces),
-                    'carat_weight' => $order->melee_carat ?? 0,
+                    'carat_weight' => abs($order->melee_carat ?? 0),
                     'reference_type' => 'order',
                     'reference_id' => $order->id,
                     'created_by' => Auth::guard('admin')->id(),
@@ -590,6 +585,48 @@ class OrderController extends Controller
             }
             $order->save();
 
+            // --- Melee Stock Change Detection ---
+            $oldMeleeId = $oldSnapshot['melee_diamond_id'] ?? null;
+            $oldMeleePieces = $oldSnapshot['melee_pieces'] ?? 0;
+            $oldMeleeCarat = $oldSnapshot['melee_carat'] ?? 0;
+            $newMeleeId = $order->melee_diamond_id;
+            $newMeleePieces = $order->melee_pieces ?? 0;
+            $newMeleeCarat = $order->melee_carat ?? 0;
+
+            $meleeChanged = ($oldMeleeId != $newMeleeId)
+                || ($oldMeleePieces != $newMeleePieces)
+                || ($oldMeleeCarat != $newMeleeCarat);
+
+            if ($meleeChanged) {
+                // Reverse old melee stock (if there was one)
+                if (!empty($oldMeleeId) && $oldMeleePieces > 0) {
+                    MeleeTransaction::create([
+                        'melee_diamond_id' => $oldMeleeId,
+                        'transaction_type' => 'in',
+                        'pieces' => abs($oldMeleePieces),
+                        'carat_weight' => abs($oldMeleeCarat),
+                        'reference_type' => 'order',
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::guard('admin')->id(),
+                        'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
+                    ]);
+                }
+
+                // Deduct new melee stock (if new one selected)
+                if (!empty($newMeleeId) && $newMeleePieces > 0) {
+                    MeleeTransaction::create([
+                        'melee_diamond_id' => $newMeleeId,
+                        'transaction_type' => 'out',
+                        'pieces' => abs($newMeleePieces),
+                        'carat_weight' => abs($newMeleeCarat),
+                        'reference_type' => 'order',
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::guard('admin')->id(),
+                        'notes' => 'Stock used in Order #' . $order->id,
+                    ]);
+                }
+            }
+
             // Log audit after save succeeds
             if (!empty($oldValues) || !empty($newValues)) {
                 AuditLogger::log('updated', $order, Auth::guard('admin')->id(), $oldValues, $newValues);
@@ -707,6 +744,20 @@ class OrderController extends Controller
                         $deletedPdfs++;
                     }
                 }
+            }
+
+            // --- Reverse Melee Stock on Delete ---
+            if (!empty($order->melee_diamond_id) && ($order->melee_pieces ?? 0) > 0) {
+                MeleeTransaction::create([
+                    'melee_diamond_id' => $order->melee_diamond_id,
+                    'transaction_type' => 'in',
+                    'pieces' => abs($order->melee_pieces),
+                    'carat_weight' => abs($order->melee_carat ?? 0),
+                    'reference_type' => 'order',
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::guard('admin')->id(),
+                    'notes' => 'Stock returned (Order #' . $order->id . ' deleted)',
+                ]);
             }
 
             $order->delete();
