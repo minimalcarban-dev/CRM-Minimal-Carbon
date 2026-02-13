@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\RingSize;
 use App\Models\SettingType;
 use App\Models\Client;
+use App\Notifications\OrderUpdatedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -650,6 +651,23 @@ class OrderController extends Controller
                 'new_diamond_sku' => $newDiamondSku,
                 'updated_by' => Auth::guard('admin')->id()
             ]);
+
+            // Notify Super Admins about the update
+            try {
+                $currentAdmin = Auth::guard('admin')->user();
+                $superAdmins = Admin::where('is_super', true)
+                    ->where('id', '!=', $currentAdmin->id)
+                    ->get();
+
+                foreach ($superAdmins as $superAdmin) {
+                    $superAdmin->notify(new OrderUpdatedNotification($order, $currentAdmin));
+                }
+            } catch (\Throwable $e) {
+                Log::error('Failed to send order update notification', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order updated successfully! Added ' . count($newImages) . ' new images and ' . count($newPdfs) . ' new PDFs.');
