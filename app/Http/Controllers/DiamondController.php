@@ -641,6 +641,9 @@ class DiamondController extends Controller
 
     public function downloadErrorReport($fileName)
     {
+        // Sanitize filename to prevent path traversal
+        $fileName = basename($fileName);
+
         $filePath = storage_path('app/public/imports/errors/' . $fileName);
 
         if (!file_exists($filePath)) {
@@ -649,7 +652,6 @@ class DiamondController extends Controller
 
         return response()->download($filePath, $fileName);
     }
-
     public function export(Request $request)
     {
         try {
@@ -1071,15 +1073,16 @@ class DiamondController extends Controller
      */
     public function jobHistory()
     {
-        $jobs = JobTrack::with('admin')
-            ->where('admin_id', auth()->guard('admin')->id())
-            ->orWhere(function ($query) {
-                $query->whereHas('admin', function ($q) {
-                    $q->where('is_super', true);
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $currentAdmin = auth()->guard('admin')->user();
+
+        $query = JobTrack::with('admin');
+
+        // Super admins see all jobs, regular admins see only their own
+        if (!$currentAdmin->is_super) {
+            $query->where('admin_id', $currentAdmin->id);
+        }
+
+        $jobs = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return view('diamonds.job-history', compact('jobs'));
     }
