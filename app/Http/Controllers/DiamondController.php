@@ -295,6 +295,9 @@ class DiamondController extends Controller
                 'listing_price' => $listingPrice,
                 'cut' => $validated['cut'] ?? null,
                 'shape' => $validated['shape'] ?? null,
+                'color' => $validated['color'] ?? null,
+                'clarity' => $validated['clarity'] ?? null,
+                'material' => $validated['material'] ?? null,
                 'measurement' => $validated['measurement'] ?? null,
                 'weight' => $validated['weight'] ?? 0,
                 'per_ct' => $validated['per_ct'] ?? null,
@@ -311,6 +314,7 @@ class DiamondController extends Controller
                 'barcode_number' => $barcodeNumber,
                 'barcode_image_url' => $dataUri,
                 'description' => $validated['description'] ?? null,
+                'current_location' => $validated['current_location'] ?? null,
                 'admin_id' => $adminId,
                 'note' => $validated['note'] ?? null,
                 'diamond_type' => $validated['diamond_type'] ?? null,
@@ -437,6 +441,9 @@ class DiamondController extends Controller
             $diamond->listing_price = $listingPrice;
             $diamond->cut = $validated['cut'] ?? null;
             $diamond->shape = $validated['shape'] ?? null;
+            $diamond->color = $validated['color'] ?? null;
+            $diamond->clarity = $validated['clarity'] ?? null;
+            $diamond->material = $validated['material'] ?? null;
             $diamond->measurement = $validated['measurement'] ?? null;
             $diamond->weight = $validated['weight'] ?? 0;
             $diamond->per_ct = $validated['per_ct'] ?? null;
@@ -451,6 +458,7 @@ class DiamondController extends Controller
             $diamond->profit = $validated['profit'] ?? $diamond->profit;
             $diamond->sold_out_month = $validated['sold_out_month'] ?? $diamond->sold_out_month;
             $diamond->description = $validated['description'] ?? null;
+            $diamond->current_location = $validated['current_location'] ?? null;
             $diamond->note = $validated['note'] ?? null;
             $diamond->diamond_type = $validated['diamond_type'] ?? null;
 
