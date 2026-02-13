@@ -50,6 +50,7 @@ class StoreDiamondRequest extends FormRequest
             'admin_id' => 'nullable|exists:admins,id',
             'note' => 'nullable|string',
             'diamond_type' => 'nullable|string|max:255',
+            'current_location' => 'nullable|string|max:255',
             'multi_img_upload' => 'nullable|array',
             'multi_img_upload.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ];

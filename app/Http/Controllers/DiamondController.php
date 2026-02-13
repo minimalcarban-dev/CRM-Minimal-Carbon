@@ -295,6 +295,9 @@ class DiamondController extends Controller
                 'listing_price' => $listingPrice,
                 'cut' => $validated['cut'] ?? null,
                 'shape' => $validated['shape'] ?? null,
+                'color' => $validated['color'] ?? null,
+                'clarity' => $validated['clarity'] ?? null,
+                'material' => $validated['material'] ?? null,
                 'measurement' => $validated['measurement'] ?? null,
                 'weight' => $validated['weight'] ?? 0,
                 'per_ct' => $validated['per_ct'] ?? null,
@@ -311,6 +314,7 @@ class DiamondController extends Controller
                 'barcode_number' => $barcodeNumber,
                 'barcode_image_url' => $dataUri,
                 'description' => $validated['description'] ?? null,
+                'current_location' => $validated['current_location'] ?? null,
                 'admin_id' => $adminId,
                 'note' => $validated['note'] ?? null,
                 'diamond_type' => $validated['diamond_type'] ?? null,
@@ -437,6 +441,9 @@ class DiamondController extends Controller
             $diamond->listing_price = $listingPrice;
             $diamond->cut = $validated['cut'] ?? null;
             $diamond->shape = $validated['shape'] ?? null;
+            $diamond->color = $validated['color'] ?? null;
+            $diamond->clarity = $validated['clarity'] ?? null;
+            $diamond->material = $validated['material'] ?? null;
             $diamond->measurement = $validated['measurement'] ?? null;
             $diamond->weight = $validated['weight'] ?? 0;
             $diamond->per_ct = $validated['per_ct'] ?? null;
@@ -451,6 +458,7 @@ class DiamondController extends Controller
             $diamond->profit = $validated['profit'] ?? $diamond->profit;
             $diamond->sold_out_month = $validated['sold_out_month'] ?? $diamond->sold_out_month;
             $diamond->description = $validated['description'] ?? null;
+            $diamond->current_location = $validated['current_location'] ?? null;
             $diamond->note = $validated['note'] ?? null;
             $diamond->diamond_type = $validated['diamond_type'] ?? null;
 
@@ -633,6 +641,9 @@ class DiamondController extends Controller
 
     public function downloadErrorReport($fileName)
     {
+        // Sanitize filename to prevent path traversal
+        $fileName = basename($fileName);
+
         $filePath = storage_path('app/public/imports/errors/' . $fileName);
 
         if (!file_exists($filePath)) {
@@ -641,7 +652,6 @@ class DiamondController extends Controller
 
         return response()->download($filePath, $fileName);
     }
-
     public function export(Request $request)
     {
         try {
@@ -1063,15 +1073,16 @@ class DiamondController extends Controller
      */
     public function jobHistory()
     {
-        $jobs = JobTrack::with('admin')
-            ->where('admin_id', auth()->guard('admin')->id())
-            ->orWhere(function ($query) {
-                $query->whereHas('admin', function ($q) {
-                    $q->where('is_super', true);
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $currentAdmin = auth()->guard('admin')->user();
+
+        $query = JobTrack::with('admin');
+
+        // Super admins see all jobs, regular admins see only their own
+        if (!$currentAdmin->is_super) {
+            $query->where('admin_id', $currentAdmin->id);
+        }
+
+        $jobs = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return view('diamonds.job-history', compact('jobs'));
     }
