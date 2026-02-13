@@ -291,7 +291,7 @@ class DiamondController extends Controller
             $diamond = Diamond::create([
                 'lot_no' => $validated['lot_no'],
                 'sku' => $sku,
-                'margin' => $validated['margin'],
+                'margin' => $validated['margin'] ?? 0,
                 'listing_price' => $listingPrice,
                 'cut' => $validated['cut'] ?? null,
                 'shape' => $validated['shape'] ?? null,
@@ -437,7 +437,7 @@ class DiamondController extends Controller
             );
 
             $diamond->lot_no = $validated['lot_no'];
-            $diamond->margin = $validated['margin'];
+            $diamond->margin = $validated['margin'] ?? 0;
             $diamond->listing_price = $listingPrice;
             $diamond->cut = $validated['cut'] ?? null;
             $diamond->shape = $validated['shape'] ?? null;

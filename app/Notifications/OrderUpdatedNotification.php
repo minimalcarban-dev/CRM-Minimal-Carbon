@@ -6,10 +6,9 @@ use App\Models\Order;
 use App\Models\Admin;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class OrderUpdatedNotification extends Notification
+class OrderUpdatedNotification extends Notification implements ShouldBroadcastNow
 {
     use Queueable;
 
@@ -35,7 +34,7 @@ class OrderUpdatedNotification extends Notification
      */
     public function via($notifiable)
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -55,5 +54,13 @@ class OrderUpdatedNotification extends Notification
             'url' => route('orders.show', $this->order->id),
             'type' => 'order_updated',
         ];
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     */
+    public function toBroadcast(object $notifiable): array
+    {
+        return $this->toArray($notifiable);
     }
 }
