@@ -155,6 +155,13 @@
                                 <select name="melee_diamond_id" id="melee_diamond_select" class="form-control-modern"
                                     style="width: 100%;">
                                     <option value="">-- Search Melee Diamond --</option>
+                                    @if(isset($order) && $order->meleeDiamond)
+                                        <option value="{{ $order->melee_diamond_id }}" selected>
+                                            {{ $order->meleeDiamond->category->name ?? '' }} -
+                                            {{ $order->meleeDiamond->shape }}
+                                            {{ $order->meleeDiamond->size_label }}
+                                        </option>
+                                    @endif
                                 </select>
                             </div>
                         </div>
@@ -167,7 +174,7 @@
                                     </span>
                                 </label>
                                 <input type="number" name="melee_pieces" class="form-control-modern" placeholder="0"
-                                    min="0">
+                                    min="0" value="{{ old('melee_pieces', $order->melee_pieces ?? '') }}">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -179,7 +186,7 @@
                                     </span>
                                 </label>
                                 <input type="number" step="0.01" name="melee_carat" class="form-control-modern"
-                                    placeholder="0.00">
+                                    placeholder="0.00" value="{{ old('melee_carat', $order->melee_carat ?? '') }}">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -191,7 +198,8 @@
                                     </span>
                                 </label>
                                 <input type="number" step="0.01" name="melee_price_per_ct" id="melee_price_input"
-                                    class="form-control-modern" placeholder="0.00">
+                                    class="form-control-modern" placeholder="0.00"
+                                    value="{{ old('melee_price_per_ct', $order->melee_price_per_ct ?? '') }}">
                             </div>
                         </div>
                     </div>
@@ -336,11 +344,17 @@
                     <span class="label-text">Product Images</span>
                 </span>
                 <span style="display:flex; gap:0.5rem; align-items:center;">
-                    <span class="required-badge">Required</span>
+                    @if(!isset($order) || !$order)
+                        <span class="required-badge">Required</span>
+                    @else
+                        <span class="optional-badge">Optional</span>
+                    @endif
                     <span class="badge-info">Max 10 Images</span>
                 </span>
             </label>
-            <input type="file" name="images[]" id="product_images" class="file-input-hidden" accept="image/*" multiple required>            <label for="product_images" class="file-upload-area" id="imageUploadArea">
+            <input type="file" name="images[]" id="product_images" class="file-input-hidden" accept="image/*" multiple
+                {{ !isset($order) || !$order ? 'required' : '' }}> <label for="product_images" class="file-upload-area"
+                id="imageUploadArea">
                 <div class="file-upload-content">
                     <div class="file-upload-icon diamond">
                         <i class="bi bi-cloud-upload"></i>
@@ -524,9 +538,18 @@
                             <span class="label-text">Shipping Company</span>
                         </span>
                     </label>
-                    <input type="text" name="shipping_company_name" class="form-control-modern"
-                        placeholder="e.g., FedEx, DHL, Blue Dart"
-                        value="{{ old('shipping_company_name', $order->shipping_company_name ?? '') }}">
+                    <select name="shipping_company_name" class="form-control-modern">
+                        <option value="">Select Carrier</option>
+                        <option value="Aramex" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'Aramex' ? 'selected' : '' }}>Aramex</option>
+                        <option value="USPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'USPS' ? 'selected' : '' }}>USPS</option>
+                        <option value="DHL" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'DHL' ? 'selected' : '' }}>DHL</option>
+                        <option value="FedEx" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'FedEx' ? 'selected' : '' }}>FedEx</option>
+                        <option value="UPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>UPS</option>
+                        <option value="EMS / Speed Post" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>EMS / Speed Post</option>
+                        @if(!empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post']))
+                            <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}</option>
+                        @endif
+                    </select>
                 </div>
             </div>
 
@@ -842,7 +865,15 @@
     }
 
     .file-input-hidden {
-        display: none;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+        pointer-events: none;
     }
 
     .file-upload-area {

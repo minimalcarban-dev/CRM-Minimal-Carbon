@@ -25,6 +25,14 @@ class AuditLog extends Model
 	];
 
 	/**
+	 * The entity that this audit log belongs to.
+	 */
+	public function auditable()
+	{
+		return $this->morphTo();
+	}
+
+	/**
 	 * The admin who performed this action.
 	 */
 	public function admin()

@@ -9,28 +9,34 @@ class MeleeCategoriesSeeder extends Seeder
 {
     public function run()
     {
+        // ── Standard shapes available for all categories ──
         $standardShapes = ['Round', 'Pear', 'Oval', 'Marquise', 'Baguette'];
 
-        // 1. Lab Grown Diamonds
+        // ─────────────────────────────────────────────────
+        // 1. Lab Grown Diamonds (3 categories)
+        // ─────────────────────────────────────────────────
         $labGrown = [
             [
-                'name' => 'Brilliant Cut',
+                'name' => 'Brilliant Cut Diamond',
                 'slug' => 'lab-brilliant',
                 'type' => 'lab_grown',
+                'cut_type' => 'brilliant',
                 'allowed_shapes' => $standardShapes,
                 'sort_order' => 10,
             ],
             [
-                'name' => 'Rose Cut',
+                'name' => 'Rose Cut Diamond',
                 'slug' => 'lab-rose',
                 'type' => 'lab_grown',
+                'cut_type' => 'rose',
                 'allowed_shapes' => $standardShapes,
                 'sort_order' => 20,
             ],
             [
-                'name' => 'Salt & Pepper',
+                'name' => 'Salt and Pepper',
                 'slug' => 'lab-salt-pepper',
                 'type' => 'lab_grown',
+                'cut_type' => 'salt_pepper',
                 'allowed_shapes' => $standardShapes,
                 'sort_order' => 25,
             ],
@@ -40,7 +46,9 @@ class MeleeCategoriesSeeder extends Seeder
             MeleeCategory::updateOrCreate(['slug' => $data['slug']], $data);
         }
 
+        // ─────────────────────────────────────────────────
         // 2. Natural Diamonds
+        // ─────────────────────────────────────────────────
         $natural = [
             [
                 'name' => 'Salt & Pepper',

@@ -18,8 +18,8 @@
                     <i class="bi bi-pencil"></i> Edit
                 </a>
                 <!-- <button onclick="window.print()" class="btn-action btn-print">
-                                    <i class="bi bi-printer"></i> Print
-                                </button> -->
+                                                                <i class="bi bi-printer"></i> Print
+                                                            </button> -->
             </div>
         </div>
 
@@ -110,7 +110,8 @@
 
                             @if($order->display_client_tax_id)
                                 <div class="info-row">
-                                    <span class="info-label">{{ \App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? 'Tax ID' }}</span>
+                                    <span
+                                        class="info-label">{{ \App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? 'Tax ID' }}</span>
                                     <span class="info-value">{{ $order->display_client_tax_id }}</span>
                                 </div>
                             @endif
@@ -119,28 +120,89 @@
                 </div>
 
                 <!-- Product Details -->
-                @if($order->jewellery_details || $order->diamond_details)
-                    <div class="info-section">
-                        <h3 class="section-title">
-                            <i class="bi bi-gem"></i> Product Details
-                        </h3>
-                        <div class="section-content">
-                            @if($order->jewellery_details)
-                                <div class="detail-group">
-                                    <strong>Jewellery:</strong>
-                                    <p>{{ $order->jewellery_details }}</p>
-                                </div>
-                            @endif
+                <div class="info-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-gem"></i> Product Details
+                    </h3>
+                    <div class="section-content">
+                        @if($order->jewellery_details)
+                            <div class="detail-group">
+                                <strong>Jewellery:</strong>
+                                <p>{{ $order->jewellery_details }}</p>
+                            </div>
+                        @endif
 
-                            @if($order->diamond_details)
-                                <div class="detail-group">
-                                    <strong>Diamond:</strong>
-                                    <p>{{ $order->diamond_details }}</p>
+                        @if($order->diamond_details)
+                            <div class="detail-group">
+                                <strong>Diamond Description:</strong>
+                                <p>{{ $order->diamond_details }}</p>
+                            </div>
+                        @endif
+
+                        @php
+                            $skus = is_array($order->diamond_skus) ? $order->diamond_skus : (!empty($order->diamond_sku) ? [$order->diamond_sku] : []);
+                            $prices = is_array($order->diamond_prices) ? $order->diamond_prices : [];
+                        @endphp
+
+                        @if(!empty($skus))
+                            <div class="detail-group">
+                                <strong>Diamond SKUs:</strong>
+                                <div class="mt-2">
+                                    @foreach($skus as $sku)
+                                        <div
+                                            class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded border">
+                                            <span>
+                                                <i class="bi bi-diamond text-primary"></i>
+                                                <code>{{ $sku }}</code>
+                                            </span>
+                                            @if(isset($prices[$sku]))
+                                                <span class="badge bg-success-subtle text-success">
+                                                    $ {{ number_format($prices[$sku], 2) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
+
+                        @if($order->melee_diamond_id)
+                            <div class="detail-group mt-4 p-3 border rounded bg-light">
+                                <h6 class="mb-3 text-primary"><i class="bi bi-stars"></i> Melee Diamond Details</h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Melee Item</small>
+                                        <span>{{ $order->meleeDiamond->category->name ?? 'Melee' }} —
+                                            {{ str_replace('-', ' ', $order->meleeDiamond->size_label ?? 'N/A') }}</span>
+                                    </div>
+                                    @if($order->melee_pieces)
+                                        <div class="col-3">
+                                            <small class="text-muted d-block">Pieces</small>
+                                            <span>{{ $order->melee_pieces }} pcs</span>
+                                        </div>
+                                    @endif
+                                    @if($order->melee_carat)
+                                        <div class="col-3">
+                                            <small class="text-muted d-block">Carat</small>
+                                            <span>{{ number_format($order->melee_carat, 3) }} ct</span>
+                                        </div>
+                                    @endif
+                                    @if($order->melee_price_per_ct)
+                                        <div class="col-6 mt-2">
+                                            <small class="text-muted d-block">Price per Ct</small>
+                                            <span>$ {{ number_format($order->melee_price_per_ct, 2) }}</span>
+                                        </div>
+                                        <div class="col-6 mt-2">
+                                            <small class="text-muted d-block">Total Melee Value</small>
+                                            <span class="fw-bold">$
+                                                {{ number_format($order->melee_total_value ?? ($order->melee_carat * $order->melee_price_per_ct), 2) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
-                @endif
+                </div>
 
                 <!-- Specifications -->
                 @if($order->goldDetail || $order->ringSize || $order->settingType || $order->earringType)
@@ -191,7 +253,7 @@
                         <div class="section-content">
                             <div class="price-display">
                                 <span class="price-label">Gross Sell Amount</span>
-                                <span class="price-value">$ {{ number_format($order->gross_sell, 2) }}</span>
+                                <span class="price-value">$ {{ number_format((float) $order->gross_sell, 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -212,9 +274,45 @@
                 <!-- Shipping Info -->
                 @if($order->shipping_company_name || $order->tracking_number || $order->dispatch_date)
                     <div class="info-section">
-                        <h3 class="section-title">
-                            <i class="bi bi-truck"></i> Shipping Information
-                        </h3>
+                        <div class="section-header-flex no-print">
+                            <h3 class="section-title">
+                                <i class="bi bi-truck"></i> Shipping Information
+                            </h3>
+                            <div class="d-flex align-items-center gap-2">
+                                @if($order->tracking_url)
+                                    <a href="{{ $order->tracking_url }}" target="_blank" class="tracking-link no-print m-0">
+                                        <i class="bi bi-box-arrow-up-right"></i> Official Page
+                                    </a>
+                                @endif
+                                @if($order->tracking_number && ($order->shipping_company_name || $order->tracking_url))
+                                    <form action="{{ route('orders.sync-tracking', $order) }}" method="POST" id="syncTrackingForm"
+                                        class="m-0">
+                                        @csrf
+                                        <button type="submit" class="btn-sync-tracking"
+                                            onclick="this.innerHTML='<i class=\'bi bi-arrow-repeat spin\'></i> Syncing...'">
+                                            <i class="bi bi-arrow-repeat"></i> Sync Status
+                                        </button>
+                                    </form>
+
+                                    <style>
+                                        @keyframes spin {
+                                            from {
+                                                transform: rotate(0deg);
+                                            }
+
+                                            to {
+                                                transform: rotate(360deg);
+                                            }
+                                        }
+
+                                        .bi-arrow-repeat.spin {
+                                            animation: spin 1s linear infinite;
+                                            display: inline-block;
+                                        }
+                                    </style>
+                                @endif
+                            </div>
+                        </div>
                         <div class="section-content">
                             <div class="specs-grid">
                                 @if($order->shipping_company_name)
@@ -238,12 +336,51 @@
                                             class="spec-value">{{ \Carbon\Carbon::parse($order->dispatch_date)->format('d M Y') }}</span>
                                     </div>
                                 @endif
+
+                                @if($order->tracking_status)
+                                    <div class="spec-item col-12 mt-2">
+                                        <span class="spec-label">Live Status</span>
+                                        <span
+                                            class="status-badge status-{{ strtolower(str_replace(' ', '_', $order->tracking_status)) }}">
+                                            {{ $order->tracking_status }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
 
-                            @if($order->tracking_url)
-                                <a href="{{ $order->tracking_url }}" target="_blank" class="tracking-link no-print">
-                                    <i class="bi bi-box-arrow-up-right"></i> Track Shipment
-                                </a>
+
+                            {{-- Tracking History Timeline --}}
+                            @if(!empty($order->tracking_history) && is_array($order->tracking_history) && count($order->tracking_history) > 0)
+                                <div class="tracking-timeline-container mt-4">
+                                    <h5 class="timeline-title mb-3">Shipment Journey History</h5>
+                                    <div class="tracking-history-timeline">
+                                        @foreach($order->tracking_history as $history)
+                                            <div class="tracking-item">
+                                                <div class="tracking-point"></div>
+                                                <div class="tracking-info">
+                                                    <div class="tracking-header">
+                                                        <span class="tracking-status">{{ $history['status'] ?? 'Update' }}</span>
+                                                        <span class="tracking-date">{{ $history['date'] ?? '' }}</span>
+                                                    </div>
+                                                    @if(!empty($history['location']))
+                                                        <div class="tracking-location">
+                                                            <i class="bi bi-geo-alt"></i> {{ $history['location'] }}
+                                                        </div>
+                                                    @endif
+                                                    @if(!empty($history['description']))
+                                                        <div class="tracking-desc">{{ $history['description'] }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @if($order->last_tracker_sync)
+                                        <div class="sync-info mt-3 text-muted">
+                                            <small><i class="bi bi-clock"></i> Last updated:
+                                                {{ $order->last_tracker_sync->diffForHumans() }}</small>
+                                        </div>
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -256,7 +393,11 @@
 
                 <!-- Product Images -->
                 @php
-                    $images = is_string($order->images) ? json_decode($order->images, true) : ($order->images ?? []);
+                    $images = $order->images;
+                    if (is_string($images)) {
+                        $images = json_decode($images, true);
+                    }
+                    $images = is_array($images) ? $images : [];
                 @endphp
 
                 @if(!empty($images) && count($images) > 0)
@@ -282,7 +423,11 @@
 
                 <!-- PDF Documents -->
                 @php
-                    $pdfs = is_string($order->order_pdfs) ? json_decode($order->order_pdfs, true) : ($order->order_pdfs ?? []);
+                    $pdfs = $order->order_pdfs;
+                    if (is_string($pdfs)) {
+                        $pdfs = json_decode($pdfs, true);
+                    }
+                    $pdfs = is_array($pdfs) ? $pdfs : [];
                 @endphp
 
                 @if(!empty($pdfs) && count($pdfs) > 0)
@@ -868,15 +1013,16 @@
             display: inline-flex;
             align-items: center;
             gap: 0.375rem;
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 1.25rem;
             background: var(--primary);
             color: var(--white);
             text-decoration: none;
-            border-radius: 6px;
-            font-size: 0.875rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
         }
 
         .tracking-link:hover {
@@ -1181,6 +1327,189 @@
         }
 
         /* Print Styles */
+        }
+
+        /* Tracking Timeline Styles */
+        .section-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 0.5rem 0 1rem 0;
+            /* Added vertical padding */
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+            /* Handle wrapping cases */
+            gap: 1rem;
+        }
+
+        .section-header-flex .section-title {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .btn-sync-tracking {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            white-space: nowrap;
+        }
+
+        .btn-sync-tracking:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .btn-sync-tracking i {
+            font-size: 1rem;
+            transition: transform 0.5s ease;
+        }
+
+        .btn-sync-tracking:active i {
+            transform: rotate(180deg);
+        }
+
+        .tracking-history-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .tracking-history-timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .tracking-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .tracking-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .tracking-point {
+            position: absolute;
+            left: -2rem;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--primary);
+            z-index: 1;
+        }
+
+        .tracking-item:first-child .tracking-point {
+            background: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        }
+
+        .tracking-info {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .tracking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tracking-status {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 0.9375rem;
+        }
+
+        .tracking-date {
+            font-size: 0.75rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        /* Status Colors for Shipping Badge in Show Page */
+        .status-badge.status-delivered {
+            background: #dcfce7 !important;
+            color: #166534 !important;
+        }
+
+        .status-badge.status-in_transit {
+            background: #fef3c7 !important;
+            color: #92400e !important;
+        }
+
+        .status-badge.status-picked_up {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+        }
+
+        .status-badge.status-exception {
+            background: #fee2e2 !important;
+            color: #991b1b !important;
+        }
+
+        .status-badge.status-unknown {
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+        }
+
+        .tracking-location {
+            font-size: 0.8125rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .tracking-desc {
+            font-size: 0.875rem;
+            color: var(--secondary);
+            line-height: 1.4;
+        }
+
+        /* Status Colors for Tracker */
+        .status-badge.status-shipped {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .status-badge.status-delivered {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-badge.status-in_transit {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .status-badge.status-pickup {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
         @media print {
             .no-print {
                 display: none !important;
@@ -1519,6 +1848,167 @@
                 max-width: 120px;
                 font-size: 0.7rem;
             }
+        }
+
+        /* --- Tracking History Timeline (New) --- */
+        .tracking-timeline-container {
+            position: relative;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-top: 1.5rem;
+        }
+
+        .timeline-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .tracking-history-timeline {
+            position: relative;
+            padding-left: 2rem;
+            border-left: 2px solid #cbd5e1;
+            margin-left: 10px;
+        }
+
+        .tracking-item {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .tracking-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .tracking-point {
+            position: absolute;
+            left: -2.6rem;
+            top: 0.25rem;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border: 3px solid #64748b;
+            border-radius: 50%;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .tracking-item:first-child .tracking-point {
+            border-color: #10b981;
+            /* Green for latest */
+            background: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+            transform: scale(1.1);
+        }
+
+        .tracking-info {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .tracking-item:hover .tracking-info {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .tracking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tracking-status {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1e293b;
+            text-transform: capitalize;
+        }
+
+        .tracking-date {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-family: monospace;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .tracking-location {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .tracking-desc {
+            font-size: 0.9rem;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        /* Tracking Status Badges Colors */
+        .status-transit,
+        .status-in_transit {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-delivered {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-pending {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .status-exception {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .status-not_found,
+        .status-notfound {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .status-info_received,
+        .status-inforeceived {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-pickup {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .status-out_for_delivery {
+            background: #fae8ff;
+            color: #86198f;
+        }
+
+        .status-failed_attempt {
+            background: #ffe4e6;
+            color: #be123c;
         }
     </style>
 

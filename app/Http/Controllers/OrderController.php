@@ -23,6 +23,10 @@ use App\Models\OrderDraft;
 use App\Notifications\DiamondSoldNotification;
 use App\Models\MeleeTransaction;
 use App\Models\MeleeDiamond;
+use App\Services\ShippingTrackingService;
+use App\Notifications\OrderUpdatedNotification;
+use App\Notifications\OrderCreatedNotification;
+use Illuminate\Support\Facades\Notification;
 use App\Services\AuditLogger;
 
 class OrderController extends Controller
@@ -92,6 +96,11 @@ class OrderController extends Controller
             ->whereIn('diamond_status', $shippedStatuses)
             ->count();
 
+        // Count In Transit orders based on tracking_status
+        $inTransitCount = (clone $baseQuery)
+            ->where('tracking_status', 'In Transit')
+            ->count();
+
         // Compute totals and breakdowns EXCLUDING shipped orders
         // Note: whereNotIn excludes NULL values, so we need to explicitly include them  
         $nonShippedQuery = (clone $baseQuery)->where(function ($q) use ($shippedStatuses) {
@@ -146,6 +155,8 @@ class OrderController extends Controller
         // If shipped filter is applied, show only shipped orders
         if ($request->filled('shipped') && $request->shipped == '1') {
             $query->whereIn('diamond_status', $shippedStatuses);
+        } elseif ($request->filled('in_transit') && $request->in_transit == '1') {
+            $query->where('tracking_status', 'In Transit');
         } else {
             // Otherwise, hide shipped orders from main listing
             // Note: whereNotIn excludes NULL values, so we need to explicitly include them
@@ -187,6 +198,7 @@ class OrderController extends Controller
             'orderTypeCounts',
             'statusCounts',
             'shippedOrdersCount',
+            'inTransitCount',
             'todaysSales',
             'monthSales',
             'todaysOrderCount',
@@ -286,8 +298,9 @@ class OrderController extends Controller
                 $images = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
                 $pdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
 
-                $order->images = json_encode($images);
-                $order->order_pdfs = json_encode($pdfs);
+                // Model handles JSON conversion automatically via casts
+                $order->images = $images;
+                $order->order_pdfs = $pdfs;
                 $order->save();
 
             } catch (\Exception $e) {
@@ -329,20 +342,13 @@ class OrderController extends Controller
 
                 // Notify all admins about the diamond sale(s) - batch notification
                 if (!empty($soldDiamonds)) {
+                    /** @var Admin $currentAdmin */
                     $currentAdmin = Auth::guard('admin')->user();
                     $allAdmins = Admin::where('id', '!=', $currentAdmin->id)->get();
 
-                    foreach ($soldDiamonds as $soldDiamond) {
-                        foreach ($allAdmins as $admin) {
-                            try {
-                                $admin->notify(new DiamondSoldNotification($soldDiamond, $currentAdmin));
-                            } catch (\Throwable $e) {
-                                Log::error('Failed to send diamond sold notification', [
-                                    'admin_id' => $admin->id,
-                                    'diamond_id' => $soldDiamond->id,
-                                    'error' => $e->getMessage()
-                                ]);
-                            }
+                    if ($allAdmins->isNotEmpty()) {
+                        foreach ($soldDiamonds as $soldDiamond) {
+                            Notification::send($allAdmins, new DiamondSoldNotification($soldDiamond, $currentAdmin));
                         }
                     }
                 }
@@ -363,6 +369,14 @@ class OrderController extends Controller
             }
 
             DB::commit();
+
+            // --- Notify Super Admins about the new order ---
+            $superAdmins = Admin::where('is_super', true)->get();
+            /** @var Admin $createdBy */
+            $createdBy = Auth::guard('admin')->user();
+            if ($superAdmins->isNotEmpty()) {
+                Notification::send($superAdmins, new OrderCreatedNotification($order, $createdBy));
+            }
 
             Log::info('Order created successfully', [
                 'order_id' => $order->id,
@@ -489,13 +503,33 @@ class OrderController extends Controller
             $newImages = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
             $newPdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
 
-            // Decode existing JSON data safely
-            $existingImages = json_decode($order->images ?? '[]', true) ?: [];
-            $existingPdfs = json_decode($order->order_pdfs ?? '[]', true) ?: [];
+            // Correctly retrieve and normalize existing images (handle potential double-encoding)
+            $existingImages = $order->images;
+            if (is_string($existingImages)) {
+                $existingImages = json_decode($existingImages, true) ?: [];
+            }
+            if (is_array($existingImages) && count($existingImages) === 1 && is_string($existingImages[0])) {
+                $decoded = json_decode($existingImages[0], true);
+                if (is_array($decoded))
+                    $existingImages = $decoded;
+            }
+            $existingImages = is_array($existingImages) ? $existingImages : [];
+
+            // Correctly retrieve and normalize existing PDFs
+            $existingPdfs = $order->order_pdfs;
+            if (is_string($existingPdfs)) {
+                $existingPdfs = json_decode($existingPdfs, true) ?: [];
+            }
+            if (is_array($existingPdfs) && count($existingPdfs) === 1 && is_string($existingPdfs[0])) {
+                $decoded = json_decode($existingPdfs[0], true);
+                if (is_array($decoded))
+                    $existingPdfs = $decoded;
+            }
+            $existingPdfs = is_array($existingPdfs) ? $existingPdfs : [];
 
             // Merge old + new files
-            $order->images = json_encode(array_merge($existingImages, $newImages));
-            $order->order_pdfs = json_encode(array_merge($existingPdfs, $newPdfs));
+            $order->images = array_merge($existingImages, $newImages);
+            $order->order_pdfs = array_merge($existingPdfs, $newPdfs);
 
             // Track if diamond SKU changed
             $oldDiamondSku = $order->diamond_sku;
@@ -651,6 +685,16 @@ class OrderController extends Controller
                 'updated_by' => Auth::guard('admin')->id()
             ]);
 
+            // --- Notify Super Admins about the update ---
+            if (!empty($newValues)) {
+                $superAdmins = Admin::where('is_super', true)->get();
+                /** @var Admin $updatedBy */
+                $updatedBy = Auth::guard('admin')->user();
+                if ($superAdmins->isNotEmpty()) {
+                    Notification::send($superAdmins, new OrderUpdatedNotification($order, $updatedBy, $oldValues, $newValues));
+                }
+            }
+
             return redirect()->route('orders.index')
                 ->with('success', 'Order updated successfully! Added ' . count($newImages) . ' new images and ' . count($newPdfs) . ' new PDFs.');
 
@@ -684,7 +728,7 @@ class OrderController extends Controller
             $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
             if (in_array($order->diamond_status, $shippedStatuses)) {
                 // Use startOfDay comparison to be safe with time parts
-                if ($order->dispatch_date && $order->dispatch_date->lt(now()->subDays(10)->startOfDay())) {
+                if ($order->dispatch_date && \Illuminate\Support\Carbon::parse($order->dispatch_date)->lt(now()->subDays(10)->startOfDay())) {
                     abort(403, 'This shipped order is no longer visible (exceeded 10-day viewing window).');
                 }
             }
@@ -695,15 +739,14 @@ class OrderController extends Controller
 
         // Load edit history for superadmin only
         $editHistory = collect();
-        if ($admin->is_super) {
-            $editHistory = $order->editHistory()->with('admin')->get();
-        }
+        $metalTypes = MetalType::all();
+        $ringSizes = RingSize::all();
+        $settingTypes = SettingType::all();
+        $closureTypes = ClosureType::all();
+        $companies = Company::all();
 
-        $metalTypes = Cache::remember('metal_types_all', 3600, fn() => MetalType::all());
-        $ringSizes = Cache::remember('ring_sizes_all', 3600, fn() => RingSize::all());
-        $settingTypes = Cache::remember('setting_types_all', 3600, fn() => SettingType::all());
-        $closureTypes = Cache::remember('closure_types_all', 3600, fn() => ClosureType::all());
-        $companies = Cache::remember('companies_all', 3600, fn() => Company::all());
+        // Get edit history using model relationship
+        $editHistory = $order->editHistory()->with('admin')->get();
 
         return view('orders.show', compact(
             'order',
@@ -717,6 +760,132 @@ class OrderController extends Controller
     }
 
     /**
+     * Sync tracking data from carrier website
+     */
+    public function syncTracking(Order $order, ShippingTrackingService $trackingService)
+    {
+        try {
+            $result = $trackingService->syncOrderTracking($order);
+
+            if (request()->ajax() || request()->expectsJson()) {
+                return response()->json($result);
+            }
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            }
+
+            return redirect()->back()->with('error', $result['message']);
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Controller Error: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * AJAX: Get basic order info for quick overview.
+     */
+    public function quickView(Order $order)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if (!$admin->is_super) {
+            if ($order->submitted_by !== $admin->id && !$admin->hasPermission('orders.view_team')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        }
+
+        $order->load(['creator', 'company', 'meleeDiamond.category']);
+
+        return response()->json([
+            'id' => $order->id,
+            'client_name' => $order->client_name ?? '-',
+            'order_type' => $order->order_type,
+            'jewellery_details' => $order->jewellery_details,
+            'diamond_details' => $order->diamond_details,
+            'diamond_sku' => $order->diamond_sku,
+            'melee_details' => $order->melee_diamond_id ? [
+                'name' => ($order->meleeDiamond->category->name ?? 'Melee') . ' — ' . str_replace('-', ' ', $order->meleeDiamond->size_label ?? 'N/A'),
+                'pieces' => $order->melee_pieces,
+                'carat' => $order->melee_carat,
+                'value' => number_format((float) ($order->melee_total_value ?? 0), 2)
+            ] : null,
+            'gross_sell' => number_format((float) ($order->gross_sell ?? 0), 2),
+            'status' => $order->diamond_status,
+            'created_at' => $order->created_at->format('d M Y'),
+            'submitted_by' => $order->creator->name ?? 'Unknown',
+            'company' => $order->company->name ?? 'N/A',
+            'url' => route('orders.show', $order->id)
+        ]);
+    }
+
+    /**
+     * Remove a single file from an order and Cloudinary.
+     */
+    public function removeFile(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'file_url' => 'required|string',
+            'type' => 'required|in:image,pdf'
+        ]);
+
+        $fileUrl = $validated['file_url'];
+        $type = $validated['type'];
+        $field = ($type === 'image') ? 'images' : 'order_pdfs';
+
+        // Retrieve current files and normalize
+        $files = $order->$field;
+        if (is_string($files)) {
+            $files = json_decode($files, true) ?: [];
+        }
+        if (is_array($files) && count($files) === 1 && is_string($files[0])) {
+            $decoded = json_decode($files[0], true);
+            if (is_array($decoded))
+                $files = $decoded;
+        }
+        $files = is_array($files) ? $files : [];
+
+        $targetFile = null;
+        $remainingFiles = [];
+
+        foreach ($files as $file) {
+            $url = is_array($file) ? ($file['url'] ?? '') : $file;
+            if ($url === $fileUrl) {
+                $targetFile = $file;
+            } else {
+                $remainingFiles[] = $file;
+            }
+        }
+
+        if ($targetFile) {
+            // Delete from Cloudinary if public_id exists
+            if (is_array($targetFile) && isset($targetFile['public_id'])) {
+                $resourceType = ($type === 'pdf') ? 'raw' : 'image';
+                $this->deleteFromCloudinary($targetFile['public_id'], $resourceType);
+            }
+
+            // Update order record
+            $order->$field = $remainingFiles;
+            $order->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'File removed successfully'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'File not found'
+        ], 404);
+    }
+
+    /**
      * Delete an order and its attached files from Cloudinary.
      */
     public function destroy(Order $order)
@@ -727,7 +896,8 @@ class OrderController extends Controller
 
         try {
             // Delete images from Cloudinary
-            $images = is_string($order->images) ? json_decode($order->images, true) : ($order->images ?? []);
+            $imagesRaw = $order->images;
+            $images = is_string($imagesRaw) ? json_decode($imagesRaw, true) : (is_array($imagesRaw) ? $imagesRaw : []);
             foreach ($images as $image) {
                 if (isset($image['public_id'])) {
                     if ($this->deleteFromCloudinary($image['public_id'], 'image')) {
@@ -737,7 +907,8 @@ class OrderController extends Controller
             }
 
             // Delete PDFs from Cloudinary
-            $pdfs = is_string($order->order_pdfs) ? json_decode($order->order_pdfs, true) : ($order->order_pdfs ?? []);
+            $pdfsRaw = $order->order_pdfs;
+            $pdfs = is_string($pdfsRaw) ? json_decode($pdfsRaw, true) : (is_array($pdfsRaw) ? $pdfsRaw : []);
             foreach ($pdfs as $pdf) {
                 if (isset($pdf['public_id'])) {
                     if ($this->deleteFromCloudinary($pdf['public_id'], 'raw')) {
@@ -779,6 +950,49 @@ class OrderController extends Controller
                 'deleted_pdfs' => $deletedPdfs
             ]);
             return back()->with('error', 'Failed to delete order: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Sync tracking for all orders.
+     */
+    public function syncAllTracking(ShippingTrackingService $trackingService)
+    {
+        set_time_limit(300); // Increase time limit to 5 minutes
+
+        try {
+            $orders = Order::whereNotNull('tracking_number')
+                ->orWhereNotNull('tracking_url')
+                ->get();
+
+            $count = 0;
+            $successValues = 0;
+            $failures = 0;
+
+            foreach ($orders as $order) {
+                // Skip if no tracking info actually exists (double check)
+                if (empty($order->tracking_number) && empty($order->tracking_url)) {
+                    continue;
+                }
+
+                $result = $trackingService->syncOrderTracking($order);
+
+                if ($result['success']) {
+                    $successValues++;
+                } else {
+                    $failures++;
+                }
+                $count++;
+
+                // Small delay to be polite to the API
+                usleep(200000); // 0.2s
+            }
+
+            return redirect()->back()->with('success', "Sync completed. Processed: $count. Success: $successValues. Failed: $failures.");
+
+        } catch (\Exception $e) {
+            Log::error("Bulk Sync Error: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Bulk sync failed: ' . $e->getMessage());
         }
     }
 
@@ -896,7 +1110,13 @@ class OrderController extends Controller
         $order->special_notes = $validated['special_notes'] ?? '';
         $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
         $order->tracking_number = $validated['tracking_number'] ?? '';
-        $order->tracking_url = $validated['tracking_url'] ?? '';
+
+        $trackingUrl = $validated['tracking_url'] ?? '';
+        if (empty($trackingUrl) && !empty($order->tracking_number) && !empty($order->shipping_company_name)) {
+            $trackingService = new ShippingTrackingService();
+            $trackingUrl = $trackingService->generateTrackingUrl($order->shipping_company_name, $order->tracking_number);
+        }
+        $order->tracking_url = $trackingUrl;
 
         // Integer foreign key fields - use null instead of empty string for MySQL compatibility
         $order->gold_detail_id = !empty($validated['gold_detail_id']) ? $validated['gold_detail_id'] : null;

@@ -12,29 +12,27 @@ class MeleeDiamondSeeder extends Seeder
     {
         $categories = MeleeCategory::all();
 
-        // Standard sizes from 0.8 to 4.0 mm
-        $sizes = [];
-        for ($i = 8; $i <= 40; $i++) {
-            $val = $i / 10;
-            $sizes[] = number_format($val, 1) . ' mm';
-        }
-        // Add some sieve sizes or specific ones if needed, but simple mm sizes are good start.
+        // Default sizes (numeric values only - will be stored as "shape-size" format)
+        $defaultSizes = [0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5, 1.7, 2.0, 2.5, 3.0];
 
         foreach ($categories as $category) {
             if (empty($category->allowed_shapes))
                 continue;
 
             foreach ($category->allowed_shapes as $shape) {
-                foreach ($sizes as $size) {
+                foreach ($defaultSizes as $size) {
+                    // size_label stored as "shape-size" in lowercase
+                    // e.g., "round-1.0", "pear-2.5"
+                    $sizeLabel = strtolower($shape) . '-' . $size;
+
                     MeleeDiamond::updateOrCreate(
                         [
                             'melee_category_id' => $category->id,
                             'shape' => $shape,
-                            'size_label' => $size,
+                            'size_label' => $sizeLabel,
                         ],
                         [
-                            // Defaults for new records
-                            'color' => 'White', // Default color, user can edit? or maybe null
+                            'color' => null,
                             'sieve_size' => null,
                             'total_pieces' => 0,
                             'available_pieces' => 0,

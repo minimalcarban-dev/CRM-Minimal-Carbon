@@ -14,6 +14,10 @@
         window.authAdminId = @json(Auth::guard('admin')->user()?->id ?? null);
         window.authAdminIsSuper = @json(Auth::guard('admin')->user()?->is_super ?? false);
         window.authAdminName = @json(Auth::guard('admin')->user()?->name ?? 'Admin');
+
+        // Pusher credentials for Echo
+        window.chatPusherKey = @json(config('broadcasting.connections.pusher.key'));
+        window.chatPusherCluster = @json(config('broadcasting.connections.pusher.options.cluster'));
     </script>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -1360,136 +1364,183 @@
                 font-size: 1.25rem;
             }
         }
+
         @media (max-width: 575px) {
             #mainContent {
                 margin-left: 0px;
                 padding: 0 10px;
             }
-            h2.navbar-title, .navbar-right .notification-btn i, .notification-header h6, .notification-empty p,.notification-icon, .page-subtitle   {
+
+            h2.navbar-title,
+            .navbar-right .notification-btn i,
+            .notification-header h6,
+            .notification-empty p,
+            .notification-icon,
+            .page-subtitle {
                 font-size: 12px;
             }
+
             .navbar-left button#topSidebarToggle {
                 display: none;
             }
+
             .notification-btn {
                 width: 34px;
                 height: 34px;
             }
+
             .notification-badge {
                 font-size: 7px;
                 padding: 1px 5px;
             }
+
             .profile-btn {
                 padding: 5px 7px;
                 font-size: 13px;
             }
+
             .profile-avatar {
                 width: 23px;
                 height: 23px;
                 font-size: 11px;
                 border-radius: 50%;
             }
+
             .navbar-right {
                 gap: 10px;
             }
+
             .notification-menu {
                 width: calc(100vw - 28px);
                 left: 0;
                 transform: translateX(-63%);
             }
+
             .notification-header {
                 padding: 10px 10px;
             }
+
             .notification-empty i {
                 font-size: 23px;
             }
+
             .notification-divider {
                 padding: 6px 4px;
                 font-size: 13px;
             }
+
             .notification-item {
                 gap: 8px;
                 padding: 8px;
             }
+
             .notification-icon {
                 width: 30px;
                 height: 30px;
             }
+
             .notification-message {
                 font-size: 11PX;
             }
+
             .notification-time {
                 font-size: 10PX;
             }
+
             .notification-footer a {
                 font-size: 12px !important;
             }
+
             .profile-menu {
                 width: calc(100vw - 25px);
                 left: 0;
                 right: 0;
                 transform: translateX(-78%);
             }
-            .breadcrumb-current, .breadcrumb-link {
+
+            .breadcrumb-current,
+            .breadcrumb-link {
                 font-size: 11px;
             }
+
             .page-title {
                 font-size: 17px;
             }
+
             .page-header {
                 padding: 15px;
                 margin-bottom: 15px;
             }
+
             .toast.custom-toast {
                 min-width: 100%;
                 font-size: 19px;
                 width: 100%;
             }
-            .toast.custom-toast .toast-body, .toast.custom-toast .btn-close{
+
+            .toast.custom-toast .toast-body,
+            .toast.custom-toast .btn-close {
                 font-size: 12px;
             }
+
             .toast.custom-toast .toast-icon {
                 font-size: 14px;
             }
+
             h1.dashboard-title {
                 font-size: 16px;
                 margin-top: 6px;
             }
+
             p.dashboard-subtitle {
                 font-size: 12px;
             }
+
             .welcome-card .welcome-content {
                 gap: 15px;
                 margin-bottom: 15px;
             }
+
             .welcome-card .welcome-title {
                 font-size: 14px;
             }
+
             #mainContent .welcome-card {
                 padding: 15px;
                 margin-bottom: 13px;
             }
-            #mainContent .btn-primary-modern,#mainContent .btn-secondary-modern {
+
+            #mainContent .btn-primary-modern,
+            #mainContent .btn-secondary-modern {
                 padding: 5px 9px;
                 font-size: 12px;
             }
-            #mainContent .welcome-actions{
+
+            #mainContent .welcome-actions {
                 display: unset;
             }
+
             .section-header {
                 padding: 10px;
             }
-            #mainContent .section-title ,#mainContent .quick-link-title{
+
+            #mainContent .section-title,
+            #mainContent .quick-link-title {
                 font-size: 14px;
             }
-            #mainContent .section-subtitle,#mainContent .quick-link-description{
+
+            #mainContent .section-subtitle,
+            #mainContent .quick-link-description {
                 font-size: 11px;
             }
-            #mainContent .welcome-icon,#mainContent .quick-link-icon {
+
+            #mainContent .welcome-icon,
+            #mainContent .quick-link-icon {
                 width: 40px;
                 height: 40px;
                 font-size: 18px;
             }
+
             #mainContent .quick-link-card {
                 padding: 10px;
                 gap: 10px;
@@ -2154,16 +2205,18 @@
         });
 
         // Toast Helper
-        function showToast(message, delay = 3000) {
+        window.showToast = function(message, delay = 3000) {
             try {
                 const container = document.getElementById('toast-container');
+                if (!container) return;
+                
                 const toastEl = document.createElement('div');
                 toastEl.className = 'toast align-items-center custom-toast border-0';
                 toastEl.setAttribute('role', 'alert');
                 toastEl.innerHTML = `
                     <div class="d-flex">
                         <div class="toast-body">
-                            <span class="toast-icon">💬</span>
+                            <span class="toast-icon">🔔</span>
                             <span>${message}</span>
                         </div>
                         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
@@ -2176,7 +2229,7 @@
                 bsToast.show();
                 toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
             } catch (e) {
-                alert(message);
+                console.error('[Toast Error]', e);
             }
         }
 
@@ -2561,19 +2614,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                            <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                <div>
-                                                                    <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                    <div style="font-size: 0.8rem; color: #64748b;">
-                                                                        ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                                    <div>
+                                                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                                        <div style="font-size: 0.8rem; color: #64748b;">
+                                                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                        </div>
                                                                     </div>
+                                                                    <a href="${draft.resume_url}"
+                                                                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                                        Resume
+                                                                    </a>    
                                                                 </div>
-                                                                <a href="${draft.resume_url}"
-                                                                    style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                                    Resume
-                                                                </a>    
-                                                            </div>
-                                                        `;
+                                                            `;
                             });
                             draftsHtml += '</div>';
 
@@ -2581,11 +2634,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                            <p style="color: #64748b; margin-bottom: 1rem;">
-                                                                You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                            </p>
-                                                            ${draftsHtml}
-                                                        `,
+                                                                <p style="color: #64748b; margin-bottom: 1rem;">
+                                                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                                                </p>
+                                                                ${draftsHtml}
+                                                            `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',

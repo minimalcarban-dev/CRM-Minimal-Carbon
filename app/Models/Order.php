@@ -50,6 +50,9 @@ class Order extends Model
         'shipping_company_name',
         'tracking_number',
         'tracking_url',
+        'tracking_status',
+        'tracking_history',
+        'last_tracker_sync',
         'dispatch_date',
         'submitted_by',
         'last_modified_by',
@@ -61,6 +64,8 @@ class Order extends Model
         'order_pdfs' => 'array',
         'diamond_skus' => 'array', // New: cast to array for multi-SKU support
         'diamond_prices' => 'array', // Cast JSON to array for diamond prices
+        'tracking_history' => 'array',
+        'last_tracker_sync' => 'datetime',
         'dispatch_date' => 'date',
         'gross_sell' => 'decimal:2',
     ];

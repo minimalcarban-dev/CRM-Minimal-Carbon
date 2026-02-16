@@ -3,7 +3,8 @@
 @section('title', 'Edit Order')
 
 @section('content')
-    <div class="page-header d-block d-sm-flex d-lg-flex d-md-flex d-xl-flex justify-content-between align-items-center mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
+    <div
+        class="page-header d-block d-sm-flex d-lg-flex d-md-flex d-xl-flex justify-content-between align-items-center mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
         <div class="mb-lg-0 mb-xl-0 mb-md-0 mb-2">
             <h1 class="page-title">Edit Order #{{ $order->id }}</h1>
             <p class="page-subtitle">Update order details and related information</p>
@@ -29,18 +30,35 @@
 
                 <div class="row">
                     <!-- Current Images -->
-                    @if($order->images)
+                    @php
+                        $images = $order->images;
+                        if (is_string($images)) {
+                            $images = json_decode($images, true) ?: [];
+                        }
+                        if (is_array($images) && count($images) === 1 && is_string($images[0])) {
+                            $decoded = json_decode($images[0], true);
+                            if (is_array($decoded)) $images = $decoded;
+                        }
+                        $images = is_array($images) ? $images : [];
+                    @endphp
+                    @if(!empty($images))
                         <div class="col-md-6 mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
                             <div class="file-section">
                                 <div class="file-section-header">
                                     <i class="bi bi-images"></i>
-                                    <span>Product Images ({{ count(json_decode($order->images, true) ?? []) }})</span>
+                                    <span>Product Images ({{ count($images) }})</span>
                                 </div>
                                 <div class="current-images-grid">
-                                    @foreach(json_decode($order->images, true) ?? [] as $index => $image)
-                                        <div class="current-image-item">
-                                            <img src="{{ $image['url'] }}" alt="Image {{ $index + 1 }}"
-                                                onclick="openImageModal(this.src)">
+                                    @foreach($images as $index => $image)
+                                        @php
+                                            $url = is_array($image) ? ($image['url'] ?? '') : $image;
+                                        @endphp
+                                        <div class="current-image-item" id="image-{{ $index }}">
+                                            <img src="{{ $url }}" alt="Image {{ $index + 1 }}" onclick="openImageModal(this.src)">
+                                            <button type="button" class="remove-existing-file"
+                                                onclick="removeExistingFile('{{ $url }}', 'image', 'image-{{ $index }}')">
+                                                <i class="bi bi-x"></i>
+                                            </button>
                                             <div class="image-overlay">
                                                 <i class="bi bi-zoom-in"></i>
                                             </div>
@@ -53,28 +71,37 @@
                     @endif
 
                     <!-- Current PDFs -->
-                    @if($order->order_pdfs)
+                    @php
+                        $pdfs = (array) $order->order_pdfs;
+                    @endphp
+                    @if(!empty($pdfs))
                         <div class="col-md-6 mb-3">
                             <div class="file-section">
                                 <div class="file-section-header">
                                     <i class="bi bi-file-pdf"></i>
-                                    <span>PDF Documents ({{ count(json_decode($order->order_pdfs, true) ?? []) }})</span>
+                                    <span>PDF Documents ({{ count($pdfs) }})</span>
                                 </div>
                                 <div class="current-pdfs-list">
-                                    @foreach(json_decode($order->order_pdfs, true) ?? [] as $index => $pdf)
+                                    @foreach($pdfs as $index => $pdf)
                                         @php
                                             $path = is_array($pdf) ? $pdf['url'] : $pdf;
                                             $name = is_array($pdf) ? $pdf['name'] : basename($pdf);
                                         @endphp
-                                        <a href="{{ asset($path) }}" target="_blank" class="current-pdf-item">
-                                            <div class="pdf-icon">
-                                                <i class="bi bi-file-pdf-fill"></i>
-                                            </div>
-                                            <div class="pdf-info">
-                                                <div class="pdf-name">{{ $name }}</div>
-                                                <div class="pdf-action">Click to view <i class="bi bi-box-arrow-up-right"></i></div>
-                                            </div>
-                                        </a>
+                                        <div class="current-pdf-wrapper" id="pdf-{{ $index }}">
+                                            <a href="{{ asset($path) }}" target="_blank" class="current-pdf-item">
+                                                <div class="pdf-icon">
+                                                    <i class="bi bi-file-pdf-fill"></i>
+                                                </div>
+                                                <div class="pdf-info">
+                                                    <div class="pdf-name">{{ $name }}</div>
+                                                    <div class="pdf-action">Click to view <i class="bi bi-box-arrow-up-right"></i></div>
+                                                </div>
+                                            </a>
+                                            <button type="button" class="remove-pdf-btn"
+                                                onclick="removeExistingFile('{{ $path }}', 'pdf', 'pdf-{{ $index }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>
@@ -527,35 +554,43 @@
                 margin-bottom: 1rem;
             }
         }
+
         @media (max-width: 575px) {
-            #mainContent{
+            #mainContent {
                 margin-top: 83px;
             }
+
             .btn-primary-custom {
                 padding: 5px 7px;
                 border-radius: 7px;
                 font-size: 11px;
             }
+
             .file-section {
                 padding: 7px;
             }
+
             .file-section-header {
                 font-size: 14px;
                 gap: 5px;
                 margin-bottom: 7px;
                 padding-bottom: 6px;
             }
+
             .section-header {
                 padding: 7px;
             }
+
             .section-icon {
                 width: 34px;
                 height: 34px;
                 font-size: 15px;
             }
+
             p.section-description {
                 font-size: 12px;
             }
+
             .form-group-modern .form-label-modern {
                 font-size: 12px;
                 flex-direction: row;
@@ -563,33 +598,101 @@
                 justify-content: space-between;
                 margin-bottom: 7px;
             }
-            .section-body, .order-type-label, #orderFormFields .section-body {
+
+            .section-body,
+            .order-type-label,
+            #orderFormFields .section-body {
                 padding: 10px;
             }
+
             .form-control-modern {
                 padding: 3px 5px;
                 border-radius: 7px;
                 font-size: 11px;
             }
+
             #orderFormFields .row>div {
                 margin-bottom: 0;
             }
-            #orderFormFields .required-badge, #orderFormFields .form-group-modern .optional-badge {
+
+            #orderFormFields .required-badge,
+            #orderFormFields .form-group-modern .optional-badge {
                 font-size: 8px;
                 padding: 1px 2px;
             }
-            #orderFormFields .badge-info, #orderFormFields .optional-badge {
+
+            #orderFormFields .badge-info,
+            #orderFormFields .optional-badge {
                 padding: 1px 4px;
                 border-radius: 2px;
                 font-size: 10px;
             }
+
             .section-content .price-display {
                 padding: 0.5rem;
                 border-radius: 5px;
             }
+
             .section-content .price-value {
                 font-size: 15px;
             }
+        }
+
+        /* Existing File Removal Buttons */
+        .remove-existing-file {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: 1px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .remove-existing-file:hover {
+            background: #ef4444;
+            transform: scale(1.1);
+        }
+
+        .current-pdf-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-pdf-item {
+            flex: 1;
+        }
+
+        .remove-pdf-btn {
+            background: #fef2f2;
+            color: #ef4444;
+            border: 1px solid #fee2e2;
+            width: 36px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .remove-pdf-btn:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
         }
     </style>
 
@@ -656,12 +759,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                    <div class="preview-header">
-                                                        <i class="bi bi-images"></i>
-                                                        <span>Selected Images (${files.length})</span>
-                                                    </div>
-                                                    <div class="preview-grid" id="imagePreviewGrid"></div>
-                                                `;
+                                                            <div class="preview-header">
+                                                                <i class="bi bi-images"></i>
+                                                                <span>Selected Images (${files.length})</span>
+                                                            </div>
+                                                            <div class="preview-grid" id="imagePreviewGrid"></div>
+                                                        `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -672,9 +775,9 @@
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
                         previewItem.innerHTML = `
-                                                            <img src="${e.target.result}" alt="${file.name}">
-                                                            <div class="file-name">${file.name}</div>
-                                                        `;
+                                                                    <img src="${e.target.result}" alt="${file.name}">
+                                                                    <div class="file-name">${file.name}</div>
+                                                                `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -693,12 +796,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                    <div class="preview-header">
-                                                        <i class="bi bi-file-pdf"></i>
-                                                        <span>Selected PDFs (${files.length})</span>
-                                                    </div>
-                                                    <div id="pdfPreviewList"></div>
-                                                `;
+                                                            <div class="preview-header">
+                                                                <i class="bi bi-file-pdf"></i>
+                                                                <span>Selected PDFs (${files.length})</span>
+                                                            </div>
+                                                            <div id="pdfPreviewList"></div>
+                                                        `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
@@ -708,18 +811,64 @@
                     previewItem.className = 'pdf-preview-item';
                     const fileSize = (file.size / 1024).toFixed(2);
                     previewItem.innerHTML = `
-                                                        <div class="pdf-preview-icon">
-                                                            <i class="bi bi-file-pdf-fill"></i>
-                                                        </div>
-                                                        <div class="pdf-preview-info">
-                                                            <div class="pdf-preview-name">${file.name}</div>
-                                                            <div class="pdf-preview-size">${fileSize} KB</div>
-                                                        </div>
-                                                    `;
+                                                                <div class="pdf-preview-icon">
+                                                                    <i class="bi bi-file-pdf-fill"></i>
+                                                                </div>
+                                                                <div class="pdf-preview-info">
+                                                                    <div class="pdf-preview-name">${file.name}</div>
+                                                                    <div class="pdf-preview-size">${fileSize} KB</div>
+                                                                </div>
+                                                            `;
                     list.appendChild(previewItem);
                 });
             }
         });
+
+        function removeExistingFile(fileUrl, type, elementId) {
+            if (!confirm('Are you sure you want to delete this ' + type + '? This action cannot be undone.')) {
+                return;
+            }
+
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btn.disabled = true;
+
+            fetch('{{ route('orders.remove-file', $order->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    file_url: fileUrl,
+                    type: type
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const el = document.getElementById(elementId);
+                    el.style.transition = 'all 0.4s ease';
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        el.remove();
+                        // Update counts if needed or just let it be
+                    }, 400);
+                } else {
+                    alert('Error: ' + data.message);
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while removing the file.');
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            });
+        }
 
         function openImageModal(src) {
             const modal = document.getElementById('imageModal');
