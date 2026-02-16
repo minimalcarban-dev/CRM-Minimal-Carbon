@@ -25,7 +25,6 @@ use App\Notifications\DiamondSoldNotification;
 use App\Models\MeleeTransaction;
 use App\Models\MeleeDiamond;
 use App\Services\ShippingTrackingService;
-use App\Notifications\OrderUpdatedNotification;
 use App\Notifications\OrderCreatedNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Services\AuditLogger;
