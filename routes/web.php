@@ -228,6 +228,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::post('orders', [OrderController::class, 'store'])
         ->name('orders.store')
         ->middleware('admin.permission:orders.create');
+    Route::get('orders/sync-all-tracking', [OrderController::class, 'syncAllTracking'])
+        ->name('orders.sync-all-tracking')
+        ->middleware('admin.permission:orders.edit');
     Route::get('orders/form/{type}', [OrderController::class, 'loadFormPartial'])
         ->name('orders.loadFormPartial')
         ->middleware('admin.permission:orders.create');
@@ -281,9 +284,18 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::put('orders/{order}', [OrderController::class, 'update'])
         ->name('orders.update')
         ->middleware('admin.permission:orders.edit');
+    Route::get('orders/{order}/quick-view', [OrderController::class, 'quickView'])
+        ->name('orders.quick-view')
+        ->middleware('admin.permission:orders.view');
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])
         ->name('orders.destroy')
         ->middleware('admin.permission:orders.delete');
+    Route::post('orders/{order}/remove-file', [OrderController::class, 'removeFile'])
+        ->name('orders.remove-file')
+        ->middleware('admin.permission:orders.edit');
+    Route::post('orders/{order}/sync-tracking', [OrderController::class, 'syncTracking'])
+        ->name('orders.sync-tracking')
+        ->middleware('admin.permission:orders.edit');
 
     // ─────────────────────────────────────────────────────────────
     // Client Dashboard Module
@@ -893,7 +905,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::get('/', [MeleeDiamondController::class, 'index'])->name('index'); // View
         Route::get('/search', [MeleeDiamondController::class, 'search'])->name('search');
         Route::get('/stock/{id}', [MeleeDiamondController::class, 'getStock'])->name('get-stock');
+        Route::get('/history/{id}', [MeleeDiamondController::class, 'getHistory'])->name('history');
         Route::post('/transaction', [MeleeDiamondController::class, 'transaction'])->name('transaction'); // Stock IN/OUT
+        Route::post('/add-shape', [MeleeDiamondController::class, 'addShape'])->name('add-shape'); // Add new Shape+Size
     });
 
 });

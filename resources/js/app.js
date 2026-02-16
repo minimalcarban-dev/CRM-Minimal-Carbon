@@ -130,10 +130,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     )
                         iconClass = "bi-gem";
                     else if (
-                        e.type ===
-                        "App\\Notifications\\OrderUpdatedNotification"
+                        e.type === "App\\Notifications\\OrderCreatedNotification"
+                    )
+                        iconClass = "bi-cart-plus-fill";
+                    else if (
+                        e.type === "App\\Notifications\\OrderUpdatedNotification"
                     )
                         iconClass = "bi-pencil-square";
+                    else if (
+                        e.type === "App\\Notifications\\MeleeLowStockNotification"
+                    )
+                        iconClass = "bi-exclamation-triangle-fill text-danger";
 
                     item.innerHTML = `
                     <div class="notification-icon">
@@ -144,10 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${e.title ? `<strong>${e.title}</strong><br>` : ""}
                             ${e.message || "New notification"}
                         </p>
-                        ${
-                            e.message_preview
-                                ? `<p class="notification-preview" style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; font-style: italic;">${e.message_preview}</p>`
-                                : ""
+                        ${e.message_preview
+                            ? `<p class="notification-preview" style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; font-style: italic;">${e.message_preview}</p>`
+                            : ""
                         }
                         <span class="notification-time">Just now</span>
                     </div>
@@ -254,9 +260,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Show in-app toast
                         if (typeof window.showToast === "function") {
                             window.showToast(
-                                `New message from ${
-                                    e.message.sender?.name || "someone"
-                                }`,
+                                `New message from ${e.message.sender?.name || "someone"
+                                }`
                             );
                         }
 
@@ -335,7 +340,7 @@ window.playNotificationSound = () => {
             const beep = new Audio(
                 "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAA=",
             );
-            beep.play().catch(() => {});
-        } catch (_) {}
+            beep.play().catch(() => { });
+        } catch (_) { }
     }
 };

@@ -39,6 +39,7 @@ const pusherKey = envKey || fallbackKey;
 const pusherCluster = envCluster || fallbackCluster || "mt1";
 
 window.Pusher = Pusher;
+const csrfToken = document.head.querySelector('meta[name="csrf-token"]')?.content;
 window.Echo = new Echo({
     broadcaster: "pusher",
     key: pusherKey,
@@ -51,7 +52,7 @@ window.Echo = new Echo({
     authEndpoint: "/admin/broadcasting/auth",
     auth: {
         headers: {
-            "X-CSRF-TOKEN": token ? token.content : "",
+            "X-CSRF-TOKEN": csrfToken,
             Accept: "application/json",
         },
     },
