@@ -11,7 +11,6 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 class OrderUpdatedNotification extends Notification implements ShouldBroadcastNow
 {
     use Queueable;
-
     protected Order $order;
     protected Admin $updatedBy;
     protected array $oldValues;
@@ -30,8 +29,8 @@ class OrderUpdatedNotification extends Notification implements ShouldBroadcastNo
         $this->updatedBy = $updatedBy;
         $this->oldValues = $oldValues;
         $this->newValues = $newValues;
-    }
 
+    }
     /**
      * Get the notification's delivery channels.
      */

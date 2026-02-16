@@ -113,7 +113,7 @@
                                 <select id="shape" name="shape" class="form-control themed-select">
                                     <option value="">-- Select Stone Shape --</option>
                                     @foreach(($stoneShapes ?? []) as $sshape)
-                                        <option value="{{ $sshape->name }}" {{ old('shape', $diamond->shape) == $sshape->name ? 'selected' : '' }}>
+                                        <option value="{{ $sshape->name }}" {{ strcasecmp(old('shape', $diamond->shape), $sshape->name) == 0 ? 'selected' : '' }}>
                                             {{ $sshape->name }}
                                         </option>
                                     @endforeach
@@ -132,7 +132,7 @@
                                 <select id="cut" name="cut" class="form-control themed-select">
                                     <option value="">-- Select Diamond Cut --</option>
                                     @foreach(($diamondCuts ?? []) as $dcut)
-                                        <option value="{{ $dcut->name }}" {{ old('cut', $diamond->cut) == $dcut->name ? 'selected' : '' }}>
+                                        <option value="{{ $dcut->name }}" {{ strcasecmp(old('cut', $diamond->cut), $dcut->name) == 0 ? 'selected' : '' }}>
                                             {{ $dcut->name }}
                                         </option>
                                     @endforeach
@@ -149,7 +149,7 @@
                             <select id="color" name="color" class="form-control themed-select">
                                 <option value="">-- Select Stone Color --</option>
                                 @foreach(($stoneColors ?? []) as $scolor)
-                                    <option value="{{ $scolor->name }}" {{ old('color', $diamond->color) == $scolor->name ? 'selected' : '' }}>
+                                    <option value="{{ $scolor->name }}" {{ strcasecmp(old('color', $diamond->color), $scolor->name) == 0 ? 'selected' : '' }}>
                                         {{ $scolor->name }}
                                     </option>
                                 @endforeach
@@ -165,7 +165,7 @@
                             <select id="clarity" name="clarity" class="form-control themed-select">
                                 <option value="">-- Select Diamond Clarity --</option>
                                 @foreach(($diamondClarities ?? []) as $dclar)
-                                    <option value="{{ $dclar->name }}" {{ old('clarity', $diamond->clarity) == $dclar->name ? 'selected' : '' }}>
+                                    <option value="{{ $dclar->name }}" {{ strcasecmp(old('clarity', $diamond->clarity), $dclar->name) == 0 ? 'selected' : '' }}>
                                         {{ $dclar->name }}
                                     </option>
                                 @endforeach
@@ -187,6 +187,20 @@
                             <div class="form-hint">
                                 <i class="bi bi-info-circle"></i>
                                 Dimensions in millimeters
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="material" class="form-label">Material</label>
+                            <div class="input-with-icon">
+                                <i class="bi bi-layers input-icon"></i>
+                                <input type="text" class="form-control" id="material" name="material"
+                                    value="{{ old('material', $diamond->material) }}"
+                                    placeholder="e.g., Gold, Platinum">
+                            </div>
+                            <div class="form-hint">
+                                <i class="bi bi-info-circle"></i>
+                                Material composition (optional)
                             </div>
                         </div>
                     </div>

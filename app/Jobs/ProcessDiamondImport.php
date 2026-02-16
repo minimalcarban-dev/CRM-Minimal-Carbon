@@ -105,8 +105,8 @@ class ProcessDiamondImport implements ShouldQueue
                 $relative = str_replace([storage_path('app') . DIRECTORY_SEPARATOR, storage_path('app/')], '', $resolvedPath);
                 $relative = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $relative);
 
-                if (\Illuminate\Support\Facades\Storage::disk('local')->exists(str_replace(DIRECTORY_SEPARATOR, '/', $relative))) {
-                    $resolvedPath = \Illuminate\Support\Facades\Storage::disk('local')->path(str_replace(DIRECTORY_SEPARATOR, '/', $relative));
+                if (Storage::disk('local')->exists(str_replace(DIRECTORY_SEPARATOR, '/', $relative))) {
+                    $resolvedPath = Storage::disk('local')->path(str_replace(DIRECTORY_SEPARATOR, '/', $relative));
                 } else {
                     throw new \Exception("Source file not found. Expected at: {$originalPath}. The file may have been moved or deleted.");
                 }
@@ -287,8 +287,20 @@ class ProcessDiamondImport implements ShouldQueue
         }
 
         // Get price values and convert from INR to USD
-        $perCt = $this->currencyService->inrToUsd($this->toNumericOrNull($data['per_ct'] ?? null));
-        $purchasePrice = $this->currencyService->inrToUsd($this->toNumericOrNull($data['purchase_price'] ?? $data['price'] ?? null));
+        // Get raw values first to allow calculation before currency conversion
+        $weightRaw = $this->toNumericOrNull($data['weight'] ?? null);
+        $perCtRaw = $this->toNumericOrNull($data['per_ct'] ?? null);
+        $purchasePriceRaw = $this->toNumericOrNull($data['purchase_price'] ?? $data['price'] ?? null);
+
+        // Auto-calculate purchase_price if missing but per_ct and weight exist
+        // This assumes if per_ct is provided in INR, the calculated purchase_price will also be in INR
+        if (empty($purchasePriceRaw) && !empty($perCtRaw) && !empty($weightRaw)) {
+            $purchasePriceRaw = $perCtRaw * $weightRaw;
+        }
+
+        // Get price values and convert from INR to USD
+        $perCt = $this->currencyService->inrToUsd($perCtRaw);
+        $purchasePrice = $this->currencyService->inrToUsd($purchasePriceRaw);
         $listingPrice = $this->currencyService->inrToUsd($this->toNumericOrNull($data['listing_price'] ?? null));
         $shippingPrice = $this->currencyService->inrToUsd($this->toNumericOrDefault($data['shipping_price'] ?? null, 0)) ?? 0;
         $durationPrice = $this->currencyService->inrToUsd($this->toNumericOrDefault($data['duration_price'] ?? null, 0)) ?? 0;
@@ -306,10 +318,10 @@ class ProcessDiamondImport implements ShouldQueue
             'color' => $data['color'] ?? null,
             'shape' => $data['shape'] ?? null,
             'measurement' => $data['measurement'] ?? null,
-            'weight' => $this->toNumericOrNull($data['weight'] ?? null),
+            'weight' => $weightRaw,
             'per_ct' => $perCt,
             'purchase_price' => $purchasePrice,
-            'margin' => $this->toNumericOrNull($data['margin'] ?? null),
+            'margin' => $this->toNumericOrDefault($data['margin'] ?? null, 0),
             'listing_price' => $listingPrice,
             'shipping_price' => $shippingPrice,
             'purchase_date' => $this->parseExcelDate($data['purchase_date'] ?? null),

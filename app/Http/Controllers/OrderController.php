@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\RingSize;
 use App\Models\SettingType;
 use App\Models\Client;
+use App\Notifications\OrderUpdatedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -684,7 +685,6 @@ class OrderController extends Controller
                 'new_diamond_sku' => $newDiamondSku,
                 'updated_by' => Auth::guard('admin')->id()
             ]);
-
             // --- Notify Super Admins about the update ---
             if (!empty($newValues)) {
                 $superAdmins = Admin::where('is_super', true)->get();

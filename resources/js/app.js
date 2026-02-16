@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Ensure Echo is available
     if (typeof window.Echo === "undefined") {
         console.warn(
-            "Echo is not defined. Real-time notifications will not work outside of dedicated components."
+            "Echo is not defined. Real-time notifications will not work outside of dedicated components.",
         );
         return;
     }
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const showDesktopNotification = (title, options = {}) => {
         if (!("Notification" in window)) {
             console.warn(
-                "This browser does not support desktop notifications."
+                "This browser does not support desktop notifications.",
             );
             return;
         }
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- NOTIFICATION CHANNEL LISTENER (Updates Dropdown & Badge) ---
     try {
         const notificationChannel = window.Echo.private(
-            `admin.notifications.${userId}`
+            `admin.notifications.${userId}`,
         );
 
         notificationChannel.listen(
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     item.addEventListener("click", function (evt) {
                         const url = this.getAttribute("data-url");
                         const notificationId = this.getAttribute(
-                            "data-notification-id"
+                            "data-notification-id",
                         );
                         if (url && url !== "#") {
                             // Optimistic UI: mark read
@@ -173,11 +173,11 @@ document.addEventListener("DOMContentLoaded", () => {
                                     method: "POST",
                                     headers: {
                                         "X-CSRF-TOKEN": document.querySelector(
-                                            'meta[name="csrf-token"]'
+                                            'meta[name="csrf-token"]',
                                         )?.content,
                                         "Content-Type": "application/json",
                                     },
-                                }
+                                },
                             ).catch(console.error);
                             window.location.href = url;
                         }
@@ -204,10 +204,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.playNotificationSound();
                 } else {
                     console.warn(
-                        "[DEBUG] window.playNotificationSound is not available"
+                        "[DEBUG] window.playNotificationSound is not available",
                     );
                 }
-            }
+            },
         );
     } catch (err) {
         console.error("Error subscribing to notification channel:", err);
@@ -272,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 body: e.message.body,
                                 tag: `chat-${channel.id}-${e.message.id}`,
                                 url: `/admin/chat?channel=${channel.id}`, // Link to specific channel
-                            }
+                            },
                         );
 
                         // Play sound
@@ -281,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ) {
                             window.playNotificationSound();
                         }
-                    }
+                    },
                 );
             });
 
@@ -314,8 +314,9 @@ document.addEventListener("DOMContentLoaded", () => {
 // Helper for sound
 window.playNotificationSound = () => {
     try {
-        const audioContext = new (window.AudioContext ||
-            window.webkitAudioContext)();
+        const audioContext = new (
+            window.AudioContext || window.webkitAudioContext
+        )();
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
 
@@ -328,7 +329,7 @@ window.playNotificationSound = () => {
         gain.gain.setValueAtTime(0.3, audioContext.currentTime);
         gain.gain.exponentialRampToValueAtTime(
             0.01,
-            audioContext.currentTime + 0.3
+            audioContext.currentTime + 0.3,
         );
 
         oscillator.start(audioContext.currentTime);
@@ -337,7 +338,7 @@ window.playNotificationSound = () => {
         // Fallback
         try {
             const beep = new Audio(
-                "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAA="
+                "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAA=",
             );
             beep.play().catch(() => { });
         } catch (_) { }
