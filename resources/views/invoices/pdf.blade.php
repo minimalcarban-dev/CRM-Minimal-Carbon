@@ -583,8 +583,8 @@
         }
 
         .signature-image {
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
+            /* border: 1px solid #e2e8f0;
+            border-radius: 4px; */
             padding: 8px;
             background: white;
             min-height: 80px;
@@ -738,11 +738,18 @@
                     <div class="company-details">
                         <div class="company-name">{{ strtoupper($invoice->company->name ?? '') }}</div>
                         <div class="company-info">{{ $invoice->company->address ?? '' }}</div>
-                        <div class="company-info" style="margin-top:6px"><strong>GSTIN:</strong>
-                            {{ $invoice->company->gst_no ?? ($invoice->company->tax_id ?? '-') }}</div>
-                        <div class="company-info"><strong>State Code:</strong>
-                            {{ $invoice->company->state_code ?? '-' }}
-                        </div>
+
+                        @if ($invoice->company->gst_no)
+                            <div class="company-info" style="margin-top:6px"><strong>GSTIN:</strong>
+                                {{ $invoice->company->gst_no ?? ($invoice->company->tax_id ?? '-') }}</div>
+                        @endif
+
+                        @if ($invoice->company->state_code)
+                            <div class="company-info"><strong>State Code:</strong>
+                                {{ $invoice->company->state_code ?? '-' }}
+                            </div>
+                        @endif
+
                         @if(!empty($invoice->company->phone))
                             <div class="company-info"><strong>Tel:</strong> {{ $invoice->company->phone }}</div>
                         @endif
@@ -900,8 +907,7 @@
                         <th style="width:40px">#</th>
                         <th>Description of Goods</th>
                         <th style="width:80px">HSN</th>
-                        <th style="width:70px">Pieces</th>
-                        <th style="width:80px">Carats</th>
+                        <th style="width:80px">Quantity</th>
                         <th style="width:120px" class="text-right">Rate</th>
                         <th style="width:120px" class="text-right">Amount</th>
                     </tr>
@@ -912,8 +918,15 @@
                             <td>{{ $k + 1 }}</td>
                             <td>{{ $it->description_of_goods }}</td>
                             <td>{{ $it->hsn_code }}</td>
-                            <td>{{ $it->pieces }}</td>
-                            <td class="text-right">{{ (float) $it->carats }}</td>
+                            <td>
+                                @if(!empty($it->pieces))
+                                    {{ $it->pieces }}
+                                    <span style="float:right;">Pcs</span>
+                                @elseif(!empty($it->carats))
+                                    {{ (float) $it->carats }}
+                                    <span style="float:right;">Cts</span>
+                                @endif
+                            </td>
                             <td class="text-right">{{ number_format($it->rate, 2) }}</td>
                             <td class="text-right">{{ number_format($it->amount, 2) }}</td>
                         </tr>
@@ -1058,23 +1071,23 @@
 
             <!-- Bank Details -->
             <!-- @if(!empty($invoice->company->bank_name) || !empty($invoice->company->ifsc_code))
-            <div class="bank-details">
-                <strong>Bank Details:</strong>
-                {{ $invoice->company->bank_name ?? '' }} — A/C: {{ $invoice->company->account_no ?? '' }} — IFSC:
-                {{ $invoice->company->ifsc_code ?? '' }}
-            </div>
-        @endif -->
+                <div class="bank-details">
+                    <strong>Bank Details:</strong>
+                    {{ $invoice->company->bank_name ?? '' }} — A/C: {{ $invoice->company->account_no ?? '' }} — IFSC:
+                    {{ $invoice->company->ifsc_code ?? '' }}
+                </div>
+            @endif -->
 
             <!-- Declarations Section -->
             <div class="declarations">
                 <!-- <div class="declaration-section">
-                <div class="declaration-title">Certified Statement</div>
-                <div class="declaration-text">
-                    Certified that the particulars above are true and correct and the amount indicated represents the
-                    price actually charged and that there is no additional favour, consideration directly or indirectly
-                    from the buyer or from any person on behalf of the buyer.
-                </div>
-            </div> -->
+                        <div class="declaration-title">Certified Statement</div>
+                        <div class="declaration-text">
+                            Certified that the particulars above are true and correct and the amount indicated represents the
+                            price actually charged and that there is no additional favour, consideration directly or indirectly
+                            from the buyer or from any person on behalf of the buyer.
+                        </div>
+                </div> -->
 
                 <div class="declaration-section">
                     <div class="declaration-title">Payment Instruction</div>
@@ -1112,15 +1125,18 @@
                 </div>
 
                 <!-- <div class="declaration-section">
-                <div class="declaration-title">Disclaimer</div>
-                <div class="declaration-text">
-                    {{ $invoice->company->name ?? 'OM GEMS PRIVATE LIMITED' }} EXPRESSLY DISCLAIMS ANY OBLIGATION OR
-                    LIABILITY FOR ANY FRAUDULENT EMAIL OR VERBAL COMMUNICATION FOR ANY PAYMENT INSTRUCTIONS. PLEASE SEND
-                    US PAYMENTS AS PER PAYMENT INSTRUCTIONS SPECIFIED ON ORIGINAL HARD COPY OF INVOICE DULY SIGNED BY
-                    AUTHORISED PERSON. FOR ANY OTHER EXPENSE, LOSS OR DAMAGE OF WHATSOEVER KIND OF NATURE, WHETHER
-                    DIRECT, INCIDENTAL OR CONSEQUENTIAL IN CONNECTION WITH THE PAYMENT IS NOT BINDING ON THE COMPANY.
-                </div>
-            </div> -->
+                    <div class="declaration-title">Disclaimer</div>
+                    <div class="declaration-text">
+                        {{ $invoice->company->name ?? 'OM GEMS PRIVATE LIMITED' }} EXPRESSLY DISCLAIMS ANY OBLIGATION OR
+                        LIABILITY FOR ANY FRAUDULENT EMAIL OR VERBAL COMMUNICATION FOR ANY PAYMENT INSTRUCTIONS. PLEASE
+                        SEND
+                        US PAYMENTS AS PER PAYMENT INSTRUCTIONS SPECIFIED ON ORIGINAL HARD COPY OF INVOICE DULY SIGNED
+                        BY
+                        AUTHORISED PERSON. FOR ANY OTHER EXPENSE, LOSS OR DAMAGE OF WHATSOEVER KIND OF NATURE, WHETHER
+                        DIRECT, INCIDENTAL OR CONSEQUENTIAL IN CONNECTION WITH THE PAYMENT IS NOT BINDING ON THE
+                        COMPANY.
+                    </div>
+                </div> -->
 
                 <!-- <div class="declaration-section">
                 <div class="declaration-title">Declaration</div>
@@ -1164,7 +1180,7 @@
                         Signature valid.<br>
                         Digitally signed by
                         {{ $invoice->signed_by ?? ($invoice->company->authorized_person ?? 'Authorised Signatory') }}<br>
-                        Date: {{ $invoice->signed_at ?? now()->format('Y-m-d H:i:s') }}
+                        Date: {{ $invoice->signed_at ?? now()->format('d M Y, H:i:s') }}
                     </div>
                 </div>
             </div>
@@ -1178,7 +1194,7 @@
 
             <!-- Page Footer -->
             <div class="page-footer">
-                Page 1 | Generated on {{ now()->format('d M Y, h:i A') }}
+                Generated on {{ now()->format('d M Y, h:i A') }}
             </div>
         </div>
     </div> <!-- End page-wrapper -->

@@ -44,5 +44,9 @@ class DatabaseSeeder extends Seeder
         $this->call(PartySeeder::class);
         $this->call(DiamondClaritySeeder::class);
         $this->call(DiamondCutSeeder::class);
+        $this->call(MeleeCategoriesSeeder::class);
+        $this->call(MeleeDiamondSeeder::class);
+        $this->call(MeleePermissionsSeeder::class);
+        $this->call(PackagePermissionSeeder::class);
     }
 }

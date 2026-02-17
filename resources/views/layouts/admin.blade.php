@@ -1643,6 +1643,16 @@
                     </li>
                 @endif
 
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['packages.view', 'packages.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('packages.*') ? 'active' : '' }}"
+                            href="{{ route('packages.index') }}" data-tooltip="Packages">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Packages</span>
+                        </a>
+                    </li>
+                @endif
+
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_jobs.view']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active' : '' }}"
@@ -1702,6 +1712,35 @@
                         </a>
                     </li>
                 @endif
+
+                {{-- Tools Dropdown --}}
+                @php
+                    $toolsActive = request()->routeIs('tools.*');
+                @endphp
+                <div class="nav-dropdown">
+                    <button class="dropdown-toggle-link {{ $toolsActive ? 'active' : '' }}" id="toolsDropdown"
+                        data-tooltip="Tools" data-initial-open="{{ $toolsActive ? '1' : '0' }}" type="button"
+                        aria-expanded="false" style="padding-left: 23px;">
+                        <div class="left-content">
+                            <i class="bi bi-tools main-icon"></i>
+                            <span style="padding-left: 15px">Tools</span>
+                        </div>
+                        <i class="bi bi-chevron-down chevron-icon"></i>
+                    </button>
+                    <div class="dropdown-menu-custom {{ $toolsActive ? 'show' : '' }}" id="toolsMenu">
+                        <ul class="nav">
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('tools.jewellery-calculator') ? 'active' : '' }}"
+                                    href="{{ route('tools.jewellery-calculator') }}"
+                                    data-tooltip="Jewellery Calculator">
+                                    <i class="bi bi-calculator"></i>
+                                    <span>Jewellery Calc</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['mail.access']))
                     @php
@@ -2205,11 +2244,11 @@
         });
 
         // Toast Helper
-        window.showToast = function(message, delay = 3000) {
+        window.showToast = function (message, delay = 3000) {
             try {
                 const container = document.getElementById('toast-container');
                 if (!container) return;
-                
+
                 const toastEl = document.createElement('div');
                 toastEl.className = 'toast align-items-center custom-toast border-0';
                 toastEl.setAttribute('role', 'alert');
@@ -2353,6 +2392,36 @@
                 this.classList.toggle('active');
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 localStorage.setItem('emailDropdownOpen', isOpen);
+            });
+        }
+
+
+        // Tools Dropdown Handler
+        const toolsDropdown = document.getElementById('toolsDropdown');
+        const toolsMenu = document.getElementById('toolsMenu');
+
+        if (toolsDropdown && toolsMenu) {
+            const savedState = localStorage.getItem('toolsDropdownOpen');
+            const defaultOpen = (toolsDropdown.getAttribute('data-initial-open') === '1');
+            const initialOpen = savedState === null ? defaultOpen : (savedState === 'true');
+
+            if (initialOpen) {
+                toolsDropdown.classList.add('active');
+                toolsMenu.classList.add('show');
+            } else {
+                toolsDropdown.classList.remove('active');
+                toolsMenu.classList.remove('show');
+            }
+
+            toolsDropdown.addEventListener('click', function (e) {
+                try {
+                    e.preventDefault();
+                    e.stopPropagation();
+                } catch (err) { }
+                const isOpen = toolsMenu.classList.toggle('show');
+                this.classList.toggle('active');
+                this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                localStorage.setItem('toolsDropdownOpen', isOpen);
             });
         }
 
@@ -2614,19 +2683,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                    <div>
-                                                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                        <div style="font-size: 0.8rem; color: #64748b;">
-                                                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
-                                                                        </div>
-                                                                    </div>
-                                                                    <a href="${draft.resume_url}"
-                                                                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                                        Resume
-                                                                    </a>    
-                                                                </div>
-                                                            `;
+                                                                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                                                    <div>
+                                                                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                                                        <div style="font-size: 0.8rem; color: #64748b;">
+                                                                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <a href="${draft.resume_url}"
+                                                                                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                                                        Resume
+                                                                                    </a>    
+                                                                                </div>
+                                                                            `;
                             });
                             draftsHtml += '</div>';
 
@@ -2634,11 +2703,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                                <p style="color: #64748b; margin-bottom: 1rem;">
-                                                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                                </p>
-                                                                ${draftsHtml}
-                                                            `,
+                                                                                <p style="color: #64748b; margin-bottom: 1rem;">
+                                                                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                                                                </p>
+                                                                                ${draftsHtml}
+                                                                            `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',

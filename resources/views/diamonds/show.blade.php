@@ -520,6 +520,39 @@
                 opacity: 1;
             }
         }
+        @media (max-width: 575px) {
+            .breadcrumb-nav {
+                gap: 5px;
+            }
+            .header-right a:first-child{
+                margin-bottom: 8px;
+            }
+            .header-right a {
+                padding: 5px;
+                font-size: 13px;
+            }
+            .section-icon {
+                width: 35px;
+                height: 35px;
+                border-radius: 5px;
+                font-size: 18px;
+            }
+            p.section-description {
+                font-size: 12px;
+            }
+            p.form-value {
+                font-size: 12px;
+            }
+            label.form-label {
+                font-size: 14px;
+                margin-bottom: 0px;
+                font-weight: 700;
+            }
+            .form-grid {
+                gap: 5px;
+            }
+            
+        }
     </style>
 
     <script>
