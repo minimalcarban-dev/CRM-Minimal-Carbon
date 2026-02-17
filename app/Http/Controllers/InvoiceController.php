@@ -65,7 +65,8 @@ class InvoiceController extends Controller
             'billed_to_id' => 'nullable|exists:parties,id',
             'shipped_to_id' => 'nullable|exists:parties,id',
             'items' => 'required|array|min:1',
-            'items.*.carats' => 'nullable|numeric',
+            'items.*.quantity' => 'nullable|numeric',
+            'items.*.unit' => 'nullable|in:pieces,carats',
             'items.*.rate' => 'nullable|numeric',
             'items.*.amount' => 'nullable|numeric',
         ]);
@@ -90,15 +91,19 @@ class InvoiceController extends Controller
 
             $taxable = 0;
             foreach ($request->input('items') as $it) {
-                $amount = isset($it['amount']) ? $it['amount'] : ((float) ($it['carats'] ?? 0) * (float) ($it['rate'] ?? 0));
+                $quantity = (float) ($it['quantity'] ?? 0);
+                $rate = (float) ($it['rate'] ?? 0);
+                $unit = $it['unit'] ?? 'pieces';
+
+                $amount = isset($it['amount']) ? $it['amount'] : ($quantity * $rate);
                 $taxable += $amount;
 
                 $invoice->items()->create([
                     'description_of_goods' => $it['description_of_goods'] ?? null,
                     'hsn_code' => $it['hsn_code'] ?? null,
-                    'pieces' => $it['pieces'] ?? null,
-                    'carats' => $it['carats'] ?? null,
-                    'rate' => $it['rate'] ?? null,
+                    'pieces' => ($unit === 'pieces') ? $quantity : null,
+                    'carats' => ($unit === 'carats') ? $quantity : null,
+                    'rate' => $rate,
                     'amount' => $amount,
                 ]);
             }
@@ -171,6 +176,10 @@ class InvoiceController extends Controller
             'invoice_type' => 'required|in:proforma,tax',
             'copy_type' => 'nullable|in:original,duplicate,triplicate',
             'items' => 'required|array|min:1',
+            'items.*.quantity' => 'nullable|numeric',
+            'items.*.unit' => 'nullable|in:pieces,carats',
+            'items.*.rate' => 'nullable|numeric',
+            'items.*.amount' => 'nullable|numeric',
         ]);
 
         DB::beginTransaction();
@@ -197,15 +206,19 @@ class InvoiceController extends Controller
             $invoice->items()->delete();
             $taxable = 0;
             foreach ($request->input('items') as $it) {
-                $amount = isset($it['amount']) ? $it['amount'] : ((float) ($it['carats'] ?? 0) * (float) ($it['rate'] ?? 0));
+                $quantity = (float) ($it['quantity'] ?? 0);
+                $rate = (float) ($it['rate'] ?? 0);
+                $unit = $it['unit'] ?? 'pieces';
+
+                $amount = isset($it['amount']) ? $it['amount'] : ($quantity * $rate);
                 $taxable += $amount;
 
                 $invoice->items()->create([
                     'description_of_goods' => $it['description_of_goods'] ?? null,
                     'hsn_code' => $it['hsn_code'] ?? null,
-                    'pieces' => $it['pieces'] ?? null,
-                    'carats' => $it['carats'] ?? null,
-                    'rate' => $it['rate'] ?? null,
+                    'pieces' => ($unit === 'pieces') ? $quantity : null,
+                    'carats' => ($unit === 'carats') ? $quantity : null,
+                    'rate' => $rate,
                     'amount' => $amount,
                 ]);
             }

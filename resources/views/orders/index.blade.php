@@ -487,8 +487,8 @@
                                 </th>
                                 <th>
                                     <div class="th-content">
-                                        <i class="bi bi-box-seam"></i>
-                                        <span>Product Details</span>
+                                        <i class="bi bi-image"></i>
+                                        <span>Product Image</span>
                                     </div>
                                 </th>
                                 <th>
@@ -497,24 +497,14 @@
                                         <span>Client</span>
                                     </div>
                                 </th>
+
                                 <th>
                                     <div class="th-content">
-                                        <i class="bi bi-building"></i>
-                                        <span>Company</span>
+                                        <i class="bi bi-box-seam"></i>
+                                        <span>Product Details</span>
                                     </div>
                                 </th>
-                                <th>
-                                    <div class="th-content">
-                                        <i class="bi bi-tag"></i>
-                                        <span>Order Type</span>
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="th-content">
-                                        <i class="bi bi-gem"></i>
-                                        <span>Diamond Status</span>
-                                    </div>
-                                </th>
+
                                 <th>
                                     <div class="th-content">
                                         <i class="bi bi-currency-dollar"></i>
@@ -523,14 +513,8 @@
                                 </th>
                                 <th>
                                     <div class="th-content">
-                                        <i class="bi bi-calendar-plus"></i>
-                                        <span>Created Date</span>
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="th-content">
-                                        <i class="bi bi-calendar-event"></i>
-                                        <span>Dispatch Date</span>
+                                        <i class="bi bi-calendar-range"></i>
+                                        <span>Dates</span>
                                     </div>
                                 </th>
                                 <th>
@@ -568,7 +552,7 @@
                                         <span class="order-id-badge">#{{ $order->id }}</span>
                                     </td>
                                     <td>
-                                        <div class="d-flex flex-column align-items-center">
+                                        <div class="d-flex align-items-center gap-2">
                                             @php
                                                 $firstImage = null;
                                                 if (!empty($order->images)) {
@@ -583,10 +567,6 @@
                                             <div class="thumbnail-container">
                                                 @if($firstImage)
                                                     <img src="{{ $firstImage['url'] }}" alt="Product">
-                                                    <a href="{{ $firstImage['url'] }}" target="_blank" class="thumbnail-overlay"
-                                                        title="View Image">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
                                                 @else
                                                     <div
                                                         class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
@@ -595,55 +575,99 @@
                                                 @endif
                                             </div>
 
-                                            @if($skuText !== '—')
-                                                <span class="product-sku" title="{{ $skuText }}">{{ Str::limit($skuText, 15) }}</span>
-                                            @endif
+                                            <div class="order-details-column">
+                                                {{-- Company --}}
+                                                @if($order->company)
+                                                    <span class="badge-item badge-company">
+                                                        <i class="bi bi-building"></i> {{ $order->company->name }}
+                                                    </span>
+                                                @endif
 
-                                            @if($order->special_notes)
-                                                <span class="product-note"
-                                                    title="{{ $order->special_notes }}">{{ $order->special_notes }}</span>
-                                            @endif
+                                                {{-- Order Type --}}
+                                                @if($order->order_type == 'ready_to_ship')
+                                                    <span class="badge-item badge-ready-to-ship">
+                                                        <i class="bi bi-box-seam"></i> Ready to Ship
+                                                    </span>
+                                                @elseif($order->order_type == 'custom_diamond')
+                                                    <span class="badge-item badge-custom-diamond">
+                                                        <i class="bi bi-gem"></i> Custom Diamond
+                                                    </span>
+                                                @else
+                                                    <span class="badge-item badge-custom-jewellery">
+                                                        <i class="bi bi-award"></i> Custom Jewellery
+                                                    </span>
+                                                @endif
+
+                                                {{-- Diamond Status --}}
+                                                @php
+                                                    $statusKey = $order->diamond_status ?? 'processed';
+                                                    $color = $statusColors[$statusKey] ?? 'secondary';
+                                                    $icon = $statusIcons[$statusKey] ?? 'bi-circle';
+                                                @endphp
+                                                <span class="badge-item badge-status status-{{ $color }}">
+                                                    <i class="bi {{ $icon }}"></i>
+                                                    {{ ucfirst(str_replace(['_', 'r ', 'd ', 'j '], [' ', '', '', ''], $order->diamond_status ?? 'N/A')) }}
+                                                </span>
+
+                                                {{-- SKU --}}
+                                                @if($skuText !== '—')
+                                                    <span class="sku-text" title="{{ $skuText }}">
+                                                        SKU: {{ Str::limit($skuText, 15) }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="client-info">
-                                            <span
-                                                class="client-name">{{ Str::limit($order->display_client_name ?? ($order->client_details ?? ''), 30) }}</span>
+                                            <div class="client-name fw-bold text-dark mb-1">
+                                                {{ $order->display_client_name ?? '—' }}
+                                            </div>
+
+                                            <div class="client-meta d-flex flex-column gap-1" style="font-size: 0.75rem;">
+
+                                                @if($address = $order->display_client_address)
+                                                    <div class="d-flex align-items-start text-muted">
+                                                        <span
+                                                            style="white-space: normal; line-height: 1.2;">{!! nl2br(e($address)) !!}</span>
+                                                    </div>
+                                                @endif
+
+                                                @if($email = $order->display_client_email)
+                                                    <div class="d-flex align-items-center text-muted">
+                                                        {{ $email }}
+                                                    </div>
+                                                @endif
+
+                                                @if($mobile = $order->display_client_mobile)
+                                                    <div class="d-flex align-items-center text-muted">
+                                                        {{ $mobile }}
+                                                    </div>
+                                                @endif
+
+                                                @if($taxId = $order->display_client_tax_id)
+                                                    <div class="d-flex align-items-center text-muted">
+                                                        <span class="text-uppercase me-1" style="font-size: 0.7rem; font-weight: 600;">
+                                                            {{ $order->client_tax_id_type ? (\App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? $order->client_tax_id_type) : 'Tax ID' }}:
+                                                        </span>
+                                                        {{ $taxId }}
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="company-name">{{ $order->company->name ?? '—' }}</span>
                                     </td>
 
                                     <td>
-                                        @if($order->order_type == 'ready_to_ship')
-                                            <span class="order-type-badge badge-info">
-                                                <i class="bi bi-box-seam"></i>
-                                                Ready to Ship
-                                            </span>
-                                        @elseif($order->order_type == 'custom_diamond')
-                                            <span class="order-type-badge badge-warning">
-                                                <i class="bi bi-gem"></i>
-                                                Custom Diamond
-                                            </span>
-                                        @else
-                                            <span class="order-type-badge badge-primary">
-                                                <i class="bi bi-award"></i>
-                                                Custom Jewellery
-                                            </span>
-                                        @endif
+                                        <div class="d-flex flex-column gap-1"
+                                            style="font-size: 0.8rem; white-space: pre-wrap; max-width: 300px;">
+                                            @if($order->order_type == 'custom_diamond')
+                                                {{ $order->diamond_details ?? '—' }}
+                                            @else
+                                                {{ $order->jewellery_details ?? '—' }}
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td>
-                                        @php
-                                            $statusKey = $order->diamond_status ?? 'processed';
-                                            $color = $statusColors[$statusKey] ?? 'secondary';
-                                            $icon = $statusIcons[$statusKey] ?? 'bi-circle';
-                                        @endphp
-                                        <span class="status-badge status-{{ $color }}">
-                                            <i class="bi {{ $icon }}"></i>
-                                            {{ ucfirst(str_replace('_', ' ', $order->diamond_status ?? 'N/A')) }}
-                                        </span>
-                                    </td>
+
                                     <td>
                                         <span class="amount-value">
                                             @if($order->gross_sell)
@@ -654,26 +678,31 @@
                                         </span>
                                     </td>
                                     <td>
-                                        @if($order->created_at)
+                                        <div class="d-flex flex-column gap-2">
                                             <div class="date-info">
-                                                <span class="date-main">{{ $order->created_at->format('M d, Y') }}</span>
-                                                <span class="date-time">{{ $order->created_at->format('l') }}</span>
+                                                <small class="text-muted d-block mb-1"
+                                                    style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: xx-small">Created</small>
+                                                @if($order->created_at)
+                                                    <span class="date-main">{{ $order->created_at->format('M d, Y') }}</span>
+                                                    <span class="date-time text-muted">{{ $order->created_at->format('l') }}</span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
                                             </div>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($order->dispatch_date)
+
                                             <div class="date-info">
-                                                <span
-                                                    class="date-main">{{ \Carbon\Carbon::parse($order->dispatch_date)->format('M d, Y') }}</span>
-                                                <span
-                                                    class="date-time">{{ \Carbon\Carbon::parse($order->dispatch_date)->format('l') }}</span>
+                                                <small class="text-muted d-block mb-1"
+                                                    style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: xx-small;">Dispatch</small>
+                                                @if($order->dispatch_date)
+                                                    <span
+                                                        class="date-main">{{ \Carbon\Carbon::parse($order->dispatch_date)->format('M d, Y') }}</span>
+                                                    <span
+                                                        class="date-time text-muted">{{ \Carbon\Carbon::parse($order->dispatch_date)->format('l') }}</span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
                                             </div>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
+                                        </div>
                                     </td>
                                     <td>
                                         @if($order->shipping_company_name || $order->tracking_number)
@@ -1858,7 +1887,7 @@
         }
 
         .orders-table td {
-            padding: 1.25rem 1.5rem;
+            padding: 15px;
             color: var(--dark);
             font-size: 0.95rem;
             vertical-align: middle;
@@ -1918,6 +1947,25 @@
         .badge-primary {
             background: rgba(99, 102, 241, 0.1);
             color: var(--primary);
+        }
+
+        .company-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(236, 72, 153, 0.1);
+            /* Pink/Rose tint */
+            color: #db2777;
+            /* Pink-600 */
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .status-badge {
@@ -2367,7 +2415,7 @@
             .orders-table td {
                 padding: 7px;
                 line-height: 16px;
-                text-align: center;
+                text-align: start;
                 font-size: 12px;
                 align-items: center;
             }
@@ -2397,507 +2445,661 @@
         }
 
         /* Product Details Column (Global) */
-            .thumbnail-container {
-                width: 100px;
-                height: 100px;
-                position: relative;
-                border-radius: 8px;
-                /* overflow: hidden; Removed to allow pop-out */
-                margin: 0 auto;
-                border: 1px solid var(--border);
-                background: #fff;
-                transition: transform 0.2s ease, z-index 0s;
-                z-index: 1;
-            }
+        .order-details-column {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
+            padding-left: 5px;
+        }
 
-            .thumbnail-container img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                border-radius: 8px;
-            }
+        .badge-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
 
-            .thumbnail-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.4);
-                display: flex;
-                align-items: center;
-                justify-content: center;
+        .badge-item i {
+            font-size: 11px;
+        }
+
+        /* Company Badge */
+        .badge-company {
+            background-color: white;
+            color: var(--primary);
+            /* Deep Pink/Red from Minimal Carbon theme */
+            border: 1px solid rgba(226, 24, 88, 0.15);
+            /* Soft border matching logo */
+            background: rgba(226, 24, 88, 0.04);
+        }
+
+        /* Order Type Badges - Enhanced for Visibility */
+        .badge-ready-to-ship {
+            background-color: rgba(13, 202, 240, 0.12);
+            color: #0aa2c0;
+            /* Darker cyan for better readability */
+            border: 1px solid rgba(13, 202, 240, 0.25);
+            font-size: 12.5px;
+            font-weight: 700;
+            padding: 6px 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-custom-diamond {
+            background-color: rgba(255, 193, 7, 0.12);
+            color: #bfa005;
+            /* Darker gold/yellow */
+            border: 1px solid rgba(255, 193, 7, 0.25);
+            font-size: 12.5px;
+            font-weight: 700;
+            padding: 6px 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-custom-jewellery {
+            background-color: rgba(13, 110, 253, 0.12);
+            color: #0a58ca;
+            /* Darker blue */
+            border: 1px solid rgba(13, 110, 253, 0.25);
+            font-size: 12.5px;
+            font-weight: 700;
+            padding: 6px 12px;
+            letter-spacing: 0.3px;
+        }
+
+        /* Status Badge - Enhanced for Visibility */
+        .badge-status {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 10px;
+            border: 1px solid transparent;
+            letter-spacing: 0.2px;
+        }
+
+        .badge-status.status-info {
+            background: rgba(13, 202, 240, 0.15);
+            color: #0aa2c0;
+            border-color: rgba(13, 202, 240, 0.2);
+        }
+
+        .badge-status.status-success {
+            background: rgba(25, 135, 84, 0.15);
+            color: #146c43;
+            border-color: rgba(25, 135, 84, 0.2);
+        }
+
+        .badge-status.status-warning {
+            background: rgba(255, 193, 7, 0.15);
+            color: #bfa005;
+            border-color: rgba(255, 193, 7, 0.2);
+        }
+
+        .badge-status.status-danger {
+            background: rgba(220, 53, 69, 0.15);
+            color: #b02a37;
+            border-color: rgba(220, 53, 69, 0.2);
+        }
+
+        .badge-status.status-purple {
+            background: rgba(111, 66, 193, 0.15);
+            color: #59359a;
+            border-color: rgba(111, 66, 193, 0.2);
+        }
+
+        .badge-status.status-dark {
+            background: rgba(33, 37, 41, 0.1);
+            color: #212529;
+            border-color: rgba(33, 37, 41, 0.2);
+        }
+
+        .badge-status.status-secondary {
+            background: rgba(108, 117, 125, 0.15);
+            color: #5c636a;
+            border-color: rgba(108, 117, 125, 0.2);
+        }
+
+        .badge-status.status-cyan {
+            background: rgba(13, 202, 240, 0.15);
+            color: #0aa2c0;
+            border-color: rgba(13, 202, 240, 0.2);
+        }
+
+
+        /* SKU */
+        .sku-text {
+            font-family: var(--bs-font-sans-serif);
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            opacity: 0.9;
+        }
+
+        .thumbnail-container {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            border-radius: 8px;
+            /* overflow: hidden; Removed to allow pop-out */
+            margin: 0 auto;
+            border: 1px solid var(--border);
+            background: #fff;
+            transition: transform 0.2s ease, z-index 0s;
+            z-index: 1;
+        }
+
+        .thumbnail-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .thumbnail-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .thumbnail-container:hover {
+            transform: scale(2.5);
+            z-index: 1000;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .thumbnail-container:hover .thumbnail-overlay {
+            opacity: 1;
+        }
+
+        .thumbnail-overlay i {
+            color: white;
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .product-sku {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-top: 6px;
+            display: block;
+            line-height: 1.2;
+        }
+
+        .product-note {
+            font-size: 10px;
+            color: var(--secondary);
+            margin-top: 2px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
+            max-width: 120px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
                 opacity: 0;
-                transition: opacity 0.2s ease;
-                cursor: pointer;
-                border-radius: 8px;
+                transform: translateY(20px);
             }
 
-            .thumbnail-container:hover {
-                transform: scale(2.5);
-                z-index: 1000;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            }
-
-            .thumbnail-container:hover .thumbnail-overlay {
+            to {
                 opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            animation: fadeIn 0.4s ease forwards;
+            opacity: 0;
+        }
+
+        .stat-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .table-row {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+
+
+        /* Print Styles */
+        @media print {
+
+            .page-header,
+            .filter-section,
+            .action-buttons,
+            .pagination-container {
+                display: none;
             }
 
-            .thumbnail-overlay i {
-                color: white;
+            .orders-table-card {
+                box-shadow: none;
+                border: 1px solid var(--border);
+            }
+
+            .table-row:hover {
+                background: white;
+            }
+
+            .orders-table {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Custom Scrollbar */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: var(--light-gray);
+            border-radius: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: var(--gray);
+        }
+
+        /* Text Utilities */
+        .text-muted {
+            color: var(--gray) !important;
+        }
+
+        .d-inline {
+            display: inline !important;
+        }
+
+        /* Text Utilities */
+        .text-muted {
+            color: var(--gray) !important;
+        }
+
+        .d-inline {
+            display: inline !important;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            animation: fadeIn 0.4s ease forwards;
+            opacity: 0;
+        }
+
+        .stat-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .table-row {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .orders-management-container {
+                padding: 0rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-form {
+                flex-direction: column;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .orders-table {
+                min-width: 1000px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page-title {
                 font-size: 1.5rem;
-                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
             }
 
-            .product-sku {
-                font-size: 11px;
-                font-weight: 600;
-                color: var(--primary);
-                margin-top: 6px;
-                display: block;
-                line-height: 1.2;
+            .stat-icon {
+                display: none;
             }
 
-            .product-note {
-                font-size: 10px;
-                color: var(--secondary);
-                margin-top: 2px;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-                line-height: 1.3;
-                max-width: 120px;
-                margin-left: auto;
-                margin-right: auto;
+            .orders-table-card {
+                overflow-x: auto;
             }
 
-                    /* Animations */
-                    @keyframes fadeIn {
-                        from {
-                            opacity: 0;
-                            transform: translateY(20px);
-                        }
+            /* Compact actions for mobile */
+            .action-buttons {
+                display: flex;
+                gap: 0.5rem;
+            }
 
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
+            .shipping-info-cell {
+                min-width: 120px;
+            }
+
+            /* .client-info {
+                        text-align: start;
+                    } */
+        }
+
+        /* Print Styles */
+        @media print {
+
+            .page-header,
+            .filter-section,
+            .action-buttons,
+            .pagination-container,
+            .btn-sync-inline {
+                display: none !important;
+            }
+
+            .orders-table-card {
+                box-shadow: none;
+                border: 1px solid var(--border);
+            }
+
+            .orders-table {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+
+    <!-- Date Ranege Picker -->
+    @include('partials.daterangepicker-styles')
+
+    <!-- JavaScript -->
+    @push('scripts')
+        <script>
+            // Initialize Date Range Picker for Orders
+            $(document).ready(function () {
+                var startDate = $('#orderDateFrom').val() ? moment($('#orderDateFrom').val()) : null;
+                var endDate = $('#orderDateTo').val() ? moment($('#orderDateTo').val()) : null;
+
+                $('#orderDateRange').daterangepicker({
+                    autoUpdateInput: false,
+                    opens: 'left',
+                    showDropdowns: true,
+                    linkedCalendars: false,
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    },
+                    locale: {
+                        cancelLabel: 'Clear',
+                        applyLabel: 'Apply',
+                        format: 'MMM D, YYYY'
                     }
+                }, function (start, end, label) {
+                    $('#orderDateFrom').val(start.format('YYYY-MM-DD'));
+                    $('#orderDateTo').val(end.format('YYYY-MM-DD'));
+                    $('#orderDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+                    // Auto-submit the form when date is selected
+                    $('#orderFilterForm').submit();
+                });
 
-                    .stat-card {
-                        animation: fadeIn 0.4s ease forwards;
-                        opacity: 0;
+                // Set initial value if dates exist
+                if (startDate && endDate) {
+                    $('#orderDateRange').val(startDate.format('MMM D, YYYY') + ' - ' + endDate.format('MMM D, YYYY'));
+                }
+
+                // Clear dates on cancel and auto-submit
+                $('#orderDateRange').on('cancel.daterangepicker', function (ev, picker) {
+                    $(this).val('');
+                    $('#orderDateFrom').val('');
+                    $('#orderDateTo').val('');
+                    // Auto-submit to apply the cleared filter
+                    $('#orderFilterForm').submit();
+                });
+
+                // Fix z-index issue on image hover - raise the row above others
+                $('.thumbnail-container').hover(
+                    function () {
+                        $(this).closest('.table-row').css({ 'z-index': 9999, 'position': 'relative' });
+                    },
+                    function () {
+                        $(this).closest('.table-row').css({ 'z-index': '', 'position': '' });
                     }
+                );
+            });
 
-                    .stat-card:nth-child(1) {
-                        animation-delay: 0.1s;
+            // Toggle Company Progress Section
+            function toggleCompanyProgress() {
+                const section = document.getElementById('companyProgressSection');
+                const icon = document.getElementById('toggleIcon');
+                if (section) {
+                    if (section.style.display === 'none') {
+                        section.style.display = 'block';
+                        if (icon) icon.classList.add('rotated');
+                    } else {
+                        section.style.display = 'none';
+                        if (icon) icon.classList.remove('rotated');
                     }
+                }
+            }
 
-                    .stat-card:nth-child(2) {
-                        animation-delay: 0.2s;
-                    }
+            // Make toggleCompanyProgress available globally
+            window.toggleCompanyProgress = toggleCompanyProgress;
 
-                    .stat-card:nth-child(3) {
-                        animation-delay: 0.3s;
-                    }
+            // Dismiss overdue banner function
+            function dismissOverdueBanner() {
+                const banner = document.getElementById('overdueAlertBanner');
+                if (banner) {
+                    banner.style.animation = 'slideUp 0.3s ease-out forwards';
+                    setTimeout(() => {
+                        banner.style.display = 'none';
+                        // Store in sessionStorage to hide for this session
+                        sessionStorage.setItem('hideOverdueBanner', 'true');
+                    }, 300);
+                }
+            }
+            window.dismissOverdueBanner = dismissOverdueBanner;
 
-                    .stat-card:nth-child(4) {
-                        animation-delay: 0.4s;
-                    }
+            // Check if banner should be hidden on load
+            document.addEventListener('DOMContentLoaded', function () {
+                if (sessionStorage.getItem('hideOverdueBanner') === 'true') {
+                    const banner = document.getElementById('overdueAlertBanner');
+                    if (banner) banner.style.display = 'none';
+                }
+            });
 
-                    .table-row {
-                        animation: fadeIn 0.3s ease forwards;
-                    }
+            document.addEventListener('DOMContentLoaded', function () {
+                // Add stagger animation to table rows
+                const rows = document.querySelectorAll('.table-row');
+                rows.forEach((row, index) => {
+                    row.style.animationDelay = `${(index % 10) * 0.05}s`;
+                });
 
-                    /* Print Styles */
-                    @media print {
+                // Initialize stat cards
+                const statCards = document.querySelectorAll('.stat-card');
+                statCards.forEach((card, index) => {
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                    }, 100 * (index + 1));
+                });
 
-                        .page-header,
-                        .filter-section,
-                        .action-buttons,
-                        .pagination-container {
-                            display: none;
+                // Handle delete confirmations with SweetAlert2
+                document.querySelectorAll('.delete-form').forEach(form => {
+                    form.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+
+                        const confirmed = await showConfirm(
+                            'Are you sure you want to delete this order?',
+                            'This action cannot be undone',
+                            'Yes, Delete',
+                            'Cancel'
+                        );
+
+                        if (confirmed) {
+                            this.submit();
                         }
+                    });
+                });
+            });
 
-                        .orders-table-card {
-                            box-shadow: none;
-                            border: 1px solid var(--border);
-                        }
+            // Tracking Support Functions
+            async function syncTracking(orderId, btn) {
+                const icon = btn.querySelector('i');
+                btn.classList.add('spinning');
+                btn.disabled = true;
 
-                        .table-row:hover {
-                            background: white;
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/sync-tracking`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                            ,
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
+                    });
 
-                        .orders-table {
-                            font-size: 0.85rem;
-                        }
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Refresh current page to show updated info
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                        btn.classList.remove('spinning');
+                        btn.disabled = false;
                     }
+                } catch (error) {
+                    console.error('Sync failed:', error);
+                    alert('Failed to sync tracking data. Please try again.');
+                    btn.classList.remove('spinning');
+                    btn.disabled = false;
+                }
+            }
 
-                    /* Custom Scrollbar */
-                    .table-container::-webkit-scrollbar {
-                        height: 8px;
-                    }
+            function showTrackingHistory(orderId, trackingNumber, carrier, history, trackingUrl) {
+                document.getElementById('modalTrackingNumber').textContent = trackingNumber;
+                document.getElementById('modalCarrierName').textContent = carrier;
 
-                    .table-container::-webkit-scrollbar-track {
-                        background: var(--light-gray);
-                        border-radius: 10px;
-                    }
+                const container = document.getElementById('trackingHistoryContainer');
+                container.innerHTML = '';
 
-                    .table-container::-webkit-scrollbar-thumb {
-                        background: var(--border);
-                        border-radius: 10px;
-                    }
+                if (!history || history.length === 0) {
+                    container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
+                    document.getElementById('modalLatestStatus').textContent = 'No Data';
+                } else {
+                    document.getElementById('modalLatestStatus').textContent = history[0].status;
 
-                    .table-container::-webkit-scrollbar-thumb:hover {
-                        background: var(--gray);
-                    }
+                    history.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'tracking-history-item';
+                        historyItem.innerHTML = `
+                            <div class="tracking-history-dot"></div>
+                            <div class="tracking-history-details shadow-sm">
+                                <div class="tracking-history-header">
+                                    <span class="tracking-history-status">${item.status}</span>
+                                    <span class="tracking-history-date">${item.date}</span>
+                                </div>
+                                <div class="tracking-history-location">
+                                    <i class="bi bi-geo-alt-fill"></i> ${item.location}
+                                </div>
+                                ${item.description ? `<div class="tracking-history-desc">${item.description}</div>` : ''}
+                            </div>`;
+                        container.appendChild(historyItem);
+                    });
+                }
 
-                    /* Text Utilities */
-                    .text-muted {
-                        color: var(--gray) !important;
-                    }
+                const officialLink = document.getElementById('modalOfficialLink');
+                if (trackingUrl && trackingUrl !== 'null' && trackingUrl !== '') {
+                    officialLink.href = trackingUrl;
+                    officialLink.style.display = 'inline-block';
+                } else {
+                    officialLink.href = `https://www.google.com/search?q=${carrier}+tracking+${trackingNumber}`;
+                    officialLink.style.display = 'inline-block';
+                }
 
-                    .d-inline {
-                        display: inline !important;
-                    }
+                const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
+                modal.show();
+            }
 
-                    /* Text Utilities */
-                    .text-muted {
-                        color: var(--gray) !important;
-                    }
-
-                    .d-inline {
-                        display: inline !important;
-                    }
-
-                    /* Animations */
-                    @keyframes fadeIn {
-                        from {
-                            opacity: 0;
-                            transform: translateY(20px);
-                        }
-
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-
-                    .stat-card {
-                        animation: fadeIn 0.4s ease forwards;
-                        opacity: 0;
-                    }
-
-                    .stat-card:nth-child(1) {
-                        animation-delay: 0.1s;
-                    }
-
-                    .stat-card:nth-child(2) {
-                        animation-delay: 0.2s;
-                    }
-
-                    .stat-card:nth-child(3) {
-                        animation-delay: 0.3s;
-                    }
-
-                    .stat-card:nth-child(4) {
-                        animation-delay: 0.4s;
-                    }
-
-                    .table-row {
-                        animation: fadeIn 0.3s ease forwards;
-                    }
-
-                    /* Responsive Styles */
-                    @media (max-width: 1200px) {
-                        .stats-grid {
-                            grid-template-columns: repeat(2, 1fr);
-                        }
-                    }
-
-                    @media (max-width: 768px) {
-                        .orders-management-container {
-                            padding: 0rem;
-                        }
-
-                        .header-content {
-                            flex-direction: column;
-                            align-items: stretch;
-                        }
-
-                        .stats-grid {
-                            grid-template-columns: 1fr;
-                        }
-
-                        .filter-form {
-                            flex-direction: column;
-                        }
-
-                        .search-box {
-                            min-width: 100%;
-                        }
-
-                        .orders-table {
-                            min-width: 1000px;
-                        }
-                    }
-
-                    @media (max-width: 576px) {
-                        .page-title {
-                            font-size: 1.5rem;
-                        }
-
-                        .stat-icon {
-                            display: none;
-                        }
-
-                        .orders-table-card {
-                            overflow-x: auto;
-                        }
-
-                        /* Compact actions for mobile */
-                        .action-buttons {
-                            display: flex;
-                            gap: 0.5rem;
-                        }
-
-                        .shipping-info-cell {
-                            min-width: 120px;
-                        }
-                    }
-
-                    /* Print Styles */
-                    @media print {
-
-                        .page-header,
-                        .filter-section,
-                        .action-buttons,
-                        .pagination-container,
-                        .btn-sync-inline {
-                            display: none !important;
-                        }
-
-                        .orders-table-card {
-                            box-shadow: none;
-                            border: 1px solid var(--border);
-                        }
-
-                        .orders-table {
-                            font-size: 0.85rem;
-                        }
-                    }
-                </style>
-
-                <!-- Date Ranege Picker -->
-                @include('partials.daterangepicker-styles')
-
-                <!-- JavaScript -->
-                @push('scripts')
-                    <script>
-                        // Initialize Date Range Pi            cker for O          rders
-                        $(document).ready(function () {
-                            var startDate = $('#orderDateFrom').val() ? moment($('#orderDateFrom').val()) : null;
-                            var endDate = $('#orderDateTo').val() ? moment($('#orderDateTo').val()) : null;
-
-                            $('#orderDateRange').daterangepicker({
-                                autoUpdateInput: false,
-                                opens: 'left',
-                                showDropdowns: true,
-                                linkedCalendars: false,
-                                ranges: {
-                                    'Today': [moment(), moment()],
-                                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                                    'This Month': [moment().startOf('month'), moment().endOf('month')],
-                                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                                },
-                                locale: {
-                                    cancelLabel: 'Clear',
-                                    applyLabel: 'Apply',
-                                    format: 'MMM D, YYYY'
-                                }
-                            }, function (start, end, label) {
-                                $('#orderDateFrom').val(start.format('YYYY-MM-DD'));
-                                $('#orderDateTo').val(end.format('YYYY-MM-DD'));
-                                $('#orderDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
-                                // Auto-submit the form when date is selected
-                                $('#orderFilterForm').submit();
-                            });
-
-                            // Set initial value if dates exist
-                            if (startDate && endDate) {
-                                $('#orderDateRange').val(startDate.format('MMM D, YYYY') + ' - ' + endDate.format('MMM D, YYYY'));
-                            }
-
-                            // Clear dates on cancel and auto-submit
-                            $('#orderDateRange').on('cancel.daterangepicker', function (ev, picker) {
-                                $(this).val('');
-                                $('#orderDateFrom').val('');
-                                $('#orderDateTo').val('');
-                                // Auto-submit to apply the cleared filter
-                                $('#orderFilterForm').submit();
-                            });
-                        });
-
-                        // Toggle Company Progress Section
-                        function toggleCompanyProgress() {
-                            const section = document.getElementById('companyProgressSection');
-                            const icon = document.getElementById('toggleIcon');
-                            if (section) {
-                                if (section.style.display === 'none') {
-                                    section.style.display = 'block';
-                                    if (icon) icon.classList.add('rotated');
-                                } else {
-                                    section.style.display = 'none';
-                                    if (icon) icon.classList.remove('rotated');
-                                }
-                            }
-                        }
-
-                        // Make toggleCompanyProgress available globally
-                        window.toggleCompanyProgress = toggleCompanyProgress;
-
-                        // Dismiss overdue banner function
-                        function dismissOverdueBanner() {
-                            const banner = document.getElementById('overdueAlertBanner');
-                            if (banner) {
-                                banner.style.animation = 'slideUp 0.3s ease-out forwards';
-                                setTimeout(() => {
-                                    banner.style.display = 'none';
-                                    // Store in sessionStorage to hide for this session
-                                    sessionStorage.setItem('hideOverdueBanner', 'true');
-                                }, 300);
-                            }
-                        }
-                        window.dismissOverdueBanner = dismissOverdueBanner;
-
-                        // Check if banner should be hidden on load
-                        document.addEventListener('DOMContentLoaded', function () {
-                            if (sessionStorage.getItem('hideOverdueBanner') === 'true') {
-                                const banner = document.getElementById('overdueAlertBanner');
-                                if (banner) banner.style.display = 'none';
-                            }
-                        });
-
-                        document.addEventListener('DOMContentLoaded', function () {
-                            // Add stagger animation to table rows
-                            const rows = document.querySelectorAll('.table-row');
-                            rows.forEach((row, index) => {
-                                row.style.animationDelay = `${(index % 10) * 0.05}s`;
-                            });
-
-                            // Initialize stat cards
-                            const statCards = document.querySelectorAll('.stat-card');
-                            statCards.forEach((card, index) => {
-                                card.style.opacity = '0';
-                                setTimeout(() => {
-                                    card.style.opacity = '1';
-                                }, 100 * (index + 1));
-                            });
-
-                            // Handle delete confirmations with SweetAlert2
-                            document.querySelectorAll('.delete-form').forEach(form => {
-                                form.addEventListener('submit', async function (e) {
-                                    e.preventDefault();
-
-                                    const confirmed = await showConfirm(
-                                        'Are you sure you want to delete this order?',
-                                        'This action cannot be undone',
-                                        'Yes, Delete',
-                                        'Cancel'
-                                    );
-
-                                    if (confirmed) {
-                                        this.submit();
-                                    }
-                                });
-                            });
-                        });
-
-                        // Tracking Support Functions
-                        async function syncTracking(orderId, btn) {
-                            const icon = btn.querySelector('i');
-                            btn.classList.add('spinning');
-                            btn.disabled = true;
-
-                            try {
-                                const response = await fetch(`/admin/orders/${orderId}/sync-tracking`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'Accept': 'application/json',
-                                        'Content-Type': 'application/json'
-                                        ,
-                                        'X-Requested-With': 'XMLHttpRequest'
-                                    }
-                                });
-
-                                const result = await response.json();
-
-                                if (result.success) {
-                                    // Refresh current page to show updated info
-                                    window.location.reload();
-                                } else {
-                                    alert('Error: ' + result.message);
-                                    btn.classList.remove('spinning');
-                                    btn.disabled = false;
-                                }
-                            } catch (error) {
-                                console.error('Sync failed:', error);
-                                alert('Failed to sync tracking data. Please try again.');
-                                btn.classList.remove('spinning');
-                                btn.disabled = false;
-                            }
-                        }
-
-                        function showTrackingHistory(orderId, trackingNumber, carrier, history, trackingUrl) {
-                            document.getElementById('modalTrackingNumber').textContent = trackingNumber;
-                            document.getElementById('modalCarrierName').textContent = carrier;
-
-                            const container = document.getElementById('trackingHistoryContainer');
-                            container.innerHTML = '';
-
-                            if (!history || history.length === 0) {
-                                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
-                                document.getElementById('modalLatestStatus').textContent = 'No Data';
-                            } else {
-                                document.getElementById('modalLatestStatus').textContent = history[0].status;
-
-                                history.forEach(item => {
-                                    const historyItem = document.createElement('div');
-                                    historyItem.className = 'tracking-history-item';
-                                    historyItem.innerHTML = `
-                                                                                                                                                                            <div class="tracking-history-dot"></div>
-                                                                                                                                                                            <div class="tracking-history-details shadow-sm">
-                                                                                                                                                                                <div class="tracking-history-header">
-                                                                                                                                                                                    <span class="tracking-history-status">${item.status}</span>
-                                                                                                                                                                                    <span class="tracking-history-date">${item.date}</span>
-                                                                                                                                                                                </div>
-                                                                                                                                                                                <div class="tracking-history-location">
-                                                                                                                                                                                    <i class="bi bi-geo-alt-fill"></i> ${item.location}
-                                                                                                                                                                                </div>
-                                                                                                                                                                                ${item.description ? `<div class="tracking-history-desc">${item.description}</div>` : ''}
-                                                                                                                                                                            </div>
-                                                                                                                                                                        `;
-                                    container.appendChild(historyItem);
-                                });
-                            }
-
-                            const officialLink = document.getElementById('modalOfficialLink');
-                            if (trackingUrl && trackingUrl !== 'null' && trackingUrl !== '') {
-                                officialLink.href = trackingUrl;
-                                officialLink.style.display = 'inline-block';
-                            } else {
-                                officialLink.href = `https://www.google.com/search?q=${carrier}+tracking+${trackingNumber}`;
-                                officialLink.style.display = 'inline-block';
-                            }
-
-                            const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
-                            modal.show();
-                        }
-
-                    </script>
-                @endpush
+        </script>
+    @endpush
 @endsection

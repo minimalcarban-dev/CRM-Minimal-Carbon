@@ -66,7 +66,18 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->middleware('admin.permission:chat.access');
 
     // ─────────────────────────────────────────────────────────────
+    // Tools & Calculators
+    // ─────────────────────────────────────────────────────────────
+    Route::prefix('tools')->name('tools.')->group(function () {
+        Route::get('jewellery-calculator', [\App\Http\Controllers\JewelleryCalculatorController::class, 'index'])
+            ->name('jewellery-calculator');
+        Route::get('gold-rate', [\App\Http\Controllers\JewelleryCalculatorController::class, 'getRates'])
+            ->name('gold-rate');
+    });
+
+    // ─────────────────────────────────────────────────────────────
     // Chat routes
+
     // ─────────────────────────────────────────────────────────────
     Route::prefix('chat')->middleware('admin.permission:chat.access')->group(function () {
         Route::post('/channels', [ChatController::class, 'createChannel']);
@@ -908,6 +919,35 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::get('/history/{id}', [MeleeDiamondController::class, 'getHistory'])->name('history');
         Route::post('/transaction', [MeleeDiamondController::class, 'transaction'])->name('transaction'); // Stock IN/OUT
         Route::post('/add-shape', [MeleeDiamondController::class, 'addShape'])->name('add-shape'); // Add new Shape+Size
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // Package Handover & Return Management System
+    // ─────────────────────────────────────────────────────────────
+    Route::prefix('packages')->name('packages.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PackageController::class, 'index'])
+            ->name('index')
+            ->middleware('admin.permission:packages.view');
+
+        Route::get('/create', [\App\Http\Controllers\PackageController::class, 'create'])
+            ->name('create')
+            ->middleware('admin.permission:packages.create');
+
+        Route::post('/', [\App\Http\Controllers\PackageController::class, 'store'])
+            ->name('store')
+            ->middleware('admin.permission:packages.create');
+
+        Route::get('/{package}', [\App\Http\Controllers\PackageController::class, 'show'])
+            ->name('show')
+            ->middleware('admin.permission:packages.view');
+
+        Route::post('/{package}/return', [\App\Http\Controllers\PackageController::class, 'returnPackage'])
+            ->name('return')
+            ->middleware('admin.permission:packages.return');
+
+        Route::delete('/{package}', [\App\Http\Controllers\PackageController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('admin.permission:packages.delete');
     });
 
 });

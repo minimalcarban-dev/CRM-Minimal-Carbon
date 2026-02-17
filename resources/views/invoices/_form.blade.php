@@ -181,9 +181,9 @@
                         <tr>
                             <th>Description</th>
                             <th>HSN Code</th>
-                            <th>Pieces</th>
-                            <th>Carats</th>
-                            <th>Rate/Carat</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Rate</th>
                             <th>Amount</th>
                             <th class="th-action">Action</th>
                         </tr>
@@ -197,13 +197,17 @@
                                     </td>
                                     <td><input name="items[{{$i}}][hsn_code]" class="input-cell"
                                             value="{{ $it['hsn_code'] ?? '' }}" placeholder="HSN"></td>
-                                    <td><input name="items[{{$i}}][pieces]" class="input-cell pieces"
-                                            value="{{ $it['pieces'] ?? '' }}" placeholder="0"></td>
-                                    <td><input name="items[{{$i}}][carats]" class="input-cell carats"
-                                            value="{{ $it['carats'] ?? '' }}" placeholder="0.00"></td>
-                                    <td><input name="items[{{$i}}][rate]" class="input-cell rate"
+                                    <td><input type="number" step="0.01" name="items[{{$i}}][quantity]" class="input-cell quantity"
+                                            value="{{ $it['quantity'] ?? '' }}" placeholder="0.00"></td>
+                                    <td>
+                                        <select name="items[{{$i}}][unit]" class="input-cell unit">
+                                            <option value="pieces" {{ ($it['unit'] ?? '') == 'pieces' ? 'selected' : '' }}>Pcs</option>
+                                            <option value="carats" {{ ($it['unit'] ?? '') == 'carats' ? 'selected' : '' }}>Cts</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" step="0.01" name="items[{{$i}}][rate]" class="input-cell rate"
                                             value="{{ $it['rate'] ?? '' }}" placeholder="0.00"></td>
-                                    <td><input name="items[{{$i}}][amount]" class="input-cell amount"
+                                    <td><input type="number" step="0.01" name="items[{{$i}}][amount]" class="input-cell amount"
                                             value="{{ $it['amount'] ?? '' }}"></td>
                                     <td class="td-action">
                                         <button type="button" class="btn-remove remove-row" title="Remove Item">
@@ -214,18 +218,27 @@
                             @endforeach
                         @elseif(isset($invoice) && $invoice->items->count())
                             @foreach($invoice->items as $i => $it)
+                                @php
+                                    $isPieces = !empty($it->pieces) && empty($it->carats);
+                                    $quantity = $isPieces ? $it->pieces : $it->carats;
+                                    $unit = $isPieces ? 'pieces' : 'carats';
+                                @endphp
                                 <tr class="item-row">
                                     <td><input name="items[{{$i}}][description_of_goods]" class="input-cell"
                                             value="{{ $it->description_of_goods }}" placeholder="Enter description"></td>
                                     <td><input name="items[{{$i}}][hsn_code]" class="input-cell" value="{{ $it->hsn_code }}"
                                             placeholder="HSN"></td>
-                                    <td><input name="items[{{$i}}][pieces]" class="input-cell pieces" value="{{ $it->pieces }}"
-                                            placeholder="0"></td>
-                                    <td><input name="items[{{$i}}][carats]" class="input-cell carats" value="{{ $it->carats }}"
+                                    <td><input type="number" step="0.01" name="items[{{$i}}][quantity]" class="input-cell quantity" value="{{ $quantity }}"
                                             placeholder="0.00"></td>
-                                    <td><input name="items[{{$i}}][rate]" class="input-cell rate" value="{{ $it->rate }}"
+                                    <td>
+                                        <select name="items[{{$i}}][unit]" class="input-cell unit">
+                                            <option value="pieces" {{ $unit == 'pieces' ? 'selected' : '' }}>Pcs</option>
+                                            <option value="carats" {{ $unit == 'carats' ? 'selected' : '' }}>Cts</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" step="0.01" name="items[{{$i}}][rate]" class="input-cell rate" value="{{ $it->rate }}"
                                             placeholder="0.00"></td>
-                                    <td><input name="items[{{$i}}][amount]" class="input-cell amount" value="{{ $it->amount }}">
+                                    <td><input type="number" step="0.01" name="items[{{$i}}][amount]" class="input-cell amount" value="{{ $it->amount }}">
                                     </td>
                                     <td class="td-action">
                                         <button type="button" class="btn-remove remove-row" title="Remove Item">
@@ -239,10 +252,15 @@
                                 <td><input name="items[0][description_of_goods]" class="input-cell"
                                         placeholder="Enter description"></td>
                                 <td><input name="items[0][hsn_code]" class="input-cell" placeholder="HSN"></td>
-                                <td><input name="items[0][pieces]" class="input-cell pieces" placeholder="0"></td>
-                                <td><input name="items[0][carats]" class="input-cell carats" placeholder="0.00"></td>
-                                <td><input name="items[0][rate]" class="input-cell rate" placeholder="0.00"></td>
-                                <td><input name="items[0][amount]" class="input-cell amount"></td>
+                                <td><input type="number" step="0.01" name="items[0][quantity]" class="input-cell quantity" placeholder="0.00"></td>
+                                <td>
+                                    <select name="items[0][unit]" class="input-cell unit">
+                                        <option value="pieces">Pcs</option>
+                                        <option value="carats">Cts</option>
+                                    </select>
+                                </td>
+                                <td><input type="number" step="0.01" name="items[0][rate]" class="input-cell rate" placeholder="0.00"></td>
+                                <td><input type="number" step="0.01" name="items[0][amount]" class="input-cell amount"></td>
                                 <td class="td-action">
                                     <button type="button" class="btn-remove remove-row" title="Remove Item">
                                         <i class="bi bi-trash"></i>
@@ -991,9 +1009,9 @@
         }
 
         function recalcRow($row) {
-            var carats = parseFloat($row.querySelector('.carats').value) || 0;
+            var quantity = parseFloat($row.querySelector('.quantity').value) || 0;
             var rate = parseFloat($row.querySelector('.rate').value) || 0;
-            var amount = (carats * rate).toFixed(2);
+            var amount = (quantity * rate).toFixed(2);
             $row.querySelector('.amount').value = amount;
         }
 
@@ -1112,10 +1130,15 @@
             tr.innerHTML = `
             <td><input name="items[${index}][description_of_goods]" class="input-cell" placeholder="Enter description"></td>
             <td><input name="items[${index}][hsn_code]" class="input-cell" placeholder="HSN"></td>
-            <td><input name="items[${index}][pieces]" class="input-cell pieces" placeholder="0"></td>
-            <td><input name="items[${index}][carats]" class="input-cell carats" placeholder="0.00"></td>
-            <td><input name="items[${index}][rate]" class="input-cell rate" placeholder="0.00"></td>
-            <td><input name="items[${index}][amount]" class="input-cell amount"></td>
+            <td><input type="number" step="0.01" name="items[${index}][quantity]" class="input-cell quantity" placeholder="0.00"></td>
+            <td>
+                <select name="items[${index}][unit]" class="input-cell unit">
+                    <option value="pieces">Pcs</option>
+                    <option value="carats">Cts</option>
+                </select>
+            </td>
+            <td><input type="number" step="0.01" name="items[${index}][rate]" class="input-cell rate" placeholder="0.00"></td>
+            <td><input type="number" step="0.01" name="items[${index}][amount]" class="input-cell amount"></td>
             <td class="td-action">
                 <button type="button" class="btn-remove remove-row" title="Remove Item">
                     <i class="bi bi-trash"></i>
@@ -1127,7 +1150,7 @@
 
         document.querySelector('#items_table').addEventListener('input', function (e) {
             var row = e.target.closest('tr');
-            if (e.target.classList.contains('carats') || e.target.classList.contains('rate')) {
+            if (e.target.classList.contains('quantity') || e.target.classList.contains('rate')) {
                 recalcRow(row);
                 recalcAll();
             } else if (e.target.classList.contains('amount')) {
