@@ -356,6 +356,73 @@
             z-index: 9999;
             min-width: 300px;
         }
+        @media (max-width: 575px) {
+            .inventory-management-container{
+                padding: 0;
+            }
+            .page-header {
+                padding: 8px;
+                border-radius: 7px;
+                display: block;
+                margin-bottom: 15px;
+            }
+            .page-header div:first-child {
+                margin-bottom: 0.75rem;
+            }
+            .page-header div:last-child {
+                flex-flow: column;
+                gap: 5px !important;
+            }
+            .page-header div:last-child div {
+                display: none;
+            }
+            .inventory-card {
+                flex-direction: column;
+            }
+            .sidebar-panel {
+                padding: 7px;
+            }
+            #cat-view-1 .table-header {
+                padding: 10px;
+                flex-direction: column;
+                text-align: left;
+                justify-content: left;
+                width: 100%;
+            }
+            #cat-view-1 .table-header div:last-child {
+                margin-top: 5px;
+            }
+            #cat-view-1 .table-header div {
+                width: 100%;
+            }
+            #shapes-container-1 .table-custom thead th, #shapes-container-1 .table-custom tbody td{
+                padding: 3px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+            #shapes-container-1 .rounded-pill{
+                white-space: nowrap;
+                font-size: 12px;
+                padding: 4px !important;
+                border-radius: 8px !important;
+            }
+            #shapes-container-1 td.text-end {
+                display: flex;
+            }
+            .shape-group.open .shape-group-body {
+                overflow-y: auto;
+            }
+            #history-table.table-custom thead th,#history-table.table-custom tbody td{
+                padding: 10px;
+                white-space: nowrap;
+            }
+            .add-size-row {
+                padding: 9px;
+            }
+            .add-size-row input {
+                padding: 5px;
+            }
+        }
     </style>
 
     <div class="inventory-management-container">
