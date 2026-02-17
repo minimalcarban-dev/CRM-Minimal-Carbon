@@ -54,6 +54,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $admin = Auth::guard('admin')->user();
+
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped']; // Define shipped statuses
         $baseQuery = Order::query()->with(['company', 'creator']); // Start the base query (apply admin + search filters first)
 
@@ -80,14 +81,20 @@ class OrderController extends Controller
         }
 
         if ($request->filled('search')) {
+
             $search = $request->search;
-            $baseQuery->where(function ($q) use ($search) {
-                $q->where('client_name', 'like', "%$search%")
-                    ->orWhere('client_email', 'like', "%$search%")
-                    ->orWhere('client_address', 'like', "%$search%")
-                    ->orWhere('jewellery_details', 'like', "%$search%")
-                    ->orWhere('diamond_details', 'like', "%$search%")
-                    ->orWhereHas('company', fn($c) => $c->where('name', 'like', "%$search%"));
+            $fields = ['client_name', 'id', 'client_email', 'client_address', 'jewellery_details', 'diamond_details'];
+
+            $baseQuery->where(function ($query) use ($search, $fields) {
+
+                foreach ($fields as $field) {
+                    $query->orWhere($field, 'like', "%{$search}%");
+                }
+
+                $query->orWhereHas('company', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+
             });
         }
 
