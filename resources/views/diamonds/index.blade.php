@@ -2278,6 +2278,80 @@
         .filter-section-title {
             font-size: 12px;
         }
+        @media (max-width: 575px) {
+            .filter-row-3, .filter-row-4 {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 7px;
+            }
+            .filter-actions {
+                padding-top: 5px;
+                margin-top: 5px;
+            }
+            .filter-actions-right {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-input, .filter-select {
+                padding: 5px;
+            }
+            .filter-actions-left{
+                flex-direction: column;
+            }
+            span.result-count {
+                padding-bottom: 10px;
+            }
+            .per-page-filter {
+                border: none;
+                margin-bottom: 11px;
+                padding-left: 0;
+                margin-left: 0;
+            }
+            .badge-custom {
+                font-size: 11px;
+            }
+            .status-sold, .status-instock {
+                white-space: nowrap;
+                font-size: 11px;
+                padding: 4px;
+                border-radius: 8px;
+            }
+            .barcode-image {
+                height: 30px;
+                max-width: 90px;
+            }
+            .cell-content .action-buttons {
+                flex-wrap: nowrap;
+                text-align: left;
+                justify-content: start;
+                align-items: center;
+            }
+            .reassign-modal {
+                padding: 1rem;
+            }
+            .btn-filter-apply,.filter-actions .filter-actions-right a.btn-filter-reset {
+                padding: 4px;
+                border-radius: 8px;
+                font-size: 13px;
+            }
+            .tutorial-modal-header {
+                padding: 14px 8px;
+                font-size: 15px;
+            }
+            .tutorial-modal-body {
+                padding: 10px;
+            }
+            .tutorial-step {
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                gap: 7px;
+            }
+            .step-content p {
+                font-size: 13px;
+            }
+            .field-item {
+                font-size: 13px;
+            }
+        }
     }
 </style>
 

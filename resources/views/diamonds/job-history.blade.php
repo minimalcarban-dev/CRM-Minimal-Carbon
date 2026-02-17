@@ -360,5 +360,23 @@
             display: flex;
             justify-content: center;
         }
+
+         @media (max-width: 575px) {
+            .job-history-container{
+                padding: 0rem;
+            }
+            .page-header h1 {
+                font-size: 12px;
+            }
+            .btn-back {
+                padding: 5px;
+                border-radius: 6px;
+                gap: 5px;
+                font-size: 13px;
+            }
+            .empty-state {
+                padding: 5px !important;
+            }
+        }
     </style>
 @endsection

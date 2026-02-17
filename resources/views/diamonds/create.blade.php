@@ -520,6 +520,36 @@
             transform: rotate(360deg);
         }
     }
+    @media (max-width: 575px) {
+        .breadcrumb-current, .breadcrumb-link {
+            font-size: 10px;
+        }
+        .header-content {
+            gap: 1rem;
+        }
+        a.btn-secondary-custom, button.btn-primary-custom, button.btn-secondary-custom{
+            padding: 6px;
+            font-size: 13px;
+        }
+        .form-control {
+            border-radius: 7px;
+            padding: 5px 9px;
+            font-size: 14px;
+        }
+        .form-grid {
+            gap: 9px;
+        }
+        .section-icon {
+            width: 35px;
+            height: 35px;
+            font-size: 19px;
+            border-radius: 6px;
+        }
+        .form-label {
+            margin-bottom: 3px;
+            font-size: 13px;
+        }
+    }
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
