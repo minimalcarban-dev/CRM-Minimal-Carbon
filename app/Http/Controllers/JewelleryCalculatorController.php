@@ -29,145 +29,104 @@ class JewelleryCalculatorController extends Controller
     public function getRates()
     {
         try {
-            // Log start of request for debugging (Comment out for high frequency log spam)
-            // Log::info('JewelleryCalculator: Starting Rate Fetch');
-
-            // --- 1. Currency API (Cache for 1 Hour) ---
-            // Currency rates don't fluctuate maniacally like gold.
-            $usdRate = Cache::remember('currency_usd_inr_v1', 3600, function () {
+            // --- 1. Currency API (Cache 1 Hour) ---
+            $usdRate = Cache::remember('currency_usd_inr_v2', 3600, function () {
                 try {
-                    // Log::info('JewelleryCalculator: Fetching Currency from API...');
-                    $exResponse = Http::withoutVerifying()->timeout(5)->get('https://currency-rate-exchange-api.onrender.com/inr');
-
-                    if ($exResponse->successful()) {
-                        $rates = $exResponse->json('rates');
-                        if (isset($rates['inr']['usd'])) {
+                    $r = Http::withoutVerifying()->timeout(8)
+                        ->get('https://currency-rate-exchange-api.onrender.com/inr');
+                    if ($r->successful()) {
+                        $rates = $r->json('rates');
+                        if (isset($rates['inr']['usd']))
                             return floatval($rates['inr']['usd']);
-                        } elseif (isset($rates['USD'])) {
+                        if (isset($rates['USD']))
                             return floatval($rates['USD']);
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Currency API failed: ' . $e->getMessage());
+                }
+                return 0.0118;
+            });
+
+            // --- 2. Gold Rate via Cloudflare Worker Proxy → Navkar MCX ---
+            $goldUsdPerGram = Cache::remember('gold_rate_usd_gram_v5', 1, function () use ($usdRate) {
+
+                // ── PRIMARY: Navkar via Cloudflare Worker (Indian MCX rate) ────
+                try {
+                    $r = Http::withoutVerifying()->timeout(10)
+                        ->withHeaders(['X-Proxy-Key' => 'navkar-proxy-xK9mP2024'])
+                        ->get('https://navkar-gold-proxy.minimalcarbonstore.workers.dev');
+
+                    if ($r->successful()) {
+                        $content = trim($r->body());
+                        $inrPer10g = 0;
+
+                        // TSV format parsing
+                        foreach (explode("\n", $content) as $line) {
+                            $line = trim($line);
+                            if (strpos($line, 'GOLD 999 IMP') !== false || strpos($line, 'GOLD 999 10GM') !== false) {
+                                $parts = preg_split('/\s+|\t/', $line);
+                                foreach ($parts as $part) {
+                                    $part = str_replace(',', '', trim($part));
+                                    if (is_numeric($part) && floatval($part) > 50000) {
+                                        $inrPer10g = floatval($part);
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($inrPer10g > 50000) {
+                            $perGram = ($inrPer10g / 10) * $usdRate;
+                            Log::info('Gold via Navkar Proxy: ₹' . ($inrPer10g / 10) . '/g = $' . round($perGram, 2));
+                            return $perGram;
                         }
                     }
                 } catch (\Exception $e) {
-                    Log::warning('JewelleryCalculator: Currency API Exception: ' . $e->getMessage());
+                    Log::warning('Navkar Proxy failed: ' . $e->getMessage());
                 }
-                return 0.0118; // Default fallback
-            });
 
-            // --- 2. Gold API (LIVE - No Cache) ---
-            // Fetch every time for real-time updates
-            $goldRateInr10g = 0;
+                // ── FALLBACK: Coinbase + India premium 8.5% ────────────────────
+                try {
+                    $r = Http::withoutVerifying()->timeout(8)
+                        ->get('https://api.coinbase.com/v2/exchange-rates?currency=USD');
 
-            try {
-                // Log::info('JewelleryCalculator: Fetching Gold Rate...');
-                // Note: Port 7768 might be blocked on some hosts. 
-                $goldResponse = Http::withoutVerifying()->timeout(5)->get('https://bcast.navkargold.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/navkar');
-
-                if ($goldResponse->successful()) {
-                    $content = trim($goldResponse->body());
-
-                    // Check format: XML vs Text/TSV
-                    if (strpos($content, '<') === 0 && strpos($content, '<xml') !== false) {
-                        libxml_use_internal_errors(true);
-                        $xml = simplexml_load_string($content);
-                        if ($xml && isset($xml->row)) {
-                            foreach ($xml->row as $row) {
-                                $symbol = (string) $row['symbol_name'];
-                                if (strpos($symbol, 'GOLD 999 10GM') !== false || strpos($symbol, 'GOLD 999 IMP') !== false) {
-                                    $price = str_replace(',', '', (string) $row['bid_price']);
-                                    if (is_numeric($price) && $price > 0) {
-                                        $goldRateInr10g = floatval($price);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // Text/TSV Value Parsing
-                        // Log::info("JewelleryCalculator: Parsing Text Response (Length: " . strlen($content) . ")");
-                        $lines = explode("\n", $content);
-
-                        $gold999Found = false;
-                        $goldDotValue = 0; // Fallback "GOLD." value
-
-                        foreach ($lines as $line) {
-                            $line = trim($line);
-                            if (empty($line))
-                                continue;
-
-                            // 1. Attempt to find "GOLD 999 IMP" or similar
-                            if (strpos($line, 'GOLD 999 IMP') !== false || strpos($line, 'GOLD 999 10GM') !== false) {
-                                $parts = preg_split('/\s+/', $line);
-                                foreach ($parts as $part) {
-                                    if (is_numeric($part) && floatval($part) > 50000) {
-                                        $goldRateInr10g = floatval($part);
-                                        $gold999Found = true;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            // 2. Fallback: Parse "GOLD." (e.g. 4910.80)
-                            if (!$gold999Found && strpos($line, 'GOLD.') !== false) {
-                                $parts = preg_split('/\s+/', $line);
-                                foreach ($parts as $part) {
-                                    if (is_numeric($part) && floatval($part) > 3000 && floatval($part) < 8000) {
-                                        $goldDotValue = floatval($part);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if ($gold999Found)
-                                break;
-                        }
-
-                        // If explicit 10g rate not found, use heuristic
-                        if (!$gold999Found && $goldDotValue > 0) {
-                            $goldRateInr10g = $goldDotValue * 31.87;
+                    if ($r->successful()) {
+                        $xauPerUsd = floatval($r->json('data.rates.XAU') ?? 0);
+                        if ($xauPerUsd > 0) {
+                            $intlPerGram = (1 / $xauPerUsd) / 31.1035;
+                            $indianPerGram = $intlPerGram * 1.085;
+                            Log::info('Gold via Coinbase fallback: $' . round($indianPerGram, 2));
+                            return $indianPerGram;
                         }
                     }
-
-                } else {
-                    Log::error('JewelleryCalculator: Gold API failed status: ' . $goldResponse->status());
+                } catch (\Exception $e) {
+                    Log::warning('Coinbase fallback failed: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                Log::error('JewelleryCalculator: Gold API Exception: ' . $e->getMessage());
-            }
 
-            // --- 3. Fallback Logic ---
-            if ($goldRateInr10g <= 0) {
-                // User requested NO hardcoded fallback. 
-                // If API fails, we return an error state so the frontend can show "Unavailable".
+                return 0;
+            });
+
+            // --- 3. Fallback ---
+            if ($goldUsdPerGram <= 0) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Live Gold Rate Unavailable',
-                    'error' => 'API returned no valid data'
+                    'error' => 'All APIs failed',
                 ]);
             }
 
-            // --- 4. Calculation ---
-            // 10g INR -> 1g INR
-            $goldRateInr1g = $goldRateInr10g / 10;
-            // 1g INR -> 1g USD
-            $goldRateUsd1g = $goldRateInr1g * $usdRate;
-
-            $finalRate = round($goldRateUsd1g, 2);
-
+            // --- 4. Return ---
             return response()->json([
                 'success' => true,
-                'rate' => $finalRate,
+                'rate' => round($goldUsdPerGram, 2),
                 'currency' => 'USD',
                 'timestamp' => now()->toIso8601String(),
-                'source' => 'live'
+                'source' => 'live',
             ]);
 
         } catch (\Exception $e) {
-            Log::critical('JewelleryCalculator: CRITICAL UNHANDLED: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Server Error',
-                'error' => $e->getMessage()
-            ], 500);
+            Log::critical('JewelleryCalculator CRITICAL: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server Error'], 500);
         }
     }
 }

@@ -950,6 +950,25 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             ->middleware('admin.permission:packages.delete');
     });
 
+    Route::get('/debug-gold', function () {
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->timeout(10)
+                ->get('https://bcast.navkargold.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/navkar');
+
+            return response()->json([
+                'status' => $response->status(),
+                'body_preview' => substr($response->body(), 0, 500),
+                'success' => $response->successful(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'class' => get_class($e),
+            ]);
+        }
+    });
+
 });
 
 // ─────────────────────────────────────────────────────────────

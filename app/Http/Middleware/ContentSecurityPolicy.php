@@ -17,10 +17,10 @@ class ContentSecurityPolicy
 
         // Allow self assets + jQuery CDN + inline styles (temporary) and images + ws connections + Vite dev server
         // NOTE: 'unsafe-eval' should never be enabled in production (it weakens CSP and may trigger security scanners).
-        $scriptSrc = "'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net";
-        if ($isLocal) {
-            $scriptSrc .= " 'unsafe-eval'";
-        }
+        $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval' https://code.jquery.com https://cdn.jsdelivr.net";
+        // if ($isLocal) {
+        //     $scriptSrc .= " 'unsafe-eval'";
+        // }
         $styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com";
         $connectSrc = "'self' https://* wss:";
 
