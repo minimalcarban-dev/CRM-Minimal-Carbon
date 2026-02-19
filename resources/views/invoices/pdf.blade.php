@@ -1180,7 +1180,7 @@
                         Signature valid.<br>
                         Digitally signed by
                         {{ $invoice->signed_by ?? ($invoice->company->authorized_person ?? 'Authorised Signatory') }}<br>
-                        Date: {{ $invoice->signed_at ?? now()->format('d M Y, H:i:s') }}
+                        Date: {{ $invoice->signed_at ?? now()->format('d M Y, h:i:s') }}
                     </div>
                 </div>
             </div>
@@ -1197,7 +1197,7 @@
                 Generated on {{ now()->format('d M Y, h:i A') }}
             </div>
         </div>
-    </div> <!-- End page-wrapper -->
+    </div>
 </body>
 
 </html>
