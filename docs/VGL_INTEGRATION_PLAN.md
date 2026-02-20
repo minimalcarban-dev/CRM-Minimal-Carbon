@@ -10,9 +10,9 @@
 
 Certificate creators at `vgllab.com` currently follow a manual and time-consuming process:
 
-1.  Log into the CRM to look up order details (diamond specifications, jewellery details, images, client info).
-2.  Manually copy and paste these details into the VGL certificate creation form.
-3.  Repeat this process for every single certificate.
+1. Log into the CRM to look up order details (diamond specifications, jewellery details, images, client info).
+2. Manually copy and paste these details into the VGL certificate creation form.
+3. Repeat this process for every single certificate.
 
 **Goal:** Expose CRM order data through a secure, well-defined API that enables the VGL platform to fetch and auto-populate certificate forms directly, eliminating manual data entry.
 
@@ -45,26 +45,6 @@ sequenceDiagram
     VGL_Backend-->>VGL_Frontend: Certificate creation successful
 ```
 
-┌──────────────────────┐         HTTPS/JSON           ┌──────────────────────┐
-│                      │  ◄──────────────────────►    │                      │
-│   CRM (Laravel)      │     API Token Auth           │   VGL (React+PHP)    │
-│   This Project       │                              │   vgllab.com         │
-│                      │                              │                      │
-│  ┌────────────────┐  │   GET /api/v1/orders         │  ┌────────────────┐  │
-│  │ Orders         │──┼──────────────────────────►   │  │ Certificate    │  │
-│  │ Diamonds       │  │   GET /api/v1/orders/{id}    │  │ Creation Form  │  │
-│  │ Companies      │  │                              │  │ (auto-fill)    │  │
-│  │ MetalTypes     │  │   GET /api/v1/orders/search  │  └────────────────┘  │
-│  │ Images (CDN)   │  │         ?q=client_name       │                      │
-│  └────────────────┘  │                              │  ┌────────────────┐  │
-│                      │   POST /api/v1/orders/{id}/  │  │ Certificate    │  │
-│  ┌────────────────┐  │        certificate-link      │  │ Database       │  │
-│  │ API Token Auth │  │  ◄────────────────────────   │  │                │  │
-│  │ (Sanctum)      │  │  (link cert# back to order)  │  └────────────────┘  │
-│  └────────────────┘  │                              │                      │
-└──────────────────────┘                              └──────────────────────┘
-
-
 > **Security Note:** The VGL PHP backend will act as a **proxy**. The CRM API token will be stored securely on the VGL server and will never be exposed to the client-side React application.
 
 ---
@@ -73,13 +53,13 @@ sequenceDiagram
 
 ### 3.1. Initial Setup
 
-1.  **Install Laravel Sanctum** for API token authentication.
+1. **Install Laravel Sanctum** for API token authentication.
     ```bash
     composer require laravel/sanctum
     php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
     php artisan migrate
     ```
-2.  **Update CORS Configuration** in `config/cors.php` to allow requests from VGL.
+2. **Update CORS Configuration** in `config/cors.php` to allow requests from VGL.
     ```php
     'paths' => ['api/*'],
     'allowed_origins' => ['https://vgllab.com', 'https://www.vgllab.com'],
@@ -182,7 +162,7 @@ A new nullable column will be added to the `orders` table:
 
 A dedicated service class (`CrmApiService.php`) will be created to:
 
-- Read `CRM_API_URL` and `CRM_API_TOKEN` from the `.env` file.****
+- Read `CRM_API_URL` and `CRM_API_TOKEN` from the `.env` file.\*\*\*\*
 - Wrap all CRM API calls using a standard HTTP client like Guzzle.
 - Handle errors, timeouts, and response parsing, returning structured arrays.
 
@@ -295,9 +275,9 @@ A dedicated service class (`CrmApiService.php`) will be created to:
 
 ## 7. Implementation Plan
 
-1.  **Phase 1 (CRM API):** To be built entirely within this Laravel project. This phase can be tested independently using Postman or a similar API client.
-2.  **Phase 2 (VGL Backend):** To be built in the VGL PHP backend project.
-3.  **Phase 3 (VGL Frontend):** To be built in the VGL React/TypeScript project.
+1. **Phase 1 (CRM API):** To be built entirely within this Laravel project. This phase can be tested independently using Postman or a similar API client.
+2. **Phase 2 (VGL Backend):** To be built in the VGL PHP backend project.
+3. **Phase 3 (VGL Frontend):** To be built in the VGL React/TypeScript project.
 
 ### Dependencies from VGL Project
 

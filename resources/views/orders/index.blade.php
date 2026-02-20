@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+﻿﻿@extends('layouts.admin')
 
 @section('title', 'Orders Management')
 
@@ -2944,8 +2944,8 @@
             }
 
             /* .client-info {
-                                                                                                                                                                                    text-align: start;
-                                                                                                                                                                                } */
+                                                                                                                                                                                            text-align: start;
+                                                                                                                                                                                        } */
         }
 
         /* Print Styles */
@@ -3143,60 +3143,67 @@
                 }
             }
 
-            function showTrackingHistory(orderId, trackingNumber, carrier, history, trackingUrl) {
-                document.getElementById('modalTrackingNumber').textContent = trackingNumber;
-                document.getElementById('modalCarrierName').textContent = carrier;
-
-                const container = document.getElementById('trackingHistoryContainer');
-                container.innerHTML = '';
-
-                if (!history || history.length === 0) {
-                    container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
-                    document.getElementById('modalLatestStatus').textContent = 'No Data';
-                } else {
-                    document.getElementById('modalLatestStatus').textContent = history[0].status;
-
-                    history.forEach(item => {
-                        const historyItem = document.createElement('div');
-                        historyItem.className = 'tracking-history-item';
-                        historyItem.innerHTML = `
-                            <div class="tracking-history-dot"></div>
-                            <div class="tracking-history-details shadow-sm">
-                                <div class="tracking-history-header">
-                                    <span class="tracking-history-status">${item.status}</span>
-                                    <span class="tracking-history-date">${item.date}</span>
-                                </div>
-                                <div class="tracking-history-location">
-                                    <i class="bi bi-geo-alt-fill"></i> ${item.location}
-                                </div>
-                                ${item.description ? `<div class="tracking-history-desc">${item.description}</div>` : ''}
-                            </div>`;
-                        container.appendChild(historyItem);
-                    });
-                }
-
-                const officialLink = document.getElementById('modalOfficialLink');
-                if (trackingUrl && trackingUrl !== 'null' && trackingUrl !== '') {
-                    officialLink.href = trackingUrl;
-                    officialLink.style.display = 'inline-block';
-                } else {
-                    officialLink.href = `https://www.google.com/search?q=${carrier}+tracking+${trackingNumber}`;
-                    officialLink.style.display = 'inline-block';
-                }
-
-                // Setup Sync Button
-                        const syncBtn = document.getElementById('modalSyncBtn');
-                        if (syncBtn) {
-                            // Creating a fresh onClick handler that captures current orderId
-                            syncBtn.onclick = function() {
-                                syncTracking(orderId, this);
-                            };
-                        }
-
-                        const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
-                        modal.show();
+            function escapeHtml(str) {
+                        if (!str) return '';
+                        return         String(str).replace(/[&<>"']/g, function(m) {
+                            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+                        });
                     }
 
-                </script>
+                    function showTrackingHistory(orderId, trackingNumber, carrier, history, trackingUrl) {
+                        document.getElementById('modalTrackingNumber').textContent = trackingNumber;
+                        document.getElementById('modalCarrierName').textContent = carrier;
+
+                        const container = document.getElementById('trackingHistoryContainer');
+                        container.innerHTML = '';
+
+                        if (!history || history.length === 0) {
+                            container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
+                            document.getElementById('modalLatestStatus').textContent = 'No Data';
+                        } else {
+                            document.getElementById('modalLatestStatus').textContent = history[0].status;
+
+                            history.forEach(item => {
+                                const historyItem = document.createElement('div');
+                                historyItem.className = 'tracking-history-item';
+                                historyItem.innerHTML = `
+                                    <div class="tracking-history-dot"></div>
+                                    <div class="tracking-history-details shadow-sm">
+                                        <div class="tracking-history-header">
+                                            <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                            <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                        </div>
+                                        <div class="tracking-history-location">
+                                            <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                        </div>
+                                        ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                                    </div>`;
+                                container.appendChild(historyItem);
+                            });
+                        }
+
+                        const officialLink = document.getElementById('modalOfficialLink');
+                                if (trackingUrl && trackingUrl !== 'null' && trackingUrl !== '') {
+                                    officialLink.href = trackingUrl;
+                                    officialLink.style.display = 'inline-block';
+                                } else {
+                                    officialLink.href = `https://www.google.com/search?q=${carrier}+tracking+${trackingNumber}`;
+                                    officialLink.style.display = 'inline-block';
+                                }
+
+                                // Setup Sync Button
+                                        const syncBtn = document.getElementById('modalSyncBtn');
+                                        if (syncBtn) {
+                                            // Creating a fresh onClick handler that captures current orderId
+                                            syncBtn.onclick = function() {
+                                                syncTracking(orderId, this);
+                                            };
+                                        }
+
+                                        const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
+                                        modal.show();
+                                    }
+
+                                </script>
     @endpush
 @endsection

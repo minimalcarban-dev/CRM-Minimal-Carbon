@@ -34,32 +34,16 @@ class ShippingTrackingService
             ];
         }
 
-        // 2. Fetch from TrackingMore
-        $apiKey = env('TRACKINGMORE_API_KEY');
+        // 2. Fetch from 17Track
+        $apiKey = env('17TRACK_API_KEY', '016E049ACA4113B2A846E1FD39D403C3');
         if (!$apiKey) {
             return [
                 'success' => false,
-                'message' => 'TrackingMore API Key is missing in .env'
+                'message' => '17Track API Key is missing.'
             ];
         }
 
-        // If carrier is unknown, we might try auto-detect or default (but TrackingMore needs carrier usually for best results)
-        // If carrier is missing, TrackingMore's 'detect' endpoint could be used, but for now let's rely on provided info.
-        if (empty($carrierCode)) {
-            // Optional: fallback to 'auto' or try to guess from number format?
-            // For now, return error or try 'auto' if supported.
-            // TrackingMore create endpoint requires courier_code.
-            // However, we can try without it or guess Aramex if user provided it in context.
-            // Given the user specifically asked for Aramex support:
-            if (preg_match('/^3\d{10}$/', $trackingNumber)) {
-                $carrierCode = 'aramex'; // Simple heuristic for Aramex (11 digits starting with 3? Just an example)
-            } else {
-                $carrierCode = 'aramex'; // Defaulting to Aramex as per user request context if unknown? 
-                // Better: fail if unknown to avoid bad data. But user said "update full code" for this specific API.
-            }
-        }
-
-        $trackingData = $this->fetchFromTrackingMore($trackingNumber, $carrierCode, $apiKey);
+        $trackingData = $this->fetchFrom17Track($trackingNumber, $apiKey);
 
         if ($trackingData['success']) {
             $order->update([
@@ -67,7 +51,7 @@ class ShippingTrackingService
                 'tracking_history' => $trackingData['history'],
                 'last_tracker_sync' => now(),
                 'tracking_number' => $trackingNumber, // Ensure number is saved if extracted
-                'shipping_company_name' => $order->shipping_company_name ?: ucfirst($carrierCode),
+                'shipping_company_name' => $order->shipping_company_name ?: ($trackingData['carrier'] ?? 'Unknown Carrier'),
             ]);
 
             return [
@@ -139,45 +123,31 @@ class ShippingTrackingService
     }
 
     /**
-     * Call TrackingMore API
+     * Call 17Track API
      */
-    private function fetchFromTrackingMore($number, $carrierCode, $apiKey)
+    private function fetchFrom17Track($number, $apiKey)
     {
         try {
-            // Step 1: Register/Create Tracking
-            // We use 'create' to ensure the tracking exists in their system.
-            // If it already exists, this might return an error or existing data, 
-            // but usually it's safe to call or we should check if we need to call 'get' only.
-            // The user's cURL allows create.
-
             $postPayload = [
-                'tracking_number' => $number,
-                'courier_code' => $carrierCode
+                ['number' => $number]
             ];
 
-            $createResponse = Http::withHeaders([
-                'Tracking-Api-Key' => $apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json'
-            ])->post('https://api.trackingmore.com/v4/trackings/create', $postPayload);
+            // Step 1: Register Tracking
+            $registerResponse = Http::withHeaders([
+                '17token' => $apiKey,
+                'Content-Type' => 'application/json'
+            ])->post('https://api.17track.net/track/v2.2/register', $postPayload);
 
-            // Even if create failed (e.g. "Tracking already exists"), we proceed to GET.
-            // Common error: 400 Bad Request if exists.
-
-            Log::info("TrackingMore Create Response: " . $createResponse->body());
+            Log::info("17Track Register Response for {$number}: " . $registerResponse->body());
 
             // Step 2: Get Tracking Details
-            // Use 'get' endpoint to retrieve full history.
             $getResponse = Http::withHeaders([
-                'Tracking-Api-Key' => $apiKey,
-                'Accept' => 'application/json'
-            ])->get('https://api.trackingmore.com/v4/trackings/get', [
-                        'tracking_numbers' => $number,
-                        'courier_code' => $carrierCode
-                    ]);
+                '17token' => $apiKey,
+                'Content-Type' => 'application/json'
+            ])->post('https://api.17track.net/track/v2.2/gettrackinfo', $postPayload);
 
             if ($getResponse->failed()) {
-                Log::error("TrackingMore Get Failed: " . $getResponse->body());
+                Log::error("17Track Get Failed: " . $getResponse->body());
                 return [
                     'success' => false,
                     'message' => 'Tracking API Error: ' . $getResponse->status()
@@ -185,29 +155,39 @@ class ShippingTrackingService
             }
 
             $body = $getResponse->json();
-            $data = $body['data'][0] ?? null;
 
-            if (!$data) {
+            if (empty($body['data']['accepted'][0]['track_info'])) {
+                $errorMsg = $body['data']['rejected'][0]['error']['message'] ?? 'No tracking data returned from API.';
                 return [
                     'success' => false,
-                    'message' => 'No tracking data returned from API.'
+                    'message' => $errorMsg
                 ];
             }
 
-            // Parse History
-            // History is usually in 'origin_info.trackinfo' or 'destination_info.trackinfo'
-            $trackInfo = $data['origin_info']['trackinfo'] ?? $data['destination_info']['trackinfo'] ?? [];
+            $trackInfo = $body['data']['accepted'][0]['track_info'];
+            $latestStatus = $trackInfo['latest_status']['status'] ?? 'Unknown';
 
-            // Should usually prioritize destination info for delivery updates if available, but often they are similar or one is empty.
-            // Let's merge or pick the one with data.
-            if (empty($trackInfo) && !empty($data['destination_info']['trackinfo'])) {
-                $trackInfo = $data['destination_info']['trackinfo'];
-            }
+            // 17Track statuses mapping
+            $statusMap = [
+                'NotFound' => 'Not found',
+                'InfoReceived' => 'Info received',
+                'InTransit' => 'In transit',
+                'Expired' => 'Expired',
+                'AvailableForPickup' => 'Pick up',
+                'OutForDelivery' => 'Out for delivery',
+                'Undelivered' => 'Undelivered',
+                'Delivered' => 'Delivered',
+                'Alert' => 'Alert',
+                'Exception' => 'Exception',
+            ];
+            $readableStatus = $statusMap[$latestStatus] ?? $latestStatus;
+
+            $providerName = $trackInfo['tracking']['providers'][0]['provider']['name'] ?? null;
+            $events = $trackInfo['tracking']['providers'][0]['events'] ?? [];
 
             $history = [];
-            foreach ($trackInfo as $checkpoint) {
-                // Ensure date formatting
-                $dateStr = $checkpoint['checkpoint_date'] ?? now();
+            foreach ($events as $checkpoint) {
+                $dateStr = $checkpoint['time_iso'] ?? $checkpoint['time_utc'] ?? now();
                 try {
                     $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
                 } catch (\Exception $e) {
@@ -216,20 +196,16 @@ class ShippingTrackingService
 
                 $history[] = [
                     'date' => $dateFormatted,
-                    'status' => $checkpoint['checkpoint_delivery_status'] ?? $checkpoint['status'] ?? 'Update',
+                    'status' => $checkpoint['stage'] ?? $readableStatus,
                     'location' => $checkpoint['location'] ?? '',
-                    'description' => $checkpoint['tracking_detail'] ?? ''
+                    'description' => $checkpoint['description'] ?? ''
                 ];
             }
 
-            // If no checkpoints but we have a status
             if (empty($history)) {
-                // Check if there is a global status message or error
-                // Sometimes TrackingMore returns a "Direct Tracking Recommended" warning note in specific fields?
-                // We'll mimic a history item if needed, or just return empty.
                 $history[] = [
                     'date' => now()->format('d M Y, h:i A'),
-                    'status' => ucfirst($data['delivery_status'] ?? 'Unknown'),
+                    'status' => $readableStatus,
                     'location' => '',
                     'description' => 'Tracking initialized. Please check back later.'
                 ];
@@ -242,8 +218,9 @@ class ShippingTrackingService
 
             return [
                 'success' => true,
-                'status' => ucfirst($data['delivery_status'] ?? 'In Transit'),
-                'history' => $history
+                'status' => $readableStatus,
+                'history' => $history,
+                'carrier' => $providerName
             ];
 
         } catch (\Exception $e) {

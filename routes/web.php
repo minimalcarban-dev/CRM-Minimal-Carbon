@@ -17,6 +17,7 @@ use App\Http\Controllers\DiamondClarityController;
 use App\Http\Controllers\DiamondCutController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\TrackingWebhookController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminPermissionController;
@@ -983,5 +984,12 @@ Route::prefix('webhook/meta')->group(function () {
     Route::post('/', [MetaWebhookController::class, 'handle'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });
+
+// ─────────────────────────────────────────────────────────────
+// 17Track Webhook Routes (Outside auth middleware)
+// ─────────────────────────────────────────────────────────────
+
+Route::post('webhook/17track', [TrackingWebhookController::class, 'handle17Track'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 
