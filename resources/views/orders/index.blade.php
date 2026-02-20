@@ -86,8 +86,7 @@
                             <span class="draft-count-badge">{{ $draftCount }}</span>
                         </a>
                     @endif
-                    <a href="{{ route('orders.sync-all-tracking') }}" class="btn-primary-custom"
-                        onclick="return confirm('Syncing all orders may take a few minutes. Continue?');"
+                    <a href="{{ route('orders.sync-all-tracking') }}" class="btn-primary-custom" id="btnSyncAll"
                         style="margin-right: 10px; background: #6366f1;">
                         <i class="bi bi-arrow-repeat"></i>
                         <span>Sync All</span>
@@ -450,6 +449,42 @@
                                 filterForm.submit();
                             }
                         });
+                        // Sync All Confirm & Loader
+                        const btnSyncAll = document.getElementById('btnSyncAll');
+                        if (btnSyncAll) {
+                            btnSyncAll.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                const url = this.getAttribute('href');
+
+                                Swal.fire({
+                                    title: 'Sync All Orders?',
+                                    text: "This process may take a few minutes depending on the number of orders.",
+                                    icon: 'info',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#6366f1',
+                                    cancelButtonColor: '#64748b',
+                                    confirmButtonText: 'Yes, start sync!',
+                                    cancelButtonText: 'Cancel'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // Show loading state
+                                        Swal.fire({
+                                            title: 'Syncing Tracking Data...',
+                                            html: 'Please wait while we update tracking information from carriers.<br>Do not close this window.',
+                                            allowOutsideClick: false,
+                                            allowEscapeKey: false,
+                                            showConfirmButton: false,
+                                            didOpen: () => {
+                                                Swal.showLoading();
+                                            }
+                                        });
+
+                                        // Redirect to sync route
+                                        window.location.href = url;
+                                    }
+                                });
+                            });
+                        }
                     });
                 </script>
 
@@ -841,6 +876,9 @@
                 </div>
                 <div class="modal-footer bg-light border-top p-3">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="modalSyncBtn" class="btn btn-warning rounded-pill px-4 text-white">
+                        <i class="bi bi-arrow-repeat me-1"></i> Sync Status
+                    </button>
                     <a href="#" id="modalOfficialLink" target="_blank" class="btn btn-primary rounded-pill px-4">
                         <i class="bi bi-box-arrow-up-right me-1"></i> Official Page
                     </a>
@@ -1220,6 +1258,7 @@
             text-decoration: none;
             color: inherit;
             min-width: 140px;
+            flex: 0 0 238px;
         }
 
         .company-progress-card-simple:hover {
@@ -2649,7 +2688,7 @@
         .thumbnail-container img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             border-radius: 8px;
         }
 
@@ -2905,8 +2944,8 @@
             }
 
             /* .client-info {
-                                                                                                                                                                text-align: start;
-                                                                                                                                                            } */
+                                                                                                                                                                                    text-align: start;
+                                                                                                                                                                                } */
         }
 
         /* Print Styles */
@@ -3121,17 +3160,17 @@
                         const historyItem = document.createElement('div');
                         historyItem.className = 'tracking-history-item';
                         historyItem.innerHTML = `
-                                                                                        <div class="tracking-history-dot"></div>
-                                                                                        <div class="tracking-history-details shadow-sm">
-                                                                                            <div class="tracking-history-header">
-                                                                                                <span class="tracking-history-status">${item.status}</span>
-                                                                                                <span class="tracking-history-date">${item.date}</span>
-                                                                                            </div>
-                                                                                            <div class="tracking-history-location">
-                                                                                                <i class="bi bi-geo-alt-fill"></i> ${item.location}
-                                                                                            </div>
-                                                                                            ${item.description ? `<div class="tracking-history-desc">${item.description}</div>` : ''}
-                                                                                        </div>`;
+                            <div class="tracking-history-dot"></div>
+                            <div class="tracking-history-details shadow-sm">
+                                <div class="tracking-history-header">
+                                    <span class="tracking-history-status">${item.status}</span>
+                                    <span class="tracking-history-date">${item.date}</span>
+                                </div>
+                                <div class="tracking-history-location">
+                                    <i class="bi bi-geo-alt-fill"></i> ${item.location}
+                                </div>
+                                ${item.description ? `<div class="tracking-history-desc">${item.description}</div>` : ''}
+                            </div>`;
                         container.appendChild(historyItem);
                     });
                 }
@@ -3145,10 +3184,19 @@
                     officialLink.style.display = 'inline-block';
                 }
 
-                const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
-                modal.show();
-            }
+                // Setup Sync Button
+                        const syncBtn = document.getElementById('modalSyncBtn');
+                        if (syncBtn) {
+                            // Creating a fresh onClick handler that captures current orderId
+                            syncBtn.onclick = function() {
+                                syncTracking(orderId, this);
+                            };
+                        }
 
-        </script>
+                        const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
+                        modal.show();
+                    }
+
+                </script>
     @endpush
 @endsection

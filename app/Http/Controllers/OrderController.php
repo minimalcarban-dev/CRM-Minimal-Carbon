@@ -786,10 +786,10 @@ class OrderController extends Controller
             if (request()->ajax() || request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Controller Error: ' . $e->getMessage()
-                ], 500);
+                    'message' => $e->getMessage()
+                ], 500); // Or 422 if it's a "valid" error like quota
             }
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
@@ -965,11 +965,14 @@ class OrderController extends Controller
     public function syncAllTracking(ShippingTrackingService $trackingService)
     {
         set_time_limit(300); // Increase time limit to 5 minutes
+        Log::info("Bulk Sync Initiated");
 
         try {
             $orders = Order::whereNotNull('tracking_number')
                 ->orWhereNotNull('tracking_url')
                 ->get();
+
+            Log::info("Bulk Sync: Found " . $orders->count() . " orders.");
 
             $count = 0;
             $successValues = 0;

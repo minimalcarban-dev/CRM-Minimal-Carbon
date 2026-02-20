@@ -18,8 +18,8 @@
                     <i class="bi bi-pencil"></i> Edit
                 </a>
                 <!-- <button onclick="window.print()" class="btn-action btn-print">
-                                                                <i class="bi bi-printer"></i> Print
-                                                            </button> -->
+                                                                                <i class="bi bi-printer"></i> Print
+                                                                            </button> -->
             </div>
         </div>
 
@@ -274,13 +274,13 @@
                 <!-- Shipping Info -->
                 @if($order->shipping_company_name || $order->tracking_number || $order->dispatch_date)
                     <div class="info-section">
-                        <div class="section-header-flex no-print">
-                            <h3 class="section-title">
+                        <div class="section-title justify-content-between align-items-center no-print">
+                            <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-truck"></i> Shipping Information
-                            </h3>
+                            </div>
                             <div class="d-flex align-items-center gap-2">
                                 @if($order->tracking_url)
-                                    <a href="{{ $order->tracking_url }}" target="_blank" class="tracking-link no-print m-0">
+                                    <a href="{{ $order->tracking_url }}" target="_blank" class="btn-action-sm">
                                         <i class="bi bi-box-arrow-up-right"></i> Official Page
                                     </a>
                                 @endif
@@ -288,27 +288,14 @@
                                     <form action="{{ route('orders.sync-tracking', $order) }}" method="POST" id="syncTrackingForm"
                                         class="m-0">
                                         @csrf
-                                        <button type="submit" class="btn-sync-tracking"
+                                        <button type="submit" class="btn-action-sm header-action-btn"
                                             onclick="this.innerHTML='<i class=\'bi bi-arrow-repeat spin\'></i> Syncing...'">
                                             <i class="bi bi-arrow-repeat"></i> Sync Status
                                         </button>
                                     </form>
 
                                     <style>
-                                        @keyframes spin {
-                                            from {
-                                                transform: rotate(0deg);
-                                            }
 
-                                            to {
-                                                transform: rotate(360deg);
-                                            }
-                                        }
-
-                                        .bi-arrow-repeat.spin {
-                                            animation: spin 1s linear infinite;
-                                            display: inline-block;
-                                        }
                                     </style>
                                 @endif
                             </div>
@@ -667,6 +654,28 @@
             background: var(--primary-light);
             border-color: var(--primary-light);
             color: var(--white);
+        }
+
+        .btn-action-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.4rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--white);
+            color: var(--secondary);
+        }
+
+        .btn-action-sm:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #eef2ff;
         }
 
         /* Status Cards */
@@ -2009,6 +2018,37 @@
         .status-failed_attempt {
             background: #ffe4e6;
             color: #be123c;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .bi-arrow-repeat.spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        /* Adjust button background for header context */
+        .section-title .btn-action-sm {
+            background: var(--white);
+            border-color: var(--border);
+        }
+
+        .section-title .btn-action-sm:hover {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .btn-action-sm:hover i {
+            color: var(--white);
         }
     </style>
 
