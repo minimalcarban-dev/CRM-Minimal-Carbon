@@ -146,15 +146,50 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Success: ' + data.message);
-                    location.reload(); // Simple reload for now to update UI
+                    if (window.Swal) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: { confirmButton: 'btn btn-primary' },
+                            buttonsStyling: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        alert('Success: ' + data.message);
+                        location.reload();
+                    }
                 } else {
-                    alert('Error: ' + data.message);
+                    if (window.Swal) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            customClass: { confirmButton: 'btn btn-danger' },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('An error occurred.');
+                if (window.Swal) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: { confirmButton: 'btn btn-danger' },
+                        buttonsStyling: false
+                    });
+                } else {
+                    alert('An error occurred.');
+                }
             })
             .finally(() => {
                 btn.disabled = false;

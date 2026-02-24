@@ -919,6 +919,10 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::get('/history/{id}', [MeleeDiamondController::class, 'getHistory'])->name('history');
         Route::post('/transaction', [MeleeDiamondController::class, 'transaction'])->name('transaction'); // Stock IN/OUT
         Route::post('/add-shape', [MeleeDiamondController::class, 'addShape'])->name('add-shape'); // Add new Shape+Size
+        Route::put('/{id}', [MeleeDiamondController::class, 'update'])->name('update');
+        Route::delete('/{id}', [MeleeDiamondController::class, 'destroy'])->name('destroy');
+        Route::put('/transaction/{id}', [MeleeDiamondController::class, 'updateTransaction'])->name('update-transaction');
+        Route::delete('/transaction/{id}', [MeleeDiamondController::class, 'destroyTransaction'])->name('destroy-transaction');
     });
 
     // ─────────────────────────────────────────────────────────────
