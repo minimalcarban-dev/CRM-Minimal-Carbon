@@ -104,7 +104,7 @@
             background: rgba(255, 255, 255, 0.2);
             color: white;
         }
-        
+
         .category-nav-item:not(.active) .badge {
             background: #f1f5f9;
             color: var(--secondary);
@@ -197,7 +197,7 @@
         .table-custom tbody tr:hover {
             background-color: #f8fafc;
         }
-        
+
         .hidden {
             display: none !important;
         }
@@ -226,7 +226,8 @@
             border-top: 2px dashed var(--border);
         }
 
-        .add-shape-bar input, .add-shape-bar select {
+        .add-shape-bar input,
+        .add-shape-bar select {
             max-width: 170px;
         }
 
@@ -356,32 +357,40 @@
             z-index: 9999;
             min-width: 300px;
         }
+
         @media (max-width: 575px) {
-            .inventory-management-container{
+            .inventory-management-container {
                 padding: 0;
             }
+
             .page-header {
                 padding: 8px;
                 border-radius: 7px;
                 display: block;
                 margin-bottom: 15px;
             }
+
             .page-header div:first-child {
                 margin-bottom: 0.75rem;
             }
+
             .page-header div:last-child {
                 flex-flow: column;
                 gap: 5px !important;
             }
+
             .page-header div:last-child div {
                 display: none;
             }
+
             .inventory-card {
                 flex-direction: column;
             }
+
             .sidebar-panel {
                 padding: 7px;
             }
+
             #cat-view-1 .table-header {
                 padding: 10px;
                 flex-direction: column;
@@ -389,36 +398,47 @@
                 justify-content: left;
                 width: 100%;
             }
+
             #cat-view-1 .table-header div:last-child {
                 margin-top: 5px;
             }
+
             #cat-view-1 .table-header div {
                 width: 100%;
             }
-            #shapes-container-1 .table-custom thead th, #shapes-container-1 .table-custom tbody td{
+
+            #shapes-container-1 .table-custom thead th,
+            #shapes-container-1 .table-custom tbody td {
                 padding: 3px;
                 font-size: 12px;
                 white-space: nowrap;
             }
-            #shapes-container-1 .rounded-pill{
+
+            #shapes-container-1 .rounded-pill {
                 white-space: nowrap;
                 font-size: 12px;
                 padding: 4px !important;
                 border-radius: 8px !important;
             }
+
             #shapes-container-1 td.text-end {
                 display: flex;
             }
+
             .shape-group.open .shape-group-body {
                 overflow-y: auto;
             }
-            #history-table.table-custom thead th,#history-table.table-custom tbody td{
+
+            #history-table.table-custom thead th,
+            #history-table.table-custom tbody td {
                 padding: 10px;
                 white-space: nowrap;
             }
+
             .add-size-row {
                 padding: 9px;
             }
+
             .add-size-row input {
                 padding: 5px;
             }
@@ -432,18 +452,18 @@
                 <h2 class="mb-1 fw-bold text-dark"><i class="bi bi-gem me-2 text-primary"></i>Melee Inventory</h2>
                 <div class="text-secondary small">Manage your melee diamond stock</div>
             </div>
-            
-             <div class="d-flex gap-2">
-                 <!-- Tab Switcher implemented as Buttons -->
+
+            <div class="d-flex gap-2">
+                <!-- Tab Switcher implemented as Buttons -->
                 <button class="btn btn-outline-primary active" id="btn-tab-lab" onclick="switchMainTab('lab-grown')">
                     Lab Grown
                 </button>
                 <button class="btn btn-outline-secondary" id="btn-tab-natural" onclick="switchMainTab('natural')">
                     Natural
                 </button>
-                
+
                 <div class="vr mx-2"></div>
-                
+
                 <button class="btn btn-primary" onclick="openTransactionModal('in')">
                     <i class="bi bi-plus-lg me-2"></i>Add Stock
                 </button>
@@ -455,15 +475,16 @@
 
         <!-- Main Content Card -->
         <div class="inventory-card">
-            
+
             <!-- LEFT SIDEBAR: Categories -->
             <div class="sidebar-panel">
                 <h6 class="text-uppercase text-secondary fs-7 fw-bold mb-3 ps-2">Categories</h6>
-                
+
                 <!-- LAB GROWN LIST -->
                 <div id="sidebar-lab-grown">
                     @forelse($labGrownCategories as $category)
-                        <button class="category-nav-item cat-btn-{{ $category->id }}" onclick="selectCategory('{{ $category->id }}', this)">
+                        <button class="category-nav-item cat-btn-{{ $category->id }}"
+                            onclick="selectCategory('{{ $category->id }}', this)">
                             <span>
                                 <i class="bi bi-gem me-2"></i> {{ $category->name }}
                             </span>
@@ -476,15 +497,16 @@
                         </div>
                     @endforelse
                 </div>
-                
+
                 <!-- NATURAL LIST (Hidden by default) -->
                 <div id="sidebar-natural" class="hidden">
-                     @forelse($naturalCategories as $category)
-                         <button class="category-nav-item cat-btn-{{ $category->id }}" onclick="selectCategory('{{ $category->id }}', this)">
+                    @forelse($naturalCategories as $category)
+                        <button class="category-nav-item cat-btn-{{ $category->id }}"
+                            onclick="selectCategory('{{ $category->id }}', this)">
                             <span>
                                 <i class="bi bi-diamond-half me-2"></i> {{ $category->name }}
                             </span>
-                             <span class="badge">{{ $category->diamonds->count() }}</span>
+                            <span class="badge">{{ $category->diamonds->count() }}</span>
                         </button>
                     @empty
                         <div class="text-center py-4 text-muted">
@@ -501,7 +523,7 @@
                 @php
                     $allCategories = $labGrownCategories->concat($naturalCategories);
                 @endphp
-                
+
                 @foreach($allCategories as $category)
                     @php
                         // Group diamonds by shape
@@ -521,9 +543,8 @@
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <input type="text" class="form-control form-control-sm" placeholder="Search..."
-                                       aria-label="Search diamonds"
-                                       onkeyup="filterCategoryTable('{{ $category->id }}', this.value)"
-                                       style="width: 180px;">
+                                    aria-label="Search diamonds"
+                                    onkeyup="filterCategoryTable('{{ $category->id }}', this.value)" style="width: 180px;">
                             </div>
                         </div>
 
@@ -540,7 +561,9 @@
                                                 $totalPcs = $diamonds->sum('available_pieces');
                                             @endphp
                                             @if($totalPcs != 0)
-                                                <span class="stock-total-pill {{ $totalPcs < 0 ? 'bg-danger text-white' : '' }}">{{ $totalPcs }} pcs</span>
+                                                <span
+                                                    class="stock-total-pill {{ $totalPcs < 0 ? 'bg-danger text-white' : '' }}">{{ $totalPcs }}
+                                                    pcs</span>
                                             @endif
                                         </div>
                                         <div class="shape-meta">
@@ -565,37 +588,59 @@
                                                         $sizeParts = explode('-', $diamond->size_label);
                                                         $sizeNum = end($sizeParts);
                                                     @endphp
-                                                    <tr class="searchable-row" data-search="{{ strtolower($diamond->size_label . ' ' . $diamond->shape) }}">
+                                                    <tr class="searchable-row"
+                                                        data-search="{{ strtolower($diamond->size_label . ' ' . $diamond->shape) }}">
                                                         <td class="fw-bold">{{ $sizeNum }}</td>
-                                                        <td class="text-muted small">{{ str_replace('-', ' ', $diamond->size_label) }}</td>
+                                                        <td class="text-muted small">{{ str_replace('-', ' ', $diamond->size_label) }}
+                                                        </td>
                                                         <td>
                                                             @if($diamond->available_pieces != 0)
-                                                                <span class="badge {{ $diamond->available_pieces > 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' }} border px-3 py-2 rounded-pill" style="cursor:pointer" onclick="openHistoryModal({{ $diamond->id }})" title="Click to view history">
+                                                                <span
+                                                                    class="badge {{ $diamond->available_pieces > 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' }} border px-3 py-2 rounded-pill"
+                                                                    style="cursor:pointer" onclick="openHistoryModal({{ $diamond->id }})"
+                                                                    title="Click to view history">
                                                                     {{ $diamond->available_pieces }} pcs
                                                                 </span>
                                                             @else
-                                                                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill" style="cursor:pointer" onclick="openHistoryModal({{ $diamond->id }})" title="Click to view history">
+                                                                <span
+                                                                    class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill"
+                                                                    style="cursor:pointer" onclick="openHistoryModal({{ $diamond->id }})"
+                                                                    title="Click to view history">
                                                                     Out of Stock
                                                                 </span>
                                                             @endif
                                                         </td>
-                                                        <td class="fw-medium">${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}</td>
+                                                        <td class="fw-medium">
+                                                            ${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}</td>
                                                         <td class="text-end">
-                                                             <button class="btn btn-sm btn-light text-primary border"
-                                                                data-action="in"
+                                                            <button class="btn btn-sm btn-light text-primary border" data-action="in"
                                                                 data-diamond-id="{{ $diamond->id }}"
                                                                 data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
-                                                                data-category-name="{{ $category->name }}"
+                                                                data-category-name="{{ $category->name }}" title="Add Stock"
                                                                 onclick="openTransactionModal(this.dataset.action, this.dataset.diamondId, this.dataset.diamondName, this.dataset.categoryName)">
                                                                 <i class="bi bi-plus-lg"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-light text-danger border ms-1"
-                                                                data-action="out"
-                                                                data-diamond-id="{{ $diamond->id }}"
+                                                            <button class="btn btn-sm btn-light text-warning border ms-1"
+                                                                data-action="out" data-diamond-id="{{ $diamond->id }}"
                                                                 data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
-                                                                data-category-name="{{ $category->name }}"
+                                                                data-category-name="{{ $category->name }}" title="Use Stock"
                                                                 onclick="openTransactionModal(this.dataset.action, this.dataset.diamondId, this.dataset.diamondName, this.dataset.categoryName)">
                                                                 <i class="bi bi-dash-lg"></i>
+                                                            </button>
+                                                            @php
+                                                                $lastTx = $diamond->transactions->first();
+                                                                $lastTxPieces = $lastTx ? $lastTx->pieces : '';
+                                                                $lastTxCarats = $lastTx ? $lastTx->carat_weight : '';
+                                                            @endphp
+                                                            <button class="btn btn-sm btn-light text-secondary border ms-1"
+                                                                title="Edit Melee"
+                                                                onclick="openEditModal({{ $diamond->id }}, '{{ $diamond->shape }}', '{{ explode('-', $diamond->size_label)[1] ?? str_replace(strtolower($diamond->shape) . '-', '', $diamond->size_label) }}', '{{ $lastTxPieces }}', '{{ $lastTxCarats }}')">
+                                                                <i class="bi bi-pencil-square"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-light text-danger border ms-1"
+                                                                title="Delete Melee"
+                                                                onclick="deleteMeleeDiamond({{ $diamond->id }}, '{{ $diamond->shape }} {{ $diamond->size_label }}')">
+                                                                <i class="bi bi-trash"></i>
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -607,11 +652,9 @@
                                         <div class="add-size-row">
                                             <i class="bi bi-plus-circle text-primary"></i>
                                             <input type="text" class="form-control form-control-sm add-size-input"
-                                                   placeholder="e.g. 1.5 or 4*2"
-                                                   data-category-id="{{ $category->id }}"
-                                                   data-shape="{{ $shapeName }}">
-                                            <button class="btn btn-sm btn-primary"
-                                                    onclick="addSizeToShape(this)">
+                                                placeholder="e.g. 1.5 or 4*2" data-category-id="{{ $category->id }}"
+                                                data-shape="{{ $shapeName }}">
+                                            <button class="btn btn-sm btn-primary" onclick="addSizeToShape(this)">
                                                 <i class="bi bi-plus-lg me-1"></i>Add Size
                                             </button>
                                         </div>
@@ -646,11 +689,9 @@
                                                 <div class="add-size-row">
                                                     <i class="bi bi-plus-circle text-primary"></i>
                                                     <input type="text" class="form-control form-control-sm add-size-input"
-                                                           placeholder="e.g. 1.5 or 4*2"
-                                                           data-category-id="{{ $category->id }}"
-                                                           data-shape="{{ $allowedShape }}">
-                                                    <button class="btn btn-sm btn-primary"
-                                                            onclick="addSizeToShape(this)">
+                                                        placeholder="e.g. 1.5 or 4*2" data-category-id="{{ $category->id }}"
+                                                        data-shape="{{ $allowedShape }}">
+                                                    <button class="btn btn-sm btn-primary" onclick="addSizeToShape(this)">
                                                         <i class="bi bi-plus-lg me-1"></i>Add Size
                                                     </button>
                                                 </div>
@@ -664,22 +705,21 @@
                             <div class="add-shape-bar" id="add-shape-bar-{{ $category->id }}">
                                 <i class="bi bi-plus-square-dotted text-primary fs-5"></i>
                                 <input type="text" class="form-control form-control-sm new-shape-name"
-                                       placeholder="New shape name"
-                                       data-category-id="{{ $category->id }}">
+                                    placeholder="New shape name" data-category-id="{{ $category->id }}">
                                 <input type="text" class="form-control form-control-sm new-shape-size"
-                                       placeholder="Size (e.g. 1.0 or 4*2)"
-                                       data-category-id="{{ $category->id }}">
+                                    placeholder="Size (e.g. 1.0 or 4*2)" data-category-id="{{ $category->id }}">
                                 <button class="btn btn-sm btn-outline-primary"
-                                        onclick="addNewShape(this, '{{ $category->id }}')">
+                                    onclick="addNewShape(this, '{{ $category->id }}')">
                                     <i class="bi bi-plus-lg me-1"></i>Add Shape
                                 </button>
                             </div>
                         </div>
                     </div>
                 @endforeach
-                
+
                 <!-- Initial Empty State -->
-                <div id="empty-state-placeholder" class="d-flex align-items-center justify-content-center h-100 flex-column text-muted">
+                <div id="empty-state-placeholder"
+                    class="d-flex align-items-center justify-content-center h-100 flex-column text-muted">
                     <i class="bi bi-arrow-left-circle fs-1 mb-3"></i>
                     <h5>Select a category from the sidebar</h5>
                 </div>
@@ -694,7 +734,8 @@
     <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content" style="border-radius:16px; overflow:hidden;">
-                <div class="modal-header" style="background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#fff; border:0;">
+                <div class="modal-header"
+                    style="background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#fff; border:0;">
                     <h5 class="modal-title" id="historyModalLabel">
                         <i class="bi bi-clock-history me-2"></i>Stock History
                     </h5>
@@ -702,13 +743,15 @@
                 </div>
                 <div class="modal-body p-0">
                     <!-- Diamond Info Header -->
-                    <div id="history-diamond-info" class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <div id="history-diamond-info"
+                        class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
                         <div>
                             <strong id="history-diamond-name">Loading...</strong>
                             <div class="text-muted small" id="history-diamond-detail"></div>
                         </div>
                         <div>
-                            <span id="history-stock-badge" class="badge bg-primary-subtle text-primary px-3 py-2 fs-6 rounded-pill"></span>
+                            <span id="history-stock-badge"
+                                class="badge bg-primary-subtle text-primary px-3 py-2 fs-6 rounded-pill"></span>
                         </div>
                     </div>
 
@@ -731,6 +774,7 @@
                                 <th>Reference</th>
                                 <th>Notes</th>
                                 <th>Date</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="history-tbody"></tbody>
@@ -743,10 +787,12 @@
     <!-- Quick Order View Modal -->
     <div class="modal fade" id="quickOrderModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="border-radius:12px; overflow:hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-content"
+                style="border-radius:12px; overflow:hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
                 <div class="modal-header bg-dark text-white border-0">
                     <h5 class="modal-title"><i class="bi bi-card-checklist me-2"></i>Order Overview</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0" id="quick-order-content">
                     <div class="text-center py-5" id="quick-order-loading">
@@ -755,7 +801,93 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-top-0">
-                    <a href="#" id="quick-order-full-link" class="btn btn-primary w-100 py-2 fw-bold">View Full Order Details</a>
+                    <a href="#" id="quick-order-full-link" class="btn btn-primary w-100 py-2 fw-bold">View Full Order
+                        Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Melee Diamond Modal -->
+    <div class="modal fade" id="editMeleeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 bg-light pb-0">
+                    <h5 class="modal-title fw-bold">Edit Melee Diamond</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editMeleeForm">
+                        @csrf
+                        <input type="hidden" id="edit_melee_id">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Shape</label>
+                            <input type="text" id="edit_shape" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Size</label>
+                            <input type="text" id="edit_size" class="form-control" required>
+                        </div>
+
+                        <hr class="my-4">
+                        <div class="mb-3 text-secondary small fw-bold text-uppercase">
+                            Latest "IN" Stock Entry <span class="fw-normal text-muted text-lowercase">(Leave blank if
+                                none)</span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Pieces</label>
+                                <input type="number" id="edit_last_pieces" class="form-control" placeholder="0" min="1">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Carats</label>
+                                <input type="number" step="0.001" id="edit_last_carats" class="form-control"
+                                    placeholder="0.000" min="0">
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                            class="btn btn-primary w-100 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2"
+                            id="btnUpdateMelee">
+                            <span>Update Details</span>
+                            <i class="bi bi-save"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 bg-light pb-0">
+                    <h5 class="modal-title fw-bold">Edit Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editTransactionForm">
+                        @csrf
+                        <input type="hidden" id="edit_tx_id">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Pieces</label>
+                            <input type="number" id="edit_tx_pieces" class="form-control" required min="1">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Carats</label>
+                            <input type="number" step="0.001" id="edit_tx_carats" class="form-control" min="0">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2" id="btnUpdateTransaction">
+                            Save Changes
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -766,10 +898,12 @@
     <script>
         let activeCategoryId = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-select first lab-grown category on load
-            const firstBtn = document.querySelector('#sidebar-lab-grown .category-nav-item');
-            if(firstBtn) firstBtn.click();
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check localStorage for previous tab, otherwise default to lab-grown
+            const savedTab = localStorage.getItem('meleeActiveTab') || 'lab-grown';
+
+            // Ensure buttons have the correct initial classes if switchMainTab needs them
+            switchMainTab(savedTab);
 
             // Initialize Select2 for the melee diamond search dropdown
             if ($ && $.fn.select2) {
@@ -797,30 +931,153 @@
             }
         });
 
+        // ==========================================
+        //  EDIT / DELETE STOCK FUNCTIONS
+        // ==========================================
+        function openEditModal(id, shape, size, lastPieces, lastCarats) {
+            document.getElementById('edit_melee_id').value = id;
+            document.getElementById('edit_shape').value = shape;
+            document.getElementById('edit_size').value = size;
+
+            document.getElementById('edit_last_pieces').value = lastPieces || '';
+            document.getElementById('edit_last_carats').value = lastCarats || '';
+            document.getElementById('edit_last_pieces').disabled = !lastPieces;
+            document.getElementById('edit_last_carats').disabled = !lastPieces;
+
+            new bootstrap.Modal(document.getElementById('editMeleeModal')).show();
+        }
+
+        // Handle Edit Form Submission
+        document.getElementById('editMeleeForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const id = document.getElementById('edit_melee_id').value;
+            const shape = document.getElementById('edit_shape').value;
+            const size = document.getElementById('edit_size').value;
+            const last_pieces = document.getElementById('edit_last_pieces').value;
+            const last_carats = document.getElementById('edit_last_carats').value;
+
+            const btn = document.getElementById('btnUpdateMelee');
+            const originalText = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+            fetch(`{{ url('admin/melee') }}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ shape, size, last_pieces, last_carats })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.Swal) {
+                            Swal.fire({ title: 'Success!', text: data.message, icon: 'success' }).then(() => location.reload());
+                        } else {
+                            alert(data.message); location.reload();
+                        }
+                    } else {
+                        if (window.Swal) Swal.fire('Error', data.message || 'Validation failed.', 'error');
+                        else alert('Error: ' + (data.message || 'Validation failed.'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Error updating melee diamond:', err);
+                    if (window.Swal) Swal.fire('Error', 'An unexpected error occurred.', 'error');
+                    else alert('An unexpected error occurred.');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+        });
+
+        function deleteMeleeDiamond(id, name) {
+            if (!window.Swal) {
+                if (confirm(`Are you sure you want to completely delete ${name}? All transaction history for this size will also be deleted.`)) {
+                    executeDelete(id);
+                }
+                return;
+            }
+
+            Swal.fire({
+                title: 'Delete Melee Stock?',
+                html: `You are about to delete <strong>${name}</strong>.<br><br><span class="text-danger">Warning: This will also permanently delete all transaction history for this size!</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeDelete(id);
+                }
+            });
+        }
+
+        function executeDelete(id) {
+            fetch(`{{ url('admin/melee') }}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.Swal) {
+                            Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
+                        } else {
+                            alert(data.message); location.reload();
+                        }
+                    } else {
+                        if (window.Swal) Swal.fire('Error', data.message || 'Could not delete.', 'error');
+                        else alert('Error: ' + (data.message || 'Could not delete.'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Error deleting melee diamond:', err);
+                    if (window.Swal) Swal.fire('Error', 'An unexpected error occurred.', 'error');
+                    else alert('An unexpected error occurred.');
+                });
+        }
+
         function switchMainTab(type) {
+            // Save state to localStorage to persist across reloads
+            localStorage.setItem('meleeActiveTab', type);
+
             // Reset buttons
             document.getElementById('btn-tab-lab').className = 'btn btn-outline-secondary';
             document.getElementById('btn-tab-natural').className = 'btn btn-outline-secondary';
-            
+
             if (type === 'lab-grown') {
-                 document.getElementById('btn-tab-lab').className = 'btn btn-outline-primary active';
-                 document.getElementById('sidebar-lab-grown').classList.remove('hidden');
-                 document.getElementById('sidebar-natural').classList.add('hidden');
-                 
-                  const first = document.querySelector('#sidebar-lab-grown .category-nav-item');
-                  if(first) first.click();
+                document.getElementById('btn-tab-lab').className = 'btn btn-outline-primary active';
+                document.getElementById('sidebar-lab-grown').classList.remove('hidden');
+                document.getElementById('sidebar-natural').classList.add('hidden');
+
+                const savedCatId = localStorage.getItem('meleeActiveCategory');
+                let btnToClick = savedCatId ? document.querySelector(`#sidebar-lab-grown .cat-btn-${savedCatId}`) : null;
+                if (!btnToClick) btnToClick = document.querySelector('#sidebar-lab-grown .category-nav-item');
+                if (btnToClick) btnToClick.click();
             } else {
-                 document.getElementById('btn-tab-natural').className = 'btn btn-outline-primary active';
-                 document.getElementById('sidebar-lab-grown').classList.add('hidden');
-                 document.getElementById('sidebar-natural').classList.remove('hidden');
-                 
-                  const first = document.querySelector('#sidebar-natural .category-nav-item');
-                  if(first) first.click();
+                document.getElementById('btn-tab-natural').className = 'btn btn-outline-primary active';
+                document.getElementById('sidebar-lab-grown').classList.add('hidden');
+                document.getElementById('sidebar-natural').classList.remove('hidden');
+
+                const savedCatId = localStorage.getItem('meleeActiveCategory');
+                let btnToClick = savedCatId ? document.querySelector(`#sidebar-natural .cat-btn-${savedCatId}`) : null;
+                if (!btnToClick) btnToClick = document.querySelector('#sidebar-natural .category-nav-item');
+                if (btnToClick) btnToClick.click();
             }
         }
 
         function selectCategory(catId, btn) {
             activeCategoryId = catId;
+            localStorage.setItem('meleeActiveCategory', catId);
 
             // 1. Sidebar Active State
             document.querySelectorAll('.category-nav-item').forEach(el => el.classList.remove('active'));
@@ -831,25 +1088,25 @@
                 el.classList.remove('d-flex');
                 el.classList.add('hidden');
             });
-            
+
             document.getElementById('empty-state-placeholder').classList.add('hidden');
             document.getElementById('empty-state-placeholder').classList.remove('d-flex');
 
             // 3. Show target view
             const target = document.getElementById('cat-view-' + catId);
-            if(target) {
+            if (target) {
                 target.classList.remove('hidden');
                 target.classList.add('d-flex');
             }
         }
-        
+
         function filterCategoryTable(catId, term) {
             term = term.toLowerCase();
             const container = document.getElementById('shapes-container-' + catId);
             if (!container) return;
 
             const shapeGroups = container.querySelectorAll('.shape-group');
-            
+
             shapeGroups.forEach(group => {
                 const shapeName = group.getAttribute('data-shape') || '';
                 const rows = group.querySelectorAll('.searchable-row');
@@ -864,7 +1121,7 @@
 
                 rows.forEach(row => {
                     const searchData = row.getAttribute('data-search');
-                    if(searchData && searchData.includes(term)) {
+                    if (searchData && searchData.includes(term)) {
                         row.classList.remove('hidden');
                         hasVisibleRow = true;
                     } else {
@@ -919,23 +1176,23 @@
                     size: size
                 })
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    showMeleeToast(data.message, 'success');
-                    location.reload();
-                } else {
-                    showMeleeToast(data.message || 'Error adding size.', 'danger');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                showMeleeToast('An error occurred.', 'danger');
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add Size';
-            });
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showMeleeToast(data.message, 'success');
+                        location.reload();
+                    } else {
+                        showMeleeToast(data.message || 'Error adding size.', 'danger');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showMeleeToast('An error occurred.', 'danger');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add Size';
+                });
         }
 
         // Add a completely new shape with initial size
@@ -973,23 +1230,23 @@
                     size: size
                 })
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    showMeleeToast(data.message, 'success');
-                    location.reload();
-                } else {
-                    showMeleeToast(data.message || 'Error adding shape.', 'danger');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                showMeleeToast('An error occurred.', 'danger');
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add Shape';
-            });
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showMeleeToast(data.message, 'success');
+                        location.reload();
+                    } else {
+                        showMeleeToast(data.message || 'Error adding shape.', 'danger');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showMeleeToast('An error occurred.', 'danger');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add Shape';
+                });
         }
 
         // Simple toast helper
@@ -997,31 +1254,31 @@
             const container = document.getElementById('meleeToastContainer');
             const bgClass = type === 'success' ? 'bg-success' : type === 'danger' ? 'bg-danger' : type === 'warning' ? 'bg-warning text-dark' : 'bg-primary';
             const iconClass = type === 'success' ? 'bi-check-circle' : type === 'danger' ? 'bi-exclamation-triangle' : type === 'warning' ? 'bi-exclamation-circle' : 'bi-info-circle';
-            
+
             const toastEl = document.createElement('div');
             toastEl.className = `toast show align-items-center text-white ${bgClass} border-0 mb-2`;
             toastEl.setAttribute('role', 'alert');
             toastEl.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
-                </div>
-            `;
+                                    <div class="d-flex">
+                                        <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
+                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
+                                    </div>
+                                `;
             container.appendChild(toastEl);
             setTimeout(() => toastEl.remove(), 4000);
         }
-        
+
         // Transaction Modal logic
         function openTransactionModal(type, diamondId, diamondName, categoryName) {
             document.getElementById('transactionForm').reset();
             $('#modal_diamond_select').val(null).trigger('change'); // Reset Select2
-            
+
             // Set type & update theme
             if (type === 'in') {
-                if(document.getElementById('type_in')) document.getElementById('type_in').checked = true;
+                if (document.getElementById('type_in')) document.getElementById('type_in').checked = true;
                 updateModalTheme('in');
             } else {
-                if(document.getElementById('type_out')) document.getElementById('type_out').checked = true;
+                if (document.getElementById('type_out')) document.getElementById('type_out').checked = true;
                 updateModalTheme('out');
             }
 
@@ -1032,25 +1289,25 @@
             }
 
             var modalEl = document.getElementById('transactionModal');
-            if(modalEl) {
+            if (modalEl) {
                 var modal = new bootstrap.Modal(modalEl);
                 modal.show();
             }
         }
-        
+
         function setModalSelection(id, name, cat) {
-            if(document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = id;
-            if(document.getElementById('modal_item_name')) document.getElementById('modal_item_name').textContent = name || 'Unknown Item';
-            if(document.getElementById('modal_item_cat')) document.getElementById('modal_item_cat').textContent = cat || 'Category';
-            
-            if(document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'flex';
-            if(document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'none';
+            if (document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = id;
+            if (document.getElementById('modal_item_name')) document.getElementById('modal_item_name').textContent = name || 'Unknown Item';
+            if (document.getElementById('modal_item_cat')) document.getElementById('modal_item_cat').textContent = cat || 'Category';
+
+            if (document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'flex';
+            if (document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'none';
         }
 
         function resetModalSelection() {
-            if(document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = '';
-            if(document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'none';
-            if(document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'block';
+            if (document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = '';
+            if (document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'none';
+            if (document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'block';
         }
 
         // ── Stock History Modal ──
@@ -1067,65 +1324,79 @@
             var historyModal = new bootstrap.Modal(historyModalEl);
             historyModal.show();
 
+            activeHistoryDiamondId = diamondId;
+
             // Fetch history
             fetch(`/admin/melee/history/${diamondId}`, {
                 headers: { 'Accept': 'application/json' }
             })
-            .then(r => r.json())
-            .then(data => {
-                document.getElementById('history-loading').classList.add('hidden');
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('history-loading').classList.add('hidden');
 
-                // Populate diamond info header
-                const d = data.diamond;
-                document.getElementById('history-diamond-name').textContent = `${d.category_name} — ${d.shape}`;
-                document.getElementById('history-diamond-detail').textContent = `Size: ${d.size_label.replace('-', ' ')}`;
-                document.getElementById('history-stock-badge').textContent = `${d.available_pieces} pcs available`;
+                    // Populate diamond info header
+                    const d = data.diamond;
+                    document.getElementById('history-diamond-name').textContent = `${d.category_name} — ${d.shape}`;
+                    document.getElementById('history-diamond-detail').textContent = `Size: ${d.size_label.replace('-', ' ')}`;
+                    document.getElementById('history-stock-badge').textContent = `${d.available_pieces} pcs available`;
 
-                // Populate transactions
-                const txns = data.transactions;
-                const tbody = document.getElementById('history-tbody');
-                tbody.innerHTML = '';
+                    // Populate transactions
+                    const txns = data.transactions;
+                    const tbody = document.getElementById('history-tbody');
+                    tbody.innerHTML = '';
 
-                if (!txns || txns.length === 0) {
+                    if (!txns || txns.length === 0) {
+                        document.getElementById('history-empty').classList.remove('hidden');
+                        return;
+                    }
+
+                    document.getElementById('history-table').style.display = '';
+
+                    txns.forEach(t => {
+                        const typeBadge = t.type === 'in'
+                            ? '<span class="badge bg-success-subtle text-success rounded-pill px-3 py-1"><i class="bi bi-arrow-down-circle me-1"></i>Stock IN</span>'
+                            : t.type === 'out'
+                                ? '<span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1"><i class="bi bi-arrow-up-circle me-1"></i>Stock OUT</span>'
+                                : '<span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1"><i class="bi bi-arrow-repeat me-1"></i>Adjust</span>';
+
+                        const refText = t.reference_type === 'order' && t.reference_id
+                            ? `<a href="javascript:void(0)" onclick="viewOrderQuick(${t.reference_id})" class="text-primary text-decoration-none fw-bold"><i class="bi bi-link-45deg"></i>Order #${t.reference_id}</a>`
+                            : (t.reference_type || 'Manual');
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                                            <td>${typeBadge}</td>
+                                            <td class="fw-medium">${t.user_name}</td>
+                                            <td class="fw-bold">${Math.abs(t.pieces)}</td>
+                                            <td>${t.carat_weight || '-'}</td>
+                                            <td>${refText}</td>
+                                            <td class="text-muted small">${t.notes || '-'}</td>
+                                            <td>
+                                                <span class="small">${t.created_at}</span>
+                                                <br><span class="text-muted small">${t.time_ago}</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-light text-secondary border me-1" 
+                                                    onclick="openEditTransactionModal(${t.id}, ${Math.abs(t.pieces)}, '${t.carat_weight || 0}', '${t.type}')" 
+                                                    title="Edit Transaction">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-light text-danger border" 
+                                                    onclick="deleteTransaction(${t.id}, '${t.type}')" 
+                                                    title="Delete Transaction">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('history-loading').classList.add('hidden');
                     document.getElementById('history-empty').classList.remove('hidden');
-                    return;
-                }
-
-                document.getElementById('history-table').style.display = '';
-
-                txns.forEach(t => {
-                    const typeBadge = t.type === 'in'
-                        ? '<span class="badge bg-success-subtle text-success rounded-pill px-3 py-1"><i class="bi bi-arrow-down-circle me-1"></i>Stock IN</span>'
-                        : t.type === 'out'
-                        ? '<span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1"><i class="bi bi-arrow-up-circle me-1"></i>Stock OUT</span>'
-                        : '<span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1"><i class="bi bi-arrow-repeat me-1"></i>Adjust</span>';
-
-                    const refText = t.reference_type === 'order' && t.reference_id
-                        ? `<a href="javascript:void(0)" onclick="viewOrderQuick(${t.reference_id})" class="text-primary text-decoration-none fw-bold"><i class="bi bi-link-45deg"></i>Order #${t.reference_id}</a>`
-                        : (t.reference_type || 'Manual');
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${typeBadge}</td>
-                        <td class="fw-medium">${t.user_name}</td>
-                        <td class="fw-bold">${Math.abs(t.pieces)}</td>
-                        <td>${t.carat_weight || '-'}</td>
-                        <td>${refText}</td>
-                        <td class="text-muted small">${t.notes || '-'}</td>
-                        <td>
-                            <span class="small">${t.created_at}</span>
-                            <br><span class="text-muted small">${t.time_ago}</span>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
+                    document.getElementById('history-empty').querySelector('p').textContent = 'Error loading history.';
                 });
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById('history-loading').classList.add('hidden');
-                document.getElementById('history-empty').classList.remove('hidden');
-                document.getElementById('history-empty').querySelector('p').textContent = 'Error loading history.';
-            });
         }
 
         // ── Quick Order View ──
@@ -1133,11 +1404,11 @@
             const content = document.getElementById('quick-order-content');
             const loading = document.getElementById('quick-order-loading');
             const link = document.getElementById('quick-order-full-link');
-            
+
             // Show modal first
             const modal = new bootstrap.Modal(document.getElementById('quickOrderModal'));
             modal.show();
-            
+
             // Clear old content & show loading
             loading.style.display = 'block';
             const oldDetails = content.querySelector('.order-quick-details');
@@ -1147,66 +1418,213 @@
             fetch(`/admin/orders/${orderId}/quick-view`, {
                 headers: { 'Accept': 'application/json' }
             })
-            .then(r => r.json())
-            .then(data => {
-                loading.style.display = 'none';
-                link.classList.remove('disabled');
-                link.href = data.url;
+                .then(r => r.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    link.classList.remove('disabled');
+                    link.href = data.url;
 
-                const detailsHtml = `
-                    <div class="order-quick-details">
-                        <div class="p-3 bg-light border-bottom">
-                            <div class="row align-items-center">
-                                <div class="col-8">
-                                    <h6 class="mb-0 fw-bold">${data.client_name}</h6>
-                                    <small class="text-muted">${data.company} • ${data.created_at}</small>
-                                </div>
-                                <div class="col-4 text-end">
-                                    <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="mb-3">
-                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
-                                <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
-                                <small class="text-muted">${data.diamond_details || ''}</small>
-                            </div>
-                            
-                            ${data.diamond_sku ? `
-                            <div class="mb-3">
-                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
-                                <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
-                            </div>` : ''}
+                    const detailsHtml = `
+                                        <div class="order-quick-details">
+                                            <div class="p-3 bg-light border-bottom">
+                                                <div class="row align-items-center">
+                                                    <div class="col-8">
+                                                        <h6 class="mb-0 fw-bold">${data.client_name}</h6>
+                                                        <small class="text-muted">${data.company} • ${data.created_at}</small>
+                                                    </div>
+                                                    <div class="col-4 text-end">
+                                                        <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="p-4">
+                                                <div class="mb-3">
+                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
+                                                    <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
+                                                    <small class="text-muted">${data.diamond_details || ''}</small>
+                                                </div>
 
-                            ${data.melee_details ? `
-                            <div class="p-3 border rounded bg-light mb-3">
-                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span>${data.melee_details.name}</span>
-                                    <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
-                                </div>
-                            </div>` : ''}
+                                                ${data.diamond_sku ? `
+                                                <div class="mb-3">
+                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
+                                                    <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
+                                                </div>` : ''}
 
-                            <div class="row pt-3 border-top">
-                                <div class="col-6">
-                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
-                                    <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
-                                </div>
-                                <div class="col-6 text-end">
-                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
-                                    <span class="fw-medium">${data.submitted_by}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                content.insertAdjacentHTML('beforeend', detailsHtml);
-            })
-            .catch(err => {
-                console.error(err);
-                loading.innerHTML = '<div class="alert alert-danger m-3">Failed to load order details.</div>';
-            });
+                                                ${data.melee_details ? `
+                                                <div class="p-3 border rounded bg-light mb-3">
+                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span>${data.melee_details.name}</span>
+                                                        <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
+                                                    </div>
+                                                </div>` : ''}
+
+                                                <div class="row pt-3 border-top">
+                                                    <div class="col-6">
+                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
+                                                        <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
+                                                    </div>
+                                                    <div class="col-6 text-end">
+                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
+                                                        <span class="fw-medium">${data.submitted_by}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                    content.insertAdjacentHTML('beforeend', detailsHtml);
+                })
+                .catch(err => {
+                    console.error(err);
+                    loading.innerHTML = '<div class="alert alert-danger m-3">Failed to load order details.</div>';
+                });
         }
+
+        // ── Transaction Edit / Delete ──
+        let activeHistoryDiamondId = null;
+
+        function openEditTransactionModal(id, pieces, carats, type) {
+            document.getElementById('edit_tx_id').value = id;
+            document.getElementById('edit_tx_pieces').value = pieces;
+            document.getElementById('edit_tx_carats').value = carats;
+            new bootstrap.Modal(document.getElementById('editTransactionModal')).show();
+        }
+
+        document.getElementById('editTransactionForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const id = document.getElementById('edit_tx_id').value;
+            const pieces = document.getElementById('edit_tx_pieces').value;
+            const carat_weight = document.getElementById('edit_tx_carats').value;
+            const btn = document.getElementById('btnUpdateTransaction');
+            const originalText = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+            fetch(`{{ url('admin/melee/transaction') }}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ pieces, carat_weight })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('editTransactionModal')).hide();
+
+                        if (window.Swal) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                customClass: { confirmButton: 'btn btn-primary' },
+                                buttonsStyling: false
+                            }).then(() => {
+                                if (activeHistoryDiamondId) openHistoryModal(activeHistoryDiamondId);
+                                else location.reload();
+                            });
+                        } else {
+                            alert('Success: ' + data.message);
+                            if (activeHistoryDiamondId) openHistoryModal(activeHistoryDiamondId);
+                            else location.reload();
+                        }
+                    } else {
+                        if (window.Swal) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'Error updating transaction',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                customClass: { confirmButton: 'btn btn-danger' },
+                                buttonsStyling: false
+                            });
+                        } else {
+                            alert('Error: ' + (data.message || 'Error updating transaction'));
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showMeleeToast('An unexpected error occurred.', 'danger');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+        });
+
+        function deleteTransaction(id, type) {
+            const confirmMsg = `Are you sure you want to completely delete this ${type.toUpperCase()} transaction? This will reverse its effect on the total stock balance.`;
+
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'Delete Transaction?',
+                    html: `You are about to delete this <strong>${type.toUpperCase()}</strong> transaction.<br><br><span class="text-danger">Warning: This action will alter your total stock permanently.</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) executeTransactionDelete(id);
+                });
+            } else {
+                if (confirm(confirmMsg)) executeTransactionDelete(id);
+            }
+        }
+
+        function executeTransactionDelete(id) {
+            fetch(`{{ url('admin/melee/transaction') }}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.Swal) {
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                customClass: { confirmButton: 'btn btn-primary' },
+                                buttonsStyling: false
+                            }).then(() => {
+                                if (activeHistoryDiamondId) openHistoryModal(activeHistoryDiamondId);
+                                else location.reload();
+                            });
+                        } else {
+                            alert('Deleted: ' + data.message);
+                            if (activeHistoryDiamondId) openHistoryModal(activeHistoryDiamondId);
+                            else location.reload();
+                        }
+                    } else {
+                        if (window.Swal) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'Error deleting transaction',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                customClass: { confirmButton: 'btn btn-danger' },
+                                buttonsStyling: false
+                            });
+                        } else {
+                            alert('Error: ' + (data.message || 'Error deleting transaction'));
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showMeleeToast('An unexpected error occurred.', 'danger');
+                });
+        }
+
     </script>
 @endsection

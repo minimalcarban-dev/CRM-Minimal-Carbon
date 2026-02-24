@@ -19,7 +19,11 @@ class MeleeDiamondController extends Controller
         $labGrownCategories = MeleeCategory::labGrown()
             ->with([
                 'diamonds' => function ($q) {
-                    $q->orderBy('shape')->orderBy('size_label');
+                    $q->with([
+                        'transactions' => function ($sq) {
+                            $sq->where('transaction_type', 'in')->latest()->limit(1);
+                        }
+                    ])->orderBy('shape')->orderBy('size_label');
                 }
             ])
             ->orderBy('sort_order')
@@ -28,7 +32,11 @@ class MeleeDiamondController extends Controller
         $naturalCategories = MeleeCategory::natural()
             ->with([
                 'diamonds' => function ($q) {
-                    $q->orderBy('shape')->orderBy('size_label');
+                    $q->with([
+                        'transactions' => function ($sq) {
+                            $sq->where('transaction_type', 'in')->latest()->limit(1);
+                        }
+                    ])->orderBy('shape')->orderBy('size_label');
                 }
             ])
             ->orderBy('sort_order')
@@ -101,7 +109,7 @@ class MeleeDiamondController extends Controller
             'melee_diamond_id' => 'required|exists:melee_diamonds,id',
             'transaction_type' => 'required|in:in,out,adjustment',
             'pieces' => 'required|integer|min:1',
-            'carat_weight' => 'required|numeric|min:0',
+            'carat_weight' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
@@ -265,5 +273,262 @@ class MeleeDiamondController extends Controller
             'message' => "Added {$ucShape} - {$size} to {$category->name}.",
             'diamond' => $diamond,
         ]);
+    }
+
+    /**
+     * AJAX: Update an existing shape/size, and optionally adjust the very last IN transaction.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'shape' => 'required|string|max:100',
+            'size' => ['required', 'string', 'max:20', 'regex:/^[0-9.*x\s]+$/i'],
+            'last_pieces' => 'nullable|integer|min:1',
+            'last_carats' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $diamond = MeleeDiamond::lockForUpdate()->findOrFail($id);
+            $category = MeleeCategory::findOrFail($diamond->melee_category_id);
+
+            $shape = trim($request->shape);
+            $size = strtolower(trim($request->size));
+            $sizeLabel = strtolower($shape) . '-' . $size;
+
+            // Check if this new shape+size already exists in the same category (but not this diamond)
+            $exists = MeleeDiamond::where('melee_category_id', $category->id)
+                ->where('size_label', $sizeLabel)
+                ->where('id', '!=', $id)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Shape \"{$shape}\" with size \"{$size}\" already exists in this category."
+                ], 422);
+            }
+
+            $ucShape = ucfirst(strtolower($shape));
+
+            // Also add the shape to allowed_shapes if it's not there yet
+            $allowedShapes = $category->allowed_shapes ?? [];
+            if (!in_array($ucShape, $allowedShapes)) {
+                $allowedShapes[] = $ucShape;
+                $category->allowed_shapes = $allowedShapes;
+                $category->save();
+            }
+
+            // --- Handle Last Transaction Update ---
+            if ($request->filled('last_pieces') && $request->filled('last_carats')) {
+                $lastInTx = MeleeTransaction::where('melee_diamond_id', $diamond->id)
+                    ->where('transaction_type', 'in')
+                    ->latest()
+                    ->first();
+
+                if ($lastInTx) {
+                    $newPieces = (int) $request->last_pieces;
+                    $newCarats = (float) $request->last_carats;
+
+                    $piecesDiff = $newPieces - $lastInTx->pieces;
+                    $caratsDiff = $newCarats - $lastInTx->carat_weight;
+
+                    // Apply adjustments if there's a difference
+                    if ($piecesDiff != 0 || floatval($caratsDiff) != 0.0) {
+                        // Adjust transaction
+                        $lastInTx->pieces = $newPieces;
+                        $lastInTx->carat_weight = $newCarats;
+                        $lastInTx->save();
+
+                        // Adjust totals on the diamond
+                        $diamond->total_pieces += $piecesDiff;
+                        $diamond->available_pieces += $piecesDiff;
+                        $diamond->total_carat_weight += $caratsDiff;
+                        $diamond->available_carat_weight += $caratsDiff;
+                    }
+                }
+            }
+
+            // --- Update Core Diamond Properties ---
+            $diamond->shape = $ucShape;
+            $diamond->size_label = $sizeLabel;
+
+            // Recalculate status just in case pieces changed
+            if ($diamond->available_pieces <= 0) {
+                $diamond->status = 'out_of_stock';
+            } elseif ($diamond->available_pieces <= $diamond->low_stock_threshold) {
+                $diamond->status = 'low_stock';
+            } else {
+                $diamond->status = 'in_stock';
+            }
+
+            $diamond->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Diamond updated successfully.',
+                'diamond' => $diamond,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating diamond: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Delete a melee diamond entry.
+     */
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+            $diamond = MeleeDiamond::findOrFail($id);
+
+            // Delete associated transactions first
+            MeleeTransaction::where('melee_diamond_id', $id)->delete();
+
+            // Delete the diamond entry
+            $diamond->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Diamond deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting diamond: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    /**
+     * AJAX: Edit a specific stock history entry.
+     */
+    public function updateTransaction(Request $request, $id)
+    {
+        $request->validate([
+            'pieces' => 'required|integer|min:1',
+            'carat_weight' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $transaction = MeleeTransaction::findOrFail($id);
+            $diamond = MeleeDiamond::lockForUpdate()->findOrFail($transaction->melee_diamond_id);
+
+            $newPieces = (int) $request->pieces;
+            $newCarats = (float) $request->carat_weight;
+
+            $piecesDiff = $newPieces - $transaction->pieces;
+            $caratsDiff = $newCarats - $transaction->carat_weight;
+
+            if ($piecesDiff != 0 || floatval($caratsDiff) != 0.0) {
+                // Adjust diamond totals logically based on transaction type
+                if ($transaction->transaction_type === 'in' || $transaction->transaction_type === 'adjustment') {
+                    $diamond->total_pieces += $piecesDiff;
+                    $diamond->available_pieces += $piecesDiff;
+                    $diamond->total_carat_weight += $caratsDiff;
+                    $diamond->available_carat_weight += $caratsDiff;
+                } elseif ($transaction->transaction_type === 'out') {
+                    // Changing OUT pieces by +1 means we used MORE stock, so available should DECREASE by 1.
+                    // This implies $piecesDiff is subtracted from available_pieces.
+                    $diamond->available_pieces -= $piecesDiff;
+                    $diamond->available_carat_weight -= $caratsDiff;
+                }
+
+                // Update the transaction itself
+                $transaction->pieces = $newPieces;
+                $transaction->carat_weight = $newCarats;
+                $transaction->save();
+
+                // Recalculate diamond status
+                if ($diamond->available_pieces <= 0) {
+                    $diamond->status = 'out_of_stock';
+                } elseif ($diamond->available_pieces <= $diamond->low_stock_threshold) {
+                    $diamond->status = 'low_stock';
+                } else {
+                    $diamond->status = 'in_stock';
+                }
+
+                $diamond->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction updated successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating transaction: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Delete a specific stock history entry.
+     */
+    public function destroyTransaction($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $transaction = MeleeTransaction::findOrFail($id);
+            $diamond = MeleeDiamond::lockForUpdate()->findOrFail($transaction->melee_diamond_id);
+
+            // Reverse the effect of the transaction
+            if ($transaction->transaction_type === 'in' || $transaction->transaction_type === 'adjustment') {
+                $diamond->total_pieces -= $transaction->pieces;
+                $diamond->available_pieces -= $transaction->pieces;
+                $diamond->total_carat_weight -= $transaction->carat_weight;
+                $diamond->available_carat_weight -= $transaction->carat_weight;
+            } elseif ($transaction->transaction_type === 'out') {
+                // Deleting an OUT transaction means pieces were effectively returned to stock
+                $diamond->available_pieces += $transaction->pieces;
+                $diamond->available_carat_weight += $transaction->carat_weight;
+            }
+
+            $transaction->delete();
+
+            // Recalculate diamond status
+            if ($diamond->available_pieces <= 0) {
+                $diamond->status = 'out_of_stock';
+            } elseif ($diamond->available_pieces <= $diamond->low_stock_threshold) {
+                $diamond->status = 'low_stock';
+            } else {
+                $diamond->status = 'in_stock';
+            }
+
+            $diamond->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction deleted successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting transaction: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

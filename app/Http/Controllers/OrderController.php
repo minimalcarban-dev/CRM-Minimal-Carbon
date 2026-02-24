@@ -68,16 +68,16 @@ class OrderController extends Controller
 
             // Restrict visibility of dispatched orders:
             // Normal admin cannot see shipped orders older than 10 days
-            $baseQuery->where(function ($q) use ($shippedStatuses) {
-                // 1. Order is NOT in shipped status (or status is null)
-                $q->whereNotIn('diamond_status', $shippedStatuses)
-                    ->orWhereNull('diamond_status')
-                    // 2. OR Order IS shipped, but dispatch_date is within the last 10 days
-                    ->orWhere(function ($subQ) use ($shippedStatuses) {
-                        $subQ->whereIn('diamond_status', $shippedStatuses)
-                            ->whereDate('dispatch_date', '>=', now()->subDays(10));
-                    });
-            });
+            // $baseQuery->where(function ($q) use ($shippedStatuses) {
+            //     // 1. Order is NOT in shipped status (or status is null)
+            //     $q->whereNotIn('diamond_status', $shippedStatuses)
+            //         ->orWhereNull('diamond_status')
+            //         // 2. OR Order IS shipped, but dispatch_date is within the last 10 days
+            //         ->orWhere(function ($subQ) use ($shippedStatuses) {
+            //             $subQ->whereIn('diamond_status', $shippedStatuses)
+            //                 ->whereDate('dispatch_date', '>=', now()->subDays(10));
+            //         });
+            // });
         }
 
         if ($request->filled('search')) {
