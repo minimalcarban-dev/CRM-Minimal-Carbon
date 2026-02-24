@@ -118,7 +118,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Sales Dashboard', 'slug' => 'sales.view', 'description' => 'View company sales dashboards and analytics', 'category' => 'sales'],
             ['name' => 'Set Sales Targets', 'slug' => 'sales.set_targets', 'description' => 'Set monthly sales targets for companies', 'category' => 'sales'],
             ['name' => 'Export Sales Reports', 'slug' => 'sales.export', 'description' => 'Export sales reports as PDF/CSV', 'category' => 'sales'],
-
+            ['name' => 'View All Sales', 'slug' => 'sales.view_all', 'description' => 'View aggregated sales dashboard for all companies', 'category' => 'sales'],
+            
             // Parties
             ['name' => 'View Parties', 'slug' => 'parties.view', 'description' => 'View parties list and details', 'category' => 'parties'],
             ['name' => 'Create Parties', 'slug' => 'parties.create', 'description' => 'Create new parties', 'category' => 'parties'],

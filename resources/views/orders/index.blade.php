@@ -363,12 +363,33 @@
                     $overdueActive = request('overdue') === '1';
                     $overdueParams = $overdueActive
                         ? request()->except(['overdue', 'page'])
-                        : array_merge(request()->except(['page', 'shipped']), ['overdue' => '1']);
+                        : array_merge(request()->except(['page', 'shipped', 'cancelled', 'in_transit']), ['overdue' => '1']);
                 @endphp
                 <a href="{{ route('orders.index', $overdueParams) }}"
                     class="btn-overdue-filter {{ $overdueActive ? 'active' : '' }}">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <span>Overdue</span>
+                    @if(isset($overdueOrdersCount) && $overdueOrdersCount > 0)
+                        <span class="badge {{ $overdueActive ? 'bg-light text-danger' : 'bg-danger text-white' }}"
+                            style="border-radius: 12px; padding: 2px 6px; font-size: 0.75rem;">{{ $overdueOrdersCount }}</span>
+                    @endif
+                </a>
+
+                {{-- Cancelled Filter Toggle --}}
+                @php
+                    $cancelledActive = request('cancelled') === '1';
+                    $cancelledParams = $cancelledActive
+                        ? request()->except(['cancelled', 'page'])
+                        : array_merge(request()->except(['page', 'shipped', 'overdue', 'in_transit']), ['cancelled' => '1']);
+                @endphp
+                <a href="{{ route('orders.index', $cancelledParams) }}"
+                    class="btn-cancelled-filter {{ $cancelledActive ? 'active' : '' }}">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <span>Cancelled</span>
+                    @if(isset($cancelledOrdersCount) && $cancelledOrdersCount > 0)
+                        <span class="badge"
+                            style="background: rgb(239 68 68); border-radius: 12px; padding: 2px 6px; font-size: 0.75rem;">{{ $cancelledOrdersCount }}</span>
+                    @endif
                 </a>
 
                 <script>
@@ -1634,6 +1655,39 @@
         }
 
         .btn-overdue-filter.active:hover {
+            background: #dc2626;
+        }
+
+        /* Cancelled Filter Button */
+        .btn-cancelled-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            background: white;
+            color: #ef4444;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-left: 0.5rem;
+        }
+
+        .btn-cancelled-filter:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .btn-cancelled-filter.active {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+        }
+
+        .btn-cancelled-filter.active:hover {
             background: #dc2626;
         }
 
@@ -2961,8 +3015,8 @@
             }
 
             /* .client-info {
-                                                                                                                                                                                                                text-align: start;
-                                                                                                                                                                                                            } */
+                                                                                                                                                                                                                        text-align: start;
+                                                                                                                                                                                                                    } */
         }
 
         /* Print Styles */
@@ -3184,17 +3238,17 @@
                         const historyItem = document.createElement('div');
                         historyItem.className = 'tracking-history-item';
                         historyItem.innerHTML = `
-                            <div class="tracking-history-dot"></div>
-                            <div class="tracking-history-details shadow-sm">
-                                <div class="tracking-history-header">
-                                    <span class="tracking-history-status">${escapeHtml(item.status)}</span>
-                                    <span class="tracking-history-date">${escapeHtml(item.date)}</span>
-                                </div>
-                                <div class="tracking-history-location">
-                                    <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
-                                </div>
-                                ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
-                            </div>`;
+                                            <div class="tracking-history-dot"></div>
+                                            <div class="tracking-history-details shadow-sm">
+                                                <div class="tracking-history-header">
+                                                    <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                                    <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                                </div>
+                                                <div class="tracking-history-location">
+                                                    <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                                </div>
+                                                ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                                            </div>`;
                         container.appendChild(historyItem);
                     });
                 }

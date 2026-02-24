@@ -6,8 +6,8 @@
 
     <style>
         /* =============================================
-                               THEME VARIABLES — matches project palette
-                            ============================================= */
+            THEME VARIABLES — matches project palette
+        ============================================= */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -250,6 +250,11 @@
             color: #065f46;
         }
 
+        .status-r_order_cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .status-d_diamond_in_discuss {
             background: #dbeafe;
             color: #1e40af;
@@ -273,6 +278,11 @@
         .status-d_order_shipped {
             background: #1e293b;
             color: #fff;
+        }
+
+        .status-d_order_cancelled {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .status-j_diamond_in_progress {
@@ -321,6 +331,11 @@
         }
 
         .status-j_order_hold {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-j_order_cancelled {
             background: #fee2e2;
             color: #991b1b;
         }

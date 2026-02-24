@@ -591,6 +591,19 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         ->name('companies.destroy')
         ->middleware('admin.permission:companies.delete');
 
+    // All Company Sales Dashboard Routes
+    Route::get('all-company-sales', [CompanyController::class, 'allSalesDashboard'])
+        ->name('companies.all-sales-dashboard')
+        ->middleware('admin.permission:sales.view_all');
+
+    Route::post('all-company-sales/set-targets', [CompanyController::class, 'saveAllTargets'])
+        ->name('companies.save-all-targets')
+        ->middleware('admin.permission:sales.view_all');
+
+    Route::get('all-company-sales/export-csv', [CompanyController::class, 'exportAllSalesCsv'])
+        ->name('companies.export-all-sales-csv')
+        ->middleware('admin.permission:sales.view_all');
+
     // Company Sales Dashboard Routes
     Route::get('companies/{company}/sales-dashboard', [CompanyController::class, 'salesDashboard'])
         ->name('companies.sales-dashboard')

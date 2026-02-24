@@ -110,10 +110,24 @@ class OrderController extends Controller
             ->where('tracking_status', 'In Transit')
             ->count();
 
-        // Compute totals and breakdowns EXCLUDING shipped orders
+        // Count cancelled orders (before excluding)
+        $cancelledOrdersCount = (clone $baseQuery)
+            ->whereIn('diamond_status', $cancelledStatuses)
+            ->count();
+
+        // Count overdue orders (dispatch date in the past, not shipped, not cancelled)
+        $overdueOrdersCount = (clone $baseQuery)
+            ->whereDate('dispatch_date', '<', now()->startOfDay())
+            ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+                $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
+                    ->orWhereNull('diamond_status');
+            })
+            ->count();
+
+        // Compute totals and breakdowns EXCLUDING shipped and cancelled orders
         // Note: whereNotIn excludes NULL values, so we need to explicitly include them  
-        $nonShippedQuery = (clone $baseQuery)->where(function ($q) use ($shippedStatuses) {
-            $q->whereNotIn('diamond_status', $shippedStatuses)
+        $nonShippedQuery = (clone $baseQuery)->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+            $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
                 ->orWhereNull('diamond_status');
         });
         $totalOrders = $nonShippedQuery->count();
@@ -173,11 +187,13 @@ class OrderController extends Controller
             $query->whereIn('diamond_status', $shippedStatuses);
         } elseif ($request->filled('in_transit') && $request->in_transit == '1') {
             $query->where('tracking_status', 'In Transit');
+        } elseif ($request->filled('cancelled') && $request->cancelled == '1') {
+            $query->whereIn('diamond_status', $cancelledStatuses);
         } else {
-            // Otherwise, hide shipped orders from main listing
+            // Otherwise, hide shipped and cancelled orders from main listing
             // Note: whereNotIn excludes NULL values, so we need to explicitly include them
-            $query->where(function ($q) use ($shippedStatuses) {
-                $q->whereNotIn('diamond_status', $shippedStatuses)
+            $query->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+                $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
                     ->orWhereNull('diamond_status');
             });
         }
@@ -201,8 +217,8 @@ class OrderController extends Controller
         // Overdue filter
         if ($request->filled('overdue') && $request->overdue == '1') {
             $query->whereDate('dispatch_date', '<', now()->startOfDay())
-                ->where(function ($q) use ($shippedStatuses) {
-                    $q->whereNotIn('diamond_status', $shippedStatuses)
+                ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+                    $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
                         ->orWhereNull('diamond_status');
                 });
         }
@@ -214,6 +230,8 @@ class OrderController extends Controller
             'orderTypeCounts',
             'statusCounts',
             'shippedOrdersCount',
+            'cancelledOrdersCount',
+            'overdueOrdersCount',
             'inTransitCount',
             'todaysSales',
             'monthSales',
@@ -712,13 +730,31 @@ class OrderController extends Controller
                 'new_diamond_sku' => $newDiamondSku,
                 'updated_by' => Auth::guard('admin')->id()
             ]);
-            // --- Notify Super Admins about the update ---
+            // --- Notify Admins about the update ---
             if (!empty($newValues)) {
-                $superAdmins = Admin::where('is_super', true)->get();
                 /** @var Admin $updatedBy */
                 $updatedBy = Auth::guard('admin')->user();
-                if ($superAdmins->isNotEmpty()) {
-                    Notification::send($superAdmins, new OrderUpdatedNotification($order, $updatedBy, $oldValues, $newValues));
+
+                // Determine if any shipping fields were updated
+                $shippingFields = ['shipping_company_name', 'tracking_number', 'tracking_url', 'dispatch_date', 'tracking_status'];
+                $shippingChanged = false;
+                foreach ($shippingFields as $field) {
+                    if (array_key_exists($field, $newValues)) {
+                        $shippingChanged = true;
+                        break;
+                    }
+                }
+
+                if ($shippingChanged) {
+                    // Notify all admins if shipping details changed
+                    $adminsToNotify = Admin::where('id', '!=', $updatedBy->id)->get();
+                } else {
+                    // Otherwise, just notify super admins
+                    $adminsToNotify = Admin::where('is_super', true)->where('id', '!=', $updatedBy->id)->get();
+                }
+
+                if ($adminsToNotify->isNotEmpty()) {
+                    Notification::send($adminsToNotify, new OrderUpdatedNotification($order, $updatedBy, $oldValues, $newValues));
                 }
             }
 

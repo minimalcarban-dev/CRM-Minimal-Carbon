@@ -435,11 +435,26 @@ class CompanyController extends BaseResourceController
         $company = Company::findOrFail($id);
         $now = Carbon::now();
         $year = $request->input('year', $now->year);
-        $month = $request->input('month', $now->month);
 
-        // Get periods for filter - default is current month
-        $dateFrom = $request->input('date_from', $now->copy()->startOfMonth()->toDateString());
-        $dateTo = $request->input('date_to', $now->toDateString());
+        $defaultDateFrom = $now->copy()->startOfMonth()->toDateString();
+        $defaultDateTo = $now->toDateString();
+
+        if ($request->filled('year') && !$request->filled('date_from') && $year != $now->year) {
+            $defaultDateFrom = Carbon::create($year, 1, 1)->toDateString();
+            $defaultDateTo = Carbon::create($year, 12, 31)->toDateString();
+        }
+
+        // Get periods for filter
+        $dateFrom = $request->input('date_from', $defaultDateFrom);
+        $dateTo = $request->input('date_to', $defaultDateTo);
+
+        if ($request->filled('date_from')) {
+            $year = Carbon::parse($dateFrom)->year;
+        }
+
+        $month = Carbon::parse($dateFrom)->month;
+        $isCurrentMonthFilter = ($dateFrom == $now->copy()->startOfMonth()->toDateString() && $dateTo == $now->toDateString());
+        $isEntireYearFilter = ($dateFrom == Carbon::create($year, 1, 1)->toDateString() && $dateTo == Carbon::create($year, 12, 31)->toDateString());
 
         // ===== CALCULATE STATS FROM ORDERS TABLE DIRECTLY =====
         // Get ALL orders for this company (status does not matter - only created_at matters, except cancelled orders which do matter)
@@ -484,13 +499,19 @@ class CompanyController extends BaseResourceController
         $filteredOrderCount = $filteredOrders->count();
         $avgOrderValue = $filteredOrderCount > 0 ? round($filteredTotal / $filteredOrderCount, 2) : 0;
 
-        // Target calculations - use filtered data
-        $currentTarget = $company->current_month_target;
+        // Target calculations
+        $startMonth = Carbon::parse($dateFrom)->month;
+        $endMonth = Carbon::parse($dateTo)->month;
+
+        $currentTarget = CompanyMonthlyTarget::where('company_id', $company->id)
+            ->where('year', $year)
+            ->whereBetween('month', [$startMonth, $endMonth])
+            ->sum('target_amount');
+
         $targetProgress = $currentTarget > 0 ? min(100, round(($filteredTotal / $currentTarget) * 100, 1)) : null;
         $targetGap = $currentTarget - $filteredTotal;
 
         // Projected total - only show for current month filter
-        $isCurrentMonthFilter = ($dateFrom == $now->copy()->startOfMonth()->toDateString() && $dateTo == $now->toDateString());
         $projectedTotal = $isCurrentMonthFilter ? $service->getProjectedMonthEndFromOrders($company->id, $monthToDate['total_revenue'], $now) : null;
 
         // Group filtered orders by date for the history table
@@ -538,7 +559,8 @@ class CompanyController extends BaseResourceController
             'month',
             'dateFrom',
             'dateTo',
-            'isCurrentMonthFilter'
+            'isCurrentMonthFilter',
+            'isEntireYearFilter'
         ));
     }
 
@@ -690,5 +712,312 @@ class CompanyController extends BaseResourceController
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Show sales dashboard aggregating all companies.
+     */
+    public function allSalesDashboard(Request $request, CompanySalesReportService $service)
+    {
+        // Permission check
+        $admin = Auth::guard('admin')->user();
+        if (!$admin->hasExplicitPermission('sales.view_all')) {
+            abort(403, 'You do not have permission to view all sales dashboards.');
+        }
+
+        $now = Carbon::now();
+        $year = $request->input('year', $now->year);
+
+        $defaultDateFrom = $now->copy()->startOfMonth()->toDateString();
+        $defaultDateTo = $now->toDateString();
+
+        if ($request->filled('year') && !$request->filled('date_from') && $year != $now->year) {
+            $defaultDateFrom = Carbon::create($year, 1, 1)->toDateString();
+            $defaultDateTo = Carbon::create($year, 12, 31)->toDateString();
+        }
+
+        // Get periods for filter
+        $dateFrom = $request->input('date_from', $defaultDateFrom);
+        $dateTo = $request->input('date_to', $defaultDateTo);
+
+        if ($request->filled('date_from')) {
+            $year = Carbon::parse($dateFrom)->year;
+        }
+
+        $month = Carbon::parse($dateFrom)->month;
+        $isCurrentMonthFilter = ($dateFrom == $now->copy()->startOfMonth()->toDateString() && $dateTo == $now->toDateString());
+        $isEntireYearFilter = ($dateFrom == Carbon::create($year, 1, 1)->toDateString() && $dateTo == Carbon::create($year, 12, 31)->toDateString());
+
+        // ===== CALCULATE STATS FROM ORDERS TABLE DIRECTLY =====
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+        // Get ALL orders across all companies
+        $allOrders = Order::where(function ($q) use ($cancelledStatuses) {
+            $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
+        })
+            ->get();
+
+        // Today's sales - orders created today
+        $todaysOrders = $allOrders->filter(function ($order) {
+            $today = Carbon::today();
+            $createdDate = Carbon::parse($order->created_at)->startOfDay();
+            return $createdDate->eq($today);
+        });
+        $todaysSales = $todaysOrders->sum('gross_sell');
+        $todaysOrderCount = $todaysOrders->count();
+
+        // Current month stats (month-to-date) - based on created_at
+        $startOfMonth = $now->copy()->startOfMonth();
+        $monthOrders = $allOrders->filter(function ($order) use ($startOfMonth, $now) {
+            $createdDate = Carbon::parse($order->created_at);
+            return $createdDate->between($startOfMonth, $now);
+        });
+        $monthToDate = [
+            'order_count' => $monthOrders->count(),
+            'total_revenue' => $monthOrders->sum('gross_sell'),
+        ];
+
+        // ===== FILTERED DATE RANGE STATS (for Sales History section AND top stats) =====
+        $dateFromCarbon = Carbon::parse($dateFrom)->startOfDay();
+        $dateToCarbon = Carbon::parse($dateTo)->endOfDay();
+
+        $filteredOrders = $allOrders->filter(function ($order) use ($dateFromCarbon, $dateToCarbon) {
+            $createdDate = Carbon::parse($order->created_at);
+            return $createdDate->between($dateFromCarbon, $dateToCarbon);
+        });
+
+        // Calculate stats for FILTERED date range
+        $filteredTotal = $filteredOrders->sum('gross_sell');
+        $filteredOrderCount = $filteredOrders->count();
+        $avgOrderValue = $filteredOrderCount > 0 ? round($filteredTotal / $filteredOrderCount, 2) : 0;
+
+        // Target calculations - Aggregate targets across all companies
+        $startMonth = Carbon::parse($dateFrom)->month;
+        $endMonth = Carbon::parse($dateTo)->month;
+
+        $combinedTarget = CompanyMonthlyTarget::where('year', $year)
+            ->whereBetween('month', [$startMonth, $endMonth])
+            ->sum('target_amount');
+
+        $globalTargetRecord = \App\Models\GlobalMonthlyTarget::where('year', $year)
+            ->whereBetween('month', [$startMonth, $endMonth])
+            ->sum('target_amount');
+
+        $globalTarget = $globalTargetRecord; // Sum returns value directly
+
+        // Use global target if it's set (> 0), otherwise fallback to combined
+        $currentTarget = $globalTarget > 0 ? $globalTarget : $combinedTarget;
+
+        $targetProgress = $currentTarget > 0 ? min(100, round(($filteredTotal / $currentTarget) * 100, 1)) : null;
+        $targetGap = $currentTarget - $filteredTotal;
+
+        // Projected total - only show for current month filter
+        $projectedTotal = null;
+        if ($isCurrentMonthFilter) {
+            $daysInMonth = $now->daysInMonth;
+            $currentDay = $now->day;
+            // Add a small fraction to avoid division by zero or unrealistic inflation right at midnight
+            $progressRatio = max(1, $currentDay) / $daysInMonth;
+            $projectedTotal = round($monthToDate['total_revenue'] / $progressRatio, 2);
+        }
+
+        // Prepare Company-Wise stats instead of daily
+        $colors = [
+            '#6366f1',
+            '#10b981',
+            '#f59e0b',
+            '#ef4444',
+            '#3b82f6',
+            '#8b5cf6',
+            '#ec4899',
+            '#14b8a6',
+            '#f97316',
+            '#06b6d4',
+            '#64748b',
+            '#84cc16',
+            '#eab308',
+            '#d946ef',
+            '#1e293b'
+        ];
+
+        $companyWiseStats = $filteredOrders->groupBy('company_id')->map(function ($orders, $companyId) use ($filteredTotal, $colors) {
+            $company = \App\Models\Company::find($companyId);
+            $revenue = $orders->sum('gross_sell');
+            $percentage = $filteredTotal > 0 ? round(($revenue / $filteredTotal) * 100, 1) : 0;
+            $colorIndex = $companyId % count($colors);
+            return (object) [
+                'company_id' => $companyId,
+                'company_name' => $company ? $company->name : 'Unknown',
+                'order_count' => $orders->count(),
+                'total_revenue' => $revenue,
+                'percentage' => $percentage,
+                'color' => $colors[$colorIndex]
+            ];
+        })->sortByDesc('total_revenue')->values();
+
+        // Monthly chart data - calculate from orders table (aggregated)
+        $monthlySummary = $this->getAllMonthlySummaryFromOrders($year);
+
+        // Fetch all active companies and their targets for the targets modal
+        $allCompanies = \App\Models\Company::all();
+        $companyTargets = CompanyMonthlyTarget::where('year', $now->year)
+            ->where('month', $now->month)
+            ->get()
+            ->keyBy('company_id');
+
+        return view('companies.all-sales-dashboard', compact(
+            'todaysSales',
+            'todaysOrderCount',
+            'monthToDate',
+            'currentTarget',
+            'globalTarget',
+            'combinedTarget',
+            'allCompanies',
+            'companyTargets',
+            'targetProgress',
+            'targetGap',
+            'projectedTotal',
+            'avgOrderValue',
+            'filteredTotal',
+            'filteredOrderCount',
+            'monthlySummary',
+            'companyWiseStats',
+            'year',
+            'month',
+            'dateFrom',
+            'dateTo',
+            'isCurrentMonthFilter',
+            'isEntireYearFilter'
+        ));
+    }
+
+    /**
+     * Calculate monthly summary across ALL companies directly from orders table.
+     */
+    private function getAllMonthlySummaryFromOrders(int $year): array
+    {
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+        $orders = Order::whereYear('created_at', $year)
+            ->where(function ($q) use ($cancelledStatuses) {
+                $q->whereNotIn('diamond_status', $cancelledStatuses)
+                    ->orWhereNull('diamond_status');
+            })
+            ->get();
+
+        // Aggregate targets across all companies per month
+        $targets = CompanyMonthlyTarget::where('year', $year)
+            ->selectRaw('month, sum(target_amount) as total_target')
+            ->groupBy('month')
+            ->pluck('total_target', 'month')
+            ->toArray();
+
+        $result = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $monthOrders = $orders->filter(function ($order) use ($month, $year) {
+                $createdDate = Carbon::parse($order->created_at);
+                return $createdDate->month == $month && $createdDate->year == $year;
+            });
+
+            $result[$month] = [
+                'month' => $month,
+                'month_name' => Carbon::create()->month($month)->format('M'),
+                'orders' => $monthOrders->count(),
+                'revenue' => $monthOrders->sum('gross_sell'),
+                'target' => (float) ($targets[$month] ?? 0),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Export ALL sales data as CSV.
+     */
+    public function exportAllSalesCsv(Request $request, CompanySalesReportService $service)
+    {
+        $admin = Auth::guard('admin')->user();
+        if (!$admin->hasExplicitPermission('sales.view_all')) {
+            abort(403, 'You do not have permission to view all sales data.');
+        }
+
+        $year = $request->input('year', Carbon::now()->year);
+
+        // Reusing the aggregated monthly summary logic
+        $monthlySummary = $this->getAllMonthlySummaryFromOrders($year);
+
+        $filename = "all-company-sales-data-{$year}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($monthlySummary, $year) {
+            $file = fopen('php://output', 'w');
+
+            // Header
+            fputcsv($file, ["All Company Sales Report - {$year}"]);
+            fputcsv($file, []); // Empty row
+            fputcsv($file, ['Month', 'Orders', 'Revenue', 'Target', 'Achieved %']);
+
+            foreach ($monthlySummary as $month) {
+                $achieved = $month['target'] > 0
+                    ? round(($month['revenue'] / $month['target']) * 100, 1) . '%'
+                    : 'N/A';
+
+                fputcsv($file, [
+                    $month['month_name'],
+                    $month['orders'],
+                    number_format($month['revenue'], 2),
+                    number_format($month['target'], 2),
+                    $achieved,
+                ]);
+            }
+
+            // Totals
+            $totalOrders = array_sum(array_column($monthlySummary, 'orders'));
+            $totalRevenue = array_sum(array_column($monthlySummary, 'revenue'));
+            fputcsv($file, []);
+            fputcsv($file, ['TOTAL', $totalOrders, number_format($totalRevenue, 2), '', '']);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Set global target and individual company targets from the all sales dashboard.
+     */
+    public function saveAllTargets(Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+        if (!$admin->hasExplicitPermission('sales.view_all')) {
+            abort(403, 'You do not have permission to manage all targets.');
+        }
+
+        $request->validate([
+            'year' => 'required|integer',
+            'month' => 'required|integer|min:1|max:12',
+            'global_target' => 'nullable|numeric|min:0',
+            'company_targets' => 'nullable|array',
+            'company_targets.*' => 'nullable|numeric|min:0',
+        ]);
+
+        $year = $request->input('year');
+        $month = $request->input('month');
+        $globalAmount = $request->input('global_target');
+
+        // Save Global Target
+        \App\Models\GlobalMonthlyTarget::setTarget($year, $month, (float) ($globalAmount ?: 0));
+
+        // Save Individual Company Targets
+        $companyTargets = $request->input('company_targets', []);
+        foreach ($companyTargets as $companyId => $amount) {
+            if ($amount !== null && $amount !== '') {
+                CompanyMonthlyTarget::setTarget($companyId, $year, $month, (float) $amount);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Targets updated successfully.');
     }
 }
