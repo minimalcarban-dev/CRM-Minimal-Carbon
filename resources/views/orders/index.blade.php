@@ -7,6 +7,7 @@
     $statusColors = [
         'r_order_in_process' => 'info',
         'r_order_shipped' => 'success',
+        'r_order_cancelled' => 'danger',
 
         // Custom Diamond
         'd_diamond_in_discuss' => 'info',
@@ -14,6 +15,7 @@
         'd_diamond_completed' => 'success',
         'd_diamond_in_certificate' => 'purple',
         'd_order_shipped' => 'dark',
+        'd_order_cancelled' => 'danger',
 
         // Custom Jewellery
         'j_diamond_in_progress' => 'info',
@@ -26,11 +28,13 @@
         'j_qc_done' => 'success',
         'j_order_shipped' => 'dark',
         'j_order_hold' => 'danger',
+        'j_order_cancelled' => 'danger',
     ];
 
     $statusIcons = [
         'r_order_in_process' => 'bi-arrow-repeat',
         'r_order_shipped' => 'bi-truck',
+        'r_order_cancelled' => 'bi-x-circle',
 
         // Custom Diamond
         'd_diamond_in_discuss' => 'bi-chat-dots',
@@ -38,6 +42,7 @@
         'd_diamond_completed' => 'bi-gem',
         'd_diamond_in_certificate' => 'bi-file-earmark-text',
         'd_order_shipped' => 'bi-truck',
+        'd_order_cancelled' => 'bi-x-circle',
 
         // Custom Jewellery
         'j_diamond_in_progress' => 'bi-gem',
@@ -50,6 +55,7 @@
         'j_qc_done' => 'bi-check-all',
         'j_order_shipped' => 'bi-truck',
         'j_order_hold' => 'bi-pause-circle',
+        'j_order_cancelled' => 'bi-x-circle',
     ];
 @endphp
 
@@ -317,6 +323,7 @@
                     {{-- Ready to Ship Statuses --}}
                     <option value="r_order_in_process" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process</option>
                     <option value="r_order_shipped" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
+                    <option value="r_order_cancelled" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled</option>
 
                     {{-- Custom Diamond Statuses --}}
                     <option value="d_diamond_in_discuss" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
@@ -326,6 +333,7 @@
                     <option value="d_diamond_in_certificate" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
                         Certificate</option>
                     <option value="d_order_shipped" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
+                    <option value="d_order_cancelled" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled</option>
 
                     {{-- Custom Jewellery Statuses --}}
                     <option value="j_diamond_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In Progress
@@ -340,6 +348,7 @@
                     <option value="j_qc_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
                     <option value="j_order_shipped" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
                     <option value="j_order_hold" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
+                    <option value="j_order_cancelled" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled</option>
                 </select>
 
                 <div class="date-range-wrapper">
@@ -792,6 +801,14 @@
                                                     title="Edit Order">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
+                                            @endif
+
+                                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->hasPermission('orders.cancel') && !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
+                                                <button type="button" class="action-btn action-btn-cancel" title="Cancel Order"
+                                                    onclick="openCancelModal({{ $order->id }}, '{{ addslashes($order->client_name) }}')"
+                                                    style="color: #dc3545; background: rgba(220, 53, 69, 0.1);">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
                                             @endif
 
                                             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
@@ -2944,8 +2961,8 @@
             }
 
             /* .client-info {
-                                                                                                                                                                                            text-align: start;
-                                                                                                                                                                                        } */
+                                                                                                                                                                                                                text-align: start;
+                                                                                                                                                                                                            } */
         }
 
         /* Print Styles */
@@ -3144,66 +3161,118 @@
             }
 
             function escapeHtml(str) {
-                        if (!str) return '';
-                        return         String(str).replace(/[&<>"']/g, function(m) {
-                            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
-                        });
-                    }
+                if (!str) return '';
+                return String(str).replace(/[&<>"']/g, function (m) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+                });
+            }
 
-                    function showTrackingHistory(orderId, trackingNumber, carrier, history, trackingUrl) {
-                        document.getElementById('modalTrackingNumber').textContent = trackingNumber;
-                        document.getElementById('modalCarrierName').textContent = carrier;
+            function showTrackingHistory(orderId, trackingNumber, carrier, history, trackingUrl) {
+                document.getElementById('modalTrackingNumber').textContent = trackingNumber;
+                document.getElementById('modalCarrierName').textContent = carrier;
 
-                        const container = document.getElementById('trackingHistoryContainer');
-                        container.innerHTML = '';
+                const container = document.getElementById('trackingHistoryContainer');
+                container.innerHTML = '';
 
-                        if (!history || history.length === 0) {
-                            container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
-                            document.getElementById('modalLatestStatus').textContent = 'No Data';
-                        } else {
-                            document.getElementById('modalLatestStatus').textContent = history[0].status;
+                if (!history || history.length === 0) {
+                    container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
+                    document.getElementById('modalLatestStatus').textContent = 'No Data';
+                } else {
+                    document.getElementById('modalLatestStatus').textContent = history[0].status;
 
-                            history.forEach(item => {
-                                const historyItem = document.createElement('div');
-                                historyItem.className = 'tracking-history-item';
-                                historyItem.innerHTML = `
-                                    <div class="tracking-history-dot"></div>
-                                    <div class="tracking-history-details shadow-sm">
-                                        <div class="tracking-history-header">
-                                            <span class="tracking-history-status">${escapeHtml(item.status)}</span>
-                                            <span class="tracking-history-date">${escapeHtml(item.date)}</span>
-                                        </div>
-                                        <div class="tracking-history-location">
-                                            <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
-                                        </div>
-                                        ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
-                                    </div>`;
-                                container.appendChild(historyItem);
-                            });
-                        }
+                    history.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'tracking-history-item';
+                        historyItem.innerHTML = `
+                            <div class="tracking-history-dot"></div>
+                            <div class="tracking-history-details shadow-sm">
+                                <div class="tracking-history-header">
+                                    <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                    <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                </div>
+                                <div class="tracking-history-location">
+                                    <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                </div>
+                                ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                            </div>`;
+                        container.appendChild(historyItem);
+                    });
+                }
 
-                        const officialLink = document.getElementById('modalOfficialLink');
-                                if (trackingUrl && trackingUrl !== 'null' && trackingUrl !== '') {
-                                    officialLink.href = trackingUrl;
-                                    officialLink.style.display = 'inline-block';
-                                } else {
-                                    officialLink.href = `https://www.google.com/search?q=${carrier}+tracking+${trackingNumber}`;
-                                    officialLink.style.display = 'inline-block';
-                                }
+                const officialLink = document.getElementById('modalOfficialLink');
+                if (trackingUrl && trackingUrl !== 'null' && trackingUrl !== '') {
+                    officialLink.href = trackingUrl;
+                    officialLink.style.display = 'inline-block';
+                } else {
+                    officialLink.href = `https://www.google.com/search?q=${encodeURIComponent(carrier)}+tracking+${encodeURIComponent(trackingNumber)}`;
+                    officialLink.style.display = 'inline-block';
+                }
+                // Setup Sync Button
+                const syncBtn = document.getElementById('modalSyncBtn');
+                if (syncBtn) {
+                    // Creating a fresh onClick handler that captures current orderId
+                    syncBtn.onclick = function () {
+                        syncTracking(orderId, this);
+                    };
+                }
 
-                                // Setup Sync Button
-                                        const syncBtn = document.getElementById('modalSyncBtn');
-                                        if (syncBtn) {
-                                            // Creating a fresh onClick handler that captures current orderId
-                                            syncBtn.onclick = function() {
-                                                syncTracking(orderId, this);
-                                            };
-                                        }
+                const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
+                modal.show();
+            }
 
-                                        const modal = new bootstrap.Modal(document.getElementById('trackingHistoryModal'));
-                                        modal.show();
-                                    }
-
-                                </script>
+            // Cancel Order Modal Logic
+            function openCancelModal(orderId, clientName) {
+                document.getElementById('cancelOrderId').value = orderId;
+                document.getElementById('cancelClientName').textContent = clientName;
+                document.getElementById('cancelOrderForm').action = `/admin/orders/${orderId}/cancel`;
+                const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+                modal.show();
+            }
+        </script>
     @endpush
+
+    <!-- Cancel Order Modal -->
+    <div class="modal fade border-0" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form id="cancelOrderForm" method="POST">
+                    @csrf
+                    <input type="hidden" id="cancelOrderId" name="order_id" value="">
+
+                    <div class="modal-header bg-danger text-white border-0">
+                        <h5 class="modal-title" id="cancelOrderModalLabel">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> Cancel Order
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <p class="mb-3">Are you sure you want to cancel the order for <strong><span
+                                    id="cancelClientName"></span></strong>?</p>
+                        <div class="alert alert-danger py-2 d-flex align-items-center mb-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span class="small">This will return the associated diamond SKU(s) and melee stock to
+                                inventory.</span>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label for="cancel_reason" class="form-label fw-bold small text-muted text-uppercase">Reason for
+                                Cancellation <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="cancel_reason" name="cancel_reason" rows="3" required
+                                placeholder="Please provide a reason..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 bg-light">
+                        <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger px-4 py-2 custom-shadow">
+                            <i class="bi bi-x-circle me-1"></i> Confirm Cancellation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection

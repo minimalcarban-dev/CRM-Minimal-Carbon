@@ -28,26 +28,30 @@ This CRM powers the day-to-day operations of a diamond trading business, replaci
 - **Diamond Inventory** — Full lifecycle: create, import/export (Excel), bulk edit, SKU-based availability, restock sold stones, admin assignment
 - **Melee Diamonds** — Category-based melee tracking with weighted average cost per carat
 - **Gold Tracking** — Gold stock management with factory distribution, returns, and purchase logging
+- **Jewellery Calculator** — Live gold rate fetching and custom jewelry cost calculation
 
 ### 🛒 Sales & Orders
 
 - **Orders** — Multi-type pipeline (rough, polished, jewelry) with status tracking, draft auto-save, and overdue detection
+- **Order Cancellation** — Robust cancellation workflow with read-only views and reason tracking
 - **Invoices** — Multi-region PDF invoicing with dynamic tax calculations, amount-in-words, and per-region currency formatting
 - **Sales Dashboards** — Company-level analytics with monthly targets, progress tracking, projections, and PDF/CSV export
+- **Shipping Tracker** — Automated API integration (17Track) for live package status, timeline tracking, and syncing
+- **Packages** — Manage and track received / returned packages with permission-based flows
 
 ### 💱 Multi-Currency Engine
 
 Centralized currency system supporting **7 currencies** out of the box — extensible by adding a single config entry:
 
-| Currency               | Symbol | Region |
-| ---------------------- | ------ | ------ |
-| 🇮🇳 Indian Rupee      | ₹     | IN     |
+| Currency             | Symbol | Region |
+| -------------------- | ------ | ------ |
+| 🇮🇳 Indian Rupee      | ₹      | IN     |
 | 🇺🇸 US Dollar         | $      | US     |
-| 🇬🇧 British Pound     | £     | UK     |
-| 🇪🇺 Euro              | €     | EU     |
+| 🇬🇧 British Pound     | £      | UK     |
+| 🇪🇺 Euro              | €      | EU     |
 | 🇨🇦 Canadian Dollar   | C$     | CA     |
 | 🇦🇺 Australian Dollar | A$     | AU     |
-| 🇦🇪 UAE Dirham        | د.إ  | AE     |
+| 🇦🇪 UAE Dirham        | د.إ    | AE     |
 
 ### 👥 CRM & Contacts
 
@@ -79,8 +83,8 @@ Centralized currency system supporting **7 currencies** out of the box — exten
 
 ## 🏗 Tech Stack
 
-| Layer                         | Technologies                    |
-| ----------------------------- | ------------------------------- |
+| Layer                   | Technologies                    |
+| ----------------------- | ------------------------------- |
 | **Backend**             | Laravel 12, PHP 8.2+            |
 | **Frontend**            | Blade, Vue.js 3, Vanilla CSS/JS |
 | **Build Tools**         | Vite 7, TailwindCSS 4           |
@@ -100,8 +104,8 @@ Centralized currency system supporting **7 currencies** out of the box — exten
 
 | Metric               | Count |
 | -------------------- | ----- |
-| Controllers          | 32    |
-| Eloquent Models      | 44    |
+| Controllers          | 35+   |
+| Eloquent Models      | 45+   |
 | View Directories     | 33+   |
 | Route Definitions    | ~200+ |
 | Currencies Supported | 7     |

@@ -299,6 +299,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::get('orders/{order}/quick-view', [OrderController::class, 'quickView'])
         ->name('orders.quick-view')
         ->middleware('admin.permission:orders.view');
+    Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])
+        ->name('orders.cancel')
+        ->middleware('admin.permission:orders.cancel');
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])
         ->name('orders.destroy')
         ->middleware('admin.permission:orders.delete');

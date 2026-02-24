@@ -38,6 +38,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Create Orders', 'slug' => 'orders.create', 'description' => 'Create new orders via admin UI', 'category' => 'orders'],
             ['name' => 'Edit Orders', 'slug' => 'orders.edit', 'description' => 'Edit orders via admin UI', 'category' => 'orders'],
             ['name' => 'Delete Orders', 'slug' => 'orders.delete', 'description' => 'Delete orders via admin UI', 'category' => 'orders'],
+            ['name' => 'Cancel Orders', 'slug' => 'orders.cancel', 'description' => 'Cancel active orders and reset stock', 'category' => 'orders'],
             ['name' => 'View Team Orders', 'slug' => 'orders.view_team', 'description' => 'Allow admin to view orders submitted by other admins (subject to 10-day visibility rule)', 'category' => 'orders'],
 
             // Attribute types
@@ -160,8 +161,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Factories', 'slug' => 'factories.view', 'description' => 'View factories list and details', 'category' => 'factories'],
             ['name' => 'Create Factories', 'slug' => 'factories.create', 'description' => 'Create new factories', 'category' => 'factories'],
             ['name' => 'Edit Factories', 'slug' => 'factories.edit', 'description' => 'Edit existing factories', 'category' => 'factories'],
-            ['name' => 'Delete Factories', 'slug' => 'factories.destroy', 'description' => 'Delete factories', 'category' => 'factories'],
-
+            ['name' => 'Delete Factories', 'slug' => 'factories.delete', 'description' => 'Delete factories', 'category' => 'factories'],
 
             // Gold Tracking
             ['name' => 'View Gold Tracking', 'slug' => 'gold-tracking.view', 'description' => 'View gold stock and tracking', 'category' => 'gold'],

@@ -12,6 +12,7 @@ use App\Models\RingSize;
 use App\Models\SettingType;
 use App\Models\Client;
 use App\Notifications\OrderUpdatedNotification;
+use App\Notifications\OrderCancelledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -56,6 +57,7 @@ class OrderController extends Controller
         $admin = Auth::guard('admin')->user();
 
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped']; // Define shipped statuses
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']; // Define cancelled statuses
         $baseQuery = Order::query()->with(['company', 'creator']); // Start the base query (apply admin + search filters first)
 
         // Super admin sees all orders, regular admin sees only their submitted orders
@@ -128,15 +130,22 @@ class OrderController extends Controller
 
         // ===== TODAY'S SALES STATS (NEW) =====
         $todaysSales = Order::whereDate('created_at', now()->toDateString())
-            // ->whereIn('diamond_status', $shippedStatuses)
+            ->where(function ($q) use ($cancelledStatuses) {
+                $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
+            })
             ->sum('gross_sell');
         $todaysOrderCount = Order::whereDate('created_at', now()->toDateString())
-            // ->whereIn('diamond_status', $shippedStatuses)
+            ->where(function ($q) use ($cancelledStatuses) {
+                $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
+            })
             ->count();
 
         // Month Sales Stats - ALL orders count as sales (prepaid model)
         $monthSales = Order::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
+            ->where(function ($q) use ($cancelledStatuses) {
+                $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
+            })
             ->sum('gross_sell');
 
         // Get company sales progress for active companies
@@ -501,6 +510,18 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+        // If order is cancelled, only allow updating 'special_notes' UNLESS user is a super admin
+        if (in_array($order->diamond_status, $cancelledStatuses) && !Auth::guard('admin')->user()->is_super) {
+            $validated = $request->validate([
+                'special_notes' => 'nullable|string|max:2000',
+            ]);
+            $order->update([
+                'special_notes' => $validated['special_notes'] ?? null
+            ]);
+            return redirect()->route('orders.show', $order->id)
+                ->with('success', 'Order note updated successfully (Order is cancelled).');
+        }
         try {
             $validated = $this->validateOrder($request);
 
@@ -923,18 +944,42 @@ class OrderController extends Controller
                 }
             }
 
-            // --- Reverse Melee Stock on Delete ---
-            if (!empty($order->melee_diamond_id) && ($order->melee_pieces ?? 0) > 0) {
-                MeleeTransaction::create([
-                    'melee_diamond_id' => $order->melee_diamond_id,
-                    'transaction_type' => 'in',
-                    'pieces' => abs($order->melee_pieces),
-                    'carat_weight' => abs($order->melee_carat ?? 0),
-                    'reference_type' => 'order',
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::guard('admin')->id(),
-                    'notes' => 'Stock returned (Order #' . $order->id . ' deleted)',
-                ]);
+            // --- Reverse Stock on Delete (if not already cancelled) ---
+            $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+            if (!in_array($order->diamond_status, $cancelledStatuses)) {
+                // Reverse melee stock
+                if (!empty($order->melee_diamond_id) && ($order->melee_pieces ?? 0) > 0) {
+                    MeleeTransaction::create([
+                        'melee_diamond_id' => $order->melee_diamond_id,
+                        'transaction_type' => 'in',
+                        'pieces' => abs($order->melee_pieces),
+                        'carat_weight' => abs($order->melee_carat ?? 0),
+                        'reference_type' => 'order',
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::guard('admin')->id(),
+                        'notes' => 'Stock returned (Order #' . $order->id . ' deleted)',
+                    ]);
+                }
+
+                // Restore Diamond SKUs
+                $skusToRestore = [];
+                if (!empty($order->diamond_skus)) {
+                    $skusToRestore = $order->diamond_skus;
+                } elseif (!empty($order->diamond_sku)) {
+                    $skusToRestore = [$order->diamond_sku];
+                }
+
+                if (!empty($skusToRestore)) {
+                    foreach ($skusToRestore as $sku) {
+                        $diamond = Diamond::where('sku', $sku)->first();
+                        if ($diamond && $diamond->is_sold_out === 'Sold') {
+                            $diamond->update([
+                                'sold_out_date' => null,
+                                'sold_out_price' => null,
+                            ]);
+                        }
+                    }
+                }
             }
 
             $order->delete();
@@ -960,6 +1005,111 @@ class OrderController extends Controller
     }
 
     /**
+     * Cancel an order and reverse associated stock (diamonds & melee).
+     */
+    public function cancel(Request $request, Order $order)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        // Super admin can cancel all orders; regular admin can only cancel their own
+        if (!$admin->is_super && $order->submitted_by !== $admin->id) {
+            abort(403, 'You don\'t have permission to cancel this order.');
+        }
+
+        $validated = $request->validate([
+            'cancel_reason' => 'required|string|max:1000',
+        ]);
+
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+        if (in_array($order->diamond_status, $cancelledStatuses)) {
+            return back()->with('info', 'This order is already cancelled.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // old snapshot for audit
+            $oldValues = ['diamond_status' => $order->diamond_status];
+
+            // Assign proper cancelled status based on type
+            if ($order->order_type === 'custom_jewellery') {
+                $order->diamond_status = 'j_order_cancelled';
+            } elseif ($order->order_type === 'custom_diamond') {
+                $order->diamond_status = 'd_order_cancelled';
+            } else {
+                $order->diamond_status = 'r_order_cancelled';
+            }
+
+            $order->cancel_reason = $validated['cancel_reason'];
+            $order->cancelled_at = \Carbon\Carbon::now();
+            $order->cancelled_by = Auth::guard('admin')->id();
+
+            $newValues = [
+                'diamond_status' => $order->diamond_status,
+                'cancel_reason' => $order->cancel_reason,
+            ];
+
+            $order->save();
+
+            // Reverse melee diamond stock
+            if (!empty($order->melee_diamond_id) && ($order->melee_pieces ?? 0) > 0) {
+                MeleeTransaction::create([
+                    'melee_diamond_id' => $order->melee_diamond_id,
+                    'transaction_type' => 'in',
+                    'pieces' => abs($order->melee_pieces),
+                    'carat_weight' => abs($order->melee_carat ?? 0),
+                    'reference_type' => 'order',
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::guard('admin')->id(),
+                    'notes' => 'Stock returned (Order #' . $order->id . ' cancelled)',
+                ]);
+            }
+
+            // Restore Diamond SKUs to 'In Stock'
+            $skusToRestore = [];
+            if (!empty($order->diamond_skus)) {
+                $skusToRestore = $order->diamond_skus;
+            } elseif (!empty($order->diamond_sku)) {
+                $skusToRestore = [$order->diamond_sku];
+            }
+
+            if (!empty($skusToRestore)) {
+                foreach ($skusToRestore as $sku) {
+                    $diamond = Diamond::where('sku', $sku)->first();
+                    if ($diamond && $diamond->is_sold_out === 'Sold') {
+                        $diamond->update([
+                            'sold_out_date' => null,
+                            'sold_out_price' => null,
+                        ]);
+                    }
+                }
+            }
+
+            AuditLogger::log('updated', $order, Auth::guard('admin')->id(), $oldValues, $newValues);
+
+            // Notify super admins
+            $superAdmins = Admin::where('is_super', true)->get();
+            $updatedBy = Auth::guard('admin')->user();
+            if ($superAdmins->isNotEmpty()) {
+                Notification::send($superAdmins, new OrderCancelledNotification($order, $updatedBy));
+            }
+
+            DB::commit();
+
+            return redirect()->route('orders.show', $order->id)
+                ->with('success', 'Order cancelled successfully. Stocks have been reversed.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order cancellation failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', 'Failed to cancel order: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Sync tracking for all orders.
      */
     public function syncAllTracking(ShippingTrackingService $trackingService)
@@ -968,8 +1118,11 @@ class OrderController extends Controller
         Log::info("Bulk Sync Initiated");
 
         try {
-            $orders = Order::whereNotNull('tracking_number')
-                ->orWhereNotNull('tracking_url')
+            $orders = Order::where(function ($query) {
+                $query->whereNotNull('tracking_number')
+                    ->orWhereNotNull('tracking_url');
+            })
+                ->whereNotIn('diamond_status', ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'])
                 ->get();
 
             Log::info("Bulk Sync: Found " . $orders->count() . " orders.");
@@ -978,6 +1131,7 @@ class OrderController extends Controller
             $successValues = 0;
             $failures = 0;
 
+            /** @var \App\Models\Order $order */
             foreach ($orders as $order) {
                 // Skip if no tracking info actually exists (double check)
                 if (empty($order->tracking_number) && empty($order->tracking_url)) {

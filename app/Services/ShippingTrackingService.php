@@ -114,7 +114,7 @@ class ShippingTrackingService
         } elseif (str_contains($carrier, 'ups')) {
             return "https://www.ups.com/track?tracknum=" . urlencode($number);
         } elseif (str_contains($carrier, 'india post')) {
-            return "https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx";
+            return "https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?strTrackId=" . urlencode($number);
         } elseif (str_contains($carrier, 'ems')) {
             return "https://www.ems.post/en/tracking?id=" . urlencode($number);
         }
@@ -136,7 +136,7 @@ class ShippingTrackingService
             $registerResponse = Http::withHeaders([
                 '17token' => $apiKey,
                 'Content-Type' => 'application/json'
-            ])->post('https://api.17track.net/track/v2.2/register', $postPayload);
+            ])->timeout(10)->post('https://api.17track.net/track/v2.2/register', $postPayload);
 
             Log::info("17Track Register Response for {$number}: " . $registerResponse->body());
 
@@ -144,8 +144,7 @@ class ShippingTrackingService
             $getResponse = Http::withHeaders([
                 '17token' => $apiKey,
                 'Content-Type' => 'application/json'
-            ])->post('https://api.17track.net/track/v2.2/gettrackinfo', $postPayload);
-
+            ])->timeout(10)->post('https://api.17track.net/track/v2.2/gettrackinfo', $postPayload);
             if ($getResponse->failed()) {
                 Log::error("17Track Get Failed: " . $getResponse->body());
                 return [

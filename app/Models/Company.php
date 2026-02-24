@@ -70,12 +70,15 @@ class Company extends Model
     // ===== SALES ACCESSORS =====
 
     /**
-     * Get all orders for sales calculation (prepaid model - all orders count as sales).
-     * No status filter - as soon as order is created, it's a sale.
+     * Get all orders for sales calculation (prepaid model).
+     * Excludes cancelled/voided orders (r_order_cancelled, d_order_cancelled, j_order_cancelled).
      */
     private function getAllOrdersForSales()
     {
-        return $this->orders()->get();
+        return $this->orders()->where(function ($q) {
+            $q->whereNotIn('diamond_status', ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'])
+                ->orWhereNull('diamond_status');
+        })->get();
     }
 
     /**
