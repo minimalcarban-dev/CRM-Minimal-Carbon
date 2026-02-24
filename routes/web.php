@@ -17,6 +17,7 @@ use App\Http\Controllers\DiamondClarityController;
 use App\Http\Controllers\DiamondCutController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\TrackingWebhookController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminPermissionController;
@@ -298,6 +299,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::get('orders/{order}/quick-view', [OrderController::class, 'quickView'])
         ->name('orders.quick-view')
         ->middleware('admin.permission:orders.view');
+    Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])
+        ->name('orders.cancel')
+        ->middleware('admin.permission:orders.cancel');
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])
         ->name('orders.destroy')
         ->middleware('admin.permission:orders.delete');
@@ -586,6 +590,19 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::delete('companies/{company}', [CompanyController::class, 'destroy'])
         ->name('companies.destroy')
         ->middleware('admin.permission:companies.delete');
+
+    // All Company Sales Dashboard Routes
+    Route::get('all-company-sales', [CompanyController::class, 'allSalesDashboard'])
+        ->name('companies.all-sales-dashboard')
+        ->middleware('admin.permission:sales.view_all');
+
+    Route::post('all-company-sales/set-targets', [CompanyController::class, 'saveAllTargets'])
+        ->name('companies.save-all-targets')
+        ->middleware('admin.permission:sales.view_all');
+
+    Route::get('all-company-sales/export-csv', [CompanyController::class, 'exportAllSalesCsv'])
+        ->name('companies.export-all-sales-csv')
+        ->middleware('admin.permission:sales.view_all');
 
     // Company Sales Dashboard Routes
     Route::get('companies/{company}/sales-dashboard', [CompanyController::class, 'salesDashboard'])
@@ -987,5 +1004,12 @@ Route::prefix('webhook/meta')->group(function () {
     Route::post('/', [MetaWebhookController::class, 'handle'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });
+
+// ─────────────────────────────────────────────────────────────
+// 17Track Webhook Routes (Outside auth middleware)
+// ─────────────────────────────────────────────────────────────
+
+Route::post('webhook/17track', [TrackingWebhookController::class, 'handle17Track'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 

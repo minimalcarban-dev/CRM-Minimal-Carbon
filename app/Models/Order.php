@@ -57,6 +57,9 @@ class Order extends Model
         'submitted_by',
         'last_modified_by',
         'special_notes',
+        'cancel_reason',
+        'cancelled_at',
+        'cancelled_by',
     ];
 
     protected $casts = [
@@ -67,6 +70,7 @@ class Order extends Model
         'tracking_history' => 'array',
         'last_tracker_sync' => 'datetime',
         'dispatch_date' => 'date',
+        'cancelled_at' => 'datetime',
         'gross_sell' => 'decimal:2',
     ];
 
@@ -112,6 +116,11 @@ class Order extends Model
     public function lastModifier()
     {
         return $this->belongsTo(Admin::class, 'last_modified_by');
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(Admin::class, 'cancelled_by');
     }
 
     public function meleeDiamond()

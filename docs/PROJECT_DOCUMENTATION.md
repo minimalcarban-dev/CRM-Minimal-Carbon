@@ -2,7 +2,7 @@
 
 > **Project Name:** CRM-Minimal-Carbon  
 > **Technology Stack:** Laravel 11 + MySQL + Pusher (WebSocket) + Cloudinary  
-> **Last Updated:** January 13, 2026
+> **Last Updated:** February 23, 2026
 
 ---
 
@@ -27,12 +27,12 @@
 
 **CRM-Minimal-Carbon** is a comprehensive Customer Relationship Management system designed for jewelry/diamond businesses. It manages:
 
--   **Diamond Inventory** - Stock management, bulk import/export, pricing
--   **Order Management** - Multi-type orders (Ready to Ship, Custom Diamond, Custom Jewellery)
--   **Invoice Generation** - PDF invoices with multi-currency support
--   **Lead Management** - Facebook/Instagram integration via Meta API
--   **Team Chat** - Real-time messaging with channels
--   **Expense Tracking** - Purchases and office expenses
+- **Diamond Inventory** - Stock management, bulk import/export, pricing
+- **Order Management** - Multi-type orders (Ready to Ship, Custom Diamond, Custom Jewellery)
+- **Invoice Generation** - PDF invoices with multi-currency support
+- **Lead Management** - Facebook/Instagram integration via Meta API
+- **Team Chat** - Real-time messaging with channels
+- **Expense Tracking** - Purchases and office expenses
 
 ---
 
@@ -109,6 +109,11 @@ flowchart TB
 | **Purchases**   | Purchase tracking       | `PurchaseController`                                | Vendor, amounts                                |
 | **Companies**   | Company profiles        | `CompanyController`                                 | Banking details, logos                         |
 | **Clients**     | Client database         | `ClientController`                                  | Auto-created from orders                       |
+| **Packages**    | Package tracking        | `PackageController`                                 | Package receipt, return workflows              |
+| **Melee Stock** | Melee Diamonds          | `MeleeDiamondController`                            | Melee diamond stock management                 |
+| **Jhanghad**    | Gold Tracking           | `GoldTrackingController`                            | Track gold jhanghad (allocation to makers)     |
+| **Shipping**    | Shipping Tracker        | `TrackingWebhookController`                         | 17Track integration, sync & webhooks           |
+| **Tools**       | Jewellery Calculator    | `JewelleryCalculatorController`                     | Live gold rates API and calculator             |
 | **Attributes**  | Lookup tables           | Multiple controllers                                | Metal types, ring sizes, etc.                  |
 
 ---
@@ -117,17 +122,17 @@ flowchart TB
 
 ### Admin Authentication
 
--   **Guard:** `admin` (custom guard in `config/auth.php`)
--   **Middleware:** `admin.auth` - checks `Auth::guard('admin')->check()`
--   **Model:** `App\Models\Admin`
--   **Login:** `/admin/login`
+- **Guard:** `admin` (custom guard in `config/auth.php`)
+- **Middleware:** `admin.auth` - checks `Auth::guard('admin')->check()`
+- **Model:** `App\Models\Admin`
+- **Login:** `/admin/login`
 
 ### Permission System
 
--   **Middleware:** `admin.permission:{permission_key}`
--   **Model:** `App\Models\Permission`
--   **Pivot Table:** `admin_permission`
--   **Super Admin:** `is_super = true` bypasses all permission checks
+- **Middleware:** `admin.permission:{permission_key}`
+- **Model:** `App\Models\Permission`
+- **Pivot Table:** `admin_permission`
+- **Super Admin:** `is_super = true` bypasses all permission checks
 
 ### Permission Categories
 
@@ -144,6 +149,9 @@ purchases.*       - Purchase tracking
 expenses.*        - Expense tracking
 companies.*       - Company management
 clients.*         - Client management
+packages.*        - Package management
+jhanghad.*        - Jhanghad (Gold tracking)
+melee.*           - Melee diamond tracking
 {attribute}.*     - Each attribute type
 ```
 
@@ -161,11 +169,11 @@ clients.*         - Client management
 
 **Key Features:**
 
--   Dynamic form loading via AJAX partials
--   File upload to Cloudinary (images + PDFs)
--   Diamond SKU linking (marks diamond as sold)
--   Auto-save drafts (NEW - Jan 2026)
--   Status workflow per order type
+- Dynamic form loading via AJAX partials
+- File upload to Cloudinary (images + PDFs)
+- Diamond SKU linking (marks diamond as sold)
+- Auto-save drafts (NEW - Jan 2026)
+- Status workflow per order type
 
 **Order Statuses:**
 
@@ -181,13 +189,13 @@ Custom Jewellery: j_diamond_in_progress → j_cad_in_progress → j_cad_done →
 
 **Key Features:**
 
--   Bulk import via Excel/CSV
--   Bulk export with filters
--   Barcode generation
--   Price calculation (cost + margin = list price)
--   Multi-admin assignment
--   Sold status tracking
--   Job tracking history
+- Bulk import via Excel/CSV
+- Bulk export with filters
+- Barcode generation
+- Price calculation (cost + margin = list price)
+- Multi-admin assignment
+- Sold status tracking
+- Job tracking history
 
 **Diamond Fields:**
 
@@ -207,13 +215,13 @@ sold_price, sold_at, assigned_to (many-to-many with admins)
 
 **Features:**
 
--   Public/Private channels
--   Direct messages
--   Thread replies
--   File attachments (Cloudinary)
--   @mentions with notifications
--   Message search (full-text)
--   Unread count badges
+- Public/Private channels
+- Direct messages
+- Thread replies
+- File attachments (Cloudinary)
+- @mentions with notifications
+- Message search (full-text)
+- Unread count badges
 
 **Events:**
 
@@ -230,12 +238,12 @@ ChannelRead::class     // User marked channel as read
 
 **Features:**
 
--   Multi-currency (INR/USD)
--   Company branding (logo, bank details)
--   Line items with quantity/price
--   Copy types (Original, Duplicate, Triplicate)
--   Mark as done
--   PDF download
+- Multi-currency (INR/USD)
+- Company branding (logo, bank details)
+- Line items with quantity/price
+- Copy types (Original, Duplicate, Triplicate)
+- Mark as done
+- PDF download
 
 ---
 
@@ -245,12 +253,12 @@ ChannelRead::class     // User marked channel as read
 
 **Features:**
 
--   Meta OAuth connection
--   Webhook handling for messages
--   Conversation threading
--   Lead activities tracking
--   Status workflow
--   Reply to leads (via Meta API)
+- Meta OAuth connection
+- Webhook handling for messages
+- Conversation threading
+- Lead activities tracking
+- Status workflow
+- Reply to leads (via Meta API)
 
 **Meta Integration Tables:**
 
@@ -269,16 +277,16 @@ meta_message_logs  - Webhook logs for debugging
 
 **Expenses:**
 
--   Categories (rent, utilities, salaries, etc.)
--   File attachments
--   Date filtering
--   Soft delete
+- Categories (rent, utilities, salaries, etc.)
+- File attachments
+- Date filtering
+- Soft delete
 
 **Purchases:**
 
--   Vendor tracking
--   Amount + description
--   Date filtering
+- Vendor tracking
+- Amount + description
+- Date filtering
 
 ---
 
@@ -361,6 +369,14 @@ ring_sizes             - Ring size chart
 stone_types            - Diamond/ruby/etc
 stone_shapes           - Round/princess/etc
 stone_colors           - Color grades
+```
+
+**New Modules:**
+
+```
+packages               - Package management
+melee_diamonds         - Melee diamond stock
+job_tracks / gold_tracks - Gold/Jhanghad tracking
 ```
 
 ---
@@ -448,26 +464,36 @@ EXCHANGE_RATE_API_KEY=xxx
 
 ---
 
-## 10. Recent Features (Jan 2026)
+## 10. Recent Features (Jan & Feb 2026)
 
-### Order Draft System (Latest)
+### February 2026 Additions
 
--   **Auto-save**: Every 30 seconds to server
--   **Error recovery**: Drafts created on validation/server errors
--   **Management UI**: `/admin/orders/drafts`
--   **Login popup**: Notification for pending drafts
--   **Files**: `OrderDraft.php`, `OrderDraftController.php`, `order-autosave.js`
+- **Order Cancellation Flow:** Added comprehensive UI and backend logic (with reason tracking and read-only views for cancelled orders).
+- **Shipping Tracker (17Track):** Integrated 17Track API for automated shipping tracking, quota handling, and live tracking UI via webhooks (`TrackingWebhookController`).
+- **Package Management:** Permissions-based modules for managing returning/receiving packages.
+- **Melee Diamond Stock:** New module for tracking smaller diamond stock inventories.
+- **Jhanghad / Gold Tracking:** Real-time tracking of gold assigned to makers/factories.
+- **Live Gold Rate Calculator:** Tools via `JewelleryCalculatorController` pulling live gold rates dynamically without hardcoded fallbacks.
+
+### Order Draft System (Jan 2026)
+
+- **Auto-save**: Every 30 seconds to server
+- **Error recovery**: Drafts created on validation/server errors
+- **Management UI**: `/admin/orders/drafts`
+- **Login popup**: Notification for pending drafts
+- **Files**: `OrderDraft.php`, `OrderDraftController.php`, `order-autosave.js`
 
 ### Client Database
 
--   Clients auto-created from order submissions
--   Linked via `client_id` foreign key on orders
--   Deduplicated by email
+- Clients auto-created from order submissions
+- Linked via `client_id` foreign key on orders
+- Deduplicated by email
 
-### Bug Fixes
+### Bug Fixes & Refinements
 
--   MySQL integer column error for nullable foreign keys
--   Route ordering for draft routes vs `{order}` wildcard
+- Refined Orders Index page UI/UX to match global designs.
+- MySQL integer column error for nullable foreign keys
+- Route ordering for draft routes vs `{order}` wildcard
 
 ---
 
@@ -475,10 +501,10 @@ EXCHANGE_RATE_API_KEY=xxx
 
 ### Prerequisites
 
--   PHP 8.2+
--   Composer
--   MySQL 8.0
--   Node.js (for asset compilation if needed)
+- PHP 8.2+
+- Composer
+- MySQL 8.0
+- Node.js (for asset compilation if needed)
 
 ### Installation
 

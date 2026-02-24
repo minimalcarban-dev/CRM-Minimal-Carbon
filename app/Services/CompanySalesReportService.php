@@ -39,10 +39,13 @@ class CompanySalesReportService
      */
     public function getTodaysTotalSales(): array
     {
-        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
 
         $result = Order::whereDate('created_at', Carbon::today())
-            ->whereIn('diamond_status', $shippedStatuses)
+            ->where(function ($q) use ($cancelledStatuses) {
+                $q->whereNotIn('diamond_status', $cancelledStatuses)
+                    ->orWhereNull('diamond_status');
+            })
             ->selectRaw('COUNT(*) as order_count, COALESCE(SUM(gross_sell), 0) as total_revenue')
             ->first();
 
@@ -59,7 +62,7 @@ class CompanySalesReportService
     public function getDailySalesHistory(int $companyId, Carbon $from, Carbon $to): Collection
     {
         $today = Carbon::today();
-        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
 
         // Get archived data (excluding today since it's live)
         $archivedData = CompanyDailySales::where('company_id', $companyId)
@@ -72,14 +75,17 @@ class CompanySalesReportService
         if ($today->between($from, $to)) {
             $todayOrders = Order::where('company_id', $companyId)
                 ->whereDate('created_at', $today)
-                ->whereIn('diamond_status', $shippedStatuses)
+                ->where(function ($q) use ($cancelledStatuses) {
+                    $q->whereNotIn('diamond_status', $cancelledStatuses)
+                        ->orWhereNull('diamond_status');
+                })
                 ->get();
 
             if ($todayOrders->count() > 0) {
                 $orderCount = $todayOrders->count();
                 $totalRevenue = $todayOrders->sum('gross_sell');
                 $breakdown = $todayOrders->groupBy('order_type')
-                    ->map->count()
+                    ->map(fn($group) => $group->count())
                     ->toArray();
 
                 // Create a virtual daily sales record for today
@@ -108,7 +114,7 @@ class CompanySalesReportService
         $today = Carbon::today();
         $currentMonth = $today->month;
         $currentYear = $today->year;
-        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
 
         // Get archived monthly sales
         $monthlySales = CompanyDailySales::where('company_id', $companyId)
@@ -130,7 +136,10 @@ class CompanySalesReportService
             // Get today's live sales
             $todayOrders = Order::where('company_id', $companyId)
                 ->whereDate('created_at', $today)
-                ->whereIn('diamond_status', $shippedStatuses)
+                ->where(function ($q) use ($cancelledStatuses) {
+                    $q->whereNotIn('diamond_status', $cancelledStatuses)
+                        ->orWhereNull('diamond_status');
+                })
                 ->get();
 
             if ($todayOrders->count() > 0) {
@@ -215,10 +224,13 @@ class CompanySalesReportService
     public function archiveDailySales(?Carbon $date = null): array
     {
         $date = $date ?? Carbon::yesterday(); // Archive yesterday's data by default
-        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
 
         $companySales = Order::whereDate('created_at', $date)
-            ->whereIn('diamond_status', $shippedStatuses)
+            ->where(function ($q) use ($cancelledStatuses) {
+                $q->whereNotIn('diamond_status', $cancelledStatuses)
+                    ->orWhereNull('diamond_status');
+            })
             ->select('company_id', 'order_type')
             ->selectRaw('COUNT(*) as order_count, SUM(gross_sell) as total_revenue')
             ->groupBy('company_id', 'order_type')

@@ -37,7 +37,8 @@
                         }
                         if (is_array($images) && count($images) === 1 && is_string($images[0])) {
                             $decoded = json_decode($images[0], true);
-                            if (is_array($decoded)) $images = $decoded;
+                            if (is_array($decoded))
+                                $images = $decoded;
                         }
                         $images = is_array($images) ? $images : [];
                     @endphp
@@ -56,7 +57,7 @@
                                         <div class="current-image-item" id="image-{{ $index }}">
                                             <img src="{{ $url }}" alt="Image {{ $index + 1 }}" onclick="openImageModal(this.src)">
                                             <button type="button" class="remove-existing-file"
-                                                onclick="removeExistingFile('{{ $url }}', 'image', 'image-{{ $index }}')">
+                                                onclick="removeExistingFile('{{ $url }}', 'image', 'image-{{ $index }}', event)">
                                                 <i class="bi bi-x"></i>
                                             </button>
                                             <div class="image-overlay">
@@ -113,6 +114,21 @@
     @endif
 
     <div class="card-custom p-0 p-lg-4 p-xl-4 p-md-4 p-sm-4">
+        @if(in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
+            <div class="alert alert-danger d-flex align-items-center m-4 mb-4"
+                style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c;">
+                <i class="bi bi-slash-circle me-3" style="font-size: 1.5rem;"></i>
+                <div>
+                    <strong>This order is cancelled.</strong>
+                    @if(auth()->guard('admin')->user()->is_super)
+                        <div style="font-size: 0.9rem;">However, as a <span style="font-weight: 600;">Super Admin</span>, you retain full editing privileges to bypass the lock and modify this order.</div>
+                    @else
+                        <div style="font-size: 0.9rem;">Form is read-only. You may only update the Special Notes at the bottom of the page.</div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <!-- Errors are displayed via the unified flash partial in layout -->
 
         <form action="{{ route('orders.update', $order->id) }}" method="POST" enctype="multipart/form-data"
@@ -712,15 +728,45 @@
                 if (!type) return;
 
                 fetch(`/admin/orders/form/${type}?edit=true&id={{ $order->id }}`)
-                    .then(response => response.text())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        return response.text();
+                    })
                     .then(html => {
                         container.innerHTML = html;
                         initializeFilePreview();
+                        applyReadOnlyIfCancelled();
                     })
                     .catch(() => {
                         container.innerHTML = `<div class="alert alert-danger">Error loading form. Please try again.</div>`;
                     });
             }
+
+            function applyReadOnlyIfCancelled() {
+                @if(in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']) && !auth()->guard('admin')->user()->is_super)
+                    const form = document.getElementById('editOrderForm');
+                    if (form) {
+                        const elements = form.querySelectorAll('input, select, textarea');
+                        elements.forEach(el => {
+                            if (el.name !== 'special_notes' && el.type !== 'hidden') {
+                                el.disabled = true;
+                                el.style.backgroundColor = '#f3f4f6';
+                                el.style.cursor = 'not-allowed';
+                            }
+                        });
+
+                        // Remove file remove buttons
+                        const removeBtns = document.querySelectorAll('.remove-existing-file, .remove-pdf-btn');
+                        removeBtns.forEach(btn => btn.style.display = 'none');
+
+                        // Disable file inputs explicitly just in case
+                        const fileInputs = form.querySelectorAll('input[type="file"]');
+                        fileInputs.forEach(el => el.disabled = true);
+                    }
+                @endif
+                        }
 
             // Initialize file preview for dynamically loaded forms
             function initializeFilePreview() {
@@ -759,12 +805,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                            <div class="preview-header">
-                                                                <i class="bi bi-images"></i>
-                                                                <span>Selected Images (${files.length})</span>
-                                                            </div>
-                                                            <div class="preview-grid" id="imagePreviewGrid"></div>
-                                                        `;
+                                                                        <div class="preview-header">
+                                                                            <i class="bi bi-images"></i>
+                                                                            <span>Selected Images (${files.length})</span>
+                                                                        </div>
+                                                                        <div class="preview-grid" id="imagePreviewGrid"></div>
+                                                                    `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -775,9 +821,9 @@
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
                         previewItem.innerHTML = `
-                                                                    <img src="${e.target.result}" alt="${file.name}">
-                                                                    <div class="file-name">${file.name}</div>
-                                                                `;
+                                                                                <img src="${e.target.result}" alt="${file.name}">
+                                                                                <div class="file-name">${file.name}</div>
+                                                                            `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -796,12 +842,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                            <div class="preview-header">
-                                                                <i class="bi bi-file-pdf"></i>
-                                                                <span>Selected PDFs (${files.length})</span>
-                                                            </div>
-                                                            <div id="pdfPreviewList"></div>
-                                                        `;
+                                                                        <div class="preview-header">
+                                                                            <i class="bi bi-file-pdf"></i>
+                                                                            <span>Selected PDFs (${files.length})</span>
+                                                                        </div>
+                                                                        <div id="pdfPreviewList"></div>
+                                                                    `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
@@ -811,25 +857,26 @@
                     previewItem.className = 'pdf-preview-item';
                     const fileSize = (file.size / 1024).toFixed(2);
                     previewItem.innerHTML = `
-                                                                <div class="pdf-preview-icon">
-                                                                    <i class="bi bi-file-pdf-fill"></i>
-                                                                </div>
-                                                                <div class="pdf-preview-info">
-                                                                    <div class="pdf-preview-name">${file.name}</div>
-                                                                    <div class="pdf-preview-size">${fileSize} KB</div>
-                                                                </div>
-                                                            `;
+                                                                            <div class="pdf-preview-icon">
+                                                                                <i class="bi bi-file-pdf-fill"></i>
+                                                                            </div>
+                                                                            <div class="pdf-preview-info">
+                                                                                <div class="pdf-preview-name">${file.name}</div>
+                                                                                <div class="pdf-preview-size">${fileSize} KB</div>
+                                                                            </div>
+                                                                        `;
                     list.appendChild(previewItem);
                 });
             }
         });
 
-        function removeExistingFile(fileUrl, type, elementId) {
+        function removeExistingFile(fileUrl, type, elementId, event) {
             if (!confirm('Are you sure you want to delete this ' + type + '? This action cannot be undone.')) {
                 return;
             }
 
-            const btn = event.currentTarget;
+            const btn = event?.currentTarget || document.querySelector(`#${elementId} button`);
+            if (!btn) return;
             const originalContent = btn.innerHTML;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             btn.disabled = true;
@@ -845,29 +892,34 @@
                     type: type
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const el = document.getElementById(elementId);
-                    el.style.transition = 'all 0.4s ease';
-                    el.style.opacity = '0';
-                    el.style.transform = 'scale(0.8)';
-                    setTimeout(() => {
-                        el.remove();
-                        // Update counts if needed or just let it be
-                    }, 400);
-                } else {
-                    alert('Error: ' + data.message);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const el = document.getElementById(elementId);
+                        el.style.transition = 'all 0.4s ease';
+                        el.style.opacity = '0';
+                        el.style.transform = 'scale(0.8)';
+                        setTimeout(() => {
+                            el.remove();
+                            // Update counts if needed or just let it be
+                        }, 400);
+                    } else {
+                        alert('Error: ' + data.message);
+                        btn.innerHTML = originalContent;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while removing the file.');
                     btn.innerHTML = originalContent;
                     btn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while removing the file.');
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            });
+                });
         }
 
         function openImageModal(src) {
