@@ -494,18 +494,42 @@ class AdminController extends Controller
     /**
      * Show all notifications for the current admin
      */
-    public function showNotifications()
+    public function showNotifications(Request $request)
     {
         $admin = auth()->guard('admin')->user();
         if (!$admin) {
             abort(401, 'Unauthorized');
         }
 
-        // Get all notifications (both read and unread)
-        $notifications = $admin->notifications()
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $filter = $request->query('filter', 'all');
 
-        return view('notifications.index', compact('notifications'));
+        $query = $admin->notifications();
+
+        if ($filter === 'cancelled') {
+            $query->where('data', 'like', '%cancel%')
+                    ->orWhere('data', 'like', '%been cancelled%');
+        } elseif ($filter === 'created') {
+            $query->where(function ($q) {
+                $q->where('data', 'like', '%created%')
+                    ->orWhere('data', 'like', '%was created%');
+            });
+        } elseif ($filter === 'updated') {
+            $query->where(function ($q) {
+                $q->where('data', 'like', '%update%')
+                    ->orWhere('data', 'like', '%updated%');
+            });
+        } elseif ($filter === 'other') {
+            $query->where('data', 'not like', '%cancel%')
+                ->where('data', 'not like', '%update%')
+                ->where('data', 'not like', '%updated%')
+                ->where('data', 'not like', '%created%')
+                ->where('data', 'not like', '%was created%');
+        }
+
+        // Get all notifications (both read and unread)
+        $notifications = $query->orderBy('created_at', 'desc')->paginate(15);
+        $notifications->appends(request()->query());
+
+        return view('notifications.index', compact('notifications', 'filter'));
     }
 }
