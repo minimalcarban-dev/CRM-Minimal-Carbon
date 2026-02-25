@@ -483,37 +483,67 @@
                 <!-- LAB GROWN LIST -->
                 <div id="sidebar-lab-grown">
                     @forelse($labGrownCategories as $category)
-                        <button class="category-nav-item cat-btn-{{ $category->id }}"
-                            onclick="selectCategory('{{ $category->id }}', this)">
-                            <span>
-                                <i class="bi bi-gem me-2"></i> {{ $category->name }}
-                            </span>
-                            <span class="badge">{{ $category->diamonds->count() }}</span>
-                        </button>
+                        <div class="position-relative mb-1">
+                            <button class="category-nav-item cat-btn-{{ $category->id }} w-100 d-flex justify-content-between align-items-center"
+                                style="padding-right: 2.5rem; margin-bottom: 0; min-height: 48px;"
+                                onclick="selectCategory('{{ $category->id }}', this)">
+                                <span class="text-start" style="white-space: normal; line-height: 1.2;">
+                                    <i class="bi bi-gem me-2"></i>{{ $category->name }}
+                                </span>
+                                <span class="badge ms-2 flex-shrink-0" style="min-width: 25px;">{{ $category->diamonds->count() }}</span>
+                            </button>
+                            <button class="btn btn-sm text-danger position-absolute top-50 end-0 translate-middle-y me-1 p-1"
+                                onclick="event.stopPropagation(); deleteMeleeCategory({{ $category->id }}, '{{ addslashes($category->name) }}')"
+                                title="Delete Category"
+                                style="z-index: 10; background: transparent; border: none; font-size: 1rem; opacity: 0.6; transition: 0.2s;"
+                                onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     @empty
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
                             <small>No categories found.<br>Run the seeder to add defaults.</small>
                         </div>
                     @endforelse
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-primary w-100" onclick="createMeleeCategory('lab_grown')">
+                            <i class="bi bi-plus-lg me-1"></i> Add Category
+                        </button>
+                    </div>
                 </div>
 
                 <!-- NATURAL LIST (Hidden by default) -->
                 <div id="sidebar-natural" class="hidden">
                     @forelse($naturalCategories as $category)
-                        <button class="category-nav-item cat-btn-{{ $category->id }}"
-                            onclick="selectCategory('{{ $category->id }}', this)">
-                            <span>
-                                <i class="bi bi-diamond-half me-2"></i> {{ $category->name }}
-                            </span>
-                            <span class="badge">{{ $category->diamonds->count() }}</span>
-                        </button>
+                        <div class="position-relative mb-1">
+                            <button class="category-nav-item cat-btn-{{ $category->id }} w-100 d-flex justify-content-between align-items-center"
+                                style="padding-right: 2.5rem; margin-bottom: 0; min-height: 48px;"
+                                onclick="selectCategory('{{ $category->id }}', this)">
+                                <span class="text-start" style="white-space: normal; line-height: 1.2;">
+                                    <i class="bi bi-diamond-half me-2"></i>{{ $category->name }}
+                                </span>
+                                <span class="badge ms-2 flex-shrink-0" style="min-width: 25px;">{{ $category->diamonds->count() }}</span>
+                            </button>
+                            <button class="btn btn-sm text-danger position-absolute top-50 end-0 translate-middle-y me-1 p-1"
+                                onclick="event.stopPropagation(); deleteMeleeCategory({{ $category->id }}, '{{ addslashes($category->name) }}')"
+                                title="Delete Category"
+                                style="z-index: 10; background: transparent; border: none; font-size: 1rem; opacity: 0.6; transition: 0.2s;"
+                                onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     @empty
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
                             <small>No categories found.<br>Run the seeder to add defaults.</small>
                         </div>
                     @endforelse
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-primary w-100" onclick="createMeleeCategory('natural')">
+                            <i class="bi bi-plus-lg me-1"></i> Add Category
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1259,11 +1289,11 @@
             toastEl.className = `toast show align-items-center text-white ${bgClass} border-0 mb-2`;
             toastEl.setAttribute('role', 'alert');
             toastEl.innerHTML = `
-                                    <div class="d-flex">
-                                        <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
-                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
-                                    </div>
-                                `;
+                                                    <div class="d-flex">
+                                                        <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
+                                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
+                                                    </div>
+                                                `;
             container.appendChild(toastEl);
             setTimeout(() => toastEl.remove(), 4000);
         }
@@ -1365,29 +1395,29 @@
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                                            <td>${typeBadge}</td>
-                                            <td class="fw-medium">${t.user_name}</td>
-                                            <td class="fw-bold">${Math.abs(t.pieces)}</td>
-                                            <td>${t.carat_weight || '-'}</td>
-                                            <td>${refText}</td>
-                                            <td class="text-muted small">${t.notes || '-'}</td>
-                                            <td>
-                                                <span class="small">${t.created_at}</span>
-                                                <br><span class="text-muted small">${t.time_ago}</span>
-                                            </td>
-                                            <td class="text-end">
-                                                <button class="btn btn-sm btn-light text-secondary border me-1" 
-                                                    onclick="openEditTransactionModal(${t.id}, ${Math.abs(t.pieces)}, '${t.carat_weight || 0}', '${t.type}')" 
-                                                    title="Edit Transaction">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-light text-danger border" 
-                                                    onclick="deleteTransaction(${t.id}, '${t.type}')" 
-                                                    title="Delete Transaction">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        `;
+                                                            <td>${typeBadge}</td>
+                                                            <td class="fw-medium">${t.user_name}</td>
+                                                            <td class="fw-bold">${Math.abs(t.pieces)}</td>
+                                                            <td>${t.carat_weight || '-'}</td>
+                                                            <td>${refText}</td>
+                                                            <td class="text-muted small">${t.notes || '-'}</td>
+                                                            <td>
+                                                                <span class="small">${t.created_at}</span>
+                                                                <br><span class="text-muted small">${t.time_ago}</span>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <button class="btn btn-sm btn-light text-secondary border me-1" 
+                                                                    onclick="openEditTransactionModal(${t.id}, ${Math.abs(t.pieces)}, '${t.carat_weight || 0}', '${t.type}')" 
+                                                                    title="Edit Transaction">
+                                                                    <i class="bi bi-pencil-square"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-light text-danger border" 
+                                                                    onclick="deleteTransaction(${t.id}, '${t.type}')" 
+                                                                    title="Delete Transaction">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        `;
                         tbody.appendChild(row);
                     });
                 })
@@ -1425,53 +1455,53 @@
                     link.href = data.url;
 
                     const detailsHtml = `
-                                        <div class="order-quick-details">
-                                            <div class="p-3 bg-light border-bottom">
-                                                <div class="row align-items-center">
-                                                    <div class="col-8">
-                                                        <h6 class="mb-0 fw-bold">${data.client_name}</h6>
-                                                        <small class="text-muted">${data.company} • ${data.created_at}</small>
-                                                    </div>
-                                                    <div class="col-4 text-end">
-                                                        <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="p-4">
-                                                <div class="mb-3">
-                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
-                                                    <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
-                                                    <small class="text-muted">${data.diamond_details || ''}</small>
-                                                </div>
+                                                        <div class="order-quick-details">
+                                                            <div class="p-3 bg-light border-bottom">
+                                                                <div class="row align-items-center">
+                                                                    <div class="col-8">
+                                                                        <h6 class="mb-0 fw-bold">${data.client_name}</h6>
+                                                                        <small class="text-muted">${data.company} • ${data.created_at}</small>
+                                                                    </div>
+                                                                    <div class="col-4 text-end">
+                                                                        <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="p-4">
+                                                                <div class="mb-3">
+                                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
+                                                                    <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
+                                                                    <small class="text-muted">${data.diamond_details || ''}</small>
+                                                                </div>
 
-                                                ${data.diamond_sku ? `
-                                                <div class="mb-3">
-                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
-                                                    <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
-                                                </div>` : ''}
+                                                                ${data.diamond_sku ? `
+                                                                <div class="mb-3">
+                                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
+                                                                    <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
+                                                                </div>` : ''}
 
-                                                ${data.melee_details ? `
-                                                <div class="p-3 border rounded bg-light mb-3">
-                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <span>${data.melee_details.name}</span>
-                                                        <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
-                                                    </div>
-                                                </div>` : ''}
+                                                                ${data.melee_details ? `
+                                                                <div class="p-3 border rounded bg-light mb-3">
+                                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <span>${data.melee_details.name}</span>
+                                                                        <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
+                                                                    </div>
+                                                                </div>` : ''}
 
-                                                <div class="row pt-3 border-top">
-                                                    <div class="col-6">
-                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
-                                                        <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
-                                                    </div>
-                                                    <div class="col-6 text-end">
-                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
-                                                        <span class="fw-medium">${data.submitted_by}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `;
+                                                                <div class="row pt-3 border-top">
+                                                                    <div class="col-6">
+                                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
+                                                                        <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
+                                                                    </div>
+                                                                    <div class="col-6 text-end">
+                                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
+                                                                        <span class="fw-medium">${data.submitted_by}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    `;
                     content.insertAdjacentHTML('beforeend', detailsHtml);
                 })
                 .catch(err => {
@@ -1622,6 +1652,108 @@
                 })
                 .catch(err => {
                     console.error(err);
+                    showMeleeToast('An unexpected error occurred.', 'danger');
+                });
+        }
+
+        // ── Category Management ──
+        function createMeleeCategory(type) {
+            if (!window.Swal) {
+                const name = prompt("Enter category name:");
+                if (name) submitNewCategory(name, type);
+                return;
+            }
+
+            Swal.fire({
+                title: 'Add New Category',
+                input: 'text',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    placeholder: 'e.g. Round Brilliant'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Create',
+                showLoaderOnConfirm: true,
+                preConfirm: (name) => {
+                    if (!name) Swal.showValidationMessage("Name cannot be empty");
+                    return name;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitNewCategory(result.value, type);
+                }
+            });
+        }
+
+        function submitNewCategory(name, type) {
+            fetch(`{{ route('melee.category.store') }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ name, type })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showMeleeToast(data.message, 'success');
+                        location.reload();
+                    } else {
+                        if (window.Swal) Swal.fire('Error', data.message, 'error');
+                        else alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showMeleeToast('An unexpected error occurred.', 'danger');
+                });
+        }
+
+        function deleteMeleeCategory(id, name) {
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'Delete Category?',
+                    html: `You are about to delete <strong>${name}</strong>.<br><br><span class="text-danger fw-bold">Warning: This will permanently delete ALL diamonds and their transaction history inside this category!</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) executeCategoryDelete(id);
+                });
+            } else {
+                if (confirm(`Are you sure you want to completely delete ${name}? ALL diamonds inside this category will be deleted!`)) {
+                    executeCategoryDelete(id);
+                }
+            }
+        }
+
+        function executeCategoryDelete(id) {
+            fetch(`{{ url('admin/melee/category') }}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.Swal) {
+                            Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
+                        } else {
+                            alert(data.message); location.reload();
+                        }
+                    } else {
+                        if (window.Swal) Swal.fire('Error', data.message || 'Could not delete.', 'error');
+                        else alert('Error: ' + (data.message || 'Could not delete.'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Error deleting category:', err);
                     showMeleeToast('An unexpected error occurred.', 'danger');
                 });
         }
