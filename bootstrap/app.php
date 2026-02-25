@@ -4,6 +4,7 @@ use App\Http\Middleware\ChatRateLimiter;
 use App\Http\Middleware\ContentSecurityPolicy;
 use App\Http\Middleware\EnsureAdminAuthenticated;
 use App\Http\Middleware\EnsureAdminHasPermission;
+use App\Http\Middleware\IpRestriction;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,14 +22,22 @@ return Application::configure(basePath: dirname(__DIR__))
         // Trust Cloudflare proxies for HTTPS detection (fixes 419 CSRF errors)
         $middleware->trustProxies(at: '*');
 
+        // Exclude access request route from CSRF (submitted from 403 error page)
+        $middleware->validateCsrfTokens(except: [
+            'ip/request-access',
+        ]);
+
         $middleware->alias([
             'admin.auth' => EnsureAdminAuthenticated::class,
             'admin.permission' => EnsureAdminHasPermission::class,
             'chat.rate' => ChatRateLimiter::class,
             'csp' => ContentSecurityPolicy::class,
+            'ip.restrict' => IpRestriction::class,
         ]);
         // Global security headers
         $middleware->append(ContentSecurityPolicy::class);
+        // Global IP restriction
+        $middleware->append(IpRestriction::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // For all admin pages and APIs: convert 403 to a friendly redirect

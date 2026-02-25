@@ -28,6 +28,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -36,6 +37,19 @@ Route::get('/', function () {
     return redirect()->route('admin.login');
     // return view('welcome');
 });
+
+// Public IP check (no auth needed - for Cloudflare tunnel testing)
+Route::get('check-ip', function () {
+    return response()->json([
+        'your_ip' => request()->ip(),
+        'message' => 'This is the IP address the server sees for you. Add this IP to the whitelist.',
+    ]);
+});
+
+// Public access request (from 403 page — no auth needed)
+Route::post('ip/request-access', [SettingsController::class, 'submitAccessRequest'])
+    ->middleware('throttle:3,10') // Max 3 requests per 10 minutes
+    ->name('ip.request-access');
 
 // Admin auth routes
 Route::get('admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
@@ -119,56 +133,6 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // Order Reminder Trigger (called by JS timer - no cron needed)
-    // ─────────────────────────────────────────────────────────────
-    Route::post('trigger-reminders', function () {
-        $admin = auth()->guard('admin')->user();
-        if (!$admin) {
-            return response()->json(['status' => 'unauthenticated'], 401);
-        }
-
-        $cacheKey = "order_reminder_{$admin->id}";
-
-        // Debug: Check cache status
-        $hasCooldown = \Illuminate\Support\Facades\Cache::has($cacheKey);
-        \Illuminate\Support\Facades\Log::info("Reminder trigger for admin {$admin->id}: cache_exists=" . ($hasCooldown ? 'true' : 'false'));
-
-        // Check cooldown (4 hours between reminders)
-        if ($hasCooldown) {
-            return response()->json([
-                'status' => 'cooldown',
-                'message' => 'Already reminded recently',
-                'cache_key' => $cacheKey,
-                'cache_exists' => true
-            ]);
-        }
-
-        // Check for pending drafts
-        $draftCount = \App\Models\OrderDraft::where('admin_id', $admin->id)
-            ->notExpired()
-            ->count();
-
-        if ($draftCount > 0) {
-            $admin->notify(new \App\Notifications\DraftCompletionReminder($draftCount));
-        }
-
-        // Send productivity reminder
-        $admin->notify(new \App\Notifications\OrderProductivityReminder());
-
-        // Set cooldown cache (4 hours)
-        \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(4));
-
-        \Illuminate\Support\Facades\Log::info("Reminder sent to admin {$admin->id}, cache set for 4 hours");
-
-        return response()->json([
-            'status' => 'sent',
-            'draft_count' => $draftCount,
-            'cache_key' => $cacheKey
-        ]);
-    })->name('admin.trigger-reminders');
-
-    // ─────────────────────────────────────────────────────────────
     // Admin management (CRUD)
     // ─────────────────────────────────────────────────────────────
     Route::get('admins', [AdminController::class, 'index'])
@@ -803,6 +767,21 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
         Route::post('/test-webhook', [\App\Http\Controllers\MetaSettingsController::class, 'testWebhook'])
             ->name('test-webhook');
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // IP Security Settings Routes
+    // ─────────────────────────────────────────────────────────────
+    Route::prefix('settings/security')->name('settings.security.')->middleware(['admin.permission:settings.manage'])->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::post('/ip', [SettingsController::class, 'storeIp'])->name('ip.store');
+        Route::post('/ip/{ip}/toggle', [SettingsController::class, 'toggleIp'])->name('ip.toggle');
+        Route::delete('/ip/{ip}', [SettingsController::class, 'destroyIp'])->name('ip.destroy');
+        Route::post('/ip-restriction/toggle', [SettingsController::class, 'toggleIpRestriction'])->name('ip-restriction.toggle');
+        Route::get('/my-ip', [SettingsController::class, 'getMyIp'])->name('my-ip');
+        Route::post('/request/{accessRequest}/approve', [SettingsController::class, 'approveRequest'])->name('request.approve');
+        Route::post('/request/{accessRequest}/reject', [SettingsController::class, 'rejectRequest'])->name('request.reject');
+        Route::post('/logs/clear', [SettingsController::class, 'clearLogs'])->name('logs.clear');
     });
 
     // ─────────────────────────────────────────────────────────────

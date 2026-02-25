@@ -967,7 +967,7 @@
             gap: 1.5rem;
         }
 
-        /* Notification Dropdown */
+        /* ── NOTIFICATION DROPDOWN ── */
         .notification-dropdown {
             position: relative;
         }
@@ -977,7 +977,7 @@
             width: 44px;
             height: 44px;
             border-radius: 10px;
-            border: 2px solid var(--border);
+            border: 1.5px solid var(--border);
             background: white;
             color: var(--gray);
             display: flex;
@@ -985,7 +985,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
         }
 
         .notification-btn:hover {
@@ -996,33 +996,34 @@
 
         .notification-badge {
             position: absolute;
-            top: -6px;
-            right: -6px;
+            top: -5px;
+            right: -5px;
             background: var(--danger);
             color: white;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 2px 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 5px;
             border-radius: 10px;
-            min-width: 20px;
+            min-width: 18px;
             text-align: center;
             border: 2px solid white;
+            line-height: 1.4;
         }
 
+        /* Dropdown panel */
         .notification-menu {
             position: absolute;
-            top: 100%;
+            top: calc(100% + 8px);
             right: 0;
-            margin-top: 0.5rem;
-            width: 360px;
+            width: 380px;
             background: white;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(99, 102, 241, 0.08);
             z-index: 1000;
             display: none;
             flex-direction: column;
-            max-height: 500px;
+            max-height: 520px;
             overflow: hidden;
         }
 
@@ -1030,33 +1031,50 @@
             display: flex;
         }
 
+        /* Header */
         .notification-header {
-            padding: 1rem;
-            border-bottom: 2px solid var(--border);
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            background: white;
         }
 
         .notification-header h6 {
             margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 800;
             color: var(--dark);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .notification-header h6 i {
+            color: var(--primary);
+            font-size: 1rem;
         }
 
         .mark-all-read {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            font-weight: 600;
             color: var(--primary);
             text-decoration: none;
-            transition: color 0.2s;
+            padding: 0.25rem 0.6rem;
+            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.08);
+            transition: all 0.2s;
         }
 
         .mark-all-read:hover {
+            background: rgba(99, 102, 241, 0.15);
             color: var(--primary-dark);
         }
 
+        /* Scrollable list */
         .notification-list {
             flex: 1;
             overflow-y: auto;
@@ -1064,7 +1082,7 @@
         }
 
         .notification-list::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         .notification-list::-webkit-scrollbar-track {
@@ -1073,47 +1091,143 @@
 
         .notification-list::-webkit-scrollbar-thumb {
             background: var(--border);
-            border-radius: 3px;
+            border-radius: 2px;
         }
 
+        /* Notification row */
         .notification-item {
             display: flex;
             align-items: flex-start;
-            gap: 0.75rem;
-            padding: 1rem;
+            gap: 0.7rem;
+            padding: 0.8rem 1rem;
             border-bottom: 1px solid var(--border);
-            transition: background 0.2s;
+            transition: background 0.15s;
             cursor: pointer;
+            position: relative;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
         }
 
         .notification-item:hover {
-            background: var(--light-gray);
+            background: #fafbff;
         }
 
         .notification-item.unread {
-            background: rgba(99, 102, 241, 0.05);
+            background: rgba(99, 102, 241, 0.025);
         }
 
         .notification-item.read {
-            opacity: 0.7;
+            opacity: 0.65;
         }
 
+        .notification-item.read:hover {
+            opacity: 1;
+        }
+
+        /* Unread left bar */
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2.5px;
+            background: var(--primary);
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* Color-coded icon */
         .notification-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--primary);
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 0.9rem;
             flex-shrink: 0;
+            border: 1px solid transparent;
         }
 
-        .notification-item.read .notification-icon {
-            background: rgba(100, 116, 139, 0.1);
+        /* Icon color variants */
+        .notif-icon-red {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.18);
+        }
+
+        .notif-icon-amber {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.18);
+        }
+
+        .notif-icon-blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.18);
+        }
+
+        .notif-icon-green {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.18);
+        }
+
+        .notif-icon-purple {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+            border-color: rgba(139, 92, 246, 0.18);
+        }
+
+        .notif-icon-gray {
+            background: rgba(100, 116, 139, 0.08);
             color: var(--gray);
+            border-color: var(--border);
+        }
+
+        /* Active (unread) icons — solid gradient */
+        .notification-item.unread .notif-icon-red {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+        }
+
+        .notification-item.unread .notif-icon-amber {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+        }
+
+        .notification-item.unread .notif-icon-blue {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+        }
+
+        .notification-item.unread .notif-icon-green {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+        }
+
+        .notification-item.unread .notif-icon-purple {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+        }
+
+        .notification-item.unread .notif-icon-gray {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            color: white;
+            border-color: transparent;
         }
 
         .notification-content {
@@ -1121,23 +1235,75 @@
             min-width: 0;
         }
 
+        /* Type badge */
+        .notif-type-tag {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            padding: 0.1rem 0.38rem;
+            border-radius: 5px;
+            margin-bottom: 0.18rem;
+        }
+
+        .tag-red {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .tag-amber {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+
+        .tag-blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .tag-green {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .tag-purple {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+        }
+
+        .tag-gray {
+            background: var(--light-gray);
+            color: var(--gray);
+        }
+
+        .notification-title-row {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.18rem;
+            flex-wrap: wrap;
+        }
+
         .notification-message {
-            margin: 0 0 0.25rem 0;
-            font-size: 0.9rem;
-            color: var(--dark);
-            line-height: 1.4;
+            margin: 0 0 0.2rem 0;
+            font-size: 0.8rem;
+            color: var(--gray);
+            line-height: 1.45;
             word-wrap: break-word;
         }
 
         .notification-message strong {
-            color: #1e293b;
-            font-weight: 600;
+            color: var(--dark);
+            font-weight: 700;
+            font-size: 0.82rem;
         }
 
         .notification-preview {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.2rem;
             font-style: italic;
             line-height: 1.3;
         }
@@ -1151,48 +1317,98 @@
         }
 
         .notification-time {
-            font-size: 0.8rem;
-            color: var(--gray);
+            font-size: 0.7rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            margin-top: 0.25rem;
         }
 
+        .notification-time i {
+            font-size: 0.65rem;
+            color: var(--primary);
+        }
+
+        /* Close btn */
         .notification-close {
             border: none;
             background: none;
-            color: var(--gray);
+            color: #c4cdd8;
             cursor: pointer;
-            font-size: 1.1rem;
-            padding: 0;
+            font-size: 0.85rem;
+            padding: 0.2rem;
             flex-shrink: 0;
             transition: color 0.2s;
+            border-radius: 5px;
+            line-height: 1;
         }
 
         .notification-close:hover {
             color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
         }
 
+        /* Empty state */
         .notification-empty {
-            padding: 2rem 1rem;
+            padding: 2.5rem 1rem;
             text-align: center;
             color: var(--gray);
         }
 
-        .notification-empty i {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            display: block;
+        .notification-empty .empty-icon-wrap {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.07);
+            border: 1.5px solid rgba(99, 102, 241, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin: 0 auto 0.75rem;
         }
 
         .notification-empty p {
             margin: 0;
+            font-size: 0.82rem;
+            color: var(--muted, #94a3b8);
         }
 
+        /* Divider */
         .notification-divider {
-            padding: 0.75rem 1rem;
-            background: var(--light-gray);
-            font-size: 0.85rem;
-            color: var(--gray);
+            padding: 0.4rem 1rem;
+            background: #f8fafc;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Download link inside notification */
+        .notif-download-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.7rem;
             font-weight: 600;
-            text-align: center;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            margin-top: 0.3rem;
+            transition: all 0.2s;
+        }
+
+        .notif-download-link:hover {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary-dark);
         }
 
         /* Profile Dropdown */
@@ -1969,6 +2185,16 @@
                         </div>
                     </div>
                 @endif
+
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('settings.security.*') ? 'active' : '' }}"
+                            href="{{ route('settings.security.index') }}" data-tooltip="IP Security">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>IP Security</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
 
         </div>
@@ -2003,143 +2229,206 @@
                         @endif
                     </button>
                     <div class="notification-menu" id="notificationMenu">
+
+                        {{-- Header --}}
                         <div class="notification-header">
-                            <h6>Notifications</h6>
+                            <h6><i class="bi bi-bell-fill"></i> Notifications</h6>
                             @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->unreadNotifications->count() > 0)
-                                <a href="#" class="mark-all-read" id="markAllReadDropdown">Mark all as read</a>
+                                <a href="#" class="mark-all-read" id="markAllReadDropdown">
+                                    <i class="bi bi-check2-all"></i> Mark all read
+                                </a>
                             @endif
                         </div>
+
+                        {{-- List --}}
                         <div class="notification-list">
                             @if(auth()->guard('admin')->user())
+
+                                {{-- UNREAD --}}
                                 @if(auth()->guard('admin')->user()->unreadNotifications->count() > 0)
                                     @foreach(auth()->guard('admin')->user()->unreadNotifications as $notification)
+                                        @php
+                                            $t = strtolower($notification->data['title'] ?? '');
+                                            $nType = $notification->type;
+                                            if (str_contains($t, 'cancel')) {
+                                                $ic = 'bi-x-circle-fill';
+                                                $cl = 'red';
+                                                $tag = 'Cancelled';
+                                            } elseif ($nType === 'App\Notifications\DiamondSoldNotification' || (str_contains($t, 'diamond') && str_contains($t, 'sold'))) {
+                                                $ic = 'bi-gem';
+                                                $cl = 'green';
+                                                $tag = 'Sold Out';
+                                            } elseif (in_array($nType, ['App\Notifications\DiamondAssignedNotification', 'App\Notifications\DiamondReassignedNotification']) || str_contains($t, 'diamond') || str_contains($t, 'melee')) {
+                                                $ic = 'bi-gem';
+                                                $cl = 'purple';
+                                                $tag = 'Diamond';
+                                            } elseif ($nType === 'App\Notifications\ChatMentionNotification') {
+                                                $ic = 'bi-at';
+                                                $cl = 'blue';
+                                                $tag = 'Mention';
+                                            } elseif ($nType === 'App\Notifications\ExportCompleted') {
+                                                $ic = 'bi-download';
+                                                $cl = 'blue';
+                                                $tag = 'Export';
+                                            } elseif ($nType === 'App\Notifications\ImportCompleted') {
+                                                $ic = 'bi-upload';
+                                                $cl = 'blue';
+                                                $tag = 'Import';
+                                            } elseif (str_contains($t, 'reminder')) {
+                                                $ic = 'bi-alarm-fill';
+                                                $cl = 'amber';
+                                                $tag = 'Reminder';
+                                            } elseif (str_contains($t, 'updated') || str_contains($t, 'update')) {
+                                                $ic = 'bi-arrow-repeat';
+                                                $cl = 'blue';
+                                                $tag = 'Updated';
+                                            } elseif (str_contains($t, 'created') || str_contains($t, 'new order')) {
+                                                $ic = 'bi-plus-circle-fill';
+                                                $cl = 'green';
+                                                $tag = 'New Order';
+                                            } else {
+                                                $ic = 'bi-bell-fill';
+                                                $cl = 'gray';
+                                                $tag = 'Alert';
+                                            }
+                                        @endphp
                                         <div class="notification-item unread" data-notification-id="{{ $notification->id }}"
                                             data-url="{{ $notification->data['url'] ?? '#' }}">
-                                            <div class="notification-icon">
-                                                @if($notification->type === 'App\Notifications\DiamondAssignedNotification')
-                                                    <i class="bi bi-gem"></i>
-                                                @elseif($notification->type === 'App\Notifications\ChatMentionNotification')
-                                                    <i class="bi bi-at"></i>
-                                                @elseif($notification->type === 'App\Notifications\DiamondReassignedNotification')
-                                                    <i class="bi bi-arrow-repeat"></i>
-                                                @elseif($notification->type === 'App\Notifications\ImportCompleted')
-                                                    <i class="bi bi-cloud-upload"
-                                                        style="color: {{ $notification->data['icon_color'] ?? 'info' }}"></i>
-                                                @elseif($notification->type === 'App\Notifications\ExportCompleted')
-                                                    <i class="bi bi-cloud-download"
-                                                        style="color: {{ $notification->data['icon_color'] ?? 'success' }}"></i>
-                                                @elseif($notification->type === 'App\Notifications\DiamondSoldNotification')
-                                                    <i class="bi bi-gem" style="color: #10b981;"></i>
-                                                @else
-                                                    <i class="bi bi-info-circle"></i>
-                                                @endif
+
+                                            <div class="notification-icon notif-icon-{{ $cl }}">
+                                                <i class="bi {{ $ic }}"></i>
                                             </div>
+
                                             <div class="notification-content">
-                                                <p class="notification-message">
-                                                    @if(isset($notification->data['title']))
-                                                        <strong>{{ $notification->data['title'] }}</strong><br>
-                                                    @endif
-                                                    @if(isset($notification->data['message']))
-                                                        {!! $notification->data['message'] !!}
-                                                    @else
-                                                        New notification
-                                                    @endif
-                                                </p>
-                                                @if(isset($notification->data['message_preview']) && $notification->type === 'App\Notifications\ChatMentionNotification')
-                                                    <p class="notification-preview"
-                                                        style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; font-style: italic;">
-                                                        {!! $notification->data['message_preview'] !!}
-                                                    </p>
+                                                <div class="notification-title-row">
+                                                    <span class="notif-type-tag tag-{{ $cl }}">{{ $tag }}</span>
+                                                    <strong
+                                                        style="font-size:0.8rem;color:var(--dark);">{{ $notification->data['title'] ?? 'Notification' }}</strong>
+                                                </div>
+                                                <p class="notification-message">{!! $notification->data['message'] ?? '' !!}</p>
+                                                @if(isset($notification->data['message_preview']) && $nType === 'App\Notifications\ChatMentionNotification')
+                                                    <p class="notification-preview">{!! $notification->data['message_preview'] !!}</p>
                                                 @endif
-                                                @if($notification->type === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
-                                                    <a href="{{ $notification->data['action_url'] }}"
-                                                        class="btn btn-sm btn-success mt-2"
-                                                        style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+                                                @if($nType === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
+                                                    <a href="{{ $notification->data['action_url'] }}" class="notif-download-link"
                                                         onclick="event.stopPropagation();">
                                                         <i class="bi bi-download"></i> Download File
                                                     </a>
                                                 @endif
-                                                <span
-                                                    class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                                <div class="notification-time">
+                                                    <i class="bi bi-clock"></i> {{ $notification->created_at->diffForHumans() }}
+                                                </div>
                                             </div>
+
                                             <button class="notification-close"
                                                 onclick="closeNotification('{{ $notification->id }}')">
                                                 <i class="bi bi-x"></i>
                                             </button>
                                         </div>
                                     @endforeach
+
                                 @else
                                     <div class="notification-empty">
-                                        <i class="bi bi-inbox"></i>
-                                        <p>No new notifications</p>
+                                        <div class="empty-icon-wrap"><i class="bi bi-bell-slash"></i></div>
+                                        <p>All caught up! No new notifications.</p>
                                     </div>
                                 @endif
 
+                                {{-- READ (Earlier) --}}
                                 @if(auth()->guard('admin')->user()->readNotifications->count() > 0)
-                                    <div class="notification-divider">
-                                        <span>Earlier</span>
-                                    </div>
+                                    <div class="notification-divider">Earlier</div>
                                     @foreach(auth()->guard('admin')->user()->readNotifications->take(5) as $notification)
+                                        @php
+                                            $t = strtolower($notification->data['title'] ?? '');
+                                            $nType = $notification->type;
+                                            if (str_contains($t, 'cancel')) {
+                                                $ic = 'bi-x-circle-fill';
+                                                $cl = 'red';
+                                                $tag = 'Cancelled';
+                                            } elseif ($nType === 'App\Notifications\DiamondSoldNotification' || (str_contains($t, 'diamond') && str_contains($t, 'sold'))) {
+                                                $ic = 'bi-gem';
+                                                $cl = 'green';
+                                                $tag = 'Sold Out';
+                                            } elseif (in_array($nType, ['App\Notifications\DiamondAssignedNotification', 'App\Notifications\DiamondReassignedNotification']) || str_contains($t, 'diamond') || str_contains($t, 'melee')) {
+                                                $ic = 'bi-gem';
+                                                $cl = 'purple';
+                                                $tag = 'Diamond';
+                                            } elseif ($nType === 'App\Notifications\ChatMentionNotification') {
+                                                $ic = 'bi-at';
+                                                $cl = 'blue';
+                                                $tag = 'Mention';
+                                            } elseif ($nType === 'App\Notifications\ExportCompleted') {
+                                                $ic = 'bi-download';
+                                                $cl = 'blue';
+                                                $tag = 'Export';
+                                            } elseif ($nType === 'App\Notifications\ImportCompleted') {
+                                                $ic = 'bi-upload';
+                                                $cl = 'blue';
+                                                $tag = 'Import';
+                                            } elseif (str_contains($t, 'reminder')) {
+                                                $ic = 'bi-alarm-fill';
+                                                $cl = 'amber';
+                                                $tag = 'Reminder';
+                                            } elseif (str_contains($t, 'updated') || str_contains($t, 'update')) {
+                                                $ic = 'bi-arrow-repeat';
+                                                $cl = 'blue';
+                                                $tag = 'Updated';
+                                            } elseif (str_contains($t, 'created') || str_contains($t, 'new order')) {
+                                                $ic = 'bi-plus-circle-fill';
+                                                $cl = 'green';
+                                                $tag = 'New Order';
+                                            } else {
+                                                $ic = 'bi-bell-fill';
+                                                $cl = 'gray';
+                                                $tag = 'Alert';
+                                            }
+                                        @endphp
                                         <div class="notification-item read" data-url="{{ $notification->data['url'] ?? '#' }}">
-                                            <div class="notification-icon">
-                                                @if($notification->type === 'App\Notifications\DiamondAssignedNotification')
-                                                    <i class="bi bi-gem"></i>
-                                                @elseif($notification->type === 'App\Notifications\ChatMentionNotification')
-                                                    <i class="bi bi-at"></i>
-                                                @elseif($notification->type === 'App\Notifications\DiamondReassignedNotification')
-                                                    <i class="bi bi-arrow-repeat"></i>
-                                                @elseif($notification->type === 'App\Notifications\ImportCompleted')
-                                                    <i class="bi bi-cloud-upload"></i>
-                                                @elseif($notification->type === 'App\Notifications\ExportCompleted')
-                                                    <i class="bi bi-cloud-download"></i>
-                                                @else
-                                                    <i class="bi bi-info-circle"></i>
-                                                @endif
+                                            <div class="notification-icon notif-icon-{{ $cl }}">
+                                                <i class="bi {{ $ic }}"></i>
                                             </div>
                                             <div class="notification-content">
-                                                <p class="notification-message">
-                                                    @if(isset($notification->data['title']))
-                                                        <strong>{{ $notification->data['title'] }}</strong><br>
-                                                    @endif
-                                                    @if(isset($notification->data['message']))
-                                                        {!! $notification->data['message'] !!}
-                                                    @else
-                                                        Notification
-                                                    @endif
-                                                </p>
-                                                @if(isset($notification->data['message_preview']) && $notification->type === 'App\Notifications\ChatMentionNotification')
-                                                    <p class="notification-preview"
-                                                        style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem; font-style: italic; opacity: 0.8;">
-                                                        {!! $notification->data['message_preview'] !!}
-                                                    </p>
+                                                <div class="notification-title-row">
+                                                    <span class="notif-type-tag tag-{{ $cl }}">{{ $tag }}</span>
+                                                    <strong
+                                                        style="font-size:0.8rem;color:var(--dark);">{{ $notification->data['title'] ?? 'Notification' }}</strong>
+                                                </div>
+                                                <p class="notification-message">{!! $notification->data['message'] ?? '' !!}</p>
+                                                @if(isset($notification->data['message_preview']) && $nType === 'App\Notifications\ChatMentionNotification')
+                                                    <p class="notification-preview">{!! $notification->data['message_preview'] !!}</p>
                                                 @endif
-                                                @if($notification->type === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
-                                                    <a href="{{ $notification->data['action_url'] }}"
-                                                        class="btn btn-sm btn-secondary mt-2"
-                                                        style="font-size: 0.75rem; padding: 0.25rem 0.5rem; opacity: 0.8;"
+                                                @if($nType === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
+                                                    <a href="{{ $notification->data['action_url'] }}" class="notif-download-link"
                                                         onclick="event.stopPropagation();">
                                                         <i class="bi bi-download"></i> Download File
                                                     </a>
                                                 @endif
-                                                <span
-                                                    class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                                <div class="notification-time">
+                                                    <i class="bi bi-clock"></i> {{ $notification->created_at->diffForHumans() }}
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
                                 @endif
+
                             @else
                                 <div class="notification-empty">
+                                    <div class="empty-icon-wrap"><i class="bi bi-lock"></i></div>
                                     <p>Please login to see notifications</p>
                                 </div>
                             @endif
                         </div>
-                        <div class="notification-footer"
-                            style="border-top: 1px solid #e9ecef; padding: 10px; text-align: center;">
+
+                        {{-- Footer --}}
+                        <div style="border-top:1px solid var(--border);padding:0.65rem 1rem;flex-shrink:0;">
                             <a href="{{ route('notifications.index') }}"
-                                style="color: #6366f1; text-decoration: none; font-size: 14px; display: inline-block; width: 100%; padding: 8px;">
+                                style="display:flex;align-items:center;justify-content:center;gap:0.4rem;color:var(--primary);text-decoration:none;font-size:0.8rem;font-weight:600;padding:0.45rem;border-radius:10px;background:rgba(99,102,241,0.05);transition:background 0.2s;"
+                                onmouseover="this.style.background='rgba(99,102,241,0.1)'"
+                                onmouseout="this.style.background='rgba(99,102,241,0.05)'">
                                 <i class="bi bi-arrow-right-circle"></i> View All Notifications
                             </a>
                         </div>
+
                     </div>
                 </div>
 
@@ -2693,19 +2982,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                                                        <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                                            <div>
-                                                                                                <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                                                <div style="font-size: 0.8rem; color: #64748b;">
-                                                                                                    ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <a href="${draft.resume_url}"
-                                                                                                style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                                                                Resume
-                                                                                            </a>    
-                                                                                        </div>
-                                                                                    `;
+                                        <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                <div style="font-size: 0.8rem; color: #64748b;">
+                                                    ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                </div>
+                                            </div>
+                                            <a href="${draft.resume_url}"
+                                                style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                Resume
+                                            </a>    
+                                        </div>
+                                    `;
                             });
                             draftsHtml += '</div>';
 
@@ -2713,11 +3002,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                                                        <p style="color: #64748b; margin-bottom: 1rem;">
-                                                                                            You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                                                        </p>
-                                                                                        ${draftsHtml}
-                                                                                    `,
+                                    <p style="color: #64748b; margin-bottom: 1rem;">
+                                        You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                    </p>
+                                    ${draftsHtml}
+                                `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',
@@ -2740,70 +3029,6 @@
             })();
         </script>
     @endif
-
-    {{-- Order Reminder Timer (No cron needed - runs via JS) --}}
-    <script>
-        (function () {
-            const REMINDER_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
-            const INITIAL_DELAY = 30 * 1000; // 30 seconds after page load
-
-            async function triggerReminders() {
-                try {
-                    const response = await fetch('{{ route("admin.trigger-reminders") }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    // If reminder was sent, show notifications directly
-                    if (data.status === 'sent') {
-                        // Show toast
-                        if (typeof showToast === 'function') {
-                            const draftMsg = data.draft_count > 0
-                                ? `📋 You have ${data.draft_count} draft(s) waiting!`
-                                : `🛒 Don't forget to log any new orders!`;
-                            showToast(draftMsg, 8000);
-                        }
-
-                        // Update notification badge
-                        const badge = document.querySelector('.notification-badge');
-                        if (badge) {
-                            let count = parseInt(badge.innerText) || 0;
-                            badge.innerText = count + (data.draft_count > 0 ? 2 : 1);
-                        }
-
-                        // Play sound
-                        if (typeof window.playNotificationSound === 'function') {
-                            window.playNotificationSound();
-                        }
-
-                        // Show browser notification
-                        if (Notification.permission === 'granted') {
-                            new Notification('Order Reminder', {
-                                body: data.draft_count > 0
-                                    ? `You have ${data.draft_count} draft(s) + new orders to enter!`
-                                    : `Do you have any new orders to enter?`,
-                                icon: '/images/Luxurious-Logo.png'
-                            });
-                        }
-                    }
-                } catch (error) {
-                    // Silent fail - don't spam console
-                }
-            }
-
-            // Trigger after initial delay, then every 4 hours
-            setTimeout(() => {
-                triggerReminders();
-                setInterval(triggerReminders, REMINDER_INTERVAL);
-            }, INITIAL_DELAY);
-        })();
-    </script>
 
     @stack('scripts')
 </body>

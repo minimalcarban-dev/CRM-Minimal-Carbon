@@ -387,8 +387,8 @@
                     <i class="bi bi-x-circle-fill"></i>
                     <span>Cancelled</span>
                     @if(isset($cancelledOrdersCount) && $cancelledOrdersCount > 0)
-                        <span class="badge"
-                            style="background: rgb(239 68 68); border-radius: 12px; padding: 2px 6px; font-size: 0.75rem;">{{ $cancelledOrdersCount }}</span>
+                        <span class="badge {{ $cancelledActive ? 'bg-light text-danger' : 'bg-danger text-white' }}"
+                            style="border-radius: 12px; padding: 2px 6px; font-size: 0.75rem;">{{ $cancelledOrdersCount }}</span>
                     @endif
                 </a>
 
@@ -3015,8 +3015,8 @@
             }
 
             /* .client-info {
-                                                                                                                                                                                                                        text-align: start;
-                                                                                                                                                                                                                    } */
+                                                                                                                                                                                                                                    text-align: start;
+                                                                                                                                                                                                                                } */
         }
 
         /* Print Styles */
@@ -3238,17 +3238,17 @@
                         const historyItem = document.createElement('div');
                         historyItem.className = 'tracking-history-item';
                         historyItem.innerHTML = `
-                                            <div class="tracking-history-dot"></div>
-                                            <div class="tracking-history-details shadow-sm">
-                                                <div class="tracking-history-header">
-                                                    <span class="tracking-history-status">${escapeHtml(item.status)}</span>
-                                                    <span class="tracking-history-date">${escapeHtml(item.date)}</span>
-                                                </div>
-                                                <div class="tracking-history-location">
-                                                    <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
-                                                </div>
-                                                ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
-                                            </div>`;
+                                                                <div class="tracking-history-dot"></div>
+                                                                <div class="tracking-history-details shadow-sm">
+                                                                    <div class="tracking-history-header">
+                                                                        <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                                                        <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                                                    </div>
+                                                                    <div class="tracking-history-location">
+                                                                        <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                                                    </div>
+                                                                    ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                                                                </div>`;
                         container.appendChild(historyItem);
                     });
                 }
