@@ -940,6 +940,10 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::delete('/{id}', [MeleeDiamondController::class, 'destroy'])->name('destroy');
         Route::put('/transaction/{id}', [MeleeDiamondController::class, 'updateTransaction'])->name('update-transaction');
         Route::delete('/transaction/{id}', [MeleeDiamondController::class, 'destroyTransaction'])->name('destroy-transaction');
+
+        // Category Management
+        Route::post('/category', [\App\Http\Controllers\MeleeCategoryController::class, 'store'])->name('category.store');
+        Route::delete('/category/{id}', [\App\Http\Controllers\MeleeCategoryController::class, 'destroy'])->name('category.destroy');
     });
 
     // ─────────────────────────────────────────────────────────────
