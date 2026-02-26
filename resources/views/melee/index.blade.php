@@ -110,6 +110,25 @@
             color: var(--secondary);
         }
 
+        .category-item-container .category-delete-btn {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 10;
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .category-item-container:hover .category-delete-btn {
+            opacity: 0.6;
+            visibility: visible;
+        }
+
+        .category-item-container .category-delete-btn:hover {
+            opacity: 1 !important;
+        }
+
         /* Shape Accordion Group inside main panel */
         .shape-group {
             border-bottom: 1px solid var(--border);
@@ -483,20 +502,21 @@
                 <!-- LAB GROWN LIST -->
                 <div id="sidebar-lab-grown">
                     @forelse($labGrownCategories as $category)
-                        <div class="position-relative mb-1">
-                            <button class="category-nav-item cat-btn-{{ $category->id }} w-100 d-flex justify-content-between align-items-center"
+                        <div class="position-relative mb-1 category-item-container">
+                            <button
+                                class="category-nav-item cat-btn-{{ $category->id }} w-100 d-flex justify-content-between align-items-center"
                                 style="padding-right: 2.5rem; margin-bottom: 0; min-height: 48px;"
                                 onclick="selectCategory('{{ $category->id }}', this)">
                                 <span class="text-start" style="white-space: normal; line-height: 1.2;">
                                     <i class="bi bi-gem me-2"></i>{{ $category->name }}
                                 </span>
-                                <span class="badge ms-2 flex-shrink-0" style="min-width: 25px;">{{ $category->diamonds->count() }}</span>
+                                <span class="badge ms-2 flex-shrink-0"
+                                    style="min-width: 25px;">{{ $category->diamonds->count() }}</span>
                             </button>
-                            <button class="btn btn-sm text-danger position-absolute top-50 end-0 translate-middle-y me-1 p-1"
+                            <button
+                                class="btn btn-sm text-danger position-absolute top-50 end-0 translate-middle-y me-1 p-1 category-delete-btn"
                                 onclick="event.stopPropagation(); deleteMeleeCategory({{ $category->id }}, '{{ addslashes($category->name) }}')"
-                                title="Delete Category"
-                                style="z-index: 10; background: transparent; border: none; font-size: 1rem; opacity: 0.6; transition: 0.2s;"
-                                onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                                title="Delete Category">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -516,20 +536,21 @@
                 <!-- NATURAL LIST (Hidden by default) -->
                 <div id="sidebar-natural" class="hidden">
                     @forelse($naturalCategories as $category)
-                        <div class="position-relative mb-1">
-                            <button class="category-nav-item cat-btn-{{ $category->id }} w-100 d-flex justify-content-between align-items-center"
+                        <div class="position-relative mb-1 category-item-container">
+                            <button
+                                class="category-nav-item cat-btn-{{ $category->id }} w-100 d-flex justify-content-between align-items-center"
                                 style="padding-right: 2.5rem; margin-bottom: 0; min-height: 48px;"
                                 onclick="selectCategory('{{ $category->id }}', this)">
                                 <span class="text-start" style="white-space: normal; line-height: 1.2;">
                                     <i class="bi bi-diamond-half me-2"></i>{{ $category->name }}
                                 </span>
-                                <span class="badge ms-2 flex-shrink-0" style="min-width: 25px;">{{ $category->diamonds->count() }}</span>
+                                <span class="badge ms-2 flex-shrink-0"
+                                    style="min-width: 25px;">{{ $category->diamonds->count() }}</span>
                             </button>
-                            <button class="btn btn-sm text-danger position-absolute top-50 end-0 translate-middle-y me-1 p-1"
+                            <button
+                                class="btn btn-sm text-danger position-absolute top-50 end-0 translate-middle-y me-1 p-1 category-delete-btn"
                                 onclick="event.stopPropagation(); deleteMeleeCategory({{ $category->id }}, '{{ addslashes($category->name) }}')"
-                                title="Delete Category"
-                                style="z-index: 10; background: transparent; border: none; font-size: 1rem; opacity: 0.6; transition: 0.2s;"
-                                onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                                title="Delete Category">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -608,6 +629,8 @@
                                                     <th>Size Label</th>
                                                     <th>Stock Status</th>
                                                     <th>Avg $/Ct</th>
+                                                    <th>Total Carats</th>
+                                                    <th>Total Price</th>
                                                     <th class="text-end">Actions</th>
                                                 </tr>
                                             </thead>
@@ -642,6 +665,11 @@
                                                         </td>
                                                         <td class="fw-medium">
                                                             ${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}</td>
+                                                        <td class="fw-medium">
+                                                            {{ number_format($diamond->available_carat_weight ?? 0, 3) }} ct
+                                                        </td>
+                                                        <td class="fw-bold">
+                                                            ${{ number_format($diamond->total_price ?? 0, 2) }}</td>
                                                         <td class="text-end">
                                                             <button class="btn btn-sm btn-light text-primary border" data-action="in"
                                                                 data-diamond-id="{{ $diamond->id }}"
@@ -778,6 +806,7 @@
                         <div>
                             <strong id="history-diamond-name">Loading...</strong>
                             <div class="text-muted small" id="history-diamond-detail"></div>
+                            <div class="text-muted small fw-semibold" id="history-price-summary"></div>
                         </div>
                         <div>
                             <span id="history-stock-badge"
@@ -801,6 +830,8 @@
                                 <th>User</th>
                                 <th>Pieces</th>
                                 <th>Carat</th>
+                                <th>Avg $/Ct</th>
+                                <th>Total Price</th>
                                 <th>Reference</th>
                                 <th>Notes</th>
                                 <th>Date</th>
@@ -1289,11 +1320,11 @@
             toastEl.className = `toast show align-items-center text-white ${bgClass} border-0 mb-2`;
             toastEl.setAttribute('role', 'alert');
             toastEl.innerHTML = `
-                                                    <div class="d-flex">
-                                                        <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
-                                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
-                                                    </div>
-                                                `;
+                                                                            <div class="d-flex">
+                                                                                <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
+                                                                                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
+                                                                            </div>
+                                                                        `;
             container.appendChild(toastEl);
             setTimeout(() => toastEl.remove(), 4000);
         }
@@ -1348,6 +1379,7 @@
             document.getElementById('history-table').style.display = 'none';
             document.getElementById('history-diamond-name').textContent = 'Loading...';
             document.getElementById('history-diamond-detail').textContent = '';
+            document.getElementById('history-price-summary').textContent = '';
             document.getElementById('history-stock-badge').textContent = '';
 
             var historyModalEl = document.getElementById('historyModal');
@@ -1395,29 +1427,31 @@
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                                                            <td>${typeBadge}</td>
-                                                            <td class="fw-medium">${t.user_name}</td>
-                                                            <td class="fw-bold">${Math.abs(t.pieces)}</td>
-                                                            <td>${t.carat_weight || '-'}</td>
-                                                            <td>${refText}</td>
-                                                            <td class="text-muted small">${t.notes || '-'}</td>
-                                                            <td>
-                                                                <span class="small">${t.created_at}</span>
-                                                                <br><span class="text-muted small">${t.time_ago}</span>
-                                                            </td>
-                                                            <td class="text-end">
-                                                                <button class="btn btn-sm btn-light text-secondary border me-1" 
-                                                                    onclick="openEditTransactionModal(${t.id}, ${Math.abs(t.pieces)}, '${t.carat_weight || 0}', '${t.type}')" 
-                                                                    title="Edit Transaction">
-                                                                    <i class="bi bi-pencil-square"></i>
-                                                                </button>
-                                                                <button class="btn btn-sm btn-light text-danger border" 
-                                                                    onclick="deleteTransaction(${t.id}, '${t.type}')" 
-                                                                    title="Delete Transaction">
-                                                                    <i class="bi bi-trash"></i>
-                                                                </button>
-                                                            </td>
-                                                        `;
+                                                                                    <td>${typeBadge}</td>
+                                                                                    <td class="fw-medium">${t.user_name}</td>
+                                                                                    <td class="fw-bold">${Math.abs(t.pieces)}</td>
+                                                                                    <td>${t.carat_weight || '-'}</td>
+                                                                                    <td>$${parseFloat(t.cost_per_ct).toFixed(2)}</td>
+                                                                                    <td class="fw-bold text-success">$${parseFloat(t.total_price).toFixed(2)}</td>
+                                                                                    <td>${refText}</td>
+                                                                                    <td class="text-muted small">${t.notes || '-'}</td>
+                                                                                    <td>
+                                                                                        <span class="small">${t.created_at}</span>
+                                                                                        <br><span class="text-muted small">${t.time_ago}</span>
+                                                                                    </td>
+                                                                                    <td class="text-end text-nowrap">
+                                                                                        <button class="btn btn-sm btn-light text-secondary border me-1" 
+                                                                                            onclick="openEditTransactionModal(${t.id}, ${Math.abs(t.pieces)}, '${t.carat_weight || 0}', '${t.type}')" 
+                                                                                            title="Edit Transaction">
+                                                                                            <i class="bi bi-pencil-square"></i>
+                                                                                        </button>
+                                                                                        <button class="btn btn-sm btn-light text-danger border" 
+                                                                                            onclick="deleteTransaction(${t.id}, '${t.type}')" 
+                                                                                            title="Delete Transaction">
+                                                                                            <i class="bi bi-trash"></i>
+                                                                                        </button>
+                                                                                    </td>
+                                                                                `;
                         tbody.appendChild(row);
                     });
                 })
@@ -1455,53 +1489,53 @@
                     link.href = data.url;
 
                     const detailsHtml = `
-                                                        <div class="order-quick-details">
-                                                            <div class="p-3 bg-light border-bottom">
-                                                                <div class="row align-items-center">
-                                                                    <div class="col-8">
-                                                                        <h6 class="mb-0 fw-bold">${data.client_name}</h6>
-                                                                        <small class="text-muted">${data.company} • ${data.created_at}</small>
-                                                                    </div>
-                                                                    <div class="col-4 text-end">
-                                                                        <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="p-4">
-                                                                <div class="mb-3">
-                                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
-                                                                    <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
-                                                                    <small class="text-muted">${data.diamond_details || ''}</small>
-                                                                </div>
+                                                                                <div class="order-quick-details">
+                                                                                    <div class="p-3 bg-light border-bottom">
+                                                                                        <div class="row align-items-center">
+                                                                                            <div class="col-8">
+                                                                                                <h6 class="mb-0 fw-bold">${data.client_name}</h6>
+                                                                                                <small class="text-muted">${data.company} • ${data.created_at}</small>
+                                                                                            </div>
+                                                                                            <div class="col-4 text-end">
+                                                                                                <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="p-4">
+                                                                                        <div class="mb-3">
+                                                                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
+                                                                                            <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
+                                                                                            <small class="text-muted">${data.diamond_details || ''}</small>
+                                                                                        </div>
 
-                                                                ${data.diamond_sku ? `
-                                                                <div class="mb-3">
-                                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
-                                                                    <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
-                                                                </div>` : ''}
+                                                                                        ${data.diamond_sku ? `
+                                                                                        <div class="mb-3">
+                                                                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
+                                                                                            <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
+                                                                                        </div>` : ''}
 
-                                                                ${data.melee_details ? `
-                                                                <div class="p-3 border rounded bg-light mb-3">
-                                                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
-                                                                    <div class="d-flex justify-content-between align-items-center">
-                                                                        <span>${data.melee_details.name}</span>
-                                                                        <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
-                                                                    </div>
-                                                                </div>` : ''}
+                                                                                        ${data.melee_details ? `
+                                                                                        <div class="p-3 border rounded bg-light mb-3">
+                                                                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
+                                                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                                                <span>${data.melee_details.name}</span>
+                                                                                                <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
+                                                                                            </div>
+                                                                                        </div>` : ''}
 
-                                                                <div class="row pt-3 border-top">
-                                                                    <div class="col-6">
-                                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
-                                                                        <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
-                                                                    </div>
-                                                                    <div class="col-6 text-end">
-                                                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
-                                                                        <span class="fw-medium">${data.submitted_by}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    `;
+                                                                                        <div class="row pt-3 border-top">
+                                                                                            <div class="col-6">
+                                                                                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
+                                                                                                <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
+                                                                                            </div>
+                                                                                            <div class="col-6 text-end">
+                                                                                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
+                                                                                                <span class="fw-medium">${data.submitted_by}</span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            `;
                     content.insertAdjacentHTML('beforeend', detailsHtml);
                 })
                 .catch(err => {

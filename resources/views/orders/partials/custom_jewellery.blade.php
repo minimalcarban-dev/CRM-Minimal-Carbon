@@ -559,7 +559,8 @@
                         <option value="UPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>UPS</option>
                         <option value="EMS / Speed Post" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>EMS / Speed Post</option>
                         @if(!empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post']))
-                            <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}</option>
+                            <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}
+                            </option>
                         @endif
                     </select>
                 </div>
@@ -633,6 +634,7 @@
 
     /* ── Select2 Dropdown Styling for Order Forms ── */
     .select2-container--bootstrap-5 .select2-selection--single {
+        position: relative;
         border: 2px solid var(--border);
         border-radius: 10px;
         padding: 0.55rem 0.85rem;
@@ -655,6 +657,11 @@
         font-weight: 500;
         line-height: 1.5;
         padding: 0;
+        padding-right: 2.5rem;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
@@ -712,6 +719,12 @@
     .select2-container--bootstrap-5 .select2-selection__clear {
         color: #94a3b8;
         font-size: 1.1rem;
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        text-decoration: none;
     }
 
     .select2-container--bootstrap-5 .select2-selection__clear:hover {

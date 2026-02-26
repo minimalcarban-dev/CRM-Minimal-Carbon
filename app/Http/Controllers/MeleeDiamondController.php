@@ -88,12 +88,17 @@ class MeleeDiamondController extends Controller
             ->get()
             ->map(function ($d) {
                 $typeLabel = $d->category->type === 'lab_grown' ? 'Lab Grown' : 'Natural';
+                $avg_carat_per_piece = $d->total_pieces > 0 ? $d->total_carat_weight / $d->total_pieces : 0;
+                $avg_price_per_piece = $avg_carat_per_piece * ($d->purchase_price_per_ct ?? 0);
+
                 return [
                     'id' => $d->id,
                     'text' => "[$typeLabel] {$d->category->name} - {$d->shape} - {$d->size_label} (Stock: {$d->available_pieces})",
                     'available_pieces' => $d->available_pieces,
                     'category_name' => $d->category->name,
-                    'price' => $d->purchase_price_per_ct
+                    'price' => $d->purchase_price_per_ct,
+                    'avg_carat_per_piece' => $avg_carat_per_piece,
+                    'avg_price_per_piece' => $avg_price_per_piece,
                 ];
             });
 
@@ -183,12 +188,14 @@ class MeleeDiamondController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(100)
             ->get()
-            ->map(function ($t) {
+            ->map(function ($t) use ($diamond) {
                 return [
                     'id' => $t->id,
                     'type' => $t->transaction_type,
                     'pieces' => $t->pieces,
                     'carat_weight' => $t->carat_weight,
+                    'cost_per_ct' => $diamond->purchase_price_per_ct ?? 0,
+                    'total_price' => ($t->carat_weight ?? 0) * ($diamond->purchase_price_per_ct ?? 0),
                     'reference_type' => $t->reference_type,
                     'reference_id' => $t->reference_id,
                     'notes' => $t->notes,
@@ -206,6 +213,8 @@ class MeleeDiamondController extends Controller
                 'category_name' => $diamond->category->name ?? '-',
                 'available_pieces' => $diamond->available_pieces,
                 'total_pieces' => $diamond->total_pieces,
+                'avg_price_per_ct' => $diamond->purchase_price_per_ct ?? 0,
+                'total_price' => $diamond->total_price ?? 0,
             ],
             'transactions' => $transactions,
         ]);

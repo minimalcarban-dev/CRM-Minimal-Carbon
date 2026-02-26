@@ -185,8 +185,9 @@
                                         <span class="label-text">Carat Weight</span>
                                     </span>
                                 </label>
-                                <input type="number" step="0.01" name="melee_carat" class="form-control-modern"
-                                    placeholder="0.00" value="{{ old('melee_carat', $order->melee_carat ?? '') }}">
+                                <input type="number" step="0.001" name="melee_carat" id="melee_carat_input"
+                                    class="form-control-modern bg-light" placeholder="0.00"
+                                    value="{{ old('melee_carat', $order->melee_carat ?? '') }}" readonly tabindex="-1">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -194,12 +195,13 @@
                                 <label class="form-label-modern">
                                     <span class="label-content">
                                         <span class="label-icon"><i class="bi bi-currency-dollar"></i></span>
-                                        <span class="label-text">Price / Ct (Sold)</span>
+                                        <span class="label-text">Total Price ($)</span>
                                     </span>
                                 </label>
-                                <input type="number" step="0.01" name="melee_price_per_ct" id="melee_price_input"
-                                    class="form-control-modern" placeholder="0.00"
+                                <input type="hidden" name="melee_price_per_ct" id="melee_price_per_ct_input"
                                     value="{{ old('melee_price_per_ct', $order->melee_price_per_ct ?? '') }}">
+                                <input type="number" step="0.01" id="melee_total_price_input"
+                                    class="form-control-modern bg-light" placeholder="0.00" readonly tabindex="-1">
                             </div>
                         </div>
                     </div>
@@ -547,7 +549,8 @@
                         <option value="UPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>UPS</option>
                         <option value="EMS / Speed Post" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>EMS / Speed Post</option>
                         @if(!empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post']))
-                            <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}</option>
+                            <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}
+                            </option>
                         @endif
                     </select>
                 </div>
@@ -619,6 +622,7 @@
 
     /* ── Select2 Dropdown Styling for Order Forms ── */
     .select2-container--bootstrap-5 .select2-selection--single {
+        position: relative;
         border: 2px solid var(--border);
         border-radius: 10px;
         padding: 0.55rem 0.85rem;
@@ -641,6 +645,11 @@
         font-weight: 500;
         line-height: 1.5;
         padding: 0;
+        padding-right: 2.5rem;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
@@ -698,6 +707,12 @@
     .select2-container--bootstrap-5 .select2-selection__clear {
         color: #94a3b8;
         font-size: 1.1rem;
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        text-decoration: none;
     }
 
     .select2-container--bootstrap-5 .select2-selection__clear:hover {
@@ -1584,10 +1599,45 @@
             // Auto-fill price when selection changes
             $('#melee_diamond_select').on('select2:select', function (e) {
                 var data = e.params.data;
+                // Store calculation factors on the select element datastore
+                $(this).data('avg-carat', data.avg_carat_per_piece || 0);
+                $(this).data('price-per-ct', data.price || 0);
+
                 if (data.price) {
-                    $('#melee_price_input').val(data.price);
+                    $('#melee_price_per_ct_input').val(data.price);
+                }
+
+                // Trigger calculation if pieces are already filled
+                $('input[name="melee_pieces"]').trigger('input');
+            });
+
+            // Calculate Carat Weight and Total Price based on Pieces
+            $('input[name="melee_pieces"]').on('input', function () {
+                var pieces = parseFloat($(this).val()) || 0;
+                var select = $('#melee_diamond_select');
+                var avgCarat = parseFloat(select.data('avg-carat')) || 0;
+                var pricePerCt = parseFloat(select.data('price-per-ct')) || parseFloat($('#melee_price_per_ct_input').val()) || 0;
+
+                if (pieces > 0 && avgCarat > 0) {
+                    var calculatedCarat = pieces * avgCarat;
+                    $('#melee_carat_input').val(calculatedCarat.toFixed(3));
+
+                    var totalPrice = calculatedCarat * pricePerCt;
+                    $('#melee_total_price_input').val(totalPrice.toFixed(2));
+                } else {
+                    $('#melee_carat_input').val('');
+                    $('#melee_total_price_input').val('');
                 }
             });
+
+            // If editing an existing order, initialize the total price display
+            if ($('input[name="melee_pieces"]').val() > 0 && $('#melee_carat_input').val() > 0) {
+                var existingCarat = parseFloat($('#melee_carat_input').val()) || 0;
+                var existingPricePerCt = parseFloat($('#melee_price_per_ct_input').val()) || 0;
+                if (existingCarat > 0 && existingPricePerCt > 0) {
+                    $('#melee_total_price_input').val((existingCarat * existingPricePerCt).toFixed(2));
+                }
+            }
         }
     })();
 </script>
