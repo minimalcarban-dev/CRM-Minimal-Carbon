@@ -121,9 +121,11 @@
                 <div>
                     <strong>This order is cancelled.</strong>
                     @if(auth()->guard('admin')->user()->is_super)
-                        <div style="font-size: 0.9rem;">However, as a <span style="font-weight: 600;">Super Admin</span>, you retain full editing privileges to bypass the lock and modify this order.</div>
+                        <div style="font-size: 0.9rem;">However, as a <span style="font-weight: 600;">Super Admin</span>, you retain
+                            full editing privileges to bypass the lock and modify this order.</div>
                     @else
-                        <div style="font-size: 0.9rem;">Form is read-only. You may only update the Special Notes at the bottom of the page.</div>
+                        <div style="font-size: 0.9rem;">Form is read-only. You may only update the Special Notes at the bottom of
+                            the page.</div>
                     @endif
                 </div>
             </div>
@@ -735,9 +737,35 @@
                         return response.text();
                     })
                     .then(html => {
-                        container.innerHTML = html;
-                        initializeFilePreview();
-                        applyReadOnlyIfCancelled();
+                        // Extract scripts before setting innerHTML
+                        const scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+                        let match;
+                        const scripts = [];
+                        let htmlWithoutScripts = html;
+
+                        while ((match = scriptRegex.exec(html)) !== null) {
+                            scripts.push(match[1]);
+                            htmlWithoutScripts = htmlWithoutScripts.replace(match[0], '');
+                        }
+
+                        container.innerHTML = htmlWithoutScripts;
+
+                        // Wait a brief moment to ensure DOM represents the new elements
+                        setTimeout(() => {
+                            // Execute extracted scripts
+                            scripts.forEach(scriptContent => {
+                                if (scriptContent.trim()) {
+                                    try {
+                                        new Function(scriptContent)();
+                                    } catch (e) {
+                                        console.error('Error executing dynamically loaded script:', e);
+                                    }
+                                }
+                            });
+
+                            initializeFilePreview();
+                            applyReadOnlyIfCancelled();
+                        }, 50);
                     })
                     .catch(() => {
                         container.innerHTML = `<div class="alert alert-danger">Error loading form. Please try again.</div>`;
@@ -766,7 +794,7 @@
                         fileInputs.forEach(el => el.disabled = true);
                     }
                 @endif
-                        }
+                            }
 
             // Initialize file preview for dynamically loaded forms
             function initializeFilePreview() {
@@ -805,12 +833,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                                        <div class="preview-header">
-                                                                            <i class="bi bi-images"></i>
-                                                                            <span>Selected Images (${files.length})</span>
-                                                                        </div>
-                                                                        <div class="preview-grid" id="imagePreviewGrid"></div>
-                                                                    `;
+                                                                            <div class="preview-header">
+                                                                                <i class="bi bi-images"></i>
+                                                                                <span>Selected Images (${files.length})</span>
+                                                                            </div>
+                                                                            <div class="preview-grid" id="imagePreviewGrid"></div>
+                                                                        `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -821,9 +849,9 @@
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
                         previewItem.innerHTML = `
-                                                                                <img src="${e.target.result}" alt="${file.name}">
-                                                                                <div class="file-name">${file.name}</div>
-                                                                            `;
+                                                                                    <img src="${e.target.result}" alt="${file.name}">
+                                                                                    <div class="file-name">${file.name}</div>
+                                                                                `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -842,12 +870,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                                        <div class="preview-header">
-                                                                            <i class="bi bi-file-pdf"></i>
-                                                                            <span>Selected PDFs (${files.length})</span>
-                                                                        </div>
-                                                                        <div id="pdfPreviewList"></div>
-                                                                    `;
+                                                                            <div class="preview-header">
+                                                                                <i class="bi bi-file-pdf"></i>
+                                                                                <span>Selected PDFs (${files.length})</span>
+                                                                            </div>
+                                                                            <div id="pdfPreviewList"></div>
+                                                                        `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
@@ -857,14 +885,14 @@
                     previewItem.className = 'pdf-preview-item';
                     const fileSize = (file.size / 1024).toFixed(2);
                     previewItem.innerHTML = `
-                                                                            <div class="pdf-preview-icon">
-                                                                                <i class="bi bi-file-pdf-fill"></i>
-                                                                            </div>
-                                                                            <div class="pdf-preview-info">
-                                                                                <div class="pdf-preview-name">${file.name}</div>
-                                                                                <div class="pdf-preview-size">${fileSize} KB</div>
-                                                                            </div>
-                                                                        `;
+                                                                                <div class="pdf-preview-icon">
+                                                                                    <i class="bi bi-file-pdf-fill"></i>
+                                                                                </div>
+                                                                                <div class="pdf-preview-info">
+                                                                                    <div class="pdf-preview-name">${file.name}</div>
+                                                                                    <div class="pdf-preview-size">${fileSize} KB</div>
+                                                                                </div>
+                                                                            `;
                     list.appendChild(previewItem);
                 });
             }

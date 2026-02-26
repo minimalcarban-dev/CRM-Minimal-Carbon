@@ -1,18 +1,21 @@
 # Product Requirements Document (PRD)
 
 **Project:** Meele CRM — Diamond & Jewelry Business Management System
-**Version:** 1.0
-**Date:** February 25, 2026
+**Version:** 2.0
+**Date:** February 26, 2026
 **Author:** Full Codebase Analysis
 **Scalability Target:** 100,000+ concurrent users
 Assume this project will handle 100,000+ users. Evaluate scalability accordingly.
----------------------------------------------------------------------------------
+
+> **Version 2.0 Changelog** — New features added: Factory field on Orders, expanded Shipping Carrier list (UPS Ground, UPS DDP, LP Service), All-Company Sales Dashboard, Cancelled Order filter with count, Party Category system, Invoice image uploads (Cloudinary), Order Drafts count filter, IP Security moved to top navbar, live ticking clock in navbar, premium sidebar gradient active states, Expenses section repositioned under Orders & Sales in sidebar.
+
+---
 
 ## 1. Executive Summary
 
 Meele CRM is a **proprietary, full-featured business management system** purpose-built for the diamond and jewelry trading industry. It replaces fragmented workflow tools with a unified, permission-controlled admin panel that manages the complete business lifecycle — from stone-level inventory tracking and procurement through multi-currency invoicing, sales analytics, lead management, and team collaboration.
 
-The system is a monolithic Laravel 12 application with a Blade + Vue.js 3 hybrid frontend, MySQL database, Pusher-based real-time communication, and integrations with Google Gmail API, Meta/WhatsApp Business API, Cloudinary CDN, and 17Track shipping API. It currently serves as an internal operations platform with **35+ controllers, 50+ Eloquent models, 200+ route definitions, 90+ database migrations**, and supports **7 currencies across 7 international regions**.
+The system is a monolithic Laravel 12 application with a Blade + Vue.js 3 hybrid frontend, MySQL database, Pusher-based real-time communication, and integrations with Google Gmail API, Meta/WhatsApp Business API, Cloudinary CDN, and 17Track shipping API. It currently serves as an internal operations platform with **37+ controllers, 50+ Eloquent models, 200+ route definitions, 95+ database migrations**, and supports **7 currencies across 7 international regions**.
 
 The platform is **not a public-facing SaaS** — it is a closed admin panel with no public registration, designed for internal business operators, sales agents, and management.
 
@@ -40,8 +43,8 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 ### Business Goals
 
-| Goal                                | Description                                                                                                                             |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Goal                          | Description                                                                                                                             |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | **Operational Consolidation** | Replace 5+ separate tools (spreadsheets, email clients, WhatsApp Web, accounting software, shipping trackers) with one unified platform |
 | **Revenue Visibility**        | Real-time company-level sales dashboards with monthly targets, projections, and trend analysis                                          |
 | **Compliance Readiness**      | Full audit logging for email, financial, and administrative actions                                                                     |
@@ -50,8 +53,8 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 ### User Goals
 
-| User                         | Goal                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------- |
+| User                   | Goal                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
 | **Super Admin**        | Full system control: user management, permission assignment, security settings, all module access |
 | **Sales Agent**        | Create/manage orders, track diamonds, view personal assigned inventory, communicate with leads    |
 | **Operations Manager** | Monitor sales dashboards, review purchases, manage expenses, oversee shipping                     |
@@ -63,7 +66,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 | --------------------------- | ----------------------------------- | ------------------------------------------ |
 | Order Processing Time       | < 5 min per order                   | Time from create to submit                 |
 | Invoice Generation Accuracy | 100% correct tax by region          | Manual audit sampling                      |
-| Lead Response SLA           | < 24 hours first response           | `sla_deadline` field compliance          |
+| Lead Response SLA           | < 24 hours first response           | `sla_deadline` field compliance            |
 | Inventory Accuracy          | 99.5%+ SKU availability correctness | Sold-out sync delta                        |
 | System Uptime               | 99.9%                               | Server monitoring (target for 100K+ users) |
 | Page Load Time (P95)        | < 2 seconds                         | APM monitoring                             |
@@ -160,7 +163,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Full-lifecycle diamond tracking from procurement to sale, including SKU generation, barcode imaging, assignment to sales agents, bulk operations, and restocking of sold stones.
 
-**User Story**: *"As a sales executive, I want to search diamonds by SKU and see real-time availability so that I don't promise sold-out stones to clients."*
+**User Story**: _"As a sales executive, I want to search diamonds by SKU and see real-time availability so that I don't promise sold-out stones to clients."_
 
 **Acceptance Criteria**:
 
@@ -194,7 +197,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Category-based tracking of small (melee) diamonds with weighted average cost per carat, stock-in/stock-out transaction history, and shape/size management.
 
-**User Story**: *"As an operations manager, I want to track melee diamond stock levels by category and shape so that I know when to reorder."*
+**User Story**: _"As an operations manager, I want to track melee diamond stock levels by category and shape so that I know when to reorder."_
 
 **Acceptance Criteria**:
 
@@ -215,7 +218,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Track gold purchases from suppliers, distribution to factories for manufacturing, and returns from factories — with full expense auto-linking.
 
-**User Story**: *"As a procurement manager, I want to track gold distributed to each factory and how much was returned so I can calculate loss/wastage."*
+**User Story**: _"As a procurement manager, I want to track gold distributed to each factory and how much was returned so I can calculate loss/wastage."_
 
 **Acceptance Criteria**:
 
@@ -238,7 +241,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Multi-type order management supporting rough diamond, polished diamond, and jewelry orders with a comprehensive status pipeline, cancellation workflow, draft auto-save, and shipping integration.
 
-**User Story**: *"As a sales executive, I want to create an order for a client, attach multiple diamond SKUs, auto-verify their availability, and save drafts so I don't lose work if interrupted."*
+**User Story**: _"As a sales executive, I want to create an order for a client, attach multiple diamond SKUs, auto-verify their availability, and save drafts so I don't lose work if interrupted."_
 
 **Acceptance Criteria**:
 
@@ -249,13 +252,17 @@ Internal back-office users of a diamond trading operation — **not end consumer
 - Real-time SKU availability validation
 - File attachments (images, PDFs)
 - Company association for invoicing
+- **Factory association** (`factory_id`) — link an order to a factory for manufacturing tracking (diamonds/jewelry in which factory)
 - Status pipeline:
-  - Rough: `r_order_submitted` → `r_order_accepted` → `r_polishing` → `r_polished` → `r_dispatched` → `r_shipped` → `r_delivered` → `r_order_cancelled`
-  - Diamond: `d_order_submitted` → ... → `d_delivered` → `d_order_cancelled`
-  - Jewelry: `j_order_submitted` → ... → `j_delivered` → `j_order_cancelled`
+    - Rough: `r_order_submitted` → `r_order_accepted` → `r_polishing` → `r_polished` → `r_dispatched` → `r_shipped` → `r_delivered` → `r_order_cancelled`
+    - Diamond: `d_order_submitted` → ... → `d_delivered` → `d_order_cancelled`
+    - Jewelry: `j_order_submitted` → ... → `j_delivered` → `j_order_cancelled`
 - Cancellation workflow with reason tracking, cancelled_by, cancelled_at
+- **Cancelled orders filter** — dedicated filter tab on orders index with cancelled order count badge
+- **Overdue orders count** — displayed alongside the overdue filter badge on orders index
 - Quick-view modal for order preview
 - Tracking integration (tracking number, URL, carrier, status, history via 17Track)
+- Expanded shipping carrier list: Aramex, DHL, FedEx, **UPS - Ground**, **UPS - DDP**, **LP Service**, USPS, India Post, with tracking URL auto-resolution per carrier
 - Audit logging (last_modified_by, submitted_by)
 - Admin notes field
 - Overdue order detection and notifications
@@ -275,7 +282,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Auto-save in-progress orders as drafts with resume, preview, and deletion capabilities. Includes draft completion reminders via notifications.
 
-**User Story**: *"As a sales executive, I want my in-progress order to auto-save so that if I leave the page or lose connection, I can resume from where I left off."*
+**User Story**: _"As a sales executive, I want my in-progress order to auto-save so that if I leave the page or lose connection, I can resume from where I left off."_
 
 **Acceptance Criteria**:
 
@@ -297,7 +304,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Client profiles auto-synced from order data, with historical spend tracking, order history, and export capabilities.
 
-**User Story**: *"As a sales manager, I want to see a client's total historical spend and all past orders in one view so I can tailor my approach."*
+**User Story**: _"As a sales manager, I want to see a client's total historical spend and all past orders in one view so I can tailor my approach."_
 
 **Acceptance Criteria**:
 
@@ -319,15 +326,15 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Generate PDF invoices across 7 international regions with dynamic tax calculations (IGST, CGST, SGST for India; flat rate for others), amount-in-words, express shipping surcharges, and per-region currency formatting.
 
-**User Story**: *"As an accountant, I want to generate an invoice for a UK client that automatically shows GBP currency, UK tax rules, and prints the amount in words in Pounds and Pence."*
+**User Story**: _"As an accountant, I want to generate an invoice for a UK client that automatically shows GBP currency, UK tax rules, and prints the amount in words in Pounds and Pence."_
 
 **Acceptance Criteria**:
 
 - Invoice CRUD with region selection (IN, US, UK, EU, CA, AU, AE)
 - Line items management (InvoiceItem)
 - Dynamic tax calculation:
-  - India: IGST or CGST+SGST based on place of supply vs. state code
-  - International: Configurable per region
+    - India: IGST or CGST+SGST based on place of supply vs. state code
+    - International: Configurable per region
 - Currency formatting from centralized `config/currencies.php`
 - Amount-in-words generation (currency + cents name from config)
 - PDF generation via `barryvdh/laravel-dompdf`
@@ -354,20 +361,20 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Company profiles with bank details (multi-region), logo uploads, and comprehensive sales analytics including monthly targets, daily tracking, projections, ring charts, and CSV/PDF export.
 
-**User Story**: *"As a business owner, I want to set a monthly sales target for each company and see a visual dashboard showing actual vs. projected performance with exportable reports."*
+**User Story**: _"As a business owner, I want to set a monthly sales target for each company and see a visual dashboard showing actual vs. projected performance with exportable reports."_
 
 **Acceptance Criteria**:
 
 - Company CRUD with multi-region bank details (India: IFSC/AD Code; US: ABA routing; International: SWIFT/IBAN)
 - Logo upload via Cloudinary
 - Per-company sales dashboard:
-  - Monthly target setting
-  - Month-to-date actual sales
-  - Projection calculation
-  - Daily sales history
-  - Ring/donut chart visualization
-  - CSV export, PDF export
-- All-company consolidated dashboard (`allSalesDashboard`)
+    - Monthly target setting
+    - Month-to-date actual sales
+    - Projection calculation
+    - Daily sales history
+    - Ring/donut chart visualization
+    - CSV export, PDF export
+- **All-company consolidated dashboard** (`allSalesDashboard`) — single page aggregating sales from all companies with one-click full CSV download
 - Global monthly targets (`GlobalMonthlyTarget`)
 - Cancellation-excluded sales calculations
 - Company daily sales archival (Artisan command: `ArchiveDailySales`)
@@ -382,7 +389,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Kanban-style lead pipeline with scoring, SLA enforcement, WhatsApp/Meta integration, assignment, analytics, notes, and bulk operations.
 
-**User Story**: *"As a sales agent, I want to see all my assigned leads on a Kanban board, respond to WhatsApp messages directly from the CRM, and get alerted when an SLA is about to breach."*
+**User Story**: _"As a sales agent, I want to see all my assigned leads on a Kanban board, respond to WhatsApp messages directly from the CRM, and get alerted when an SLA is about to breach."_
 
 **Acceptance Criteria**:
 
@@ -416,7 +423,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Slack-like team messaging with channels, direct messages, threads, file sharing, mentions, unread counts, and real-time delivery via Pusher/Laravel Echo.
 
-**User Story**: *"As a team member, I want to create channels for project teams, send threaded replies, share files, and @mention colleagues who get instant notifications."*
+**User Story**: _"As a team member, I want to create channels for project teams, send threaded replies, share files, and @mention colleagues who get instant notifications."_
 
 **Acceptance Criteria**:
 
@@ -425,8 +432,8 @@ Internal back-office users of a diamond trading operation — **not end consumer
 - Real-time message delivery via Pusher
 - Thread replies on messages
 - File attachments with async processing (`ProcessChatAttachment` job)
-  - MIME type whitelist (images, text, octet-stream)
-  - Size limit configurable (default: 10MB)
+    - MIME type whitelist (images, text, octet-stream)
+    - Size limit configurable (default: 10MB)
 - @mention detection with notifications (`ChatMentionNotification`)
 - Unread count per channel per user
 - Read receipts (mark as read)
@@ -453,7 +460,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Enterprise-grade Gmail integration via Google OAuth2 providing shared inbox functionality with compose, reply, forward, attachment handling, per-user read states, and comprehensive audit logging.
 
-**User Story**: *"As a team member, I want to read and respond to company emails directly from the CRM without switching to Gmail, and have all my email actions logged for compliance."*
+**User Story**: _"As a team member, I want to read and respond to company emails directly from the CRM without switching to Gmail, and have all my email actions logged for compliance."_
 
 **Acceptance Criteria**:
 
@@ -494,7 +501,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Webhook-based lead capture from Facebook Messenger and WhatsApp Business, with direct reply capability and message template support.
 
-**User Story**: *"As a sales agent, I want incoming WhatsApp messages to automatically create leads in the CRM so I can respond without leaving the platform."*
+**User Story**: _"As a sales agent, I want incoming WhatsApp messages to automatically create leads in the CRM so I can respond without leaving the platform."_
 
 **Acceptance Criteria**:
 
@@ -522,7 +529,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Automated package tracking via 17Track API with webhook-based status updates, carrier auto-detection, and timeline visualization.
 
-**User Story**: *"As an operations staff, I want to sync tracking status for all shipped orders automatically so clients get accurate delivery timelines."*
+**User Story**: _"As an operations staff, I want to sync tracking status for all shipped orders automatically so clients get accurate delivery timelines."_
 
 **Acceptance Criteria**:
 
@@ -546,15 +553,15 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Diamond and material procurement tracking with completion workflow and automatic expense linking.
 
-**User Story**: *"As a procurement manager, I want to create a purchase record, mark it as complete, and have the corresponding expense automatically created."*
+**User Story**: _"As a procurement manager, I want to create a purchase record, mark it as complete, and have the corresponding expense automatically created."_
 
 **Acceptance Criteria**:
 
 - Purchase CRUD (date, amount, supplier, payment mode, bank details)
 - Status workflow: pending → completed
 - Completion action with expense auto-creation
-- Party (vendor) association
-- Invoice image uploads
+- Party (vendor) association (filtered by `diamond_gemstone` category)
+- **Invoice image uploads via Cloudinary** (JPEG/PNG/PDF, max 5MB, stored as JSON metadata with URL, public_id, resource_type)
 - Expense linkage (purchase_id on expenses)
 - Sync command (`SyncPurchaseExpenses`)
 - Soft deletes
@@ -568,18 +575,19 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Cash flow tracking with income/expense categorization, monthly/annual reporting, and Excel export.
 
-**User Story**: *"As an accountant, I want to categorize office expenses and generate monthly/annual reports with Excel export."*
+**User Story**: _"As an accountant, I want to categorize office expenses and generate monthly/annual reports with Excel export."_
 
 **Acceptance Criteria**:
 
 - Expense CRUD (title, category, amount, date, type: income/expense)
+- `title` and `category` made **nullable** (optional for system-auto-created expenses)
 - Monthly report view
 - Annual report view
 - Excel export (monthly and annual)
 - Purchase linkage (auto-created from purchase completion)
 - Gold purchase linkage
-- Invoice image uploads
-- Party association
+- **Invoice image uploads via Cloudinary** (JPEG/PNG/PDF, max 5MB; stored as JSON metadata)
+- Party association (filtered by `banks` and `in_person` categories)
 - Permission-gated reports (`expenses.reports`)
 - Soft deletes
 
@@ -590,14 +598,15 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 ### 6.16 Factory Management
 
-**Description**: Factory profiles for gold distribution and return tracking.
+**Description**: Factory profiles for gold distribution, return tracking, and **order assignment**.
 
-**User Story**: *"As an operations manager, I want to manage factory profiles so I can track gold distribution and returns per factory."*
+**User Story**: _"As an operations manager, I want to manage factory profiles so I can track gold distribution, returns, and which orders are being manufactured at each factory."_
 
 **Acceptance Criteria**:
 
 - Factory CRUD (name, contact, address, etc.)
 - Association with gold distributions
+- **Association with orders via `factory_id`** — orders can now specify which factory is manufacturing the diamonds/jewelry
 - Permission-gated
 
 **Priority**: P2
@@ -609,7 +618,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Track physical packages issued to persons with return date enforcement and overdue detection.
 
-**User Story**: *"As a front-desk admin, I want to log when a package is handed over to someone, set a return date, and get alerted when it's overdue."*
+**User Story**: _"As a front-desk admin, I want to log when a package is handed over to someone, set a return date, and get alerted when it's overdue."_
 
 **Acceptance Criteria**:
 
@@ -630,7 +639,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Live gold rate fetching from external API and custom jewelry cost calculation tool.
 
-**User Story**: *"As a sales agent, I want to calculate the real-time cost of a gold jewelry piece using live gold rates so I can give accurate quotes to clients."*
+**User Story**: _"As a sales agent, I want to calculate the real-time cost of a gold jewelry piece using live gold rates so I can give accurate quotes to clients."_
 
 **Acceptance Criteria**:
 
@@ -647,7 +656,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: In-app bell notifications for 15+ event types including order lifecycle events, diamond assignments, draft reminders, low stock alerts, and chat mentions.
 
-**User Story**: *"As a sales agent, I want to see a bell icon with unread count and get notified when I'm assigned a diamond, an order is overdue, or someone mentions me in chat."*
+**User Story**: _"As a sales agent, I want to see a bell icon with unread count and get notified when I'm assigned a diamond, an order is overdue, or someone mentions me in chat."_
 
 **Acceptance Criteria**:
 
@@ -655,21 +664,21 @@ Internal back-office users of a diamond trading operation — **not end consumer
 - Mark as read (individual and bulk)
 - Notification deletion
 - 15+ notification types:
-  - `OrderCreatedNotification`
-  - `OrderUpdatedNotification`
-  - `OrderCancelledNotification`
-  - `OverdueOrderNotification`
-  - `OrderProductivityReminder`
-  - `DiamondAssignedNotification`
-  - `DiamondReassignedNotification`
-  - `DiamondSoldNotification`
-  - `DraftCompletionReminder`
-  - `MeleeLowStockNotification`
-  - `ChatMentionNotification`
-  - `ChannelAddedNotification`
-  - `PackageIssuedNotification`
-  - `ImportCompleted`
-  - `ExportCompleted`
+    - `OrderCreatedNotification`
+    - `OrderUpdatedNotification`
+    - `OrderCancelledNotification`
+    - `OverdueOrderNotification`
+    - `OrderProductivityReminder`
+    - `DiamondAssignedNotification`
+    - `DiamondReassignedNotification`
+    - `DiamondSoldNotification`
+    - `DraftCompletionReminder`
+    - `MeleeLowStockNotification`
+    - `ChatMentionNotification`
+    - `ChannelAddedNotification`
+    - `PackageIssuedNotification`
+    - `ImportCompleted`
+    - `ExportCompleted`
 
 **Priority**: P1
 **Status**: ✅ Implemented
@@ -680,7 +689,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Granular role-based permission system with 50+ permission slugs, super admin bypass, per-route middleware enforcement, and admin CRUD with document uploads.
 
-**User Story**: *"As a super admin, I want to assign specific module permissions to each team member so that they can only access what they need."*
+**User Story**: _"As a super admin, I want to assign specific module permissions to each team member so that they can only access what they need."_
 
 **Acceptance Criteria**:
 
@@ -711,7 +720,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: IP whitelist-based access restriction with GeoIP logging, access request workflow, and security audit dashboard.
 
-**User Story**: *"As a super admin, I want to restrict CRM access to approved IP addresses and review access requests from blocked team members."*
+**User Story**: _"As a super admin, I want to restrict CRM access to approved IP addresses and review access requests from blocked team members."_
 
 **Acceptance Criteria**:
 
@@ -726,6 +735,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 - Custom 403 page for blocked IPs
 - Excluded paths (login, security settings, webhooks, API, health check)
 - Rate-limited logging (max 1 per IP per 5 minutes to prevent log spam)
+- **IP Security quick-access button moved to top navbar** — placed between Dark Mode toggle and Notifications bell; styled as icon button (shield-lock) with active-state highlighting
 
 **Priority**: P1
 **Status**: ✅ Implemented
@@ -736,20 +746,20 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: CRUD interfaces for all reference/lookup data used across the system.
 
-**User Story**: *"As an admin, I want to manage dropdown options for stone shapes, colors, clarities, cuts, metal types, ring sizes, setting types, and closure types without developer intervention."*
+**User Story**: _"As an admin, I want to manage dropdown options for stone shapes, colors, clarities, cuts, metal types, ring sizes, setting types, and closure types without developer intervention."_
 
 **Acceptance Criteria**:
 
 - Full CRUD for 9 master data entities:
-  - Metal Types
-  - Setting Types
-  - Closure Types
-  - Ring Sizes
-  - Stone Types
-  - Stone Shapes
-  - Stone Colors
-  - Diamond Clarities
-  - Diamond Cuts
+    - Metal Types
+    - Setting Types
+    - Closure Types
+    - Ring Sizes
+    - Stone Types
+    - Stone Shapes
+    - Stone Colors
+    - Diamond Clarities
+    - Diamond Cuts
 - Permission-gated per entity (view/create/edit/delete)
 - Used as foreign keys/references in orders, invoices, diamonds
 
@@ -762,12 +772,15 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Vendor and party profile management for procurement, invoicing, and supply chain operations.
 
-**User Story**: *"As a procurement manager, I want to maintain vendor profiles with categories so I can associate them with purchases and invoices."*
+**User Story**: _"As a procurement manager, I want to maintain vendor profiles with categories so I can associate them with purchases and invoices."_
 
 **Acceptance Criteria**:
 
 - Party CRUD (name, contact details)
-- Category support (added via migration)
+- **Category system** (5 categories: `gold_metal`, `jewelry_mfg`, `diamond_gemstone`, `banks`, `in_person`)
+    - Gold Tracking module filters suppliers by `gold_metal` category
+    - Purchase Tracking module filters parties by `diamond_gemstone` category
+    - Expense module filters paid-to parties by `banks` and `in_person` categories
 - Association with invoices (billed-to, shipped-to)
 - Association with purchases and gold purchases
 - Permission-gated
@@ -781,7 +794,7 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 **Description**: Comprehensive audit trail for administrative actions, email operations, and financial transactions.
 
-**User Story**: *"As a compliance officer, I want an immutable log of all system actions for regulatory audits."*
+**User Story**: _"As a compliance officer, I want an immutable log of all system actions for regulatory audits."_
 
 **Acceptance Criteria**:
 
@@ -805,8 +818,8 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 ### 7.1 Tech Stack Overview
 
-| Layer                      | Technology                   | Version                                     |
-| -------------------------- | ---------------------------- | ------------------------------------------- |
+| Layer                | Technology                   | Version                                     |
+| -------------------- | ---------------------------- | ------------------------------------------- |
 | **Runtime**          | PHP                          | 8.2+                                        |
 | **Framework**        | Laravel                      | 12.x                                        |
 | **Frontend**         | Blade + Vue.js 3             | Hybrid SSR + SPA components                 |
@@ -838,8 +851,8 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 ### 7.3 APIs and Integrations
 
-| Integration                    | Direction          | Protocol     | Purpose                             |
-| ------------------------------ | ------------------ | ------------ | ----------------------------------- |
+| Integration              | Direction          | Protocol     | Purpose                             |
+| ------------------------ | ------------------ | ------------ | ----------------------------------- |
 | **Google Gmail API**     | Bidirectional      | REST/OAuth2  | Email sync, compose, reply, forward |
 | **Meta Graph API v18.0** | Bidirectional      | REST/Webhook | WhatsApp/FB lead capture, reply     |
 | **17Track API**          | Bidirectional      | REST/Webhook | Shipping tracking sync              |
@@ -849,37 +862,37 @@ Internal back-office users of a diamond trading operation — **not end consumer
 
 ### 7.4 Performance Requirements (at 100K+ Users)
 
-| Metric                            | Current State                                | Required for 100K+                                          |
-| --------------------------------- | -------------------------------------------- | ----------------------------------------------------------- |
+| Metric                      | Current State                                | Required for 100K+                                          |
+| --------------------------- | -------------------------------------------- | ----------------------------------------------------------- |
 | **Concurrent Connections**  | Pusher (limited)                             | Self-hosted WebSocket (Reverb/Soketi) or enterprise Pusher  |
 | **Database Queries/sec**    | Unoptimized (likely N+1 in many controllers) | < 50ms avg query time; connection pooling                   |
 | **Queue Throughput**        | Single database worker                       | Redis queue + multiple Horizon workers                      |
-| **Session Storage**         | MySQL `sessions` table                     | Redis sessions                                              |
+| **Session Storage**         | MySQL `sessions` table                       | Redis sessions                                              |
 | **Full-text Search**        | TNTSearch (file-based)                       | Elasticsearch/Meilisearch cluster                           |
 | **Cache Layer**             | File/database cache                          | Dedicated Redis cluster                                     |
-| **File Storage**            | Local `public_path()` + Cloudinary         | S3/CDN for all files                                        |
+| **File Storage**            | Local `public_path()` + Cloudinary           | S3/CDN for all files                                        |
 | **PDF Generation**          | Synchronous DomPDF                           | Async queue-based generation                                |
 | **API Response Time (P95)** | Unknown                                      | < 500ms                                                     |
 | **Database Size**           | Unknown                                      | Table partitioning for orders, diamonds, audit logs, emails |
 
 ### 7.5 Security Requirements
 
-| Requirement                       | Current State                                             | Status                                                       |
-| --------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------ |
-| **Authentication**          | Custom admin guard, throttled login                       | ✅ Implemented                                               |
-| **Authorization**           | Per-route permission middleware                           | ✅ Implemented                                               |
-| **Session Security**        | Database sessions, configurable lifetime                  | ⚠️ Needs `same-site`, `secure`, `httpOnly` hardening |
-| **CSRF Protection**         | Laravel default (excluded for webhooks)                   | ✅ Implemented                                               |
-| **IP Restriction**          | Whitelist + GeoIP + access requests                       | ✅ Implemented                                               |
-| **Token Encryption**        | AES-256-GCM for Gmail/Meta tokens                         | ✅ Implemented                                               |
-| **Content Security Policy** | CSP middleware exists                                     | ✅ Implemented                                               |
-| **Input Validation**        | Present but completeness unverified                       | ⚠️ Needs audit                                             |
-| **File Upload Security**    | MIME whitelist for chat; direct `public_path` elsewhere | ⚠️ Inconsistent — needs Storage facade migration          |
-| **Rate Limiting**           | Login, imports, exports, restocks, Meta API               | ✅ Implemented                                               |
-| **Audit Logging**           | Email audit complete; general audit partial               | ⚠️ Needs expansion                                         |
-| **SQL Injection**           | Laravel Eloquent ORM (parameterized)                      | ✅ Protected                                                 |
-| **XSS Prevention**          | Blade escaping + DOMPurify (frontend)                     | ✅ Protected                                                 |
-| **Virus Scanning**          | `VirusScanner` service exists                           | ⚠️ Status unknown                                          |
+| Requirement                 | Current State                                           | Status                                               |
+| --------------------------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| **Authentication**          | Custom admin guard, throttled login                     | ✅ Implemented                                       |
+| **Authorization**           | Per-route permission middleware                         | ✅ Implemented                                       |
+| **Session Security**        | Database sessions, configurable lifetime                | ⚠️ Needs `same-site`, `secure`, `httpOnly` hardening |
+| **CSRF Protection**         | Laravel default (excluded for webhooks)                 | ✅ Implemented                                       |
+| **IP Restriction**          | Whitelist + GeoIP + access requests                     | ✅ Implemented                                       |
+| **Token Encryption**        | AES-256-GCM for Gmail/Meta tokens                       | ✅ Implemented                                       |
+| **Content Security Policy** | CSP middleware exists                                   | ✅ Implemented                                       |
+| **Input Validation**        | Present but completeness unverified                     | ⚠️ Needs audit                                       |
+| **File Upload Security**    | MIME whitelist for chat; direct `public_path` elsewhere | ⚠️ Inconsistent — needs Storage facade migration     |
+| **Rate Limiting**           | Login, imports, exports, restocks, Meta API             | ✅ Implemented                                       |
+| **Audit Logging**           | Email audit complete; general audit partial             | ⚠️ Needs expansion                                   |
+| **SQL Injection**           | Laravel Eloquent ORM (parameterized)                    | ✅ Protected                                         |
+| **XSS Prevention**          | Blade escaping + DOMPurify (frontend)                   | ✅ Protected                                         |
+| **Virus Scanning**          | `VirusScanner` service exists                           | ⚠️ Status unknown                                    |
 
 ---
 
@@ -891,35 +904,35 @@ The current architecture is **single-server monolithic** and will **not scale to
 
 #### Database Layer
 
-| Issue                    | Impact                                    | Recommendation                                                                             |
-| ------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Issue                    | Impact                                    | Recommendation                                                                 |
+| ------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------ |
 | MySQL as sole datastore  | Write bottleneck, session contention      | **Read replicas** for reporting queries; **Redis** for sessions, cache, queues |
 | No table partitioning    | Audit logs, orders, emails grow unbounded | **Partition by date** for audit_logs, emails; **archival** to cold storage     |
-| Database-backed queue    | Queue table contention under load         | Migrate to**Redis queue with Laravel Horizon**                                       |
-| Database-backed sessions | Session table lock contention             | Migrate to**Redis sessions**                                                         |
-| No connection pooling    | Connection exhaustion at scale            | Use**PgBouncer** (if migrating to Postgres) or MySQL connection pooling              |
+| Database-backed queue    | Queue table contention under load         | Migrate to**Redis queue with Laravel Horizon**                                 |
+| Database-backed sessions | Session table lock contention             | Migrate to**Redis sessions**                                                   |
+| No connection pooling    | Connection exhaustion at scale            | Use**PgBouncer** (if migrating to Postgres) or MySQL connection pooling        |
 
 #### Application Layer
 
-| Issue                                  | Impact                                | Recommendation                                                                                                                    |
-| -------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Monolithic deployment                  | Cannot scale modules independently    | Extract chat, email, lead scoring into**microservices** or use **horizontal scaling** behind load balancer            |
-| Synchronous PDF generation             | Blocks request threads                | Move to**queued generation** with download notification                                                                     |
-| TNTSearch (file-based)                 | Single-server limitation              | Migrate to**Meilisearch** or **Elasticsearch**                                                                        |
-| No caching strategy                    | Redundant DB queries on every request | Implement**Redis caching** for: static data (master tables), permission slugs, dashboard aggregations, diamond availability |
+| Issue                                | Impact                                | Recommendation                                                                                                              |
+| ------------------------------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Monolithic deployment                | Cannot scale modules independently    | Extract chat, email, lead scoring into**microservices** or use **horizontal scaling** behind load balancer                  |
+| Synchronous PDF generation           | Blocks request threads                | Move to**queued generation** with download notification                                                                     |
+| TNTSearch (file-based)               | Single-server limitation              | Migrate to**Meilisearch** or **Elasticsearch**                                                                              |
+| No caching strategy                  | Redundant DB queries on every request | Implement**Redis caching** for: static data (master tables), permission slugs, dashboard aggregations, diamond availability |
 | Direct file uploads to `public_path` | Not CDN-friendly, disk I/O bottleneck | Migrate all uploads to**S3 + CloudFront** or Cloudinary                                                                     |
 
 #### Real-time Layer
 
-| Issue                              | Impact                                 | Recommendation                                             |
-| ---------------------------------- | -------------------------------------- | ---------------------------------------------------------- |
+| Issue                              | Impact                                 | Recommendation                                 |
+| ---------------------------------- | -------------------------------------- | ---------------------------------------------- |
 | Pusher dependency                  | Connection limits, cost at scale       | Self-host with**Laravel Reverb** or **Soketi** |
-| No WebSocket connection management | Memory leaks, no graceful reconnection | Implement connection pooling and heartbeat                 |
+| No WebSocket connection management | Memory leaks, no graceful reconnection | Implement connection pooling and heartbeat     |
 
 #### Infrastructure
 
-| Recommendation                                                 | Priority |
-| -------------------------------------------------------------- | -------- |
+| Recommendation                                           | Priority |
+| -------------------------------------------------------- | -------- |
 | **Load Balancer** (NGINX/AWS ALB) + multiple app servers | P0       |
 | **Redis cluster** (sessions, cache, queue)               | P0       |
 | **MySQL read replicas** for reporting                    | P1       |
@@ -931,24 +944,24 @@ The current architecture is **single-server monolithic** and will **not scale to
 
 ### 8.2 Accessibility
 
-| Requirement               | Status                                                               |
-| ------------------------- | -------------------------------------------------------------------- |
+| Requirement               | Status                                                            |
+| ------------------------- | ----------------------------------------------------------------- |
 | Keyboard navigation       | ⚠️ Not verified — TODO mentions "accessibility attributes" needed |
-| Screen reader support     | ⚠️ Not verified                                                    |
-| Color contrast compliance | ⚠️ Not verified                                                    |
-| ARIA labels               | ⚠️ TODO item exists                                                |
+| Screen reader support     | ⚠️ Not verified                                                   |
+| Color contrast compliance | ⚠️ Not verified                                                   |
+| ARIA labels               | ⚠️ TODO item exists                                               |
 | Responsive design         | ⚠️ Partially — TODO mentions "responsive tweaks" needed           |
 
 ### 8.3 Compliance / Legal
 
-| Requirement                                         | Status                                                |
-| --------------------------------------------------- | ----------------------------------------------------- |
+| Requirement                                         | Status                                              |
+| --------------------------------------------------- | --------------------------------------------------- |
 | GDPR compliance (data portability, right to delete) | ⚠️ Soft deletes exist but no explicit GDPR workflow |
-| Financial audit readiness                           | ✅ Email audit logs, expense tracking                 |
-| Data encryption at rest (tokens)                    | ✅ AES-256-GCM for OAuth tokens                       |
+| Financial audit readiness                           | ✅ Email audit logs, expense tracking               |
+| Data encryption at rest (tokens)                    | ✅ AES-256-GCM for OAuth tokens                     |
 | Data retention policies                             | ⚠️ No documented retention/purge schedule           |
 | Backup strategy                                     | ⚠️ Not documented in codebase                       |
-| GST/Tax compliance (India)                          | ✅ IGST/CGST/SGST calculation in invoices             |
+| GST/Tax compliance (India)                          | ✅ IGST/CGST/SGST calculation in invoices           |
 
 ---
 
@@ -1054,31 +1067,31 @@ Procurement manager creates Gold Purchase (weight, rate, supplier)
 
 ### Open Questions
 
-| #  | Question                                                                         | Impact                                                          |
-| -- | -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| 1  | **What is the expected geographical distribution of users?**               | Determines CDN placement, database region, latency requirements |
-| 2  | **Are there concurrent multi-company tenants or is this single-business?** | Impacts data isolation strategy and scaling model               |
-| 3  | **What are the data retention requirements for audit logs?**               | Determines archival strategy and storage costs                  |
-| 4  | **Is there a disaster recovery requirement (RTO/RPO)?**                    | Determines backup frequency, multi-AZ deployment                |
-| 5  | **What is the expected ratio of read:write operations?**                   | Determines read replica sizing                                  |
-| 6  | **Is Spatie/laravel-permission being used or replaced?**                   | TODO mentions "Integrate or remove" — decision pending         |
-| 7  | **Why is `VirusScanner` service present but usage unclear?**             | Is it actively scanning uploads?                                |
-| 8  | **What happens when Gmail API quota is exhausted?**                        | Need graceful degradation strategy                              |
-| 9  | **Are there offline/intermittent connectivity scenarios?**                 | Would require PWA/service worker consideration                  |
-| 10 | **Is the 17Track API key hardcoded in service (`016E04...`)?**           | Security risk — should be env-only                             |
+| #   | Question                                                                   | Impact                                                          |
+| --- | -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 1   | **What is the expected geographical distribution of users?**               | Determines CDN placement, database region, latency requirements |
+| 2   | **Are there concurrent multi-company tenants or is this single-business?** | Impacts data isolation strategy and scaling model               |
+| 3   | **What are the data retention requirements for audit logs?**               | Determines archival strategy and storage costs                  |
+| 4   | **Is there a disaster recovery requirement (RTO/RPO)?**                    | Determines backup frequency, multi-AZ deployment                |
+| 5   | **What is the expected ratio of read:write operations?**                   | Determines read replica sizing                                  |
+| 6   | **Is Spatie/laravel-permission being used or replaced?**                   | TODO mentions "Integrate or remove" — decision pending          |
+| 7   | **Why is `VirusScanner` service present but usage unclear?**               | Is it actively scanning uploads?                                |
+| 8   | **What happens when Gmail API quota is exhausted?**                        | Need graceful degradation strategy                              |
+| 9   | **Are there offline/intermittent connectivity scenarios?**                 | Would require PWA/service worker consideration                  |
+| 10  | **Is the 17Track API key hardcoded in service (`016E04...`)?**             | Security risk — should be env-only                              |
 
 ### Assumptions
 
-| # | Assumption                                                                                                            |
-| - | --------------------------------------------------------------------------------------------------------------------- |
-| 1 | The system is single-tenant (one diamond business) — not a multi-tenant SaaS                                         |
-| 2 | "100K+ users" refers to total registered admins/agents, not simultaneous concurrent users (simultaneous likely 1-10K) |
-| 3 | The primary deployment target is a cloud VPS (AWS/GCP/Azure) behind a reverse proxy                                   |
-| 4 | All financial data is in a prepaid model (order amount counts as revenue at creation, not delivery)                   |
-| 5 | The Gmail module is designed to be opt-in per company (not all companies need email integration)                      |
-| 6 | The application currently runs on a single server with PM2 managing queue workers                                     |
-| 7 | Exchange rates are set manually; there is no live forex rate integration                                              |
-| 8 | The `User` (standard Laravel) model is unused; `Admin` is the sole authenticatable entity                         |
+| #   | Assumption                                                                                                            |
+| --- | --------------------------------------------------------------------------------------------------------------------- |
+| 1   | The system is single-tenant (one diamond business) — not a multi-tenant SaaS                                          |
+| 2   | "100K+ users" refers to total registered admins/agents, not simultaneous concurrent users (simultaneous likely 1-10K) |
+| 3   | The primary deployment target is a cloud VPS (AWS/GCP/Azure) behind a reverse proxy                                   |
+| 4   | All financial data is in a prepaid model (order amount counts as revenue at creation, not delivery)                   |
+| 5   | The Gmail module is designed to be opt-in per company (not all companies need email integration)                      |
+| 6   | The application currently runs on a single server with PM2 managing queue workers                                     |
+| 7   | Exchange rates are set manually; there is no live forex rate integration                                              |
+| 8   | The `User` (standard Laravel) model is unused; `Admin` is the sole authenticatable entity                             |
 
 ---
 
@@ -1086,14 +1099,14 @@ Procurement manager creates Gold Purchase (weight, rate, supplier)
 
 ### High-Risk Items
 
-| Risk                                         | Probability | Impact   | Mitigation                                                                             |
-| -------------------------------------------- | ----------- | -------- | -------------------------------------------------------------------------------------- |
+| Risk                                   | Probability | Impact   | Mitigation                                                                             |
+| -------------------------------------- | ----------- | -------- | -------------------------------------------------------------------------------------- |
 | **Database bottleneck at scale**       | High        | Critical | Migrate sessions/cache/queue to Redis; add read replicas; implement connection pooling |
 | **Pusher connection limits**           | High        | High     | Migrate to self-hosted WebSocket server (Reverb/Soketi)                                |
 | **TNTSearch single-server limitation** | High        | High     | Migrate to distributed search engine (Meilisearch/Elasticsearch)                       |
 | **Gmail API quota exhaustion**         | Medium      | High     | Implement per-account rate limiting, priority-based sync, quota monitoring             |
 | **Meta API rate limits**               | Medium      | Medium   | Backoff strategy, queue throttling                                                     |
-| **File storage disk I/O**              | High        | Medium   | Migrate all uploads from `public_path()` to S3/CDN                                   |
+| **File storage disk I/O**              | High        | Medium   | Migrate all uploads from `public_path()` to S3/CDN                                     |
 | **No automated test coverage**         | High        | High     | Critical path tests needed before refactoring for scale                                |
 | **Hardcoded API keys in services**     | Medium      | Critical | Audit all services for env-only credential usage                                       |
 | **No health monitoring/APM**           | High        | High     | Cannot detect degradation proactively                                                  |
@@ -1101,18 +1114,18 @@ Procurement manager creates Gold Purchase (weight, rate, supplier)
 
 ### Dependencies
 
-| Dependency                        | Type                          | Risk Level                                      |
-| --------------------------------- | ----------------------------- | ----------------------------------------------- |
-| **Google Cloud Platform**   | OAuth credentials + Gmail API | Medium (quotas, policy changes)                 |
-| **Meta Business Platform**  | WhatsApp/FB API access        | Medium (API deprecation, policy changes)        |
-| **Pusher**                  | Real-time messaging           | High (cost scaling, connection limits)          |
+| Dependency                  | Type                          | Risk Level                                     |
+| --------------------------- | ----------------------------- | ---------------------------------------------- |
+| **Google Cloud Platform**   | OAuth credentials + Gmail API | Medium (quotas, policy changes)                |
+| **Meta Business Platform**  | WhatsApp/FB API access        | Medium (API deprecation, policy changes)       |
+| **Pusher**                  | Real-time messaging           | High (cost scaling, connection limits)         |
 | **17Track**                 | Shipping tracking             | Low (degradable — manual tracking as fallback) |
-| **Cloudinary**              | Image storage                 | Low (CDN reliability is high)                   |
+| **Cloudinary**              | Image storage                 | Low (CDN reliability is high)                  |
 | **Navkar Gold API**         | Live gold rates               | Low (degradable — cached rates as fallback)    |
-| **MySQL**                   | Primary datastore             | Critical (single point of failure without HA)   |
-| **Picqer Barcode**          | Barcode generation            | Low (stable library)                            |
-| **maatwebsite/excel**       | Import/export                 | Medium (memory limits on large datasets)        |
-| **barryvdh/laravel-dompdf** | PDF generation                | Medium (performance at scale)                   |
+| **MySQL**                   | Primary datastore             | Critical (single point of failure without HA)  |
+| **Picqer Barcode**          | Barcode generation            | Low (stable library)                           |
+| **maatwebsite/excel**       | Import/export                 | Medium (memory limits on large datasets)       |
+| **barryvdh/laravel-dompdf** | PDF generation                | Medium (performance at scale)                  |
 
 ---
 
@@ -1122,27 +1135,27 @@ Based on the current project state, here is a suggested phased roadmap to reach 
 
 ### Phase 1: Foundation Hardening (Weeks 1-4)
 
-| Milestone                  | Tasks                                                                                                    | Priority |
-| -------------------------- | -------------------------------------------------------------------------------------------------------- | -------- |
+| Milestone            | Tasks                                                                                                    | Priority |
+| -------------------- | -------------------------------------------------------------------------------------------------------- | -------- |
 | **Security Audit**   | Fix hardcoded API keys; migrate uploads to Storage facade; harden session config; audit input validation | P0       |
 | **Test Coverage**    | Write critical path tests (auth, orders, diamonds, invoices) using Pest; target 60% coverage             | P0       |
-| **TODO Cleanup**     | Address all items in `TODO.md` (Spatie decision, session hardening, responsive fixes)                  | P0       |
+| **TODO Cleanup**     | Address all items in `TODO.md` (Spatie decision, session hardening, responsive fixes)                    | P0       |
 | **Monitoring Setup** | Deploy APM (Datadog/New Relic); structured logging; error tracking (Sentry)                              | P0       |
 
 ### Phase 2: Infrastructure Scaling (Weeks 5-10)
 
-| Milestone                         | Tasks                                                                          | Priority |
-| --------------------------------- | ------------------------------------------------------------------------------ | -------- |
+| Milestone                   | Tasks                                                                          | Priority |
+| --------------------------- | ------------------------------------------------------------------------------ | -------- |
 | **Redis Migration**         | Move sessions, cache, and queue from database to Redis; deploy Laravel Horizon | P0       |
 | **Search Engine Migration** | Replace TNTSearch with Meilisearch or Elasticsearch                            | P0       |
 | **WebSocket Migration**     | Replace Pusher with Laravel Reverb or Soketi for self-hosted real-time         | P0       |
-| **File Storage Migration**  | Move all uploads from `public_path()` to S3 with CloudFront CDN              | P1       |
+| **File Storage Migration**  | Move all uploads from `public_path()` to S3 with CloudFront CDN                | P1       |
 | **Database Optimization**   | Add composite indexes; implement query caching; set up read replica            | P0       |
 
 ### Phase 3: Architecture Optimization (Weeks 11-16)
 
-| Milestone                       | Tasks                                                                                     | Priority |
-| ------------------------------- | ----------------------------------------------------------------------------------------- | -------- |
+| Milestone                 | Tasks                                                                                     | Priority |
+| ------------------------- | ----------------------------------------------------------------------------------------- | -------- |
 | **Async PDF Generation**  | Move invoice PDF generation to queue-based workflow                                       | P1       |
 | **Database Partitioning** | Partition audit_logs, emails, orders by date range                                        | P1       |
 | **Containerization**      | Dockerize application; create docker-compose for local dev; Kubernetes/ECS for production | P1       |
@@ -1151,8 +1164,8 @@ Based on the current project state, here is a suggested phased roadmap to reach 
 
 ### Phase 4: Feature Maturity (Weeks 17-24)
 
-| Milestone                          | Tasks                                                                  | Priority |
-| ---------------------------------- | ---------------------------------------------------------------------- | -------- |
+| Milestone                    | Tasks                                                                  | Priority |
+| ---------------------------- | ---------------------------------------------------------------------- | -------- |
 | **Accessibility Compliance** | WCAG 2.1 AA compliance audit and fixes                                 | P2       |
 | **GDPR Workflow**            | Data export, right to deletion, consent management                     | P2       |
 | **Live Exchange Rates**      | Integrate forex rate API for real-time currency conversion             | P2       |
@@ -1164,34 +1177,34 @@ Based on the current project state, here is a suggested phased roadmap to reach 
 
 ## Appendix A: Database Schema Summary
 
-**Total Migrations**: 91
-**Total Models**: 50
+**Total Migrations**: 95+
+**Total Models**: 50+
 
-| Entity Group             | Tables                                                                                              | Key Relationships                              |
-| ------------------------ | --------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| **Auth & Admin**   | admins, permissions, admin_permission, sessions                                                     | Admin ↔ Permission (M:M)                      |
-| **Diamonds**       | diamonds, diamond_admin, diamond_clarities, diamond_cuts                                            | Diamond ↔ Admin (M:M)                         |
-| **Melee**          | melee_categories, melee_diamonds, melee_transactions                                                | Category → Diamond → Transaction             |
-| **Orders**         | orders, order_drafts, clients                                                                       | Order → Client, Company, Admin                |
-| **Invoices**       | invoices, invoice_items                                                                             | Invoice → Company, Party (billed/shipped)     |
-| **Companies**      | companies, company_monthly_targets, company_daily_sales, global_monthly_targets                     | Company → Orders, Targets                     |
-| **Leads**          | leads, lead_activities                                                                              | Lead → Admin, Activities                      |
-| **Meta**           | meta_accounts, meta_conversations, meta_messages, meta_message_logs, message_templates              | MetaAccount → Conversations → Messages       |
-| **Chat**           | channels, channel_user, messages, message_reads, message_attachments, message_links                 | Channel ↔ Admin (M:M); Channel → Messages    |
-| **Gold**           | gold_purchases, gold_distributions                                                                  | GoldPurchase → Expenses, Factory              |
-| **Procurement**    | purchases, expenses                                                                                 | Purchase → Expense (auto-link)                |
-| **Email**          | email_accounts, email_account_users, emails, email_attachments, email_user_states, email_audit_logs | EmailAccount ↔ Admin (M:M)                    |
-| **Master Data**    | metal_types, setting_types, closure_types, ring_sizes, stone_types, stone_shapes, stone_colors      | Referenced by Orders, Diamonds                 |
-| **Operations**     | factories, packages                                                                                 | Factory → GoldDistributions; Package → Admin |
-| **Security**       | allowed_ips, app_settings, ip_access_logs, ip_access_requests                                       | Standalone                                     |
-| **Infrastructure** | users, cache, jobs, job_tracks, notifications, audit_logs                                           | System tables                                  |
+| Entity Group       | Tables                                                                                              | Key Relationships                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Auth & Admin**   | admins, permissions, admin_permission, sessions                                                     | Admin ↔ Permission (M:M)                                 |
+| **Diamonds**       | diamonds, diamond_admin, diamond_clarities, diamond_cuts                                            | Diamond ↔ Admin (M:M)                                    |
+| **Melee**          | melee_categories, melee_diamonds, melee_transactions                                                | Category → Diamond → Transaction                         |
+| **Orders**         | orders, order_drafts, clients                                                                       | Order → Client, Company, Admin, **Factory**              |
+| **Invoices**       | invoices, invoice_items                                                                             | Invoice → Company, Party (billed/shipped)                |
+| **Companies**      | companies, company_monthly_targets, company_daily_sales, global_monthly_targets                     | Company → Orders, Targets                                |
+| **Leads**          | leads, lead_activities                                                                              | Lead → Admin, Activities                                 |
+| **Meta**           | meta_accounts, meta_conversations, meta_messages, meta_message_logs, message_templates              | MetaAccount → Conversations → Messages                   |
+| **Chat**           | channels, channel_user, messages, message_reads, message_attachments, message_links                 | Channel ↔ Admin (M:M); Channel → Messages                |
+| **Gold**           | gold_purchases, gold_distributions                                                                  | GoldPurchase → Expenses, Factory                         |
+| **Procurement**    | purchases, expenses                                                                                 | Purchase → Expense (auto-link); **invoice_image JSON**   |
+| **Email**          | email_accounts, email_account_users, emails, email_attachments, email_user_states, email_audit_logs | EmailAccount ↔ Admin (M:M)                               |
+| **Master Data**    | metal_types, setting_types, closure_types, ring_sizes, stone_types, stone_shapes, stone_colors      | Referenced by Orders, Diamonds                           |
+| **Operations**     | factories, packages                                                                                 | Factory → GoldDistributions, **Orders**; Package → Admin |
+| **Security**       | allowed_ips, app_settings, ip_access_logs, ip_access_requests                                       | Standalone                                               |
+| **Infrastructure** | users, cache, jobs, job_tracks, notifications, audit_logs                                           | System tables                                            |
 
 ---
 
 ## Appendix B: Artisan Commands
 
-| Command                    | Purpose                                  | Schedule        |
-| -------------------------- | ---------------------------------------- | --------------- |
+| Command                  | Purpose                                  | Schedule        |
+| ------------------------ | ---------------------------------------- | --------------- |
 | `email:sync`             | Sync Gmail inboxes incrementally         | Every 3 minutes |
 | `email:verify-integrity` | Verify email attachment checksums        | Daily at 02:00  |
 | `SendOrderReminders`     | Notify about overdue/pending orders      | Configurable    |
@@ -1206,8 +1219,8 @@ Based on the current project state, here is a suggested phased roadmap to reach 
 
 ## Appendix C: Background Jobs
 
-| Job                       | Queue   | Purpose                                |
-| ------------------------- | ------- | -------------------------------------- |
+| Job                     | Queue   | Purpose                                |
+| ----------------------- | ------- | -------------------------------------- |
 | `ProcessDiamondImport`  | default | Async Excel import processing          |
 | `ProcessDiamondExport`  | default | Async Excel export generation          |
 | `ProcessChatAttachment` | default | Async file processing for chat uploads |
@@ -1219,24 +1232,40 @@ Based on the current project state, here is a suggested phased roadmap to reach 
 
 ## Appendix D: Key Inconsistencies & Gaps Detected
 
-| #  | Issue                                                                                                                     | Severity | Location                                             |
-| -- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------- |
-| 1  | **17Track API key appears hardcoded** in `ShippingTrackingService.php` (`'016E049ACA...'` as default)           | Critical | `app/Services/ShippingTrackingService.php`         |
-| 2  | **Spatie/laravel-permission listed in TODO** as "integrate or remove" — currently not used; custom system in place | Low      | `TODO.md`                                          |
-| 3  | **`public_path()` direct uploads** used in multiple controllers instead of Storage facade                         | Medium   | Multiple controllers                                 |
-| 4  | **Task scheduler registration missing** for Gmail sync command                                                      | Medium   | `IMPLEMENTATION_CHECKLIST.md`                      |
-| 5  | **README says Laravel 12, BUILD_SUMMARY says Laravel 10/11** — version inconsistency                               | Low      | `README.md` vs `BUILD_SUMMARY.md`                |
-| 6  | **No `.env.example`** visible in project root (only `.env.email.example` mentioned)                             | Medium   | Project root                                         |
-| 7  | **`User` model exists** but is unused (Admin is the sole authenticatable) — dead code                            | Low      | `app/Models/User.php`                              |
-| 8  | **No database seeder** for initial admin user or permissions                                                        | Medium   | `database/seeders/`                                |
-| 9  | **Chat MIME whitelist excludes PDF** (commented out in config) — likely intentional but undocumented               | Low      | `config/chat.php`                                  |
-| 10 | **No health check endpoint** (`/up` referenced in IP middleware but not defined in routes)                        | Low      | Routes                                               |
-| 11 | **Hindi comments** in `EnsureAdminHasPermission` middleware — should be English for team consistency             | Low      | `app/Http/Middleware/EnsureAdminHasPermission.php` |
-| 12 | **Debug routes exist** (`/debug-gold`, `/test-blade`, `/test-broadcast`) — must be removed in production     | Medium   | `routes/web.php`                                   |
-| 13 | **No CORS configuration** for API routes (config exists but no API routes defined)                                  | Low      | `routes/api.php` is empty                          |
-| 14 | **Expense title and category made nullable** (migration `2026_02_24_142238`) — may indicate data quality issue   | Low      | Migrations                                           |
-| 15 | **No backup/restore strategy** documented or implemented                                                            | High     | Infrastructure                                       |
+| #   | Issue                                                                                                              | Severity | Location                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------- |
+| 1   | **17Track API key appears hardcoded** in `ShippingTrackingService.php` (`'016E049ACA...'` as default)              | Critical | `app/Services/ShippingTrackingService.php`         |
+| 2   | **Spatie/laravel-permission listed in TODO** as "integrate or remove" — currently not used; custom system in place | Low      | `TODO.md`                                          |
+| 3   | **`public_path()` direct uploads** used in multiple controllers instead of Storage facade                          | Medium   | Multiple controllers                               |
+| 4   | **Task scheduler registration missing** for Gmail sync command                                                     | Medium   | `IMPLEMENTATION_CHECKLIST.md`                      |
+| 5   | **README says Laravel 12, BUILD_SUMMARY says Laravel 10/11** — version inconsistency                               | Low      | `README.md` vs `BUILD_SUMMARY.md`                  |
+| 6   | **No `.env.example`** visible in project root (only `.env.email.example` mentioned)                                | Medium   | Project root                                       |
+| 7   | **`User` model exists** but is unused (Admin is the sole authenticatable) — dead code                              | Low      | `app/Models/User.php`                              |
+| 8   | **No database seeder** for initial admin user or permissions                                                       | Medium   | `database/seeders/`                                |
+| 9   | **Chat MIME whitelist excludes PDF** (commented out in config) — likely intentional but undocumented               | Low      | `config/chat.php`                                  |
+| 10  | **No health check endpoint** (`/up` referenced in IP middleware but not defined in routes)                         | Low      | Routes                                             |
+| 11  | **Hindi comments** in `EnsureAdminHasPermission` middleware — should be English for team consistency               | Low      | `app/Http/Middleware/EnsureAdminHasPermission.php` |
+| 12  | **Debug routes exist** (`/debug-gold`, `/test-blade`, `/test-broadcast`) — must be removed in production           | Medium   | `routes/web.php`                                   |
+| 13  | **No CORS configuration** for API routes (config exists but no API routes defined)                                 | Low      | `routes/api.php` is empty                          |
+| 14  | **Expense title and category made nullable** (migration `2026_02_24_142238`) — may indicate data quality issue     | Low      | Migrations                                         |
+| 15  | **No backup/restore strategy** documented or implemented                                                           | High     | Infrastructure                                     |
 
 ---
 
-*This PRD was generated through automated analysis of 91 migrations, 50 models, 37 controllers, 10 service classes, 6 jobs, 6 events, 15 notifications, 6 middleware, 7 Artisan commands, and ~1,000 route definitions. All feature names, routes, and terminology reflect actual codebase artifacts.*
+## Appendix E: UI / UX Enhancements (v2.0)
+
+The following UI/UX improvements were made to the admin panel layout and sidebar:
+
+| Feature                           | Description                                                                                                                                                                                                                                                                              | File                     |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| **Live Clock in Navbar**          | Real-time ticking clock (`setInterval` every second) in the top navbar showing 12-hour time with seconds (e.g. `1:17:43 PM`). Updates without page refresh.                                                                                                                              | `admin.blade.php`        |
+| **Greeting Chip in Navbar**       | Time-based greeting with admin's first name (`☀️ Good Morning, Ashish!`) auto-updates live every second as time of day changes.                                                                                                                                                          | `admin.blade.php`        |
+| **IP Security in Navbar**         | IP Security settings quick-access repositioned from the sidebar to the top navbar header, between the Dark Mode toggle and Notifications bell. Styled as an icon button with active-state highlight.                                                                                     | `admin.blade.php`        |
+| **Premium Sidebar Gradients**     | Active navigation links now use 3-stop premium gradients (bright → vivid mid → deep dark) with colored glow shadows per category: Orders=blue, Inventory=purple, Finance=green, Clients=amber, System=red.                                                                               | `admin.blade.php`        |
+| **Expenses Under Orders & Sales** | The Expenses dropdown (Purchase Tracker, Office Expenses, Gold Tracking, Factories) was repositioned from the bottom of the sidebar to directly below Orders & Sales (after Invoices, before Inventory). The Orders & Sales section label now includes Expenses in its permission check. | `admin.blade.php`        |
+| **Cancelled Orders Filter**       | New status filter button on Orders index page showing only cancelled orders, with a count badge indicating the number of cancelled orders.                                                                                                                                               | `orders/index.blade.php` |
+| **Overdue Orders Count Badge**    | Overdue orders count now displayed on the filter tab alongside the filter.                                                                                                                                                                                                               | `orders/index.blade.php` |
+
+---
+
+_This PRD (v2.0) was updated through automated analysis of 95+ migrations, 50+ models, 37+ controllers, 10 service classes, 6 jobs, 6 events, 15 notifications, 6 middleware, 9 Artisan commands, and ~1,000+ route definitions. All feature names, routes, and terminology reflect actual codebase artifacts._

@@ -15,61 +15,6 @@
             </div>
         </div>
 
-        <!-- Quick Stats -->
-        <!-- <div class="stats-grid">
-            <div class="stat-card stat-primary">
-                <div class="stat-icon">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Total Admins</div>
-                    <div class="stat-value">24</div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-arrow-up"></i> 12% from last month
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card stat-success">
-                <div class="stat-icon">
-                    <i class="bi bi-basket-fill"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Total Orders</div>
-                    <div class="stat-value">1,429</div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-arrow-up"></i> 8% from last month
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card stat-warning">
-                <div class="stat-icon">
-                    <i class="bi bi-clock-history"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Pending</div>
-                    <div class="stat-value">42</div>
-                    <div class="stat-change negative">
-                        <i class="bi bi-arrow-down"></i> 3% from last week
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card stat-info">
-                <div class="stat-icon">
-                    <i class="bi bi-shield-check"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Permissions</div>
-                    <div class="stat-value">128</div>
-                    <div class="stat-change neutral">
-                        <i class="bi bi-dash"></i> No change
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
         <!-- Welcome Card -->
         <div class="welcome-card">
             <div class="welcome-content">

@@ -119,7 +119,7 @@
                                 </label>
                                 <select name="melee_diamond_id" id="melee_diamond_select" class="form-control-modern"
                                     style="width: 100%;">
-                                    <option value="">-- Search Melee Diamond --</option>
+                                    <option value=""></option>
                                     @if(isset($order) && $order->meleeDiamond)
                                         <option value="{{ $order->melee_diamond_id }}" selected>
                                             {{ $order->meleeDiamond->category->name ?? '' }} -
