@@ -25,6 +25,7 @@ class MeleeDiamond extends Model
         'available_carat_weight',
         'purchase_price_per_ct',
         'listing_price_per_ct',
+        'total_price',
         'status',
         'low_stock_threshold'
     ];
@@ -34,6 +35,7 @@ class MeleeDiamond extends Model
         'available_carat_weight' => 'decimal:3',
         'purchase_price_per_ct' => 'decimal:2',
         'listing_price_per_ct' => 'decimal:2',
+        'total_price' => 'decimal:2',
     ];
 
     /**
@@ -45,11 +47,12 @@ class MeleeDiamond extends Model
 
         static::saving(function ($model) {
             // 1. Calculate Sold Pieces
-            // Default logic: Sold = Total - Available
-            // Ensure we don't have negative sold count (logic sanity)
             $model->sold_pieces = max(0, $model->total_pieces - $model->available_pieces);
 
-            // 2. Update Status based on Availability
+            // 2. Auto-calculate Total Price = available_carat_weight * purchase_price_per_ct
+            $model->total_price = ($model->available_carat_weight ?? 0) * ($model->purchase_price_per_ct ?? 0);
+
+            // 3. Update Status based on Availability
             if ($model->available_pieces <= 0) {
                 $model->status = 'out_of_stock';
             } elseif ($model->available_pieces <= $model->low_stock_threshold) {
