@@ -204,7 +204,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::post('orders', [OrderController::class, 'store'])
         ->name('orders.store')
         ->middleware('admin.permission:orders.create');
-    Route::get('orders/sync-all-tracking', [OrderController::class, 'syncAllTracking'])
+    Route::post('orders/sync-all-tracking', [OrderController::class, 'syncAllTracking'])
         ->name('orders.sync-all-tracking')
         ->middleware('admin.permission:orders.edit');
     Route::get('orders/form/{type}', [OrderController::class, 'loadFormPartial'])
@@ -952,25 +952,6 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::delete('/{package}', [\App\Http\Controllers\PackageController::class, 'destroy'])
             ->name('destroy')
             ->middleware('admin.permission:packages.delete');
-    });
-
-    Route::get('/debug-gold', function () {
-        try {
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
-                ->timeout(10)
-                ->get('https://bcast.navkargold.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/navkar');
-
-            return response()->json([
-                'status' => $response->status(),
-                'body_preview' => substr($response->body(), 0, 500),
-                'success' => $response->successful(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'class' => get_class($e),
-            ]);
-        }
     });
 
 });

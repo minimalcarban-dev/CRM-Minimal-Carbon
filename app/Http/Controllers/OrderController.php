@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Diamond;
 use App\Models\MetalType;
 use App\Models\Order;
+use App\Models\Factory;
 use App\Models\RingSize;
 use App\Models\SettingType;
 use App\Models\Client;
@@ -618,6 +619,7 @@ class OrderController extends Controller
                 'gross_sell' => 'Gross Sell',
                 'dispatch_date' => 'Dispatch Date',
                 'company_id' => 'Company',
+                'factory_id' => 'Factory',
                 'gold_detail_id' => 'Metal Type',
                 'ring_size_id' => 'Ring Size',
                 'setting_type_id' => 'Setting Type',
@@ -643,6 +645,7 @@ class OrderController extends Controller
             // Helper: resolve FK IDs to human-readable names
             $fkResolvers = [
                 'company_id' => fn($id) => $id ? (Company::find($id)->name ?? "ID:$id") : null,
+                'factory_id' => fn($id) => $id ? (Factory::find($id)->name ?? "ID:$id") : null,
                 'gold_detail_id' => fn($id) => $id ? (MetalType::find($id)->name ?? "ID:$id") : null,
                 'ring_size_id' => fn($id) => $id ? (RingSize::find($id)->name ?? "ID:$id") : null,
                 'setting_type_id' => fn($id) => $id ? (SettingType::find($id)->name ?? "ID:$id") : null,
@@ -1213,6 +1216,7 @@ class OrderController extends Controller
             'diamond_skus.*' => 'nullable|string|max:191', // Each SKU in the array
             'diamond_status' => 'nullable|string|in:r_order_in_process,r_order_shipped,d_diamond_in_discuss,d_diamond_in_making,d_diamond_completed,d_diamond_in_certificate,d_order_shipped,j_diamond_in_progress,j_diamond_completed,j_diamond_in_discuss,j_cad_in_progress,j_cad_done,j_order_completed,j_order_in_qc,j_qc_done,j_order_shipped,j_order_hold',
             'company_id' => 'required|exists:companies,id',
+            'factory_id' => 'nullable|exists:factories,id',
             'gross_sell' => 'nullable|numeric|min:0',
             'dispatch_date' => 'nullable|date',
             'note' => 'nullable|in:priority,non_priority',
@@ -1275,6 +1279,7 @@ class OrderController extends Controller
         // Required fields
         $order->order_type = $validated['order_type'];
         $order->company_id = $validated['company_id'];
+        $order->factory_id = !empty($validated['factory_id']) ? $validated['factory_id'] : null;
 
         // String fields (empty string is acceptable for VARCHAR/TEXT)
         $order->client_name = $validated['client_name'] ?? '';
@@ -1492,6 +1497,7 @@ class OrderController extends Controller
         }
 
         $companies = Cache::remember('companies_all', 3600, fn() => Company::all());
+        $factories = Factory::where('is_active', true)->orderBy('name')->get();
         $metalTypes = Cache::remember('metal_types_all', 3600, fn() => MetalType::all());
         $ringSizes = Cache::remember('ring_sizes_all', 3600, fn() => RingSize::all());
         $settingTypes = Cache::remember('setting_types_all', 3600, fn() => SettingType::all());
@@ -1500,6 +1506,7 @@ class OrderController extends Controller
         return view($view, compact(
             'order',
             'companies',
+            'factories',
             'metalTypes',
             'ringSizes',
             'settingTypes',

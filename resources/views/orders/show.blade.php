@@ -6,8 +6,8 @@
 
     <style>
         /* =============================================
-            THEME VARIABLES — matches project palette
-        ============================================= */
+                THEME VARIABLES — matches project palette
+            ============================================= */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -1548,6 +1548,13 @@
                 <div class="od-meta-card">
                     <span class="od-meta-label">Company</span>
                     <span class="od-meta-value">{{ $order->company->name }}</span>
+                </div>
+            @endif
+
+            @if($order->factory)
+                <div class="od-meta-card">
+                    <span class="od-meta-label">Factory</span>
+                    <span class="od-meta-value">{{ $order->factory->name }} ({{ $order->factory->code }})</span>
                 </div>
             @endif
 

@@ -44,6 +44,7 @@ class Order extends Model
         'setting_type_id',
         'earring_type_id',
         'company_id',
+        'factory_id',
         'diamond_status',
         'gross_sell',
         'note',
@@ -86,6 +87,11 @@ class Order extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function factory()
+    {
+        return $this->belongsTo(Factory::class);
     }
 
     public function creator()

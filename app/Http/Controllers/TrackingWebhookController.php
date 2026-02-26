@@ -15,8 +15,9 @@ class TrackingWebhookController extends Controller
     public function handle17Track(Request $request)
     {
         $payload = $request->all();
-        Log::info('17Track Webhook Payload:', is_array($payload) ? $payload : []);
-
+        Log::info('17Track Webhook received', [
+            'tracking_count' => count($payload['data']['accepted'] ?? $payload['data'] ?? []),
+        ]);
         $data = $payload['data'] ?? $payload;
 
         // 17Track pushes data usually wrapped in "data" -> "accepted" array, or a direct array
@@ -61,11 +62,15 @@ class TrackingWebhookController extends Controller
 
             $history = [];
             foreach ($events as $checkpoint) {
-                $dateStr = $checkpoint['time_iso'] ?? $checkpoint['time_utc'] ?? now();
-                try {
-                    $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
-                } catch (\Exception $e) {
-                    $dateFormatted = $dateStr;
+                $dateStr = $checkpoint['time_iso'] ?? $checkpoint['time_utc'] ?? null;
+                if ($dateStr === null) {
+                    $dateFormatted = now()->format('d M Y, h:i A');
+                } else {
+                    try {
+                        $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
+                    } catch (\Exception $e) {
+                        $dateFormatted = now()->format('d M Y, h:i A');
+                    }
                 }
 
                 $history[] = [

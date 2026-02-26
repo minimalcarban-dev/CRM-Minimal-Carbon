@@ -358,6 +358,30 @@
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
+                            <i class="bi bi-building-gear"></i>
+                        </span>
+                        <span class="label-text">Factory</span>
+                        <span class="optional-badge">Optional</span>
+                    </label>
+                    <select name="factory_id" class="form-control-modern">
+                        <option value="">Select Factory</option>
+                        @foreach($factories as $factory)
+                            <option value="{{ $factory->id }}" {{ old('factory_id', $order->factory_id ?? '') == $factory->id ? 'selected' : '' }}>
+                                {{ $factory->name }} ({{ $factory->code }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="form-hint">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Select the factory where the item is being made</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <span class="label-icon">
                             <i class="bi bi-check-circle"></i>
                         </span>
                         <span class="label-text">Diamond Status</span>
@@ -558,7 +582,10 @@
                         <option value="FedEx" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'FedEx' ? 'selected' : '' }}>FedEx</option>
                         <option value="UPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>UPS</option>
                         <option value="EMS / Speed Post" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>EMS / Speed Post</option>
-                        @if(!empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post']))
+                        <option value="UPS - Ground" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - Ground' ? 'selected' : '' }}>UPS - Ground</option>
+                        <option value="UPS - DDP" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - DDP' ? 'selected' : '' }}>UPS - DDP</option>
+                        <option value="LP Service" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'LP Service' ? 'selected' : '' }}>LP Service</option>
+                        @if(!empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post', 'UPS - Ground', 'UPS - DDP', 'LP Service']))
                             <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}
                             </option>
                         @endif
