@@ -43,15 +43,136 @@
             --warning: #f59e0b;
             --danger: #ef4444;
             --info: #3b82f6;
+
+            /* Theme tokens — light mode */
             --dark: #1e293b;
             --gray: #64748b;
+            --muted: #94a3b8;
             --light-gray: #f1f5f9;
             --border: #e2e8f0;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-sidebar: #ffffff;
+            --bg-navbar: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
             --shadow: rgba(0, 0, 0, 0.05);
             --shadow-md: rgba(0, 0, 0, 0.1);
             --shadow-lg: rgba(0, 0, 0, 0.15);
             --sidebar-width: 280px;
             --sidebar-collapsed: 80px;
+        }
+
+        /* ── DARK MODE ── */
+        [data-theme="dark"] {
+            --dark: #f1f5f9;
+            --gray: #94a3b8;
+            --muted: #64748b;
+            --light-gray: #1e293b;
+            --border: #334155;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #1e293b;
+            --bg-navbar: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="dark"] body {
+            background: var(--bg-body);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .sidebar,
+        [data-theme="dark"] .top-navbar {
+            background: var(--bg-sidebar);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .nav-link {
+            color: var(--gray);
+        }
+
+        [data-theme="dark"] .nav-link:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--dark);
+        }
+
+        [data-theme="dark"] .user-card {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        [data-theme="dark"] .notification-btn,
+        [data-theme="dark"] .profile-btn,
+        [data-theme="dark"] .top-sidebar-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border);
+            color: var(--gray);
+        }
+
+        [data-theme="dark"] .notification-menu,
+        [data-theme="dark"] .profile-menu {
+            background: #1e293b;
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .notification-header {
+            background: #1e293b;
+        }
+
+        [data-theme="dark"] .notification-item:hover,
+        [data-theme="dark"] .notification-item.unread {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        [data-theme="dark"] .notification-divider {
+            background: #0f172a;
+            color: var(--muted);
+        }
+
+        [data-theme="dark"] .notification-message strong {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .notification-empty {
+            background: transparent;
+        }
+
+        [data-theme="dark"] #mainContent {
+            background: var(--bg-body);
+        }
+
+        [data-theme="dark"] .dropdown-toggle-link {
+            color: var(--gray);
+        }
+
+        [data-theme="dark"] .dropdown-toggle-link:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--dark);
+        }
+
+        [data-theme="dark"] .logout-btn {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        [data-theme="dark"] .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        [data-theme="dark"] .navbar-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .stats-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .inline-stats {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border);
         }
 
         * {
@@ -923,16 +1044,20 @@
         .top-navbar {
             position: fixed;
             top: 0;
-            right: 0;
             left: var(--sidebar-width);
-            height: 70px;
-            background: white;
-            border-bottom: 2px solid var(--border);
+            right: 0;
+            height: 72px;
+            padding: 0 28px;
             display: flex;
             align-items: center;
-            padding: 0 2rem;
-            z-index: 500;
-            transition: left 0.3s;
+            justify-content: space-between;
+            /* background: rgba(255, 255, 255, 0.75); */
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            /* border-bottom: 1px solid var(--border); */
+            box-shadow: 0 4px 20px var(--shadow);
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
 
         .sidebar.collapsed~.top-navbar {
@@ -964,7 +1089,7 @@
         .navbar-right {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 0.6rem;
         }
 
         /* ── NOTIFICATION DROPDOWN ── */
@@ -974,8 +1099,8 @@
 
         .notification-btn {
             position: relative;
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 38px;
             border-radius: 10px;
             border: 1.5px solid var(--border);
             background: white;
@@ -1417,17 +1542,16 @@
         }
 
         .profile-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            border-radius: 10px;
-            border: 2px solid var(--border);
-            background: white;
-            color: var(--gray);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1.1rem;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px var(--shadow);
         }
 
         .profile-btn:hover {
@@ -1437,16 +1561,16 @@
         }
 
         .profile-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 0.85rem;
+            /* font-size: 0.85rem; */
         }
 
         .profile-menu {
@@ -1762,8 +1886,584 @@
                 gap: 10px;
             }
         }
-    </style>
 
+        /* ══════════════════════════════════════════════
+           NEW ENHANCEMENTS
+        ══════════════════════════════════════════════ */
+
+        /* ── SIDEBAR NAV SECTION LABELS ── */
+        .nav-section-label {
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted, #94a3b8);
+            padding: 1rem 1rem 0.35rem;
+            margin-top: 0.25rem;
+            opacity: 1;
+            transition: opacity 0.2s;
+        }
+
+        .sidebar.collapsed .nav-section-label {
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* ── Active nav links — premium 3-stop gradient finish ── */
+        .nav-link.active.cat-orders,
+        .nav-link.active.cat-inventory,
+        .nav-link.active.cat-finance,
+        .nav-link.active.cat-clients,
+        .nav-link.active.cat-system {
+            background: linear-gradient(135deg, #71c0f8 0%, #2053c7 45%, #1b2f99 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
+        }
+
+        .nav-link.active {
+            padding-left: 1rem;
+        }
+
+        /* ── GLOBAL SEARCH ── */
+        .global-search-wrapper {
+            position: relative;
+            flex: 1;
+            max-width: 340px;
+            margin: 0 1rem;
+        }
+
+        .global-search-input {
+            width: 100%;
+            height: 38px;
+            padding: 0 1rem 0 2.5rem;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-body, #f8fafc);
+            color: var(--text-primary, #1e293b);
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .global-search-input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .global-search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted, #94a3b8);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .global-search-kbd {
+            position: absolute;
+            right: 0.6rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--muted, #94a3b8);
+            background: var(--border);
+            padding: 0.1rem 0.35rem;
+            border-radius: 6px;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── MOBILE SEARCH BUTTON (visible only on mobile) ── */
+        .mobile-search-btn {
+            display: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--gray);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .mobile-search-btn:hover,
+        .mobile-search-btn:active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        /* ── MOBILE SEARCH HINT TOAST ── */
+        .mob-search-hint {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 0.65rem 1.2rem;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .mob-search-hint.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .global-search-wrapper {
+                display: none !important;
+            }
+
+            .mobile-search-btn {
+                display: flex;
+            }
+        }
+
+        /* ── COMMAND PALETTE ── */
+        .cmd-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            z-index: 9998;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 12vh;
+        }
+
+        .cmd-overlay.open {
+            display: flex;
+        }
+
+        .cmd-palette {
+            width: 580px;
+            max-width: calc(100vw - 2rem);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            border: 1.5px solid var(--border);
+        }
+
+        [data-theme="dark"] .cmd-palette {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .cmd-search-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cmd-search-row i {
+            color: var(--primary);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .cmd-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            color: var(--text-primary, #1e293b);
+            background: transparent;
+            font-family: inherit;
+        }
+
+        [data-theme="dark"] .cmd-input {
+            color: #f1f5f9;
+        }
+
+        .cmd-close-hint {
+            font-size: 0.7rem;
+            color: var(--muted);
+            background: var(--light-gray);
+            padding: 0.15rem 0.4rem;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
+        .cmd-results {
+            max-height: 360px;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+
+        .cmd-group-label {
+            font-size: 0.62rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            padding: 0.6rem 1.25rem 0.25rem;
+        }
+
+        .cmd-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 1.25rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            color: var(--text-primary, #1e293b);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .cmd-item:hover,
+        .cmd-item.active {
+            background: rgba(99, 102, 241, 0.07);
+        }
+
+        [data-theme="dark"] .cmd-item:hover,
+        [data-theme="dark"] .cmd-item.active {
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .cmd-item-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .cmd-item-text {
+            flex: 1;
+        }
+
+        .cmd-item-hint {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .cmd-footer {
+            border-top: 1px solid var(--border);
+            padding: 0.6rem 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .cmd-key {
+            background: var(--light-gray);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.1rem 0.35rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+
+        /* ── SPEED DIAL (floating +) ── */
+        .speed-dial {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 900;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .speed-dial-main {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 2;
+        }
+
+        .speed-dial-main:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.55);
+        }
+
+        .speed-dial-main.open {
+            transform: rotate(45deg);
+        }
+
+        .speed-dial-items {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 0.6rem;
+            align-items: center;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.25s ease;
+        }
+
+        .speed-dial-items.open {
+            pointer-events: all;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .sd-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .sd-label {
+            background: var(--bg-card, white);
+            color: var(--text-primary, #1e293b);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.7rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            white-space: nowrap;
+            border: 1px solid var(--border);
+        }
+
+        .sd-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+            text-decoration: none;
+        }
+
+        .sd-btn:hover {
+            transform: scale(1.12);
+            color: white;
+        }
+
+        .sd-btn.order {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .sd-btn.diamond {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+        }
+
+        .sd-btn.client {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        /* ── DARK MODE TOGGLE ── */
+        .dark-mode-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .dark-mode-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.06);
+        }
+
+        /* ── MOBILE BOTTOM NAV ── */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-card, white);
+            border-top: 1.5px solid var(--border);
+            z-index: 1100;
+            padding: 0 0.5rem;
+            align-items: center;
+            justify-content: space-around;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .greeting-wrapper {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .greeting-chip {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .live-clock {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .dark-mode-btn,
+        .notification-btn,
+        .top-sidebar-toggle {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px var(--shadow);
+        }
+
+        .dark-mode-btn:hover,
+        .notification-btn:hover,
+        .top-sidebar-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow-md);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .navbar-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-nav {
+                display: flex;
+            }
+
+            #mainContent {
+                padding-bottom: 70px;
+            }
+
+            .speed-dial {
+                bottom: 5rem;
+            }
+        }
+
+        .mob-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.15rem;
+            color: var(--muted, #94a3b8);
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-size: 0.6rem;
+            font-weight: 600;
+            min-width: 52px;
+        }
+
+        .mob-nav-item i {
+            font-size: 1.25rem;
+        }
+
+        .mob-nav-item.active,
+        .mob-nav-item:hover {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .mob-nav-item.active i {
+            color: var(--primary);
+        }
+
+        /* ── GREETING CHIP in navbar ── */
+        .greeting-chip {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray);
+            white-space: nowrap;
+            display: none;
+        }
+
+        @media (min-width: 1100px) {
+            .greeting-chip {
+                display: block;
+            }
+        }
+
+        /* ── ACTIVITY TIME CHIP ── */
+        .live-clock {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--muted, #94a3b8);
+            letter-spacing: 0.03em;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            text-align: end;
+        }
+    </style>
     @stack('head')
 </head>
 
@@ -1788,37 +2488,20 @@
         <!-- Navigation -->
         <div class="nav-section">
             <ul class="nav">
+
+                {{-- ── MAIN ── --}}
+                <div class="nav-section-label">Main</div>
                 <li>
-                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active cat-system' : '' }}"
                         href="{{ route('admin.dashboard') }}" data-tooltip="Dashboard">
                         <i class="bi bi-house"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create']))
-                    <li>
-                        <a class="nav-link {{ request()->routeIs('admins.*') ? 'active' : '' }}"
-                            href="{{ route('admins.index') }}" data-tooltip="Admins">
-                            <i class="bi bi-people"></i>
-                            <span>Admins</span>
-                        </a>
-                    </li>
-                @endif
-
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['permissions.view', 'permissions.create']))
-                    <li>
-                        <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"
-                            href="{{ route('permissions.index') }}" data-tooltip="Permissions">
-                            <i class="bi bi-shield-lock"></i>
-                            <span>Permissions</span>
-                        </a>
-                    </li>
-                @endif
-
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['chat.access']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('chat.*') ? 'active cat-system' : '' }}"
                             href="{{ route('chat.index') }}" data-tooltip="Chat" id="chatSidebarLink">
                             <i class="bi bi-chat-dots"></i>
                             <span>Chat</span>
@@ -1827,11 +2510,14 @@
                     </li>
                 @endif
 
-
+                {{-- ── ORDERS & SALES ── --}}
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create', 'sales.view_all', 'invoices.view', 'invoices.create', 'purchases.view', 'purchases.create', 'expenses.view', 'expenses.create', 'gold-tracking.view', 'gold-tracking.create', 'factories.view', 'factories.create']))
+                    <div class="nav-section-label">Orders & Sales</div>
+                @endif
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('orders.*') && !request()->routeIs('orders.drafts.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('orders.*') && !request()->routeIs('orders.drafts.*') ? 'active cat-orders' : '' }}"
                             href="{{ route('orders.index') }}" data-tooltip="Orders">
                             <i class="bi bi-basket"></i>
                             <span>Orders</span>
@@ -1841,7 +2527,7 @@
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['sales.view_all']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('companies.all-sales-dashboard') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('companies.all-sales-dashboard') ? 'active cat-orders' : '' }}"
                             href="{{ route('companies.all-sales-dashboard') }}" data-tooltip="All Sales">
                             <i class="bi bi-graph-up-arrow"></i>
                             <span>All Sales</span>
@@ -1849,9 +2535,82 @@
                     </li>
                 @endif
 
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['invoices.view', 'invoices.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('invoices.*') ? 'active cat-finance' : '' }}"
+                            href="{{ route('invoices.index') }}" data-tooltip="Invoices">
+                            <i class="bi bi-receipt"></i>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                @endif
+
+                {{-- ── EXPENSES (moved under Orders & Sales) ── --}}
+                @php
+                    $expensesActive = request()->routeIs(['purchases.*', 'expenses.*', 'gold-tracking.*', 'factories.*']);
+                @endphp
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['purchases.view', 'purchases.create', 'expenses.view', 'expenses.create', 'gold-tracking.view', 'gold-tracking.create', 'factories.view', 'factories.create']))
+                    <div class="nav-dropdown">
+                        <button class="dropdown-toggle-link {{ $expensesActive ? 'active' : '' }}" id="expensesDropdown"
+                            data-tooltip="Expenses" data-initial-open="{{ $expensesActive ? '1' : '0' }}" type="button"
+                            aria-expanded="false" style="padding-left: 23px;">
+                            <div class="left-content">
+                                <i class="bi bi-cash-stack main-icon"></i>
+                                <span style="padding-left: 15px">Expenses</span>
+                            </div>
+                            <i class="bi bi-chevron-down chevron-icon"></i>
+                        </button>
+                        <div class="dropdown-menu-custom {{ $expensesActive ? 'show' : '' }}" id="expensesMenu">
+                            <ul class="nav">
+                                @if (auth()->guard('admin')->user()->canAccessAny(['purchases.view', 'purchases.create']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('purchases.*') ? 'active cat-finance' : '' }}"
+                                            href="{{ route('purchases.index') }}" data-tooltip="Purchase Tracker">
+                                            <i class="bi bi-cart-check"></i>
+                                            <span>Purchase Tracker</span>
+                                        </a>
+                                    </li>
+                                @endif
+                                @if (auth()->guard('admin')->user()->canAccessAny(['expenses.view', 'expenses.create']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('expenses.*') ? 'active cat-finance' : '' }}"
+                                            href="{{ route('expenses.index') }}" data-tooltip="Office Expenses">
+                                            <i class="bi bi-wallet2"></i>
+                                            <span>Office Expenses</span>
+                                        </a>
+                                    </li>
+                                @endif
+                                @if (auth()->guard('admin')->user()->canAccessAny(['gold-tracking.view', 'gold-tracking.create']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('gold-tracking.*') ? 'active cat-finance' : '' }}"
+                                            href="{{ route('gold-tracking.index') }}" data-tooltip="Gold Tracking">
+                                            <i class="bi bi-coin"></i>
+                                            <span>Gold Tracking</span>
+                                        </a>
+                                    </li>
+                                @endif
+                                @if (auth()->guard('admin')->user()->canAccessAny(['factories.view', 'factories.create']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('factories.*') ? 'active cat-finance' : '' }}"
+                                            href="{{ route('factories.index') }}" data-tooltip="Factories">
+                                            <i class="bi bi-buildings"></i>
+                                            <span>Factories</span>
+                                        </a>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ── INVENTORY ── --}}
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create', 'melee_diamonds.view', 'melee_diamonds.create', 'packages.view', 'packages.create', 'diamond_jobs.view']))
+                    <div class="nav-section-label">Inventory</div>
+                @endif
+
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('diamond.index') || (request()->routeIs('diamond.*') && !request()->routeIs('diamond.job.*')) ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('diamond.index') || (request()->routeIs('diamond.*') && !request()->routeIs('diamond.job.*')) ? 'active cat-inventory' : '' }}"
                             href="{{ route('diamond.index') }}" data-tooltip="Diamonds">
                             <i class="bi bi-gem"></i>
                             <span>Stock List</span>
@@ -1861,7 +2620,7 @@
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['melee_diamonds.view', 'melee_diamonds.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('melee.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('melee.*') ? 'active cat-inventory' : '' }}"
                             href="{{ route('melee.index') }}" data-tooltip="Melee Inventory">
                             <i class="bi bi-grid-3x3-gap"></i>
                             <span>Melee Inventory</span>
@@ -1871,7 +2630,7 @@
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['packages.view', 'packages.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('packages.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('packages.*') ? 'active cat-inventory' : '' }}"
                             href="{{ route('packages.index') }}" data-tooltip="Packages">
                             <i class="bi bi-box-seam"></i>
                             <span>Packages</span>
@@ -1881,7 +2640,7 @@
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_jobs.view']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active cat-inventory' : '' }}"
                             href="{{ route('diamond.job.history') }}" data-tooltip="Job History">
                             <i class="bi bi-clock-history"></i>
                             <span>Job History</span>
@@ -1889,19 +2648,14 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['invoices.view', 'invoices.create']))
-                    <li>
-                        <a class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}"
-                            href="{{ route('invoices.index') }}" data-tooltip="Invoices">
-                            <i class="bi bi-receipt"></i>
-                            <span>Invoices</span>
-                        </a>
-                    </li>
+                {{-- ── CLIENTS ── --}}
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['parties.view', 'parties.create', 'clients.view', 'leads.view', 'leads.create']))
+                    <div class="nav-section-label">Clients</div>
                 @endif
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['parties.view', 'parties.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('parties.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('parties.*') ? 'active cat-clients' : '' }}"
                             href="{{ route('parties.index') }}" data-tooltip="Parties">
                             <i class="bi bi-people"></i>
                             <span>Vendors</span>
@@ -1911,7 +2665,7 @@
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('clients.*') ? 'active cat-clients' : '' }}"
                             href="{{ route('clients.index') }}" data-tooltip="Clients">
                             <i class="bi bi-person-lines-fill"></i>
                             <span>Shoppers</span>
@@ -1921,7 +2675,7 @@
 
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['leads.view', 'leads.create']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('leads.*') ? 'active cat-clients' : '' }}"
                             href="{{ route('leads.index') }}" data-tooltip="Leads Inbox">
                             <i class="bi bi-inbox"></i>
                             <span>Leads Inbox</span>
@@ -1929,9 +2683,34 @@
                     </li>
                 @endif
 
+                {{-- ── SYSTEM ── --}}
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create', 'permissions.view', 'permissions.create', 'meta_leads.settings', 'settings.manage']))
+                    <div class="nav-section-label">System</div>
+                @endif
+
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('admins.*') ? 'active cat-system' : '' }}"
+                            href="{{ route('admins.index') }}" data-tooltip="Admins">
+                            <i class="bi bi-people"></i>
+                            <span>Admins</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['permissions.view', 'permissions.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active cat-system' : '' }}"
+                            href="{{ route('permissions.index') }}" data-tooltip="Permissions">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>Permissions</span>
+                        </a>
+                    </li>
+                @endif
+
                 @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['meta_leads.settings']))
                     <li>
-                        <a class="nav-link {{ request()->routeIs('settings.meta.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('settings.meta.*') ? 'active cat-system' : '' }}"
                             href="{{ route('settings.meta.index') }}" data-tooltip="Meta Settings">
                             <i class="bi bi-gear"></i>
                             <span>Meta Settings</span>
@@ -2008,62 +2787,7 @@
                     </div>
                 @endif
 
-                @php
-                    $expensesActive = request()->routeIs(['purchases.*', 'expenses.*', 'gold-tracking.*', 'factories.*']);
-                @endphp
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['purchases.view', 'purchases.create', 'expenses.view', 'expenses.create', 'gold-tracking.view', 'gold-tracking.create', 'factories.view', 'factories.create']))
-                    <div class="nav-dropdown">
-                        <button class="dropdown-toggle-link {{ $expensesActive ? 'active' : '' }}" id="expensesDropdown"
-                            data-tooltip="Expenses" data-initial-open="{{ $expensesActive ? '1' : '0' }}" type="button"
-                            aria-expanded="false" style="padding-left: 23px;">
-                            <div class="left-content">
-                                <i class="bi bi-cash-stack main-icon"></i>
-                                <span style="padding-left: 15px">Expenses</span>
-                            </div>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </button>
-                        <div class="dropdown-menu-custom {{ $expensesActive ? 'show' : '' }}" id="expensesMenu">
-                            <ul class="nav">
-                                @if (auth()->guard('admin')->user()->canAccessAny(['purchases.view', 'purchases.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}"
-                                            href="{{ route('purchases.index') }}" data-tooltip="Purchase Tracker">
-                                            <i class="bi bi-cart-check"></i>
-                                            <span>Purchase Tracker</span>
-                                        </a>
-                                    </li>
-                                @endif
-                                @if (auth()->guard('admin')->user()->canAccessAny(['expenses.view', 'expenses.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}"
-                                            href="{{ route('expenses.index') }}" data-tooltip="Office Expenses">
-                                            <i class="bi bi-wallet2"></i>
-                                            <span>Office Expenses</span>
-                                        </a>
-                                    </li>
-                                @endif
-                                @if (auth()->guard('admin')->user()->canAccessAny(['gold-tracking.view', 'gold-tracking.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('gold-tracking.*') ? 'active' : '' }}"
-                                            href="{{ route('gold-tracking.index') }}" data-tooltip="Gold Tracking">
-                                            <i class="bi bi-coin"></i>
-                                            <span>Gold Tracking</span>
-                                        </a>
-                                    </li>
-                                @endif
-                                @if (auth()->guard('admin')->user()->canAccessAny(['factories.view', 'factories.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('factories.*') ? 'active' : '' }}"
-                                            href="{{ route('factories.index') }}" data-tooltip="Factories">
-                                            <i class="bi bi-buildings"></i>
-                                            <span>Factories</span>
-                                        </a>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                    </div>
-                @endif
+
 
 
                 @php
@@ -2186,15 +2910,6 @@
                     </div>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
-                    <li>
-                        <a class="nav-link {{ request()->routeIs('settings.security.*') ? 'active' : '' }}"
-                            href="{{ route('settings.security.index') }}" data-tooltip="IP Security">
-                            <i class="bi bi-shield-lock"></i>
-                            <span>IP Security</span>
-                        </a>
-                    </li>
-                @endif
             </ul>
 
         </div>
@@ -2207,18 +2922,53 @@
             <div class="navbar-left">
                 <button class="top-sidebar-toggle" id="topSidebarToggle" title="Toggle sidebar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="lucide lucide-panel-left text-muted-foreground" aria-hidden="true"
-                        data-replit-metadata="client/src/components/layouts/AdminLayout.tsx:78:14"
-                        data-component-name="PanelLeft">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect width="18" height="18" x="3" y="3" rx="2"></rect>
                         <path d="M9 3v18"></path>
                     </svg>
                 </button>
                 <h2 class="navbar-title">@yield('title', 'Admin Panel')</h2>
+                {{-- Global Search (desktop) --}}
+                <div class="global-search-wrapper" id="globalSearchWrapper">
+                    <i class="bi bi-search global-search-icon"></i>
+                    <input type="text" class="global-search-input" id="globalSearchInput"
+                        placeholder="Search anything..." readonly onclick="openCommandPalette()" />
+                    <span class="global-search-kbd">⌘K</span>
+                </div>
+
+                {{-- Mobile Search Icon Button --}}
+                <button class="mobile-search-btn" id="mobileSearchBtn" onclick="openCommandPalette()"
+                    title="Search modules">
+                    <i class="bi bi-search"></i>
+                </button>
             </div>
 
             <div class="navbar-right">
+                {{-- Greeting + Clock --}}
+
+                <!-- <span class="greeting-chip" id="greetingChip"></span>
+                <span class="live-clock" id="liveClock"></span> -->
+
+                <div class="greeting-wrapper">
+                    <span class="greeting-chip" id="greetingChip"></span>
+                    <span class="live-clock" id="liveClock"></span>
+                </div>
+
+                {{-- Dark Mode Toggle --}}
+                <button class="dark-mode-btn" id="darkModeBtn" title="Toggle dark mode">
+                    <i class="bi bi-moon-fill" id="darkModeIcon"></i>
+                </button>
+
+                {{-- IP Security --}}
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
+                    <a href="{{ route('settings.security.index') }}"
+                        class="dark-mode-btn {{ request()->routeIs('settings.security.*') ? 'active' : '' }}"
+                        title="IP Security"
+                        style="text-decoration:none;{{ request()->routeIs('settings.security.*') ? 'border-color:var(--primary);color:var(--primary);background:rgba(99,102,241,0.06);' : '' }}">
+                        <i class="bi bi-shield-lock"></i>
+                    </a>
+                @endif
+
                 <!-- Notifications Dropdown -->
                 <div class="notification-dropdown">
                     <button class="notification-btn" id="notificationBtn">
@@ -2438,7 +3188,6 @@
                         <div class="profile-avatar">
                             {{ strtoupper(substr(auth()->guard('admin')->user()->name ?? 'A', 0, 2)) }}
                         </div>
-                        <i class="bi bi-chevron-down"></i>
                     </button>
                     <div class="profile-menu" id="profileMenu">
                         <div class="profile-header">
@@ -2467,6 +3216,95 @@
 
     <!-- Toast Container -->
     <div id="toast-container" class="position-fixed top-0 end-0 p-3"></div>
+
+    <!-- Mobile Search Hint (one-time) -->
+    <div class="mob-search-hint" id="mobSearchHint">
+        <i class="bi bi-search"></i> Tap <strong style="margin:0 3px;">🔍</strong> in the header to search all modules
+    </div>
+
+    <!-- ── COMMAND PALETTE ── -->
+    <div class="cmd-overlay" id="cmdOverlay" onclick="closeCmdIfOutside(event)">
+        <div class="cmd-palette" id="cmdPalette">
+            <div class="cmd-search-row">
+                <i class="bi bi-search"></i>
+                <input type="text" class="cmd-input" id="cmdInput" placeholder="Search pages, actions..."
+                    autocomplete="off" />
+                <span class="cmd-close-hint">ESC to close</span>
+            </div>
+            <div class="cmd-results" id="cmdResults"></div>
+            <div class="cmd-footer">
+                <span><span class="cmd-key">↑↓</span> navigate</span>
+                <span><span class="cmd-key">↵</span> open</span>
+                <span><span class="cmd-key">ESC</span> close</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SPEED DIAL ── -->
+    <div class="speed-dial" id="speedDial">
+        <button class="speed-dial-main" id="speedDialBtn" title="Quick actions">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+        <div class="speed-dial-items" id="speedDialItems">
+            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.create']))
+                <div class="sd-item">
+                    <span class="sd-label">New Order</span>
+                    <a href="{{ route('orders.create') }}" class="sd-btn order" title="New Order">
+                        <i class="bi bi-basket-fill"></i>
+                    </a>
+                </div>
+            @endif
+            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.create']))
+                <div class="sd-item">
+                    <span class="sd-label">Add Diamond</span>
+                    <a href="{{ route('diamond.create') }}" class="sd-btn diamond" title="Add Diamond">
+                        <i class="bi bi-gem"></i>
+                    </a>
+                </div>
+            @endif
+            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+                <div class="sd-item">
+                    <span class="sd-label">View Clients</span>
+                    <a href="{{ route('clients.index') }}" class="sd-btn client" title="Clients">
+                        <i class="bi bi-people-fill"></i>
+                    </a>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- ── MOBILE BOTTOM NAV ── -->
+    <nav class="mobile-bottom-nav">
+        <a href="{{ route('admin.dashboard') }}"
+            class="mob-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+            <i class="bi bi-house-fill"></i>
+            <span>Home</span>
+        </a>
+        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view']))
+            <a href="{{ route('orders.index') }}" class="mob-nav-item {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                <i class="bi bi-basket2-fill"></i>
+                <span>Orders</span>
+            </a>
+        @endif
+        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
+            <a href="{{ route('diamond.index') }}"
+                class="mob-nav-item {{ request()->routeIs('diamond.*') ? 'active' : '' }}">
+                <i class="bi bi-gem"></i>
+                <span>Diamonds</span>
+            </a>
+        @endif
+        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+            <a href="{{ route('clients.index') }}"
+                class="mob-nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}">
+                <i class="bi bi-people-fill"></i>
+                <span>Clients</span>
+            </a>
+        @endif
+        <button class="mob-nav-item" onclick="openCommandPalette()" style="border:none;background:none;cursor:pointer;">
+            <i class="bi bi-search"></i>
+            <span>Search</span>
+        </button>
+    </nav>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -2541,6 +3379,54 @@
                 }, 1000);
             @endif
         });
+
+        // ── LIVE CLOCK (ticks every second, no page refresh needed) ──
+        (function () {
+            const clockEl = document.getElementById('liveClock');
+            const greetingEl = document.getElementById('greetingChip');
+
+            const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            function tick() {
+                const now = new Date();
+                const h24 = now.getHours();
+                const min = String(now.getMinutes()).padStart(2, '0');
+                const sec = String(now.getSeconds()).padStart(2, '0');
+                const ampm = h24 >= 12 ? 'PM' : 'AM';
+                const h12 = h24 % 12 || 12;
+                const dayName = DAYS[now.getDay()];
+                const monthStr = MONTHS[now.getMonth()];
+                const date = now.getDate();
+
+                // e.g. "Thu, Feb 26 · 1:48:34 PM"
+                if (clockEl) { clockEl.textContent = dayName + ', ' + monthStr + ' ' + date + ' \u00b7 ' + h12 + ':' + min + ':' + sec + ' ' + ampm; }
+
+                if (greetingEl) {
+                    const greeting = h24 < 12 ? '\u2600\ufe0f Good Morning' :
+                        h24 < 17 ? '\ud83c\udf24\ufe0f Good Afternoon' :
+                            '\ud83c\udf19 Good Evening';
+                    const name = '{{ auth()->guard("admin")->user()->name ?? "" }}'.split(' ')[0];
+                    greetingEl.textContent = greeting + (name ? ', ' + name : '') + '!';
+                }
+            }
+
+            tick(); // run immediately on load
+            setInterval(tick, 1000); // tick every second
+        })();
+
+        // ── MOBILE SEARCH HINT (show once per session on mobile) ──
+        (function () {
+            if (window.innerWidth <= 768 && !sessionStorage.getItem('mob_search_hint_shown')) {
+                sessionStorage.setItem('mob_search_hint_shown', '1');
+                var hint = document.getElementById('mobSearchHint');
+                if (hint) {
+                    setTimeout(function () { hint.classList.add('show'); }, 1200);
+                    setTimeout(function () { hint.classList.remove('show'); }, 5200);
+                }
+            }
+        })();
 
         // Toast Helper
         window.showToast = function (message, delay = 3000) {
@@ -2982,19 +3868,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                        <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                            <div>
-                                                <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                <div style="font-size: 0.8rem; color: #64748b;">
-                                                    ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
-                                                </div>
-                                            </div>
-                                            <a href="${draft.resume_url}"
-                                                style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                Resume
-                                            </a>    
-                                        </div>
-                                    `;
+                                                                                                                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                                    <div>
+                                                                                                                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                                                                                                        <div style="font-size: 0.8rem; color: #64748b;">
+                                                                                                                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                                                                                        </div>
+                                                                                                                                    </div>
+                                                                                                                                    <a href="${draft.resume_url}"
+                                                                                                                                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                                                                                                        Resume
+                                                                                                                                    </a>    
+                                                                                                                                </div>
+                                                                                                                            `;
                             });
                             draftsHtml += '</div>';
 
@@ -3002,11 +3888,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                    <p style="color: #64748b; margin-bottom: 1rem;">
-                                        You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                    </p>
-                                    ${draftsHtml}
-                                `,
+                                                                                                                                <p style="color: #64748b; margin-bottom: 1rem;">
+                                                                                                                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                                                                                                                </p>
+                                                                                                                                ${draftsHtml}
+                                                                                                                            `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',
@@ -3030,6 +3916,170 @@
         </script>
     @endif
 
+    <script>
+        /* ══════════════════════════════════════
+           ENHANCEMENTS JS
+        ══════════════════════════════════════ */
+
+        // ── DARK MODE ──
+        const darkBtn = document.getElementById('darkModeBtn');
+        const darkIcon = document.getElementById('darkModeIcon');
+
+        function applyTheme(dark) {
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.body.style.background = dark ? 'var(--bg-body)' : '';
+            if (darkIcon) darkIcon.className = dark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            localStorage.setItem('adminTheme', dark ? 'dark' : 'light');
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('adminTheme');
+        applyTheme(savedTheme === 'dark');
+
+        darkBtn?.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            applyTheme(!isDark);
+        });
+
+        // ── COMMAND PALETTE ──
+        const CMD_ITEMS = [
+            { label: 'Dashboard', group: 'Navigation', icon: 'bi-house', bg: 'rgba(99,102,241,0.1)', color: 'var(--primary)', url: '{{ route("admin.dashboard") }}', hint: 'Go to Home' },
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view']))
+                { label: 'Orders', group: 'Navigation', icon: 'bi-basket', bg: 'rgba(16,185,129,0.1)', color: '#10b981', url: '{{ route("orders.index") }}', hint: 'View all orders' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
+                { label: 'Stock List', group: 'Navigation', icon: 'bi-gem', bg: 'rgba(139,92,246,0.1)', color: '#8b5cf6', url: '{{ route("diamond.index") }}', hint: 'View diamonds' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+                { label: 'Clients', group: 'Navigation', icon: 'bi-people', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', url: '{{ route("clients.index") }}', hint: 'Manage clients' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
+                { label: 'Settings', group: 'System', icon: 'bi-gear', bg: 'rgba(100,116,139,0.1)', color: '#64748b', url: '{{ route("settings.security.index") }}', hint: 'System configuration' }
+            @endif
+        ];
+
+        let cmdActive = -1;
+
+        function openCommandPalette() {
+            document.getElementById('cmdOverlay').classList.add('open');
+            setTimeout(() => document.getElementById('cmdInput')?.focus(), 50);
+            cmdActive = -1;
+            renderCmdResults('');
+        }
+
+        function closeCommandPalette() {
+            document.getElementById('cmdOverlay').classList.remove('open');
+            if (document.getElementById('cmdInput')) document.getElementById('cmdInput').value = '';
+        }
+
+        function closeCmdIfOutside(e) {
+            if (e.target === document.getElementById('cmdOverlay')) closeCommandPalette();
+        }
+
+        function renderCmdResults(q) {
+            const filtered = q
+                ? CMD_ITEMS.filter(i => i.label.toLowerCase().includes(q) || i.hint.toLowerCase().includes(q) || i.group.toLowerCase().includes(q))
+                : CMD_ITEMS;
+
+            const groups = [...new Set(filtered.map(i => i.group))];
+            const container = document.getElementById('cmdResults');
+            if (!container) return;
+
+            container.innerHTML = groups.map(g => `
+            <div class="cmd-group-label">${g}</div>
+            ${filtered.filter(i => i.group === g).map((item, idx) => `
+                <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
+                    <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
+                        <i class="bi ${item.icon}"></i>
+                    </div>
+                    <div class="cmd-item-text">
+                        <div>${item.label}</div>
+                        <div class="cmd-item-hint">${item.hint}</div>
+                    </div>
+                </a>
+            `).join('')}
+        `).join('') || '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:0.875rem;">No results found</div>';
+        }
+
+        document.getElementById('cmdInput')?.addEventListener('input', function () {
+            cmdActive = -1;
+            renderCmdResults(this.value.toLowerCase());
+        });
+
+        document.getElementById('cmdInput')?.addEventListener('keydown', function (e) {
+            const items = document.querySelectorAll('.cmd-item');
+            if (e.key === 'ArrowDown') { e.preventDefault(); cmdActive = Math.min(cmdActive + 1, items.length - 1); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); cmdActive = Math.max(cmdActive - 1, 0); }
+            else if (e.key === 'Enter' && cmdActive >= 0) { e.preventDefault(); items[cmdActive]?.click(); return; }
+            else if (e.key === 'Escape') { closeCommandPalette(); return; }
+            items.forEach((el, i) => el.classList.toggle('active', i === cmdActive));
+            if (cmdActive >= 0) items[cmdActive]?.scrollIntoView({ block: 'nearest' });
+        });
+
+        // Ctrl+K / Cmd+K shortcut
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const overlay = document.getElementById('cmdOverlay');
+                overlay.classList.contains('open') ? closeCommandPalette() : openCommandPalette();
+            }
+            if (e.key === 'Escape') closeCommandPalette();
+        });
+
+        // ── SPEED DIAL ──
+        const sdBtn = document.getElementById('speedDialBtn');
+        const sdItems = document.getElementById('speedDialItems');
+
+        sdBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = sdItems.classList.toggle('open');
+            sdBtn.classList.toggle('open', open);
+        });
+
+        document.addEventListener('click', () => {
+            sdItems?.classList.remove('open');
+            sdBtn?.classList.remove('open');
+        });
+
+        // ── REAL-TIME NOTIFICATION BADGE via Pusher ──
+        (function () {
+            if (!window.chatPusherKey || !window.authAdminId) return;
+            try {
+                // Only if Pusher/Echo is available
+                if (typeof Echo !== 'undefined') {
+                    Echo.private(`App.Models.Admin.${window.authAdminId}`)
+                        .notification((notif) => {
+                            // Update badge count
+                            const badge = document.querySelector('.notification-badge');
+                            if (badge) {
+                                badge.textContent = parseInt(badge.textContent || 0) + 1;
+                                badge.style.display = '';
+                            } else {
+                                const btn = document.getElementById('notificationBtn');
+                                if (btn) {
+                                    const b = document.createElement('span');
+                                    b.className = 'notification-badge';
+                                    b.textContent = '1';
+                                    btn.appendChild(b);
+                                }
+                            }
+                            // Play subtle sound
+                            try {
+                                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                                const osc = ctx.createOscillator();
+                                const gain = ctx.createGain();
+                                osc.connect(gain); gain.connect(ctx.destination);
+                                osc.frequency.value = 880;
+                                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                                osc.start(); osc.stop(ctx.currentTime + 0.4);
+                            } catch (e) { }
+                        });
+                }
+            } catch (e) { }
+        })();
+
+    </script>
     @stack('scripts')
 </body>
 

@@ -251,7 +251,7 @@
         .job-title {
             font-size: 2rem;
             font-weight: 700;
-            color: #1e293b;
+            color: var(--dark);
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -309,11 +309,12 @@
         .job-info-card,
         .progress-card,
         .results-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 2rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             margin-bottom: 2rem;
+            border: 1px solid var(--border);
         }
 
         .info-grid {
@@ -324,32 +325,32 @@
 
         .info-label {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: var(--gray);
             margin-bottom: 0.5rem;
         }
 
         .info-value {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--dark);
         }
 
         .info-value small {
             font-size: 0.85rem;
             font-weight: 500;
-            color: #6b7280;
+            color: var(--gray);
         }
 
         .progress-card h3 {
             margin: 0 0 1.5rem 0;
-            color: #1e293b;
+            color: var(--dark);
         }
 
         .progress-bar-container {
             position: relative;
             width: 100%;
             height: 40px;
-            background: #f1f5f9;
+            background: var(--bg-body);
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 2rem;
@@ -367,7 +368,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             font-weight: 700;
-            color: #1e293b;
+            color: var(--dark);
             font-size: 1.125rem;
         }
 
@@ -382,27 +383,27 @@
             text-align: center;
             padding: 1rem;
             border-radius: 10px;
-            background: #f8fafc;
+            background: var(--bg-body);
         }
 
         .stat-item.success {
-            background: #d1fae5;
+            background: rgba(16,185,129,0.12);
         }
 
         .stat-item.error {
-            background: #fee2e2;
+            background: rgba(239,68,68,0.1);
         }
 
         .stat-value {
             font-size: 2rem;
             font-weight: 700;
-            color: #1e293b;
+            color: var(--dark);
             margin-bottom: 0.5rem;
         }
 
         .stat-label {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: var(--gray);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -434,12 +435,12 @@
 
         .results-card.success {
             border-left-color: #10b981;
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+            background: var(--bg-card);
         }
 
         .results-card.error {
             border-left-color: #ef4444;
-            background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+            background: var(--bg-card);
         }
 
         .results-header {
@@ -463,14 +464,14 @@
 
         .results-header h3 {
             margin: 0;
-            color: #1e293b;
+            color: var(--dark);
         }
 
         .error-alert {
             display: flex;
             gap: 1rem;
             padding: 1rem;
-            background: #fef3c7;
+            background: rgba(245,158,11,0.12);
             border-radius: 8px;
             border-left: 4px solid #f59e0b;
             margin: 1rem 0;
@@ -527,9 +528,9 @@
             border-radius: 10px;
             font-weight: 600;
             text-decoration: none;
-            background: white;
+            background: var(--bg-card);
             color: #6366f1;
-            border: 2px solid #6366f1;
+            border: 1.5px solid #6366f1;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -537,7 +538,20 @@
         }
 
         .btn-secondary:hover {
-            background: #f8f9ff;
+            background: rgba(99,102,241,0.07);
         }
+    </style>
+
+    <style>
+        [data-theme="dark"] .status-queued  { background: rgba(245,158,11,0.15); color: #fcd34d; }
+        [data-theme="dark"] .status-processing { background: rgba(59,130,246,0.15); color: #93c5fd; }
+        [data-theme="dark"] .status-completed { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+        [data-theme="dark"] .status-failed   { background: rgba(239,68,68,0.15);  color: #fca5a5; }
+        [data-theme="dark"] .live-stats       { border-top-color: rgba(255,255,255,0.1); }
+        [data-theme="dark"] .live-stat        { color: var(--gray); }
+        [data-theme="dark"] .error-alert      { background: rgba(245,158,11,0.12); }
+        [data-theme="dark"] .job-info-card,
+        [data-theme="dark"] .progress-card,
+        [data-theme="dark"] .results-card     { box-shadow: none; }
     </style>
 @endsection

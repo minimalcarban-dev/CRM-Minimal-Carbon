@@ -294,7 +294,7 @@
                     @if($diamond->barcode_image_url)
                         <div class="form-group full-width">
                             <label class="form-label">Barcode</label>
-                            <div style="padding: 20px; background-color: #f8f9fa; border-radius: 4px;">
+                            <div class="barcode-wrapper" style="padding: 20px; border-radius: 4px;">
                                 <img src="{{ $diamond->barcode_image_url }}" style="max-width: 200px; height: auto;"
                                     alt="Barcode">
                             </div>
@@ -303,6 +303,73 @@
                 </div>
             </div>
         </div>
+
+        <!-- Assignment History Card -->
+        @if($diamond->admins->count() > 0)
+            <div class="form-section-card">
+                <div class="section-header">
+                    <div class="section-info">
+                        <div class="section-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div>
+                            <h5 class="section-title">Assignment History</h5>
+                            <p class="section-description">Log of admin assignments for this diamond</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-body p-0">
+                    <div class="table-responsive">
+                        <table class="table data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Assigned Admin</th>
+                                    <th>Assigned By</th>
+                                    <th>Date & Time</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($diamond->admins->sortByDesc('pivot.assigned_at') as $historicalAdmin)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px; font-weight: 600;">
+                                                    {{ substr($historicalAdmin->name, 0, 1) }}
+                                                </div>
+                                                <span class="text-semibold">{{ $historicalAdmin->name }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $assigner = \App\Models\Admin::find($historicalAdmin->pivot->assign_by);
+                                            @endphp
+                                            {{ $assigner ? $assigner->name : 'System' }}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span>{{ \Carbon\Carbon::parse($historicalAdmin->pivot->assigned_at)->format('M d, Y') }}</span>
+                                                <small
+                                                    class="text-muted">{{ \Carbon\Carbon::parse($historicalAdmin->pivot->assigned_at)->format('h:i A') }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($historicalAdmin->pivot->note)
+                                                <p class="mb-0" style="white-space: pre-wrap; font-size: 0.875rem;">
+                                                    {{ $historicalAdmin->pivot->note }}</p>
+                                            @else
+                                                <span class="text-muted"><i class="bi bi-dash"></i></span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Description & Notes -->
         @if($diamond->description || $diamond->note)
@@ -354,8 +421,9 @@
                     <div class="image-gallery"
                         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
                         @foreach($diamond->multi_img_upload as $index => $image)
-                            <div onclick="viewImage('{{ $image }}', 'Diamond Image {{ $index + 1 }}')"
-                                style="border-radius: 8px; overflow: hidden; background-color: #f8f9fa; cursor: pointer; position: relative; transition: all 0.3s;">
+                            <div class="gallery-item" data-image-url="{{ $image }}"
+                                data-image-title="Diamond Image {{ $index + 1 }}"
+                                style="border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; transition: all 0.3s;">
                                 <img src="{{ $image }}" style="width: 100%; height: 150px; object-fit: cover;"
                                     alt="Diamond Image {{ $index + 1 }}">
                                 <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;"
@@ -424,6 +492,97 @@
             background: #fdeaea;
             color: #842029;
             border-color: #f6cccc;
+        }
+
+        .barcode-wrapper,
+        .gallery-item {
+            background-color: #f8f9fa;
+        }
+
+        /* ── Dark Mode Overrides ── */
+        [data-theme="dark"] .form-value {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .status-instock {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+
+        [data-theme="dark"] .status-sold {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        [data-theme="dark"] .barcode-wrapper,
+        [data-theme="dark"] .gallery-item {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Table Dark Mode */
+        [data-theme="dark"] .data-table,
+        [data-theme="dark"] .data-table > :not(caption) > * > * {
+            color: #e2e8f0;
+            border-color: rgba(255, 255, 255, 0.1);
+            background-color: transparent !important;
+            --bs-table-bg: transparent;
+        }
+
+        [data-theme="dark"] .data-table thead,
+        [data-theme="dark"] .data-table thead th,
+        [data-theme="dark"] .data-table thead tr {
+            color: #94a3b8;
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .data-table tbody td,
+        [data-theme="dark"] .data-table tbody tr {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+            background-color: transparent !important;
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .data-table tbody tr:hover td {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        [data-theme="dark"] .bg-primary-light {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+        }
+
+        [data-theme="dark"] .text-primary {
+            color: #818cf8 !important;
+        }
+
+        [data-theme="dark"] .text-semibold {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .image-modal-content {
+            background: var(--bg-card);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        [data-theme="dark"] .image-modal-header {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom-color: var(--border);
+        }
+
+        [data-theme="dark"] .image-modal-header h3 {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .image-modal-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
         }
 
         /* Image Modal */
@@ -520,38 +679,46 @@
                 opacity: 1;
             }
         }
+
         @media (max-width: 575px) {
             .breadcrumb-nav {
                 gap: 5px;
             }
-            .header-right a:first-child{
+
+            .header-right a:first-child {
                 margin-bottom: 8px;
             }
+
             .header-right a {
                 padding: 5px;
                 font-size: 13px;
             }
+
             .section-icon {
                 width: 35px;
                 height: 35px;
                 border-radius: 5px;
                 font-size: 18px;
             }
+
             p.section-description {
                 font-size: 12px;
             }
+
             p.form-value {
                 font-size: 12px;
             }
+
             label.form-label {
                 font-size: 14px;
                 margin-bottom: 0px;
                 font-weight: 700;
             }
+
             .form-grid {
                 gap: 5px;
             }
-            
+
         }
     </style>
 

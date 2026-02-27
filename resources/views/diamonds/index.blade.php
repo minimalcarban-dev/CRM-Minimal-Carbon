@@ -671,23 +671,7 @@
 </div>
 
 <style>
-    :root {
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --primary-light: #818cf8;
-        --success: #10b981;
-        --success-light: #34d399;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --info: #3b82f6;
-        --dark: #1e293b;
-        --gray: #64748b;
-        --light-gray: #f8fafc;
-        --border: #e2e8f0;
-        --shadow: rgba(0, 0, 0, 0.04);
-        --shadow-md: rgba(0, 0, 0, 0.08);
-        --shadow-lg: rgba(0, 0, 0, 0.12);
-    }
+    /* Uses global theme variables from layouts/admin.blade.php */
 
     * {
         box-sizing: border-box;
@@ -710,11 +694,11 @@
 
     /* Page Header */
     .page-header {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        background: var(--bg-card);
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px var(--shadow);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         border: 1px solid var(--border);
     }
 
@@ -817,7 +801,7 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        background: white;
+        background: var(--bg-card);
         color: var(--gray);
         padding: 0.75rem 1.5rem;
         border-radius: 12px;
@@ -825,7 +809,7 @@
         font-weight: 600;
         font-size: 0.9375rem;
         transition: all 0.3s ease;
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
         cursor: pointer;
     }
 
@@ -870,13 +854,13 @@
     }
 
     .stat-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
         padding: 1.75rem;
         display: flex;
         align-items: center;
         gap: 1.5rem;
-        box-shadow: 0 1px 3px var(--shadow);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         transition: all 0.3s ease;
         border: 1px solid var(--border);
     }
@@ -887,7 +871,7 @@
     }
 
     .stat-card-primary {
-        background: linear-gradient(135deg, #ffffff 0%, rgba(99, 102, 241, 0.02) 100%);
+        background: var(--bg-card);
         border-color: rgba(99, 102, 241, 0.1);
     }
 
@@ -896,7 +880,7 @@
     }
 
     .stat-card-success {
-        background: linear-gradient(135deg, #ffffff 0%, rgba(16, 185, 129, 0.02) 100%);
+        background: var(--bg-card);
         border-color: rgba(16, 185, 129, 0.1);
     }
 
@@ -905,7 +889,7 @@
     }
 
     .stat-card-info {
-        background: linear-gradient(135deg, #ffffff 0%, rgba(59, 130, 246, 0.02) 100%);
+        background: var(--bg-card);
         border-color: rgba(59, 130, 246, 0.1);
     }
 
@@ -992,10 +976,10 @@
 
     /* Filter Section - Professional Enterprise Design */
     .filter-section {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
         margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px var(--shadow);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         border: 1px solid var(--border);
         overflow: hidden;
     }
@@ -1005,7 +989,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 1.25rem 1.75rem;
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        background: rgba(255, 255, 255, 0.04);
         border-bottom: 1px solid var(--border);
     }
 
@@ -1026,8 +1010,8 @@
     }
 
     .btn-toggle-filters {
-        background: white;
-        border: 2px solid var(--border);
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
         width: 36px;
         height: 36px;
         border-radius: 8px;
@@ -1143,10 +1127,10 @@
     .filter-select {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
         border-radius: 10px;
         font-size: 0.875rem;
-        background: white;
+        background: var(--bg-body);
         transition: all 0.2s ease;
         color: var(--dark);
         font-weight: 500;
@@ -1165,7 +1149,7 @@
     .filter-select:focus {
         outline: none;
         border-color: var(--primary);
-        background: white;
+        background: var(--bg-body);
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
@@ -1245,12 +1229,12 @@
 
     .per-page-select {
         padding: 0.4rem 0.75rem;
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
         border-radius: 8px;
         font-size: 0.875rem;
         font-weight: 600;
         color: var(--dark);
-        background: white;
+        background: var(--bg-body);
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -1294,9 +1278,9 @@
 
     .btn-filter-reset {
         padding: 0.875rem 1.75rem;
-        background: white;
+        background: var(--bg-card);
         color: var(--gray);
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
         border-radius: 10px;
         font-weight: 600;
         font-size: 0.9375rem;
@@ -1309,7 +1293,7 @@
     }
 
     .btn-filter-reset:hover {
-        background: var(--light-gray);
+        background: var(--bg-body);
         border-color: var(--gray);
         color: var(--dark);
     }
@@ -1340,9 +1324,9 @@
 
     /* Table Card */
     .table-card {
-        background: #ffffff;
+        background: var(--bg-card);
         border-radius: 16px;
-        box-shadow: 0 1px 3px var(--shadow);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         border: 1px solid var(--border);
         overflow: hidden;
     }
@@ -1357,8 +1341,8 @@
     }
 
     .data-table thead {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border-bottom: 2px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid var(--border);
     }
 
     .data-table th {
@@ -1479,8 +1463,8 @@
     }
 
     .btn-reassign {
-        background: white;
-        border: 2px solid var(--border);
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
         color: var(--primary);
         cursor: pointer;
         padding: 0.375rem 0.5rem;
@@ -1512,8 +1496,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid var(--border);
-        background: white;
+        border: 1.5px solid var(--border);
+        background: var(--bg-card);
         color: var(--gray);
         cursor: pointer;
         transition: all 0.2s ease;
@@ -1601,12 +1585,13 @@
     }
 
     .reassign-modal {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
         padding: 2rem;
         max-width: 450px;
         width: 90%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border);
     }
 
     .modal-header {
@@ -1638,23 +1623,24 @@
     .modal-select {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
         border-radius: 10px;
         font-size: 0.9375rem;
-        background: var(--light-gray);
+        background: var(--bg-body);
+        color: var(--dark);
         cursor: pointer;
         transition: all 0.2s ease;
     }
 
     .modal-select:hover {
         border-color: var(--primary);
-        background: white;
+        background: var(--bg-body);
     }
 
     .modal-select:focus {
         outline: none;
         border-color: var(--primary);
-        background: white;
+        background: var(--bg-body);
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
@@ -1692,13 +1678,13 @@
     }
 
     .btn-modal-cancel {
-        background: white;
+        background: var(--bg-body);
         color: var(--gray);
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
     }
 
     .btn-modal-cancel:hover {
-        background: var(--light-gray);
+        background: var(--bg-card);
         border-color: var(--gray);
     }
 
@@ -1723,15 +1709,16 @@
 
     /* Tutorial Modal Styles */
     .tutorial-modal {
-        background: white;
+        background: var(--bg-card);
         border-radius: 20px;
         max-width: 800px;
         width: 95%;
         max-height: 90vh;
         overflow: hidden;
-        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
         display: flex;
         flex-direction: column;
+        border: 1px solid var(--border);
     }
 
     .tutorial-modal-header {
@@ -2278,80 +2265,170 @@
         .filter-section-title {
             font-size: 12px;
         }
+
         @media (max-width: 575px) {
-            .filter-row-3, .filter-row-4 {
+
+            .filter-row-3,
+            .filter-row-4 {
                 grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
                 gap: 7px;
             }
+
             .filter-actions {
                 padding-top: 5px;
                 margin-top: 5px;
             }
+
             .filter-actions-right {
                 flex-direction: column;
                 align-items: stretch;
             }
-            .filter-input, .filter-select {
+
+            .filter-input,
+            .filter-select {
                 padding: 5px;
             }
-            .filter-actions-left{
+
+            .filter-actions-left {
                 flex-direction: column;
             }
+
             span.result-count {
                 padding-bottom: 10px;
             }
+
             .per-page-filter {
                 border: none;
                 margin-bottom: 11px;
                 padding-left: 0;
                 margin-left: 0;
             }
+
             .badge-custom {
                 font-size: 11px;
             }
-            .status-sold, .status-instock {
+
+            .status-sold,
+            .status-instock {
                 white-space: nowrap;
                 font-size: 11px;
                 padding: 4px;
                 border-radius: 8px;
             }
+
             .barcode-image {
                 height: 30px;
                 max-width: 90px;
             }
+
             .cell-content .action-buttons {
                 flex-wrap: nowrap;
                 text-align: left;
                 justify-content: start;
                 align-items: center;
             }
+
             .reassign-modal {
                 padding: 1rem;
             }
-            .btn-filter-apply,.filter-actions .filter-actions-right a.btn-filter-reset {
+
+            .btn-filter-apply,
+            .filter-actions .filter-actions-right a.btn-filter-reset {
                 padding: 4px;
                 border-radius: 8px;
                 font-size: 13px;
             }
+
             .tutorial-modal-header {
                 padding: 14px 8px;
                 font-size: 15px;
             }
+
             .tutorial-modal-body {
                 padding: 10px;
             }
+
             .tutorial-step {
                 margin-bottom: 10px;
                 padding-bottom: 10px;
                 gap: 7px;
             }
+
             .step-content p {
                 font-size: 13px;
             }
+
             .field-item {
                 font-size: 13px;
             }
         }
+    }
+
+    /* ── Dark Mode overrides ── */
+    [data-theme="dark"] .data-table thead {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    [data-theme="dark"] .data-table tbody tr.sold-row {
+        background: rgba(239, 68, 68, 0.06);
+    }
+
+    [data-theme="dark"] .data-table tbody tr.sold-row:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    [data-theme="dark"] .status-instock {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    [data-theme="dark"] .status-sold {
+        background: rgba(239, 68, 68, 0.12);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    [data-theme="dark"] .badge-info {
+        background: rgba(59, 130, 246, 0.15);
+        color: #93c5fd;
+    }
+
+    [data-theme="dark"] .badge-success {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+    }
+
+    [data-theme="dark"] .badge-secondary {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--gray);
+    }
+
+    [data-theme="dark"] .filter-section-title {
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] .filter-actions {
+        border-top-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] .per-page-filter {
+        border-left-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] .tutorial-modal-body {
+        background: var(--bg-card);
+    }
+
+    [data-theme="dark"] .tutorial-modal-footer {
+        background: var(--bg-card);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] .date-range-input {
+        background: var(--bg-body);
+        color: var(--dark);
+        border-color: rgba(255, 255, 255, 0.12);
     }
 </style>
 
@@ -2374,6 +2451,11 @@
                         <option value="{{ $admin->id }}">{{ $admin->name }}</option>
                     @endforeach
                 </select>
+            </div>
+            <div style="margin-top: 1rem;">
+                <label class="modal-label" for="assignNote">Note (Optional)</label>
+                <textarea id="assignNote" name="note" class="modal-select" rows="3"
+                    placeholder="Enter reason for assignment or any details..."></textarea>
             </div>
         </div>
         <div class="modal-footer">
@@ -2570,6 +2652,7 @@
         const cancelBtn = document.getElementById('cancelReassign');
         const confirmBtn = document.getElementById('confirmReassign');
         const modalDiamondSku = document.getElementById('modalDiamondSku');
+        const assignNote = document.getElementById('assignNote');
         let currentDiamondId = null;
 
         // Open modal when reassign button clicked
@@ -2581,6 +2664,7 @@
 
                 modalDiamondSku.textContent = sku;
                 adminSelect.value = '';
+                assignNote.value = '';
                 modal.classList.remove('d-none');
             });
         });
@@ -2619,7 +2703,8 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                     },
                     body: JSON.stringify({
-                        admin_id: adminId
+                        admin_id: adminId,
+                        note: assignNote.value
                     })
                 });
 

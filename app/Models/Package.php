@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class Package extends Model
@@ -13,6 +14,19 @@ class Package extends Model
 
     protected $fillable = [
         'slip_id',
+        'party_type',
+        'company_name',
+        'gst_number',
+        'pan_number',
+        'purpose_of_handover',
+        'stock_id',
+        'handover_location',
+        'handover_mode',
+        'diamond_shape',
+        'diamond_size',
+        'diamond_color',
+        'diamond_clarity',
+        'diamond_carat',
         'person_name',
         'mobile_number',
         'package_description',
@@ -31,6 +45,7 @@ class Package extends Model
         'issue_date' => 'date',
         'return_date' => 'date',
         'actual_return_date' => 'date',
+        'diamond_carat' => 'decimal:3',
     ];
 
     // Relationships
@@ -73,5 +88,28 @@ class Package extends Model
             'Overdue' => '<span class="badge bg-danger">Overdue</span>',
             default => '<span class="badge bg-secondary">Unknown</span>',
         };
+    }
+
+    public function getPackageImageUrlAttribute(): ?string
+    {
+        if (empty($this->package_image)) {
+            return null;
+        }
+
+        $image = trim((string) $this->package_image);
+
+        // Cloudinary/direct URL
+        if (Str::startsWith($image, ['http://', 'https://']) && !Str::contains($image, '/storage/')) {
+            return $image;
+        }
+
+        // Old absolute local URL; normalize host to current app host.
+        if (Str::contains($image, '/storage/')) {
+            $path = parse_url($image, PHP_URL_PATH) ?: $image;
+            return url($path);
+        }
+
+        // Relative local path
+        return asset(ltrim($image, '/'));
     }
 }

@@ -9,17 +9,18 @@ use Illuminate\Support\Facades\Log;
 
 class TrackingWebhookController extends Controller
 {
-    /**
-     * Handle incoming webhooks from 17Track API.
-     */
     public function handle17Track(Request $request)
     {
         $payload = $request->all();
-        Log::info('17Track Webhook Payload:', is_array($payload) ? $payload : []);
-
+        Log::info('17Track Webhook received', [
+            'tracking_count' => count(
+                is_array($payload['data']['accepted'] ?? null)
+                ? $payload['data']['accepted']
+                : (is_array($payload['data'] ?? null) ? $payload['data'] : [])
+            ),
+        ]);
         $data = $payload['data'] ?? $payload;
 
-        // 17Track pushes data usually wrapped in "data" -> "accepted" array, or a direct array
         $trackings = [];
         if (isset($data['accepted']) && is_array($data['accepted'])) {
             $trackings = $data['accepted'];
@@ -58,14 +59,27 @@ class TrackingWebhookController extends Controller
 
             $providerName = $trackInfo['tracking']['providers'][0]['provider']['name'] ?? null;
             $events = $trackInfo['tracking']['providers'][0]['events'] ?? [];
-
             $history = [];
+
             foreach ($events as $checkpoint) {
-                $dateStr = $checkpoint['time_iso'] ?? $checkpoint['time_utc'] ?? now();
+                $dateStr = $checkpoint['time_iso'] ?? $checkpoint['time_utc'] ?? null;
+                if ($dateStr === null) {
+                    Log::warning('17Track checkpoint missing timestamp', [
+                        'tracking_number' => $number,
+                        'checkpoint' => $checkpoint['description'] ?? 'unknown'
+                    ]);
+                    continue;
+                }
+
                 try {
                     $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
                 } catch (\Exception $e) {
-                    $dateFormatted = $dateStr;
+                    Log::warning('17Track checkpoint timestamp parse failed', [
+                        'tracking_number' => $number,
+                        'date_string' => $dateStr,
+                        'error' => $e->getMessage()
+                    ]);
+                    continue;
                 }
 
                 $history[] = [

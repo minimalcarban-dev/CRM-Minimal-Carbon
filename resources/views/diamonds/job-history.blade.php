@@ -135,7 +135,7 @@
         .page-header h1 {
             font-size: 2rem;
             font-weight: 700;
-            color: #1e293b;
+            color: var(--dark);
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -147,9 +147,9 @@
             border-radius: 10px;
             font-weight: 600;
             text-decoration: none;
-            background: white;
+            background: var(--bg-card);
             color: #6366f1;
-            border: 2px solid #6366f1;
+            border: 1.5px solid #6366f1;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -157,14 +157,15 @@
         }
 
         .btn-back:hover {
-            background: #f8f9ff;
+            background: rgba(99,102,241,0.07);
         }
 
         .jobs-table-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             overflow: hidden;
+            border: 1px solid var(--border);
         }
 
         .jobs-table {
@@ -188,11 +189,12 @@
 
         .jobs-table td {
             padding: 1rem;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
+            color: var(--dark);
         }
 
         .jobs-table tbody tr:hover {
-            background: #f8fafc;
+            background: var(--bg-body);
         }
 
         .type-badge {
@@ -265,7 +267,7 @@
             transform: translate(-50%, -50%);
             font-size: 0.75rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--dark);
         }
 
         .rows-info {
@@ -377,6 +379,51 @@
             .empty-state {
                 padding: 5px !important;
             }
+        }
+    </style>
+
+    <style>
+        [data-theme="dark"] .jobs-table-card {
+            box-shadow: none;
+        }
+        [data-theme="dark"] .progress-mini {
+            background: rgba(255,255,255,0.08);
+        }
+        [data-theme="dark"] .type-badge.import {
+            background: rgba(59,130,246,0.15);
+            color: #93c5fd;
+        }
+        [data-theme="dark"] .type-badge.export {
+            background: rgba(16,185,129,0.15);
+            color: #6ee7b7;
+        }
+        [data-theme="dark"] .status-badge.queued {
+            background: rgba(245,158,11,0.15);
+            color: #fcd34d;
+        }
+        [data-theme="dark"] .status-badge.processing {
+            background: rgba(59,130,246,0.15);
+            color: #93c5fd;
+        }
+        [data-theme="dark"] .status-badge.completed {
+            background: rgba(16,185,129,0.15);
+            color: #6ee7b7;
+        }
+        [data-theme="dark"] .status-badge.failed {
+            background: rgba(239,68,68,0.15);
+            color: #fca5a5;
+        }
+        [data-theme="dark"] .btn-action.view {
+            background: rgba(59,130,246,0.15);
+            color: #93c5fd;
+        }
+        [data-theme="dark"] .btn-action.download {
+            background: rgba(16,185,129,0.15);
+            color: #6ee7b7;
+        }
+        [data-theme="dark"] .btn-action.error {
+            background: rgba(239,68,68,0.15);
+            color: #fca5a5;
         }
     </style>
 @endsection

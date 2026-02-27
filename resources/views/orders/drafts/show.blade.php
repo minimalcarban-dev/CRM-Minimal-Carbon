@@ -112,11 +112,12 @@
         }
 
         .page-header {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
         }
 
         .header-content {
@@ -128,7 +129,7 @@
         }
 
         .breadcrumb-link {
-            color: #64748b;
+            color: var(--gray);
             text-decoration: none;
             font-size: 0.875rem;
             display: flex;
@@ -144,7 +145,7 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 700;
-            color: #1e293b;
+            color: var(--dark);
             margin: 0 0 0.5rem;
             display: flex;
             align-items: center;
@@ -156,7 +157,7 @@
         }
 
         .page-subtitle {
-            color: #64748b;
+            color: var(--gray);
             margin: 0;
         }
 
@@ -184,9 +185,9 @@
         }
 
         .btn-danger-custom {
-            background: white;
+            background: var(--bg-card);
             color: #ef4444;
-            border: 2px solid #fecaca;
+            border: 1.5px solid rgba(239,68,68,0.3);
         }
 
         .info-grid {
@@ -197,15 +198,15 @@
         }
 
         .info-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 12px;
             padding: 1.25rem;
-            border: 2px solid #e2e8f0;
+            border: 1px solid var(--border);
         }
 
         .info-label {
             font-size: 0.75rem;
-            color: #64748b;
+            color: var(--gray);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 0.5rem;
@@ -214,7 +215,7 @@
         .info-value {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--dark);
         }
 
         .order-type-badge,
@@ -276,22 +277,22 @@
         }
 
         .data-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
-            border: 2px solid #e2e8f0;
+            border: 1px solid var(--border);
             overflow: hidden;
         }
 
         .data-header {
             padding: 1.25rem 1.5rem;
-            background: #f8fafc;
-            border-bottom: 2px solid #e2e8f0;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid var(--border);
         }
 
         .data-header h3 {
             margin: 0;
             font-size: 1.125rem;
-            color: #1e293b;
+            color: var(--dark);
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -307,7 +308,7 @@
         }
 
         .data-table tr {
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
         }
 
         .data-table tr:last-child {
@@ -317,23 +318,25 @@
         .data-key {
             padding: 0.75rem 1rem 0.75rem 0;
             font-weight: 600;
-            color: #64748b;
+            color: var(--gray);
             width: 200px;
             vertical-align: top;
         }
 
         .data-value {
             padding: 0.75rem 0;
-            color: #1e293b;
+            color: var(--dark);
         }
 
         .data-value pre {
-            background: #f8fafc;
+            background: var(--bg-body);
             padding: 0.5rem;
             border-radius: 6px;
             font-size: 0.75rem;
             margin: 0;
             overflow-x: auto;
+            color: var(--dark);
+            border: 1px solid var(--border);
         }
 
         .text-muted {

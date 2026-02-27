@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\ClosureTypeController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FactoryController;
 use App\Http\Controllers\GoldTrackingController;
+use App\Http\Controllers\JewelleryCalculatorController;
 use App\Http\Controllers\MeleeDiamondController;
 use App\Http\Controllers\MetalTypeController;
 use App\Http\Controllers\MetaWebhookController;
@@ -62,10 +64,9 @@ Route::post('admin/logout', [AdminAuthController::class, 'logout'])->name('admin
 
 // Admin CRUD routes (protected)
 Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
-    // Lightweight dashboard landing for safe redirects
-    Route::get('dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+    // Dashboard
+    Route::get('dashboard', [DashboardController::class, 'index'])
+        ->name('admin.dashboard');
 
     // DIAGNOSTIC ROUTE
     Route::get('test-blade', function () {
@@ -84,9 +85,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // Tools & Calculators
     // ─────────────────────────────────────────────────────────────
     Route::prefix('tools')->name('tools.')->group(function () {
-        Route::get('jewellery-calculator', [\App\Http\Controllers\JewelleryCalculatorController::class, 'index'])
+        Route::get('jewellery-calculator', [JewelleryCalculatorController::class, 'index'])
             ->name('jewellery-calculator');
-        Route::get('gold-rate', [\App\Http\Controllers\JewelleryCalculatorController::class, 'getRates'])
+        Route::get('gold-rate', [JewelleryCalculatorController::class, 'getRates'])
             ->name('gold-rate');
     });
 
@@ -204,7 +205,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::post('orders', [OrderController::class, 'store'])
         ->name('orders.store')
         ->middleware('admin.permission:orders.create');
-    Route::get('orders/sync-all-tracking', [OrderController::class, 'syncAllTracking'])
+    Route::post('orders/sync-all-tracking', [OrderController::class, 'syncAllTracking'])
         ->name('orders.sync-all-tracking')
         ->middleware('admin.permission:orders.edit');
     Route::get('orders/form/{type}', [OrderController::class, 'loadFormPartial'])
@@ -941,6 +942,10 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             ->name('store')
             ->middleware('admin.permission:packages.create');
 
+        Route::get('/lookup-stock', [\App\Http\Controllers\PackageController::class, 'lookupStock'])
+            ->name('lookup-stock')
+            ->middleware('admin.permission:packages.create');
+
         Route::get('/{package}', [\App\Http\Controllers\PackageController::class, 'show'])
             ->name('show')
             ->middleware('admin.permission:packages.view');
@@ -952,25 +957,6 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::delete('/{package}', [\App\Http\Controllers\PackageController::class, 'destroy'])
             ->name('destroy')
             ->middleware('admin.permission:packages.delete');
-    });
-
-    Route::get('/debug-gold', function () {
-        try {
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
-                ->timeout(10)
-                ->get('https://bcast.navkargold.com:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/navkar');
-
-            return response()->json([
-                'status' => $response->status(),
-                'body_preview' => substr($response->body(), 0, 500),
-                'success' => $response->successful(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'class' => get_class($e),
-            ]);
-        }
     });
 
 });

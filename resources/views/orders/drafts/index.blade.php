@@ -193,10 +193,12 @@
                             <i class="bi bi-eye"></i>
                             Preview
                         </a>
-                        <form id="delete-draft-{{ $draft->id }}" action="{{ route('orders.drafts.destroy', $draft->id) }}" method="POST" class="d-inline">
+                        <form id="delete-draft-{{ $draft->id }}" action="{{ route('orders.drafts.destroy', $draft->id) }}"
+                            method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button type="button" class="btn-action btn-discard" onclick="confirmDeleteDraft({{ $draft->id }}, '{{ $draft->client_name ?? 'Unnamed Draft' }}')">
+                            <button type="button" class="btn-action btn-discard"
+                                onclick="confirmDeleteDraft({{ $draft->id }}, @json($draft->client_name ?? 'Unnamed Draft'))">
                                 <i class="bi bi-trash"></i>
                                 Discard
                             </button>
@@ -234,34 +236,24 @@
 
     <!-- CSS -->
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
-            --dark: #1e293b;
-            --gray: #64748b;
-            --light-gray: #f1f5f9;
-            --border: #e2e8f0;
-        }
+        /* Uses global theme variables from layouts/admin.blade.php */
 
         .drafts-container {
             padding: 2rem;
             max-width: 1400px;
             margin: 0 auto;
-            background: #f8fafc;
+            background: var(--bg-body);
             min-height: 100vh;
         }
 
         /* Page Header */
         .page-header {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
         }
 
         .header-content {
@@ -338,13 +330,14 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 1.5rem;
             display: flex;
             align-items: center;
             gap: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
         }
 
         .stat-icon {
@@ -392,10 +385,11 @@
 
         /* Filters */
         .filter-section {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 1.5rem;
             margin-bottom: 2rem;
+            border: 1px solid var(--border);
         }
 
         .filter-form {
@@ -422,17 +416,21 @@
         .search-input {
             width: 100%;
             padding: 0.75rem 1rem 0.75rem 2.5rem;
-            border: 2px solid var(--border);
+            border: 1.5px solid var(--border);
             border-radius: 10px;
             font-size: 0.875rem;
+            background: var(--bg-body);
+            color: var(--dark);
         }
 
         .filter-select {
             padding: 0.75rem 1rem;
-            border: 2px solid var(--border);
+            border: 1.5px solid var(--border);
             border-radius: 10px;
             font-size: 0.875rem;
             min-width: 150px;
+            background: var(--bg-body);
+            color: var(--dark);
         }
 
         .btn-filter,
@@ -455,9 +453,9 @@
         }
 
         .btn-reset {
-            background: var(--light-gray);
+            background: var(--bg-body);
             color: var(--gray);
-            border: 2px solid var(--border);
+            border: 1.5px solid var(--border);
         }
 
         /* Draft Cards */
@@ -468,9 +466,9 @@
         }
 
         .draft-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
-            border: 2px solid var(--border);
+            border: 1px solid var(--border);
             overflow: hidden;
             transition: all 0.3s;
         }
@@ -489,11 +487,11 @@
 
         .draft-header {
             padding: 1rem 1.5rem;
-            background: var(--light-gray);
+            background: rgba(255, 255, 255, 0.04);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 1px solid var(--border);
         }
 
         .draft-id {
@@ -616,105 +614,111 @@
 
         .progress-bar {
             height: 6px;
-            background: var(--light-gray);
+            background: var(--bg-body);
             border-radius: 3px;
-            overflow: hidden;
-        }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--info));
-            border-radius: 3px;
-        }
+            .progress-bar {
+                height: 6px;
+                background: var(--bg-body);
+                border-radius: 3px;
+                overflow: hidden;
+            }
 
-        .expiry-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            color: var(--warning);
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, var(--primary), var(--info));
+                border-radius: 3px;
+            }
 
-        .draft-actions {
-            padding: 1rem 1.5rem;
-            background: var(--light-gray);
-            display: flex;
-            gap: 0.75rem;
-            border-top: 2px solid var(--border);
-        }
+            .expiry-warning {
+                background: rgba(245, 158, 11, 0.1);
+                border: 1px solid rgba(245, 158, 11, 0.2);
+                border-radius: 8px;
+                padding: 0.5rem 1rem;
+                color: var(--warning);
+                font-size: 0.75rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
 
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.375rem;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            border: none;
-        }
+            .draft-actions {
+                padding: 1rem 1.5rem;
+                background: rgba(255, 255, 255, 0.03);
+                display: flex;
+                gap: 0.75rem;
+                border-top: 1px solid var(--border);
+            }
 
-        .btn-resume {
-            background: var(--primary);
-            color: white;
-        }
+            .btn-action {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                font-size: 0.875rem;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                border: none;
+            }
 
-        .btn-preview {
-            background: white;
-            color: var(--gray);
-            border: 2px solid var(--border);
-        }
+            .btn-resume {
+                background: var(--primary);
+                color: white;
+            }
 
-        .btn-discard {
-            background: white;
-            color: var(--danger);
-            border: 2px solid rgba(239, 68, 68, 0.3);
-        }
+            .btn-preview {
+                background: var(--bg-card);
+                color: var(--gray);
+                border: 1.5px solid var(--border);
+            }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: white;
-            border-radius: 16px;
-        }
+            .btn-discard {
+                background: transparent;
+                color: var(--danger);
+                border: 1.5px solid rgba(239, 68, 68, 0.3);
+            }
 
-        .empty-icon {
-            width: 80px;
-            height: 80px;
-            background: var(--light-gray);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 2.5rem;
-            color: var(--success);
-        }
+            /* Empty State */
+            .empty-state {
+                text-align: center;
+                padding: 4rem 2rem;
+                background: var(--bg-card);
+                border-radius: 16px;
+                border: 1px solid var(--border);
+            }
 
-        .empty-title {
-            font-size: 1.5rem;
-            color: var(--dark);
-            margin: 0 0 0.5rem;
-        }
+            .empty-icon {
+                width: 80px;
+                height: 80px;
+                background: var(--bg-body);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 1.5rem;
+                font-size: 2.5rem;
+                color: var(--success);
+            }
 
-        .empty-description {
-            color: var(--gray);
-            margin-bottom: 1.5rem;
-        }
+            .empty-title {
+                font-size: 1.5rem;
+                color: var(--dark);
+                margin: 0 0 0.5rem;
+            }
 
-        /* Pagination */
-        .pagination-container {
-            margin-top: 2rem;
-            display: flex;
-            justify-content: center;
-        }
+            .empty-description {
+                color: var(--gray);
+                margin-bottom: 1.5rem;
+            }
+
+            /* Pagination */
+            .pagination-container {
+                margin-top: 2rem;
+                display: flex;
+                justify-content: center;
+            }
     </style>
 
     <!-- JavaScript -->
@@ -726,7 +730,7 @@
                 'Yes, Discard',
                 'Cancel'
             );
-            
+
             if (confirmed) {
                 document.getElementById('delete-draft-' + draftId).submit();
             }

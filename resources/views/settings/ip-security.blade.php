@@ -4,6 +4,102 @@
 
 @push('styles')
     <style>
+        [data-theme="dark"] .settings-container {
+            background: var(--bg-body, #0f172a);
+        }
+
+        [data-theme="dark"] .page-header,
+        [data-theme="dark"] .settings-card {
+            background: var(--bg-card, #1e293b) !important;
+            border: 1.5px solid rgba(148, 163, 184, 0.34) !important;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+        }
+
+        [data-theme="dark"] .settings-card-header {
+            border-bottom-color: rgba(148, 163, 184, 0.24);
+        }
+
+        [data-theme="dark"] .settings-card-title,
+        [data-theme="dark"] .ip-value,
+        [data-theme="dark"] .add-ip-form .form-group label,
+        [data-theme="dark"] .ip-address-cell {
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] .toggle-desc,
+        [data-theme="dark"] .ip-label,
+        [data-theme="dark"] .empty-state,
+        [data-theme="dark"] .config-alert-content p,
+        [data-theme="dark"] .ip-table th,
+        [data-theme="dark"] .ip-table td {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .toggle-slider {
+            background: rgba(148, 163, 184, 0.35);
+        }
+
+        [data-theme="dark"] .current-ip-card,
+        [data-theme="dark"] .ip-table th,
+        [data-theme="dark"] .add-ip-form .form-control {
+            background: rgba(15, 23, 42, 0.62) !important;
+            border-color: rgba(148, 163, 184, 0.32) !important;
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .add-ip-form .form-control::placeholder {
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .add-ip-form .form-control:focus {
+            border-color: rgba(129, 140, 248, 0.7);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+        }
+
+        [data-theme="dark"] .ip-table th,
+        [data-theme="dark"] .ip-table td {
+            border-bottom-color: rgba(148, 163, 184, 0.22);
+        }
+
+        [data-theme="dark"] .btn-secondary-custom {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(148, 163, 184, 0.35);
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .btn-secondary-custom:hover {
+            color: var(--text-primary, #f1f5f9);
+            border-color: rgba(129, 140, 248, 0.55);
+            background: rgba(99, 102, 241, 0.12);
+        }
+
+        [data-theme="dark"] .btn-danger-custom {
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        [data-theme="dark"] .btn-success-sm {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        [data-theme="dark"] .config-alert.warning {
+            background: rgba(245, 158, 11, 0.14);
+            border-color: rgba(245, 158, 11, 0.35);
+        }
+
+        [data-theme="dark"] .config-alert.info {
+            background: rgba(59, 130, 246, 0.14);
+            border-color: rgba(59, 130, 246, 0.35);
+        }
+
+        [data-theme="dark"] code {
+            color: #c7d2fe;
+            background: rgba(99, 102, 241, 0.18);
+            border-radius: 6px;
+            padding: 0.1rem 0.35rem;
+        }
+
         .settings-container {
             max-width: 1200px;
             margin: 0 auto;

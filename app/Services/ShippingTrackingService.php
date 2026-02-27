@@ -35,7 +35,7 @@ class ShippingTrackingService
         }
 
         // 2. Fetch from 17Track
-        $apiKey = env('17TRACK_API_KEY', '016E049ACA4113B2A846E1FD39D403C3');
+        $apiKey = config('services.17track.api_key');
         if (!$apiKey) {
             return [
                 'success' => false,
@@ -117,6 +117,8 @@ class ShippingTrackingService
             return "https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?strTrackId=" . urlencode($number);
         } elseif (str_contains($carrier, 'ems')) {
             return "https://www.ems.post/en/tracking?id=" . urlencode($number);
+        } elseif (str_contains($carrier, 'lp service')) {
+            return "https://t.17track.net/en#nums=" . urlencode($number);
         }
 
         return null;

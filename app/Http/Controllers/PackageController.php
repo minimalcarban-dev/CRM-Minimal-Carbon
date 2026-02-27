@@ -5,14 +5,33 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Models\Package;
+use App\Models\Diamond;
 use App\Http\Requests\PackageRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Cloudinary;
 use App\Notifications\PackageIssuedNotification;
 
 class PackageController extends Controller
 {
+    private $cloudinary;
+
+    public function __construct()
+    {
+        // Use same direct Cloudinary SDK pattern as OrderController.
+        $this->cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => config('cloudinary.cloud_name'),
+                'api_key' => config('cloudinary.api_key'),
+                'api_secret' => config('cloudinary.api_secret'),
+            ],
+            'url' => [
+                'secure' => true
+            ]
+        ]);
+    }
+
     public function index(Request $request)
     {
         $query = Package::with('admin')->latest();
@@ -50,16 +69,44 @@ class PackageController extends Controller
     {
         $validated = $request->validated();
 
-        // Handle Image Upload to Cloudinary
-        if ($request->hasFile('package_image')) {
-            $uploadedFileUrl = Cloudinary::upload($request->file('package_image')->getRealPath(), [
-                'folder' => 'packages'
-            ])->getSecurePath();
-            $validated['package_image'] = $uploadedFileUrl;
+        // Normalize custom slip id entered by user.
+        $validated['slip_id'] = strtoupper(trim($validated['slip_id']));
+
+        // Normalize stock id and auto-populate diamond snapshot details.
+        if (!empty($validated['stock_id'])) {
+            $validated['stock_id'] = strtoupper(trim($validated['stock_id']));
+
+            $diamond = Diamond::where('sku', $validated['stock_id'])->first();
+            if ($diamond) {
+                $validated['diamond_shape'] = $diamond->shape;
+                $validated['diamond_size'] = $diamond->measurement;
+                $validated['diamond_color'] = $diamond->color;
+                $validated['diamond_clarity'] = $diamond->clarity;
+                $validated['diamond_carat'] = $diamond->weight;
+            }
         }
 
-        // Generate Slip ID: PKG-YYYYMMDD-Random
-        $validated['slip_id'] = 'PKG-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        // Handle image upload to Cloudinary (same flow as orders).
+        if ($request->hasFile('package_image')) {
+            try {
+                $result = $this->cloudinary->uploadApi()->upload(
+                    $request->file('package_image')->getRealPath(),
+                    [
+                        'folder' => 'packages',
+                        'resource_type' => 'image',
+                    ]
+                );
+                $validated['package_image'] = $result['secure_url'] ?? null;
+            } catch (\Throwable $e) {
+                Log::error('Cloudinary package upload failed.', [
+                    'message' => $e->getMessage(),
+                ]);
+                return back()
+                    ->withInput()
+                    ->with('error', 'Image upload failed. Please try again.');
+            }
+        }
+
         $validated['status'] = 'Issued';
         $validated['admin_id'] = Auth::guard('admin')->user()->id;
 
@@ -72,7 +119,36 @@ class PackageController extends Controller
         }
 
         return redirect()->route('packages.show', $package->id)
-            ->with('success', 'Package issued successfully! Slip generated.');
+            ->with('success', 'Package issued successfully!');
+    }
+
+    public function lookupStock(Request $request)
+    {
+        $request->validate([
+            'stock_id' => 'required|string|max:100',
+        ]);
+
+        $stockId = strtoupper(trim((string) $request->stock_id));
+        $diamond = Diamond::where('sku', $stockId)->first();
+
+        if (!$diamond) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stock ID not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'stock_id' => $diamond->sku,
+                'shape' => $diamond->shape,
+                'size' => $diamond->measurement,
+                'color' => $diamond->color,
+                'clarity' => $diamond->clarity,
+                'carat' => $diamond->weight,
+            ],
+        ]);
     }
 
     public function show(Package $package)

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DiamondAssignedEvent;
+use App\Events\DiamondReassignedEvent;
 use App\Http\Requests\StoreDiamondRequest;
 use App\Http\Requests\UpdateDiamondRequest;
 use App\Models\Diamond;
@@ -323,6 +325,15 @@ class DiamondController extends Controller
                 'assigned_at' => $assignedAt,
             ]);
 
+            // Save assignment history in pivot table if assigned
+            if ($adminId) {
+                $diamond->admins()->attach($adminId, [
+                    'assign_by' => $assignById,
+                    'assigned_at' => $assignedAt,
+                    'note' => $validated['note'] ?? null,
+                ]);
+            }
+
             // NOTE: is_sold_out, duration_days, duration_price, sold_out_month are calculated
             // automatically by model's boot event (recalculateDerivedFields) - no need for manual calc
 
@@ -417,6 +428,15 @@ class DiamondController extends Controller
                 $diamond->admin_id = $newAdminId;
                 $diamond->assign_by = $currentAdmin ? $currentAdmin->id : null;
                 $diamond->assigned_at = $newAdminId ? now() : null;
+
+                // Save assignment history in pivot table if assigned
+                if ($newAdminId) {
+                    $diamond->admins()->attach($newAdminId, [
+                        'assign_by' => $diamond->assign_by,
+                        'assigned_at' => $diamond->assigned_at,
+                        'note' => $validated['note'] ?? null,
+                    ]);
+                }
             }
 
             // Handle multi image uploads
@@ -544,6 +564,7 @@ class DiamondController extends Controller
     {
         $request->validate([
             'admin_id' => 'required|exists:admins,id',
+            'note' => 'nullable|string',
         ]);
 
         $currentAdmin = auth('admin')->user();
@@ -559,18 +580,36 @@ class DiamondController extends Controller
             ]);
         }
 
+        $newAdmin = Admin::find($newAdminId);
         // Send reassignment notification to previous admin if exists and different
         if ($oldAdminId) {
             $oldAdmin = Admin::find($oldAdminId);
             if ($oldAdmin) {
-                Notification::sendNow($oldAdmin, new DiamondReassignedNotification($diamond, $currentAdmin, $oldAdmin));
+                try {
+                    Notification::sendNow($oldAdmin, new DiamondReassignedNotification($diamond, $currentAdmin, $oldAdmin));
+
+                    // Broadcast event for real-time toaster/popup
+                    $message = 'Diamond ' . $diamond->sku . ' has been reassigned to ' . ($newAdmin ? $newAdmin->name : 'Unknown');
+                    broadcast(new DiamondReassignedEvent($diamond, $oldAdminId, $currentAdmin->name, $message));
+                } catch (\Exception $e) {
+                    // Log error but continue assignment
+                    \Log::error('Failed to send reassignment notification: ' . $e->getMessage());
+                }
             }
         }
 
         // Send assignment notification to new admin
-        $newAdmin = Admin::find($newAdminId);
         if ($newAdmin && $currentAdmin) {
-            Notification::sendNow($newAdmin, new DiamondAssignedNotification($diamond, $currentAdmin));
+            try {
+                Notification::sendNow($newAdmin, new DiamondAssignedNotification($diamond, $currentAdmin));
+
+                // Broadcast event for real-time toaster/popup
+                $message = 'Diamond ' . $diamond->sku . ' has been assigned to you by ' . $currentAdmin->name;
+                broadcast(new DiamondAssignedEvent($diamond, $newAdminId, $currentAdmin->name, $message));
+            } catch (\Exception $e) {
+                // Log error but continue assignment
+                \Log::error('Failed to send assignment notification: ' . $e->getMessage());
+            }
         }
 
         // Update diamond assignment
@@ -578,6 +617,13 @@ class DiamondController extends Controller
             'admin_id' => $newAdminId,
             'assign_by' => $currentAdmin ? $currentAdmin->id : null,
             'assigned_at' => now(),
+        ]);
+
+        // Save assignment history in pivot table
+        $diamond->admins()->attach($newAdminId, [
+            'assign_by' => $currentAdmin ? $currentAdmin->id : null,
+            'assigned_at' => now(),
+            'note' => $request->note,
         ]);
 
         return response()->json([

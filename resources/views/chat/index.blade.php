@@ -89,17 +89,17 @@
         .chat-wrapper {
             margin: 0;
             height: calc(100% - 5rem);
-            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            background: linear-gradient(135deg, var(--bg-body) 0%, var(--light-gray) 100%);
         }
 
         .chat-container-outer {
             height: 100%;
-            background: white;
+            background: var(--bg-card);
             border-radius: 20px;
             /* margin: 1rem; */
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 40px var(--shadow-md);
             overflow: hidden;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--border);
         }
 
         #app {
@@ -145,18 +145,84 @@
         }
 
         .chat-container ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+            background: var(--light-gray);
             border-radius: 4px;
         }
 
         .chat-container ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: var(--border);
             border-radius: 4px;
             transition: background 0.2s;
         }
 
         .chat-container ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: var(--gray);
+        }
+
+        /* ── Dark mode overrides for Vue chat component internals ── */
+        [data-theme="dark"] .chat-sidebar {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .chat-header {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .conversation-item {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .conversation-item:hover,
+        [data-theme="dark"] .conversation-item.active {
+            background: rgba(99, 102, 241, 0.1) !important;
+        }
+
+        [data-theme="dark"] .conversation-name,
+        [data-theme="dark"] .conversation-preview,
+        [data-theme="dark"] .message-sender {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .conversation-preview,
+        [data-theme="dark"] .message-time {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .messages-container {
+            background: var(--bg-body) !important;
+        }
+
+        [data-theme="dark"] .message-bubble.received {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .message-input-container {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .message-input {
+            background: var(--bg-body) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .message-input::placeholder {
+            color: var(--muted) !important;
+        }
+
+        [data-theme="dark"] .send-btn {
+            background: var(--primary) !important;
+        }
+
+        [data-theme="dark"] .chat-empty-state {
+            background: var(--bg-body) !important;
+            color: var(--text-secondary) !important;
         }
 
         @media (max-width: 768px) {

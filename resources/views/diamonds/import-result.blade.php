@@ -187,7 +187,7 @@
     .result-title {
         font-size: 2rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--dark);
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -206,14 +206,15 @@
     }
 
     .result-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
         padding: 2rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         display: flex;
         gap: 1.5rem;
         align-items: center;
         transition: transform 0.2s;
+        border: 1px solid var(--border);
     }
 
     .result-card:hover {
@@ -253,7 +254,7 @@
 
     .card-label {
         font-size: 0.875rem;
-        color: #6b7280;
+        color: var(--gray);
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
@@ -261,14 +262,14 @@
     .card-value {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--dark);
         line-height: 1;
         margin-bottom: 0.5rem;
     }
 
     .card-subtitle {
         font-size: 0.875rem;
-        color: #9ca3af;
+        color: var(--gray);
     }
 
     .error-report-section {
@@ -276,10 +277,11 @@
     }
 
     .error-report-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         overflow: hidden;
+        border: 1px solid var(--border);
     }
 
     .error-header {
@@ -352,12 +354,12 @@
     }
 
     .step-text strong {
-        color: #1e293b;
+        color: var(--dark);
         font-size: 0.9375rem;
     }
 
     .step-text span {
-        color: #6b7280;
+        color: var(--gray);
         font-size: 0.875rem;
     }
 
@@ -400,7 +402,7 @@
         display: flex;
         gap: 1rem;
         padding: 1rem 1.25rem;
-        background: #f0f9ff;
+        background: rgba(59,130,246,0.08);
         border-radius: 8px;
         border-left: 4px solid #3b82f6;
     }
@@ -412,11 +414,11 @@
     }
 
     .info-box strong {
-        color: #1e40af;
+        color: #6366f1;
     }
 
     .info-box div {
-        color: #1e3a8a;
+        color: var(--dark);
         font-size: 0.9375rem;
         line-height: 1.6;
     }
@@ -451,13 +453,13 @@
     }
 
     .btn-secondary {
-        background: white;
+        background: var(--bg-card);
         color: #6366f1;
-        border: 2px solid #6366f1;
+        border: 1.5px solid #6366f1;
     }
 
     .btn-secondary:hover {
-        background: #f8f9ff;
+        background: rgba(99,102,241,0.07);
     }
 
     @media (max-width: 768px) {
@@ -484,4 +486,12 @@
         }
     }
 </style>
+
+    <style>
+        [data-theme="dark"] .error-header {
+            background: rgba(245,158,11,0.1);
+        }
+        [data-theme="dark"] .result-card,
+        [data-theme="dark"] .error-report-card { box-shadow: none; }
+    </style>
 @endsection

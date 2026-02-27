@@ -121,9 +121,11 @@
                 <div>
                     <strong>This order is cancelled.</strong>
                     @if(auth()->guard('admin')->user()->is_super)
-                        <div style="font-size: 0.9rem;">However, as a <span style="font-weight: 600;">Super Admin</span>, you retain full editing privileges to bypass the lock and modify this order.</div>
+                        <div style="font-size: 0.9rem;">However, as a <span style="font-weight: 600;">Super Admin</span>, you retain
+                            full editing privileges to bypass the lock and modify this order.</div>
                     @else
-                        <div style="font-size: 0.9rem;">Form is read-only. You may only update the Special Notes at the bottom of the page.</div>
+                        <div style="font-size: 0.9rem;">Form is read-only. You may only update the Special Notes at the bottom of
+                            the page.</div>
                     @endif
                 </div>
             </div>
@@ -171,17 +173,7 @@
     </div>
 
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #64748b;
-            --dark: #1e293b;
-            --gray: #64748b;
-            --light-gray: #f8fafc;
-            --border: #e2e8f0;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
+        /* edit.blade.php — uses global theme variables from layouts.admin */
 
         /* Custom Button Styles */
         .header-right {
@@ -215,7 +207,7 @@
         }
 
         .btn-secondary-custom {
-            background: white;
+            background: var(--bg-card);
             color: var(--gray);
             border: 2px solid var(--border);
             padding: 0.6rem 1.25rem;
@@ -238,7 +230,7 @@
 
         /* Current Files Section */
         .current-files-section .card-custom {
-            background: white;
+            background: var(--bg-card);
             border-radius: 12px;
             border: 2px solid var(--border);
         }
@@ -258,7 +250,7 @@
         }
 
         .file-section {
-            background: var(--light-gray);
+            background: var(--bg-body);
             border: 2px solid var(--border);
             border-radius: 10px;
             padding: 1rem;
@@ -297,7 +289,7 @@
             aspect-ratio: 1;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: white;
+            background: var(--bg-card);
         }
 
         .current-image-item:hover {
@@ -355,7 +347,7 @@
             align-items: center;
             gap: 0.75rem;
             padding: 0.875rem;
-            background: white;
+            background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 8px;
             text-decoration: none;
@@ -474,7 +466,7 @@
             border: 2px solid var(--border);
             border-radius: 8px;
             padding: 0.5rem;
-            background: var(--light-gray);
+            background: var(--bg-body);
             text-align: center;
         }
 
@@ -522,7 +514,7 @@
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem;
-            background: white;
+            background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 8px;
             margin-bottom: 0.5rem;
@@ -692,9 +684,9 @@
         }
 
         .remove-pdf-btn {
-            background: #fef2f2;
+            background: rgba(239,68,68,0.08);
             color: #ef4444;
-            border: 1px solid #fee2e2;
+            border: 1px solid rgba(239,68,68,0.2);
             width: 36px;
             height: 48px;
             border-radius: 8px;
@@ -710,7 +702,38 @@
             color: white;
             border-color: #ef4444;
         }
+        /* ── Dark Mode Overrides ── */
+        [data-theme="dark"] .card-custom {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+            color: var(--dark);
+        }
+
+        [data-theme="dark"] .page-header {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .page-subtitle {
+            color: var(--dark) !important;
+        }
+
+        [data-theme="dark"] .form-select-custom,
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+            color: var(--dark) !important;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background: rgba(239,68,68,0.1) !important;
+            border-color: rgba(239,68,68,0.3) !important;
+            color: #fca5a5 !important;
+        }
     </style>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -735,9 +758,35 @@
                         return response.text();
                     })
                     .then(html => {
-                        container.innerHTML = html;
-                        initializeFilePreview();
-                        applyReadOnlyIfCancelled();
+                        // Extract scripts before setting innerHTML
+                        const scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+                        let match;
+                        const scripts = [];
+                        let htmlWithoutScripts = html;
+
+                        while ((match = scriptRegex.exec(html)) !== null) {
+                            scripts.push(match[1]);
+                            htmlWithoutScripts = htmlWithoutScripts.replace(match[0], '');
+                        }
+
+                        container.innerHTML = htmlWithoutScripts;
+
+                        // Wait a brief moment to ensure DOM represents the new elements
+                        setTimeout(() => {
+                            // Execute extracted scripts
+                            scripts.forEach(scriptContent => {
+                                if (scriptContent.trim()) {
+                                    try {
+                                        new Function(scriptContent)();
+                                    } catch (e) {
+                                        console.error('Error executing dynamically loaded script:', e);
+                                    }
+                                }
+                            });
+
+                            initializeFilePreview();
+                            applyReadOnlyIfCancelled();
+                        }, 50);
                     })
                     .catch(() => {
                         container.innerHTML = `<div class="alert alert-danger">Error loading form. Please try again.</div>`;
@@ -766,7 +815,7 @@
                         fileInputs.forEach(el => el.disabled = true);
                     }
                 @endif
-                        }
+                            }
 
             // Initialize file preview for dynamically loaded forms
             function initializeFilePreview() {
@@ -805,12 +854,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                                        <div class="preview-header">
-                                                                            <i class="bi bi-images"></i>
-                                                                            <span>Selected Images (${files.length})</span>
-                                                                        </div>
-                                                                        <div class="preview-grid" id="imagePreviewGrid"></div>
-                                                                    `;
+                                                                            <div class="preview-header">
+                                                                                <i class="bi bi-images"></i>
+                                                                                <span>Selected Images (${files.length})</span>
+                                                                            </div>
+                                                                            <div class="preview-grid" id="imagePreviewGrid"></div>
+                                                                        `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -821,9 +870,9 @@
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
                         previewItem.innerHTML = `
-                                                                                <img src="${e.target.result}" alt="${file.name}">
-                                                                                <div class="file-name">${file.name}</div>
-                                                                            `;
+                                                                                    <img src="${e.target.result}" alt="${file.name}">
+                                                                                    <div class="file-name">${file.name}</div>
+                                                                                `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -842,12 +891,12 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                                        <div class="preview-header">
-                                                                            <i class="bi bi-file-pdf"></i>
-                                                                            <span>Selected PDFs (${files.length})</span>
-                                                                        </div>
-                                                                        <div id="pdfPreviewList"></div>
-                                                                    `;
+                                                                            <div class="preview-header">
+                                                                                <i class="bi bi-file-pdf"></i>
+                                                                                <span>Selected PDFs (${files.length})</span>
+                                                                            </div>
+                                                                            <div id="pdfPreviewList"></div>
+                                                                        `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
@@ -857,14 +906,14 @@
                     previewItem.className = 'pdf-preview-item';
                     const fileSize = (file.size / 1024).toFixed(2);
                     previewItem.innerHTML = `
-                                                                            <div class="pdf-preview-icon">
-                                                                                <i class="bi bi-file-pdf-fill"></i>
-                                                                            </div>
-                                                                            <div class="pdf-preview-info">
-                                                                                <div class="pdf-preview-name">${file.name}</div>
-                                                                                <div class="pdf-preview-size">${fileSize} KB</div>
-                                                                            </div>
-                                                                        `;
+                                                                                <div class="pdf-preview-icon">
+                                                                                    <i class="bi bi-file-pdf-fill"></i>
+                                                                                </div>
+                                                                                <div class="pdf-preview-info">
+                                                                                    <div class="pdf-preview-name">${file.name}</div>
+                                                                                    <div class="pdf-preview-size">${fileSize} KB</div>
+                                                                                </div>
+                                                                            `;
                     list.appendChild(previewItem);
                 });
             }

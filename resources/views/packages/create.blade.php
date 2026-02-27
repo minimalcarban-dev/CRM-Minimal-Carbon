@@ -63,13 +63,42 @@
 
                             <div class="row g-3">
                                 <div class="col-md-6">
+                                    <label for="party_type" class="form-label-custom">Party Type <span
+                                            class="text-danger">*</span></label>
+                                    <select name="party_type" id="party_type" class="form-control form-control-custom" required>
+                                        <option value="">Select party type</option>
+                                        <option value="Broker" {{ old('party_type') == 'Broker' ? 'selected' : '' }}>Broker</option>
+                                        <option value="Retailer" {{ old('party_type') == 'Retailer' ? 'selected' : '' }}>Retailer</option>
+                                        <option value="Manufacturer" {{ old('party_type') == 'Manufacturer' ? 'selected' : '' }}>Manufacturer</option>
+                                        <option value="Internal Staff" {{ old('party_type') == 'Internal Staff' ? 'selected' : '' }}>Internal Staff</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="company_name" class="form-label-custom">Company Name <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" name="company_name" id="company_name"
+                                        class="form-control form-control-custom" placeholder="Company name"
+                                        value="{{ old('company_name') }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="gst_number" class="form-label-custom">GST Number</label>
+                                    <input type="text" name="gst_number" id="gst_number"
+                                        class="form-control form-control-custom" placeholder="GST number"
+                                        value="{{ old('gst_number') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="pan_number" class="form-label-custom">PAN Number</label>
+                                    <input type="text" name="pan_number" id="pan_number"
+                                        class="form-control form-control-custom" placeholder="PAN number"
+                                        value="{{ old('pan_number') }}">
+                                </div>
+                                <div class="col-md-6">
                                     <label for="slip_id" class="form-label-custom">Slip ID <span
                                             class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0"><i
-                                                class="bi bi-hash"></i></span>
+                                    <div class="input-icon-field">
+                                        <i class="bi bi-hash"></i>
                                         <input type="text" name="slip_id" id="slip_id"
-                                            class="form-control form-control-custom border-start-0 ps-0"
+                                            class="form-control form-control-custom"
                                             placeholder="e.g. SLIP-2024-001" value="{{ old('slip_id') }}" required>
                                     </div>
                                 </div>
@@ -93,6 +122,68 @@
                                     <input type="date" name="return_date" id="return_date"
                                         class="form-control form-control-custom" value="{{ old('return_date') }}" required>
                                 </div>
+                                <div class="col-md-6">
+                                    <label for="handover_location" class="form-label-custom">Handover Location <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" name="handover_location" id="handover_location"
+                                        class="form-control form-control-custom" placeholder="Office / Surat / Mumbai etc."
+                                        value="{{ old('handover_location') }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="handover_mode" class="form-label-custom">Handover Mode <span
+                                            class="text-danger">*</span></label>
+                                    <select name="handover_mode" id="handover_mode" class="form-control form-control-custom" required>
+                                        <option value="">Select mode</option>
+                                        <option value="Hand Delivery" {{ old('handover_mode') == 'Hand Delivery' ? 'selected' : '' }}>Hand Delivery</option>
+                                        <option value="Courier" {{ old('handover_mode') == 'Courier' ? 'selected' : '' }}>Courier</option>
+                                        <option value="Office Pickup" {{ old('handover_mode') == 'Office Pickup' ? 'selected' : '' }}>Office Pickup</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="purpose_of_handover" class="form-label-custom">Purpose of Handover <span
+                                            class="text-danger">*</span></label>
+                                    <textarea name="purpose_of_handover" id="purpose_of_handover" rows="2"
+                                        class="form-control form-control-custom" placeholder="Approval / Memo / Repair / Recut etc."
+                                        required>{{ old('purpose_of_handover') }}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="stock_id" class="form-label-custom">Diamond Stock ID (SKU)</label>
+                                    <div class="d-flex gap-2">
+                                        <input type="text" name="stock_id" id="stock_id"
+                                            class="form-control form-control-custom" placeholder="Enter stock id"
+                                            value="{{ old('stock_id') }}">
+                                        <button type="button" class="btn-secondary-custom btn-fetch-stock"
+                                            id="btnLookupStock">Fetch</button>
+                                    </div>
+                                    <div id="stockLookupMessage" class="form-text text-muted"></div>
+                                </div>
+                                <div class="col-md-6"></div>
+                                <div class="col-md-4">
+                                    <label class="form-label-custom">Shape</label>
+                                    <input type="text" name="diamond_shape" id="diamond_shape"
+                                        class="form-control form-control-custom" value="{{ old('diamond_shape') }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-custom">Size</label>
+                                    <input type="text" name="diamond_size" id="diamond_size"
+                                        class="form-control form-control-custom" value="{{ old('diamond_size') }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-custom">Color</label>
+                                    <input type="text" name="diamond_color" id="diamond_color"
+                                        class="form-control form-control-custom" value="{{ old('diamond_color') }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-custom">Clarity</label>
+                                    <input type="text" name="diamond_clarity" id="diamond_clarity"
+                                        class="form-control form-control-custom" value="{{ old('diamond_clarity') }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-custom">Carat</label>
+                                    <input type="text" name="diamond_carat" id="diamond_carat"
+                                        class="form-control form-control-custom" value="{{ old('diamond_carat') }}" readonly>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -100,7 +191,7 @@
                     <!-- Recipient Details Card -->
                     <div class="form-section-card">
                         <div class="section-header">
-                            <div class="section-icon" style="background: linear-gradient(135deg, var(--success), #059669);">
+                            <div class="section-icon section-icon-success">
                                 <i class="bi bi-person-badge"></i>
                             </div>
                             <div class="section-title-wrapper">
@@ -154,7 +245,7 @@
                 <div class="col-lg-4">
                     <div class="form-section-card sticky-top" style="top: 2rem; z-index: 1;">
                         <div class="section-header">
-                            <div class="section-icon" style="background: linear-gradient(135deg, var(--warning), #d97706);">
+                            <div class="section-icon section-icon-warning">
                                 <i class="bi bi-check2-circle"></i>
                             </div>
                             <div class="section-title-wrapper">
@@ -188,38 +279,115 @@
 
     @push('styles')
         <style>
-            :root {
-                --primary: #6366f1;
-                --primary-dark: #4f46e5;
-                --secondary: #64748b;
-                --success: #10b981;
-                --warning: #f59e0b;
-                --danger: #ef4444;
-                --dark: #1e293b;
-                --gray: #64748b;
-                --light-gray: #f8fafc;
-                --border: #e2e8f0;
+            [data-theme="dark"] .packages-management-container {
+                background: var(--bg-body, #0f172a);
+            }
+
+            [data-theme="dark"] .page-header,
+            [data-theme="dark"] .form-section-card,
+            [data-theme="dark"] .section-header,
+            [data-theme="dark"] .alert {
+                background: var(--bg-card, #1e293b) !important;
+                border-color: rgba(148, 163, 184, 0.34) !important;
+                box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+            }
+
+            [data-theme="dark"] .page-header {
+                background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.07));
+            }
+
+            [data-theme="dark"] .page-title,
+            [data-theme="dark"] .section-title,
+            [data-theme="dark"] .form-label-custom,
+            [data-theme="dark"] .upload-text {
+                color: var(--text-primary, #f1f5f9);
+            }
+
+            [data-theme="dark"] .page-subtitle,
+            [data-theme="dark"] .breadcrumb-nav,
+            [data-theme="dark"] .breadcrumb-link,
+            [data-theme="dark"] .section-description,
+            [data-theme="dark"] .form-text,
+            [data-theme="dark"] .text-muted,
+            [data-theme="dark"] .upload-hint {
+                color: var(--text-secondary, #94a3b8) !important;
+            }
+
+            [data-theme="dark"] .form-control-custom,
+            [data-theme="dark"] .input-group-text {
+                background: rgba(15, 23, 42, 0.62);
+                border-color: rgba(148, 163, 184, 0.32);
+                color: var(--text-primary, #f1f5f9);
+            }
+
+            [data-theme="dark"] .form-control-custom::placeholder {
+                color: var(--text-secondary, #94a3b8);
+            }
+
+            [data-theme="dark"] .file-upload-wrapper {
+                background: rgba(15, 23, 42, 0.45);
+                border-color: rgba(148, 163, 184, 0.34);
+            }
+
+            [data-theme="dark"] .file-upload-wrapper:hover {
+                background: rgba(99, 102, 241, 0.08);
+                border-color: rgba(129, 140, 248, 0.55);
+            }
+
+            [data-theme="dark"] .btn-secondary-custom {
+                background: rgba(255, 255, 255, 0.04);
+                border-color: rgba(148, 163, 184, 0.35);
+                color: var(--text-secondary, #94a3b8);
+            }
+
+            [data-theme="dark"] .input-icon-field i {
+                color: var(--text-secondary, #94a3b8);
+            }
+
+            [data-theme="dark"] .section-icon {
+                background: rgba(99, 102, 241, 0.2);
+                border-color: rgba(129, 140, 248, 0.4);
+                color: #a5b4fc;
+            }
+
+            [data-theme="dark"] .section-icon-success {
+                background: rgba(16, 185, 129, 0.2);
+                border-color: rgba(52, 211, 153, 0.35);
+                color: #34d399;
+            }
+
+            [data-theme="dark"] .section-icon-warning {
+                background: rgba(245, 158, 11, 0.2);
+                border-color: rgba(251, 191, 36, 0.35);
+                color: #fbbf24;
+            }
+
+            [data-theme="dark"] .form-control-custom[type="date"],
+            [data-theme="dark"] .form-control-custom[type="time"] {
+                color-scheme: dark;
             }
 
             .packages-management-container {
-                padding: 1.5rem;
-                max-width: 1200px;
+                padding: 2rem;
+                max-width: 1600px;
                 margin: 0 auto;
+                min-height: 100vh;
+                background: #f8fafc;
             }
 
             /* Page Header */
             .page-header {
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+                background: white;
                 padding: 2rem;
                 border-radius: 16px;
-                border: 2px solid rgba(99, 102, 241, 0.1);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             }
 
             .header-content {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-end;
-                gap: 1rem;
+                align-items: flex-start;
+                gap: 2rem;
                 flex-wrap: wrap;
             }
 
@@ -275,16 +443,16 @@
             /* Form Cards */
             .form-section-card {
                 background: white;
-                border-radius: 16px;
-                border: 2px solid var(--border);
+                border-radius: 20px;
+                border: 1.5px solid var(--border);
                 overflow: hidden;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
             }
 
             .section-header {
                 padding: 1.25rem 1.5rem;
                 background: #f8fafc;
-                border-bottom: 2px solid var(--border);
+                border-bottom: 1.5px solid var(--border);
                 display: flex;
                 align-items: center;
                 gap: 1rem;
@@ -294,14 +462,26 @@
                 width: 48px;
                 height: 48px;
                 border-radius: 12px;
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                color: white;
+                background: rgba(99, 102, 241, 0.14);
+                border: 1px solid rgba(99, 102, 241, 0.25);
+                color: var(--primary);
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 1.5rem;
                 flex-shrink: 0;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .section-icon-success {
+                background: rgba(16, 185, 129, 0.14);
+                border-color: rgba(16, 185, 129, 0.28);
+                color: var(--success);
+            }
+
+            .section-icon-warning {
+                background: rgba(245, 158, 11, 0.14);
+                border-color: rgba(245, 158, 11, 0.28);
+                color: var(--warning);
             }
 
             .section-title {
@@ -346,6 +526,24 @@
             .input-group-text {
                 border: 2px solid var(--border);
                 border-radius: 10px;
+            }
+
+            .input-icon-field {
+                position: relative;
+            }
+
+            .input-icon-field i {
+                position: absolute;
+                left: 0.9rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--gray);
+                pointer-events: none;
+                font-size: 0.95rem;
+            }
+
+            .input-icon-field .form-control-custom {
+                padding-left: 2.25rem;
             }
 
             /* File Upload */
@@ -473,6 +671,12 @@
                 color: var(--dark);
                 background: var(--light-gray);
             }
+
+            .btn-fetch-stock {
+                min-width: 92px;
+                justify-content: center;
+                white-space: nowrap;
+            }
         </style>
     @endpush
 
@@ -503,6 +707,78 @@
                 document.getElementById('imagePreviewContainer').style.display = 'none';
                 document.getElementById('uploadPlaceholder').style.display = 'block';
             }
+
+            async function lookupStock() {
+                const stockIdInput = document.getElementById('stock_id');
+                const messageEl = document.getElementById('stockLookupMessage');
+                const lookupBtn = document.getElementById('btnLookupStock');
+                const stockId = (stockIdInput.value || '').trim();
+
+                const fields = {
+                    shape: document.getElementById('diamond_shape'),
+                    size: document.getElementById('diamond_size'),
+                    color: document.getElementById('diamond_color'),
+                    clarity: document.getElementById('diamond_clarity'),
+                    carat: document.getElementById('diamond_carat'),
+                };
+
+                if (!stockId) {
+                    Object.values(fields).forEach((input) => input.value = '');
+                    messageEl.textContent = 'Enter stock ID first.';
+                    return;
+                }
+
+                lookupBtn.disabled = true;
+                lookupBtn.textContent = 'Fetching...';
+                messageEl.textContent = 'Fetching stock details...';
+
+                try {
+                    const response = await fetch(`{{ route('packages.lookup-stock') }}?stock_id=${encodeURIComponent(stockId)}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Stock not found.');
+                    }
+
+                    fields.shape.value = result.data.shape || '';
+                    fields.size.value = result.data.size || '';
+                    fields.color.value = result.data.color || '';
+                    fields.clarity.value = result.data.clarity || '';
+                    fields.carat.value = result.data.carat || '';
+                    stockIdInput.value = result.data.stock_id || stockId.toUpperCase();
+                    messageEl.textContent = 'Stock details loaded.';
+                } catch (error) {
+                    Object.values(fields).forEach((input) => input.value = '');
+                    messageEl.textContent = error.message || 'Unable to fetch stock details.';
+                } finally {
+                    lookupBtn.disabled = false;
+                    lookupBtn.textContent = 'Fetch';
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const stockIdInput = document.getElementById('stock_id');
+                const lookupBtn = document.getElementById('btnLookupStock');
+
+                lookupBtn.addEventListener('click', lookupStock);
+                stockIdInput.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        lookupStock();
+                    }
+                });
+                stockIdInput.addEventListener('blur', function () {
+                    if (stockIdInput.value.trim()) {
+                        lookupStock();
+                    }
+                });
+            });
         </script>
     @endpush
 @endsection

@@ -6,19 +6,383 @@
 
     <style>
         /* Custom Styles meant to match orders/index.blade.php */
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --border: #e2e8f0;
-            --secondary: #64748b;
+
+        [data-theme="dark"] .inventory-management-container {
+            background: var(--bg-body, #0f172a);
+        }
+
+        [data-theme="dark"] .page-header,
+        [data-theme="dark"] .inventory-card,
+        [data-theme="dark"] .sidebar-panel,
+        [data-theme="dark"] .main-panel,
+        [data-theme="dark"] .shape-group-header,
+        [data-theme="dark"] .shape-group-body,
+        [data-theme="dark"] .table-header,
+        [data-theme="dark"] .add-size-row,
+        [data-theme="dark"] .add-shape-bar {
+            background: var(--bg-card, #1e293b);
+            border-color: rgba(148, 163, 184, 0.28) !important;
+        }
+
+        [data-theme="dark"] .shape-group-header:hover,
+        [data-theme="dark"] .table-custom tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .category-nav-item {
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .category-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .category-nav-item:not(.active) .badge {
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .shape-group-header .shape-name,
+        [data-theme="dark"] .table-custom tbody td,
+        [data-theme="dark"] .inventory-management-container .text-dark {
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] .shape-chevron,
+        [data-theme="dark"] .inventory-management-container .text-secondary,
+        [data-theme="dark"] .inventory-management-container .text-muted {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .table-custom thead th {
+            background: rgba(15, 23, 42, 0.5);
+            border-bottom-color: rgba(148, 163, 184, 0.34);
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .table-custom tbody td {
+            border-bottom-color: rgba(148, 163, 184, 0.22);
+        }
+
+        [data-theme="dark"] .size-count-pill {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+        }
+
+        [data-theme="dark"] .stock-total-pill {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        /* Stock table partial */
+        [data-theme="dark"] .inventory-card .table thead.bg-light th {
+            background: rgba(15, 23, 42, 0.5) !important;
+            color: var(--text-secondary, #94a3b8);
+            border-bottom-color: rgba(148, 163, 184, 0.34);
+        }
+
+        [data-theme="dark"] .inventory-card .table tbody td {
+            color: var(--text-primary, #f1f5f9);
+            border-bottom-color: rgba(148, 163, 184, 0.22);
+        }
+
+        [data-theme="dark"] .inventory-card .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--text-primary, #f1f5f9);
+            --bs-table-border-color: rgba(148, 163, 184, 0.22);
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .inventory-card .table> :not(caption)>*>* {
+            background-color: transparent !important;
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .inventory-card .table .bg-success-subtle {
+            background: rgba(16, 185, 129, 0.18) !important;
+            color: #34d399 !important;
+        }
+
+        [data-theme="dark"] .inventory-card .table .bg-danger-subtle {
+            background: rgba(239, 68, 68, 0.18) !important;
+            color: #f87171 !important;
+        }
+
+        /* Transaction modal partial */
+        [data-theme="dark"] #transactionModal .modal-content {
+            background: var(--bg-card, #1e293b);
+            border: 1px solid rgba(148, 163, 184, 0.34) !important;
+        }
+
+        [data-theme="dark"] #transactionModal .modal-header.bg-light {
+            background: rgba(15, 23, 42, 0.55) !important;
+            border-color: rgba(148, 163, 184, 0.28) !important;
+        }
+
+        [data-theme="dark"] #transactionModal #selection_context {
+            background: rgba(15, 23, 42, 0.5) !important;
+            border-color: rgba(148, 163, 184, 0.3) !important;
+        }
+
+        [data-theme="dark"] #transactionModal .bg-light {
+            background: rgba(255, 255, 255, 0.06) !important;
+        }
+
+        [data-theme="dark"] #transactionModal .bg-white {
+            background: rgba(15, 23, 42, 0.4) !important;
+        }
+
+        [data-theme="dark"] #transactionModal .text-dark {
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] #transactionModal .text-secondary,
+        [data-theme="dark"] #transactionModal .text-muted {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] #transactionModal .form-control,
+        [data-theme="dark"] #transactionModal textarea,
+        [data-theme="dark"] #transactionModal select {
+            background: rgba(15, 23, 42, 0.62);
+            border-color: rgba(148, 163, 184, 0.32);
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] #transactionModal .form-control::placeholder,
+        [data-theme="dark"] #transactionModal textarea::placeholder {
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] #transactionModal .form-text {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] #transactionModal .btn-close {
+            filter: invert(1) brightness(1.2);
+        }
+
+        [data-theme="dark"] #transactionModal .btn-link {
+            color: #a5b4fc !important;
+        }
+
+        [data-theme="dark"] #transactionModal .select2-container--bootstrap-5 .select2-selection--single,
+        [data-theme="dark"] #transactionModal .select2-container--bootstrap-5 .select2-dropdown,
+        [data-theme="dark"] #transactionModal .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+            background: rgba(15, 23, 42, 0.62);
+            border-color: rgba(148, 163, 184, 0.32);
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] #transactionModal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered,
+        [data-theme="dark"] #transactionModal .select2-container--bootstrap-5 .select2-results__option {
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] #transactionModal .select2-container--bootstrap-5 .select2-results__option--selected {
+            background: rgba(99, 102, 241, 0.18);
+            color: #a5b4fc;
+        }
+
+        /* History + Edit Modals Dark Theme */
+        [data-theme="dark"] #historyModal .modal-content,
+        [data-theme="dark"] #editMeleeModal .modal-content,
+        [data-theme="dark"] #editTransactionModal .modal-content,
+        [data-theme="dark"] #quickOrderModal .modal-content {
+            background: var(--bg-card, #1e293b);
+            border: 1px solid rgba(148, 163, 184, 0.34) !important;
+        }
+
+        [data-theme="dark"] #historyModal .modal-body,
+        [data-theme="dark"] #editMeleeModal .modal-body,
+        [data-theme="dark"] #editTransactionModal .modal-body,
+        [data-theme="dark"] #quickOrderModal .modal-body {
+            background: var(--bg-card, #1e293b);
+        }
+
+        [data-theme="dark"] #historyModal #history-diamond-info.bg-light,
+        [data-theme="dark"] #editMeleeModal .modal-header.bg-light,
+        [data-theme="dark"] #editTransactionModal .modal-header.bg-light,
+        [data-theme="dark"] #quickOrderModal .modal-footer.bg-light,
+        [data-theme="dark"] #quickOrderModal .bg-light {
+            background: rgba(15, 23, 42, 0.52) !important;
+            border-color: rgba(148, 163, 184, 0.3) !important;
+        }
+
+        [data-theme="dark"] #historyModal .table-custom,
+        [data-theme="dark"] #historyModal .table-custom> :not(caption)>*>* {
+            color: var(--text-primary, #f1f5f9);
+            background: transparent !important;
+            border-color: rgba(148, 163, 184, 0.24);
+        }
+
+        [data-theme="dark"] #historyModal .table-custom thead th {
+            background: rgba(15, 23, 42, 0.52) !important;
+            color: var(--text-secondary, #94a3b8);
+            border-bottom-color: rgba(148, 163, 184, 0.34);
+        }
+
+        [data-theme="dark"] #historyModal .table-custom tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        [data-theme="dark"] #historyModal .text-muted,
+        [data-theme="dark"] #editMeleeModal .text-muted,
+        [data-theme="dark"] #editTransactionModal .text-muted,
+        [data-theme="dark"] #quickOrderModal .text-muted,
+        [data-theme="dark"] #editMeleeModal .text-secondary,
+        [data-theme="dark"] #editTransactionModal .text-secondary,
+        [data-theme="dark"] #quickOrderModal .text-secondary {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] #historyModal .text-dark,
+        [data-theme="dark"] #editMeleeModal .text-dark,
+        [data-theme="dark"] #editTransactionModal .text-dark,
+        [data-theme="dark"] #quickOrderModal .text-dark,
+        [data-theme="dark"] #editMeleeModal .modal-title,
+        [data-theme="dark"] #editTransactionModal .modal-title,
+        [data-theme="dark"] #quickOrderModal .modal-title,
+        [data-theme="dark"] #historyModal #history-diamond-name,
+        [data-theme="dark"] #quickOrderModal .order-quick-details {
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] #editMeleeModal hr,
+        [data-theme="dark"] #editTransactionModal hr,
+        [data-theme="dark"] #quickOrderModal hr {
+            border-color: rgba(148, 163, 184, 0.22);
+        }
+
+        [data-theme="dark"] #editMeleeModal .form-control,
+        [data-theme="dark"] #editTransactionModal .form-control,
+        [data-theme="dark"] #quickOrderModal .form-control {
+            background: rgba(15, 23, 42, 0.62);
+            border-color: rgba(148, 163, 184, 0.32);
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] #editMeleeModal .form-control::placeholder,
+        [data-theme="dark"] #editTransactionModal .form-control::placeholder,
+        [data-theme="dark"] #quickOrderModal .form-control::placeholder {
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] #editMeleeModal .btn-close,
+        [data-theme="dark"] #editTransactionModal .btn-close,
+        [data-theme="dark"] #quickOrderModal .btn-close,
+        [data-theme="dark"] #historyModal .btn-close {
+            filter: invert(1) brightness(1.2);
+        }
+
+        /* Theme Buttons */
+        .btn-theme-tab {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-secondary, #64748b);
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.45rem 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme-tab:hover {
+            border-color: rgba(99, 102, 241, 0.45);
+            color: var(--text-primary, #1e293b);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .btn-theme-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.28);
+        }
+
+        .btn-theme-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            color: #fff;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+            color: #fff;
+        }
+
+        .btn-theme-danger-outline {
+            border: 1px solid rgba(239, 68, 68, 0.55);
+            background: rgba(239, 68, 68, 0.04);
+            color: #ef4444;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme-danger-outline:hover {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+        }
+
+        .btn-theme-outline {
+            border: 1px solid rgba(99, 102, 241, 0.6);
+            background: rgba(99, 102, 241, 0.04);
+            color: var(--primary);
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme-outline:hover {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--primary);
+        }
+
+        .btn-theme-icon {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme-icon-in {
+            color: #2563eb;
+        }
+
+        .btn-theme-icon-out {
+            color: #f59e0b;
+        }
+
+        .btn-theme-icon-edit {
+            color: #94a3b8;
+        }
+
+        .btn-theme-icon-delete {
+            color: #ef4444;
+        }
+
+        .btn-theme-icon:hover {
+            transform: translateY(-1px);
+            border-color: rgba(99, 102, 241, 0.45);
+            background: rgba(99, 102, 241, 0.12);
         }
 
         .inventory-management-container {
+            --secondary: var(--text-secondary, #64748b);
             padding: 2rem;
             max-width: 1800px;
             margin: 0 auto;
@@ -474,19 +838,19 @@
 
             <div class="d-flex gap-2">
                 <!-- Tab Switcher implemented as Buttons -->
-                <button class="btn btn-outline-primary active" id="btn-tab-lab" onclick="switchMainTab('lab-grown')">
+                <button class="btn btn-theme-tab active" id="btn-tab-lab" onclick="switchMainTab('lab-grown')">
                     Lab Grown
                 </button>
-                <button class="btn btn-outline-secondary" id="btn-tab-natural" onclick="switchMainTab('natural')">
+                <button class="btn btn-theme-tab" id="btn-tab-natural" onclick="switchMainTab('natural')">
                     Natural
                 </button>
 
                 <div class="vr mx-2"></div>
 
-                <button class="btn btn-primary" onclick="openTransactionModal('in')">
+                <button class="btn btn-theme-primary" onclick="openTransactionModal('in')">
                     <i class="bi bi-plus-lg me-2"></i>Add Stock
                 </button>
-                <button class="btn btn-outline-danger" onclick="openTransactionModal('out')">
+                <button class="btn btn-theme-danger-outline" onclick="openTransactionModal('out')">
                     <i class="bi bi-dash-lg me-2"></i>Use Stock
                 </button>
             </div>
@@ -527,7 +891,7 @@
                         </div>
                     @endforelse
                     <div class="mt-3">
-                        <button class="btn btn-sm btn-outline-primary w-100" onclick="createMeleeCategory('lab_grown')">
+                        <button class="btn btn-sm btn-theme-outline w-100" onclick="createMeleeCategory('lab_grown')">
                             <i class="bi bi-plus-lg me-1"></i> Add Category
                         </button>
                     </div>
@@ -561,7 +925,7 @@
                         </div>
                     @endforelse
                     <div class="mt-3">
-                        <button class="btn btn-sm btn-outline-primary w-100" onclick="createMeleeCategory('natural')">
+                        <button class="btn btn-sm btn-theme-outline w-100" onclick="createMeleeCategory('natural')">
                             <i class="bi bi-plus-lg me-1"></i> Add Category
                         </button>
                     </div>
@@ -596,6 +960,10 @@
                                 <input type="text" class="form-control form-control-sm" placeholder="Search..."
                                     aria-label="Search diamonds"
                                     onkeyup="filterCategoryTable('{{ $category->id }}', this.value)" style="width: 180px;">
+                                <button class="btn btn-sm btn-theme-outline" type="button"
+                                    onclick="focusAddShape('{{ $category->id }}')">
+                                    Add Shape
+                                </button>
                             </div>
                         </div>
 
@@ -671,14 +1039,14 @@
                                                         <td class="fw-bold">
                                                             ${{ number_format($diamond->total_price ?? 0, 2) }}</td>
                                                         <td class="text-end">
-                                                            <button class="btn btn-sm btn-light text-primary border" data-action="in"
+                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-in" data-action="in"
                                                                 data-diamond-id="{{ $diamond->id }}"
                                                                 data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
                                                                 data-category-name="{{ $category->name }}" title="Add Stock"
                                                                 onclick="openTransactionModal(this.dataset.action, this.dataset.diamondId, this.dataset.diamondName, this.dataset.categoryName)">
                                                                 <i class="bi bi-plus-lg"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-light text-warning border ms-1"
+                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-out ms-1"
                                                                 data-action="out" data-diamond-id="{{ $diamond->id }}"
                                                                 data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
                                                                 data-category-name="{{ $category->name }}" title="Use Stock"
@@ -690,12 +1058,12 @@
                                                                 $lastTxPieces = $lastTx ? $lastTx->pieces : '';
                                                                 $lastTxCarats = $lastTx ? $lastTx->carat_weight : '';
                                                             @endphp
-                                                            <button class="btn btn-sm btn-light text-secondary border ms-1"
+                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-edit ms-1"
                                                                 title="Edit Melee"
                                                                 onclick="openEditModal({{ $diamond->id }}, '{{ $diamond->shape }}', '{{ explode('-', $diamond->size_label)[1] ?? str_replace(strtolower($diamond->shape) . '-', '', $diamond->size_label) }}', '{{ $lastTxPieces }}', '{{ $lastTxCarats }}')">
                                                                 <i class="bi bi-pencil-square"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-light text-danger border ms-1"
+                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-delete ms-1"
                                                                 title="Delete Melee"
                                                                 onclick="deleteMeleeDiamond({{ $diamond->id }}, '{{ $diamond->shape }} {{ $diamond->size_label }}')">
                                                                 <i class="bi bi-trash"></i>
@@ -708,12 +1076,11 @@
 
                                         <!-- Add Size Row (inside each shape) -->
                                         <div class="add-size-row">
-                                            <i class="bi bi-plus-circle text-primary"></i>
                                             <input type="text" class="form-control form-control-sm add-size-input"
                                                 placeholder="e.g. 1.5 or 4*2" data-category-id="{{ $category->id }}"
                                                 data-shape="{{ $shapeName }}">
                                             <button class="btn btn-sm btn-primary" onclick="addSizeToShape(this)">
-                                                <i class="bi bi-plus-lg me-1"></i>Add Size
+                                                Add Size
                                             </button>
                                         </div>
                                     </div>
@@ -745,12 +1112,11 @@
 
                                                 <!-- Add Size Row -->
                                                 <div class="add-size-row">
-                                                    <i class="bi bi-plus-circle text-primary"></i>
                                                     <input type="text" class="form-control form-control-sm add-size-input"
                                                         placeholder="e.g. 1.5 or 4*2" data-category-id="{{ $category->id }}"
                                                         data-shape="{{ $allowedShape }}">
                                                     <button class="btn btn-sm btn-primary" onclick="addSizeToShape(this)">
-                                                        <i class="bi bi-plus-lg me-1"></i>Add Size
+                                                        Add Size
                                                     </button>
                                                 </div>
                                             </div>
@@ -761,14 +1127,13 @@
 
                             <!-- Add New Shape Bar at the bottom -->
                             <div class="add-shape-bar" id="add-shape-bar-{{ $category->id }}">
-                                <i class="bi bi-plus-square-dotted text-primary fs-5"></i>
                                 <input type="text" class="form-control form-control-sm new-shape-name"
                                     placeholder="New shape name" data-category-id="{{ $category->id }}">
                                 <input type="text" class="form-control form-control-sm new-shape-size"
                                     placeholder="Size (e.g. 1.0 or 4*2)" data-category-id="{{ $category->id }}">
-                                <button class="btn btn-sm btn-outline-primary"
+                                <button class="btn btn-sm btn-theme-outline"
                                     onclick="addNewShape(this, '{{ $category->id }}')">
-                                    <i class="bi bi-plus-lg me-1"></i>Add Shape
+                                    Add Shape
                                 </button>
                             </div>
                         </div>
@@ -1112,11 +1477,11 @@
             localStorage.setItem('meleeActiveTab', type);
 
             // Reset buttons
-            document.getElementById('btn-tab-lab').className = 'btn btn-outline-secondary';
-            document.getElementById('btn-tab-natural').className = 'btn btn-outline-secondary';
+            document.getElementById('btn-tab-lab').className = 'btn btn-theme-tab';
+            document.getElementById('btn-tab-natural').className = 'btn btn-theme-tab';
 
             if (type === 'lab-grown') {
-                document.getElementById('btn-tab-lab').className = 'btn btn-outline-primary active';
+                document.getElementById('btn-tab-lab').className = 'btn btn-theme-tab active';
                 document.getElementById('sidebar-lab-grown').classList.remove('hidden');
                 document.getElementById('sidebar-natural').classList.add('hidden');
 
@@ -1125,7 +1490,7 @@
                 if (!btnToClick) btnToClick = document.querySelector('#sidebar-lab-grown .category-nav-item');
                 if (btnToClick) btnToClick.click();
             } else {
-                document.getElementById('btn-tab-natural').className = 'btn btn-outline-primary active';
+                document.getElementById('btn-tab-natural').className = 'btn btn-theme-tab active';
                 document.getElementById('sidebar-lab-grown').classList.add('hidden');
                 document.getElementById('sidebar-natural').classList.remove('hidden');
 
@@ -1207,6 +1572,14 @@
             group.classList.toggle('open');
         }
 
+        function focusAddShape(categoryId) {
+            const bar = document.getElementById(`add-shape-bar-${categoryId}`);
+            if (!bar) return;
+            bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const nameInput = bar.querySelector('.new-shape-name');
+            if (nameInput) nameInput.focus();
+        }
+
         // Add a new size to an existing shape
         function addSizeToShape(btn) {
             const container = btn.closest('.add-size-row');
@@ -1252,7 +1625,7 @@
                 })
                 .finally(() => {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add Size';
+                    btn.innerHTML = 'Add Size';
                 });
         }
 
@@ -1306,7 +1679,7 @@
                 })
                 .finally(() => {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add Shape';
+                    btn.innerHTML = 'Add Shape';
                 });
         }
 
@@ -1320,11 +1693,11 @@
             toastEl.className = `toast show align-items-center text-white ${bgClass} border-0 mb-2`;
             toastEl.setAttribute('role', 'alert');
             toastEl.innerHTML = `
-                                                                            <div class="d-flex">
-                                                                                <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
-                                                                                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
-                                                                            </div>
-                                                                        `;
+                <div class="d-flex">
+                    <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
+                </div>
+            `;
             container.appendChild(toastEl);
             setTimeout(() => toastEl.remove(), 4000);
         }
@@ -1427,31 +1800,31 @@
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                                                                                    <td>${typeBadge}</td>
-                                                                                    <td class="fw-medium">${t.user_name}</td>
-                                                                                    <td class="fw-bold">${Math.abs(t.pieces)}</td>
-                                                                                    <td>${t.carat_weight || '-'}</td>
-                                                                                    <td>$${parseFloat(t.cost_per_ct).toFixed(2)}</td>
-                                                                                    <td class="fw-bold text-success">$${parseFloat(t.total_price).toFixed(2)}</td>
-                                                                                    <td>${refText}</td>
-                                                                                    <td class="text-muted small">${t.notes || '-'}</td>
-                                                                                    <td>
-                                                                                        <span class="small">${t.created_at}</span>
-                                                                                        <br><span class="text-muted small">${t.time_ago}</span>
-                                                                                    </td>
-                                                                                    <td class="text-end text-nowrap">
-                                                                                        <button class="btn btn-sm btn-light text-secondary border me-1" 
-                                                                                            onclick="openEditTransactionModal(${t.id}, ${Math.abs(t.pieces)}, '${t.carat_weight || 0}', '${t.type}')" 
-                                                                                            title="Edit Transaction">
-                                                                                            <i class="bi bi-pencil-square"></i>
-                                                                                        </button>
-                                                                                        <button class="btn btn-sm btn-light text-danger border" 
-                                                                                            onclick="deleteTransaction(${t.id}, '${t.type}')" 
-                                                                                            title="Delete Transaction">
-                                                                                            <i class="bi bi-trash"></i>
-                                                                                        </button>
-                                                                                    </td>
-                                                                                `;
+                            <td>${typeBadge}</td>
+                            <td class="fw-medium">${t.user_name}</td>
+                            <td class="fw-bold">${Math.abs(t.pieces)}</td>
+                            <td>${t.carat_weight || '-'}</td>
+                            <td>$${parseFloat(t.cost_per_ct).toFixed(2)}</td>
+                            <td class="fw-bold text-success">$${parseFloat(t.total_price).toFixed(2)}</td>
+                            <td>${refText}</td>
+                            <td class="text-muted small">${t.notes || '-'}</td>
+                            <td>
+                                <span class="small">${t.created_at}</span>
+                                <br><span class="text-muted small">${t.time_ago}</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <button class="btn btn-sm btn-light text-secondary border me-1" 
+                                    onclick="openEditTransactionModal(${t.id}, ${Math.abs(t.pieces)}, '${t.carat_weight || 0}', '${t.type}')" 
+                                    title="Edit Transaction">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-sm btn-light text-danger border" 
+                                    onclick="deleteTransaction(${t.id}, '${t.type}')" 
+                                    title="Delete Transaction">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        `;
                         tbody.appendChild(row);
                     });
                 })
@@ -1489,53 +1862,53 @@
                     link.href = data.url;
 
                     const detailsHtml = `
-                                                                                <div class="order-quick-details">
-                                                                                    <div class="p-3 bg-light border-bottom">
-                                                                                        <div class="row align-items-center">
-                                                                                            <div class="col-8">
-                                                                                                <h6 class="mb-0 fw-bold">${data.client_name}</h6>
-                                                                                                <small class="text-muted">${data.company} • ${data.created_at}</small>
-                                                                                            </div>
-                                                                                            <div class="col-4 text-end">
-                                                                                                <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="p-4">
-                                                                                        <div class="mb-3">
-                                                                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
-                                                                                            <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
-                                                                                            <small class="text-muted">${data.diamond_details || ''}</small>
-                                                                                        </div>
+                    <div class="order-quick-details">
+                        <div class="p-3 bg-light border-bottom">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="mb-0 fw-bold">${data.client_name}</h6>
+                                    <small class="text-muted">${data.company} • ${data.created_at}</small>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <span class="badge bg-primary rounded-pill px-3">${data.status.replace('_', ' ').toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="mb-3">
+                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Product Details</label>
+                                <p class="mb-1 fw-medium">${data.jewellery_details || 'No jewellery details'}</p>
+                                <small class="text-muted">${data.diamond_details || ''}</small>
+                            </div>
 
-                                                                                        ${data.diamond_sku ? `
-                                                                                        <div class="mb-3">
-                                                                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
-                                                                                            <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
-                                                                                        </div>` : ''}
+                            ${data.diamond_sku ? `
+                            <div class="mb-3">
+                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
+                                <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
+                            </div>` : ''}
 
-                                                                                        ${data.melee_details ? `
-                                                                                        <div class="p-3 border rounded bg-light mb-3">
-                                                                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
-                                                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                                                <span>${data.melee_details.name}</span>
-                                                                                                <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
-                                                                                            </div>
-                                                                                        </div>` : ''}
+                            ${data.melee_details ? `
+                            <div class="p-3 border rounded bg-light mb-3">
+                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>${data.melee_details.name}</span>
+                                    <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
+                                </div>
+                            </div>` : ''}
 
-                                                                                        <div class="row pt-3 border-top">
-                                                                                            <div class="col-6">
-                                                                                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
-                                                                                                <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
-                                                                                            </div>
-                                                                                            <div class="col-6 text-end">
-                                                                                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
-                                                                                                <span class="fw-medium">${data.submitted_by}</span>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            `;
+                            <div class="row pt-3 border-top">
+                                <div class="col-6">
+                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Total Value</label>
+                                    <h5 class="mb-0 fw-bold text-success">$ ${data.gross_sell}</h5>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <label class="text-muted small text-uppercase fw-bold d-block mb-1">Submitted By</label>
+                                    <span class="fw-medium">${data.submitted_by}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
                     content.insertAdjacentHTML('beforeend', detailsHtml);
                 })
                 .catch(err => {
