@@ -26,9 +26,9 @@ class DashboardController extends Controller
     ];
 
     private array $shippedStatuses = [
-        'r_order_dispatched',
-        'd_order_dispatched',
-        'j_order_dispatched',
+        'r_order_shipped',
+        'd_order_shipped',
+        'j_order_shipped',
         'Delivered',
     ];
 
@@ -96,13 +96,19 @@ class DashboardController extends Controller
 
         // ── 3. ORDERS PIPELINE ────────────────────────────────────
         $activeOrders = Cache::remember('dash.active_orders', 120, function () {
-            return Order::whereNotIn('diamond_status', array_merge($this->cancelledStatuses, $this->shippedStatuses))
+            return Order::where(function ($q) {
+                $q->whereNotIn('diamond_status', array_merge($this->cancelledStatuses, $this->shippedStatuses))
+                    ->orWhereNull('diamond_status');
+            })
                 ->count();
         });
 
         $overdueOrders = Cache::remember("dash.overdue_orders.{$today}", 120, function () use ($today) {
             return Order::whereDate('dispatch_date', '<', $today)
-                ->whereNotIn('diamond_status', array_merge($this->cancelledStatuses, $this->shippedStatuses))
+                ->where(function ($q) {
+                    $q->whereNotIn('diamond_status', array_merge($this->cancelledStatuses, $this->shippedStatuses))
+                        ->orWhereNull('diamond_status');
+                })
                 ->count();
         });
 
