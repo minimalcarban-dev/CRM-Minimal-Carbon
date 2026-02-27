@@ -267,7 +267,6 @@
             </div>
 
             {{-- Card 4: Target Gap --}}
-            @php $gap = $targetGap ?? ($currentTarget ? $currentTarget - ($filteredTotal ?? 0) : 0); @endphp
             <div class="stat-card stat-card-warning">
                 <div class="stat-card-top">
                     <div class="stat-icon-wrap amber">
@@ -369,9 +368,7 @@
                                     <td class="running-total">
                                         {{ $company->currency_symbol }}{{ number_format($day->running_total, 0) }}
                                     </td>
-                                    </td>
-                                    <td>
-                                        @if($day->target_percent !== null)
+                                    <td>                                        @if($day->target_percent !== null)
                                             <span class="target-badge {{ $day->target_percent >= 100 ? 'achieved' : '' }}">
                                                 {{ $day->target_percent }}%
                                             </span>
@@ -436,17 +433,135 @@
     </div>
 
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
-            --dark: #1e293b;
-            --gray: #64748b;
-            --light-gray: #f1f5f9;
-            --border: #e2e8f0;
+        [data-theme="dark"] .sales-dashboard-container {
+            background: var(--bg-body, #0f172a);
+        }
+
+        [data-theme="dark"] .page-header,
+        [data-theme="dark"] .target-progress-section,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .chart-section,
+        [data-theme="dark"] .history-section,
+        [data-theme="dark"] .modal-content {
+            background: var(--bg-card, #1e293b);
+            border: 1px solid rgba(148, 163, 184, 0.38);
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+        }
+
+        [data-theme="dark"] .target-progress-section::after {
+            background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 72%);
+        }
+
+        [data-theme="dark"] .tp-mini-card,
+        [data-theme="dark"] .year-selector {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .target-header h2,
+        [data-theme="dark"] .tp-mini-value,
+        [data-theme="dark"] .pct-number,
+        [data-theme="dark"] .days-count,
+        [data-theme="dark"] .stat-value,
+        [data-theme="dark"] .chart-header h3,
+        [data-theme="dark"] .history-header h3,
+        [data-theme="dark"] .current-year,
+        [data-theme="dark"] .date-main,
+        [data-theme="dark"] .modal-header h4,
+        [data-theme="dark"] .form-group label {
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .page-subtitle,
+        [data-theme="dark"] .breadcrumb-nav,
+        [data-theme="dark"] .breadcrumb-link,
+        [data-theme="dark"] .tp-mini-label,
+        [data-theme="dark"] .pct-label,
+        [data-theme="dark"] .days-row,
+        [data-theme="dark"] .days-pct,
+        [data-theme="dark"] .ring-label,
+        [data-theme="dark"] .ring-divider,
+        [data-theme="dark"] .ring-target,
+        [data-theme="dark"] .stat-label,
+        [data-theme="dark"] .date-day {
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .tp-mini-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(148, 163, 184, 0.42);
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .circle-bg-large,
+        [data-theme="dark"] .days-track {
+            stroke: #334155;
+            background: #334155;
+        }
+
+        [data-theme="dark"] .btn-export,
+        [data-theme="dark"] .btn-filter,
+        [data-theme="dark"] .btn-cancel {
+            background: rgba(15, 23, 42, 0.45);
+            border-color: rgba(148, 163, 184, 0.4);
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .btn-export:hover,
+        [data-theme="dark"] .btn-filter:hover,
+        [data-theme="dark"] .btn-cancel:hover,
+        [data-theme="dark"] .year-nav:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(148, 163, 184, 0.5);
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .btn-back {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff !important;
+        }
+
+        [data-theme="dark"] .history-table th {
+            background: rgba(15, 23, 42, 0.5);
+            border-bottom-color: rgba(148, 163, 184, 0.36);
+        }
+
+        [data-theme="dark"] .history-table td {
+            border-bottom-color: rgba(148, 163, 184, 0.26);
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .history-table tr:hover td {
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        [data-theme="dark"] .type-badge,
+        [data-theme="dark"] .target-badge,
+        [data-theme="dark"] .header-date-chip {
+            background: rgba(255, 255, 255, 0.055);
+            color: var(--text-secondary, #94a3b8);
+            border-color: rgba(148, 163, 184, 0.28);
+        }
+
+        [data-theme="dark"] .modal-header,
+        [data-theme="dark"] .modal-footer {
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        [data-theme="dark"] .modal-footer {
+            background: rgba(15, 23, 42, 0.42);
+        }
+
+        [data-theme="dark"] .form-input {
+            background: rgba(15, 23, 42, 0.62);
+            color: var(--text-primary, #f1f5f9);
+            border-color: rgba(148, 163, 184, 0.32);
+        }
+
+        [data-theme="dark"] .form-input::placeholder {
+            color: var(--text-secondary, #94a3b8);
         }
 
         .sales-dashboard-container {
@@ -1297,10 +1412,10 @@
     @include('partials.daterangepicker-styles')
 
     {{-- DateRangePicker CDN --}}
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -1358,9 +1473,11 @@
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 2,
                     }]
+                    pointHoverBorderWidth: 2,
+                    }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: true,                    responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {

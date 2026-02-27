@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DiamondAssignedEvent;
+use App\Events\DiamondReassignedEvent;
 use App\Http\Requests\StoreDiamondRequest;
 use App\Http\Requests\UpdateDiamondRequest;
 use App\Models\Diamond;
@@ -559,18 +561,36 @@ class DiamondController extends Controller
             ]);
         }
 
+        $newAdmin = Admin::find($newAdminId);
         // Send reassignment notification to previous admin if exists and different
         if ($oldAdminId) {
             $oldAdmin = Admin::find($oldAdminId);
             if ($oldAdmin) {
-                Notification::sendNow($oldAdmin, new DiamondReassignedNotification($diamond, $currentAdmin, $oldAdmin));
+                try {
+                    Notification::sendNow($oldAdmin, new DiamondReassignedNotification($diamond, $currentAdmin, $oldAdmin));
+
+                    // Broadcast event for real-time toaster/popup
+                    $message = 'Diamond ' . $diamond->sku . ' has been reassigned to ' . ($newAdmin ? $newAdmin->name : 'Unknown');
+                    broadcast(new DiamondReassignedEvent($diamond, $oldAdminId, $currentAdmin->name, $message));
+                } catch (\Exception $e) {
+                    // Log error but continue assignment
+                    \Log::error('Failed to send reassignment notification: ' . $e->getMessage());
+                }
             }
         }
 
         // Send assignment notification to new admin
-        $newAdmin = Admin::find($newAdminId);
         if ($newAdmin && $currentAdmin) {
-            Notification::sendNow($newAdmin, new DiamondAssignedNotification($diamond, $currentAdmin));
+            try {
+                Notification::sendNow($newAdmin, new DiamondAssignedNotification($diamond, $currentAdmin));
+
+                // Broadcast event for real-time toaster/popup
+                $message = 'Diamond ' . $diamond->sku . ' has been assigned to you by ' . $currentAdmin->name;
+                broadcast(new DiamondAssignedEvent($diamond, $newAdminId, $currentAdmin->name, $message));
+            } catch (\Exception $e) {
+                // Log error but continue assignment
+                \Log::error('Failed to send assignment notification: ' . $e->getMessage());
+            }
         }
 
         // Update diamond assignment

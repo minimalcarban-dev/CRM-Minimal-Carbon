@@ -6,24 +6,30 @@
 
     <style>
         /* =============================================
-                THEME VARIABLES — matches project palette
-            ============================================= */
+                    THEME VARIABLES — matches project palette
+                ============================================= */
+        /* Bridge local vars to theme vars so dark mode works automatically */
         :root {
+            --primary: var(--bs-primary, #4f46e5);
+        }
+
+        /* Map local semantic tokens to the global theme variables */
+        .od-wrap {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
-            --primary-soft: #eef2ff;
+            --primary-soft: rgba(99, 102, 241, 0.1);
             --success: #10b981;
-            --success-soft: #d1fae5;
+            --success-soft: rgba(16, 185, 129, 0.12);
             --warning: #f59e0b;
-            --warning-soft: #fef3c7;
+            --warning-soft: rgba(245, 158, 11, 0.12);
             --danger: #ef4444;
-            --danger-soft: #fee2e2;
-            --dark: #0f172a;
-            --body: #334155;
-            --muted: #94a3b8;
-            --border: #e2e8f0;
-            --surface: #ffffff;
-            --bg: #f8fafc;
+            --danger-soft: rgba(239, 68, 68, 0.12);
+            --dark: var(--text-primary, #0f172a);
+            --body: var(--text-secondary, #334155);
+            --muted: var(--text-muted, #94a3b8);
+            --border: var(--border-color, #e2e8f0);
+            --surface: var(--bg-card);
+            --bg: var(--bg-body);
             --accent: #6366f1;
             --radius-sm: 6px;
             --radius: 10px;
@@ -140,7 +146,7 @@
             flex-direction: column;
             gap: .4rem;
             background: var(--surface);
-            border: 2px solid var(--border);
+            border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 1rem 1.125rem;
             transition: var(--transition);
@@ -193,171 +199,170 @@
             opacity: .7;
         }
 
-        /* status colours */
         .status-ready_to_ship {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
         }
 
         .status-custom_diamond {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
         }
 
         .status-custom_jewellery {
-            background: #e0e7ff;
-            color: #3730a3;
+            background: rgba(99, 102, 241, 0.12);
+            color: #818cf8;
         }
 
         .status-processed {
-            background: #ddd6fe;
-            color: #5b21b6;
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
         }
 
         .status-completed,
         .status-diamond_completed {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         .status-diamond_purchased {
-            background: #fce7f3;
-            color: #9f1239;
+            background: rgba(236, 72, 153, 0.12);
+            color: #ec4899;
         }
 
         .status-factory_making {
-            background: #fed7aa;
-            color: #9a3412;
+            background: rgba(249, 115, 22, 0.12);
+            color: #f97316;
         }
 
         .status-priority {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
 
         .status-non_priority {
-            background: #f1f5f9;
-            color: #475569;
+            background: rgba(100, 116, 139, 0.12);
+            color: #64748b;
         }
 
         .status-r_order_in_process {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
         }
 
         .status-r_order_shipped {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         .status-r_order_cancelled {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
 
         .status-d_diamond_in_discuss {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
         }
 
         .status-d_diamond_in_making {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
         }
 
         .status-d_diamond_completed {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         .status-d_diamond_in_certificate {
-            background: #f3e8ff;
-            color: #7c3aed;
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
         }
 
         .status-d_order_shipped {
-            background: #1e293b;
-            color: #fff;
+            background: rgba(30, 41, 59, 0.7);
+            color: #e2e8f0;
         }
 
         .status-d_order_cancelled {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
 
         .status-j_diamond_in_progress {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
         }
 
         .status-j_diamond_completed {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         .status-j_diamond_in_discuss {
-            background: #cffafe;
-            color: #0e7490;
+            background: rgba(6, 182, 212, 0.12);
+            color: #06b6d4;
         }
 
         .status-j_cad_in_progress {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
         }
 
         .status-j_cad_done {
-            background: #f3e8ff;
-            color: #7c3aed;
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
         }
 
         .status-j_order_completed {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         .status-j_order_in_qc {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
         }
 
         .status-j_qc_done {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         .status-j_order_shipped {
-            background: #1e293b;
-            color: #fff;
+            background: rgba(30, 41, 59, 0.7);
+            color: #e2e8f0;
         }
 
         .status-j_order_hold {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
 
         .status-j_order_cancelled {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
 
         .status-delivered {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         .status-in_transit {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
         }
 
         .status-out_for_delivery {
-            background: #fae8ff;
-            color: #86198f;
+            background: rgba(168, 85, 247, 0.12);
+            color: #a855f7;
         }
 
         .status-failed_attempt {
-            background: #fee2e2;
-            color: #be123c;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
 
         /* ── Two-column Layout ───────────────────── */
@@ -383,7 +388,7 @@
         /* ── Card ────────────────────────────────── */
         .od-card {
             background: var(--surface);
-            border: 2px solid var(--border);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             overflow: hidden;
             box-shadow: var(--shadow-sm);
@@ -400,7 +405,7 @@
             justify-content: space-between;
             padding: 1rem 1.25rem;
             background: var(--bg);
-            border-bottom: 2px solid var(--border);
+            border-bottom: 1px solid var(--border);
             gap: .75rem;
         }
 
@@ -624,8 +629,8 @@
             line-height: 1.7;
             color: var(--body);
             white-space: pre-wrap;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
+            background: rgba(245, 158, 11, 0.07);
+            border: 1px solid rgba(245, 158, 11, 0.25);
             border-radius: var(--radius-sm);
             padding: .875rem 1rem;
             margin: 0;
@@ -811,8 +816,8 @@
             width: 38px;
             height: 38px;
             border-radius: var(--radius-sm);
-            background: #fee2e2;
-            color: #dc2626;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -869,8 +874,8 @@
 
         /* ── Melee Diamond Box ───────────────────── */
         .od-melee-box {
-            background: linear-gradient(135deg, var(--primary-soft), #f0f4ff);
-            border: 1.5px solid #c7d2fe;
+            background: rgba(99, 102, 241, 0.07);
+            border: 1.5px solid rgba(99, 102, 241, 0.2);
             border-radius: var(--radius);
             padding: 1rem 1.125rem;
             margin-top: 1rem;
@@ -1044,13 +1049,13 @@
         }
 
         .val-old {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
 
         .val-new {
-            background: var(--success-soft);
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
         }
 
         /* ── Modals ──────────────────────────────── */
@@ -1486,7 +1491,128 @@
                 min-width: 100px;
             }
         }
+
+        /* ── Dark Mode: reduce contrast to match project theme ── */
+        [data-theme="dark"] .od-card-head {
+            background: rgba(255, 255, 255, 0.03);
+            /* barely-there tint, not pitch black */
+            border-bottom-color: rgba(255, 255, 255, 0.06);
+        }
+
+        [data-theme="dark"] .od-card {
+            box-shadow: none;
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .od-meta-card {
+            border-color: rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .od-meta-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        [data-theme="dark"] .od-header {
+            border-bottom-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .od-info-row {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .sku-row {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .od-spec {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .od-tl::before {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .od-tl-dot {
+            border-color: var(--bg-card);
+            box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.15);
+        }
+
+        [data-theme="dark"] .od-pdf-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .od-pdf-item:hover {
+            border-color: rgba(99, 102, 241, 0.35);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        [data-theme="dark"] .od-pdf-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .od-edit-header {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .od-edit-item {
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .changes-table th {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .changes-table th,
+        [data-theme="dark"] .changes-table td {
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        [data-theme="dark"] .changes-toggle {
+            border-top-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .od-modal-box {
+            background: var(--bg-card);
+        }
+
+        [data-theme="dark"] .od-modal-head {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom-color: rgba(255, 255, 255, 0.07);
+        }
+
+        [data-theme="dark"] .od-modal-close {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .od-stepper-latest {
+            background: rgba(99, 102, 241, 0.07);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="dark"] .od-timeline-title::after {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        [data-theme="dark"] .btn-od {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--muted);
+        }
+
+        [data-theme="dark"] .btn-od:hover {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(99, 102, 241, 0.4);
+            color: #818cf8;
+        }
     </style>
+
 
     <div class="od-wrap">
 

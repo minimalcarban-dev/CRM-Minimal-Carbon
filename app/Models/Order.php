@@ -89,11 +89,10 @@ class Order extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function factory()
+    public function Factory()
     {
-        return $this->belongsTo(Factory::class);
+        return $this->belongsTo(Factory::class, 'factory_id');
     }
-
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'submitted_by');

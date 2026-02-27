@@ -1042,19 +1042,6 @@
 
         /* Top Navbar */
         .top-navbar {
-            /* position: fixed;
-            top: 0;
-            right: 0;
-            left: var(--sidebar-width);
-            height: 70px;
-            background: white;
-            border-bottom: 2px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 2rem;
-            z-index: 500;
-            transition: left 0.3s; */
-
             position: fixed;
             top: 0;
             left: var(--sidebar-width);
@@ -1064,12 +1051,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-
-            background: rgba(255, 255, 255, 0.75);
+            /* background: rgba(255, 255, 255, 0.75); */
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-
-            border-bottom: 1px solid var(--border);
+            /* border-bottom: 1px solid var(--border); */
             box-shadow: 0 4px 20px var(--shadow);
             z-index: 1000;
             transition: all 0.3s ease;
@@ -1928,7 +1913,11 @@
         }
 
         /* ── Active nav links — premium 3-stop gradient finish ── */
-        .nav-link.active.cat-orders, .nav-link.active.cat-inventory, .nav-link.active.cat-finance, .nav-link.active.cat-clients, .nav-link.active.cat-system {
+        .nav-link.active.cat-orders,
+        .nav-link.active.cat-inventory,
+        .nav-link.active.cat-finance,
+        .nav-link.active.cat-clients,
+        .nav-link.active.cat-system {
             background: linear-gradient(135deg, #71c0f8 0%, #2053c7 45%, #1b2f99 100%);
             color: white;
             box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
@@ -3880,19 +3869,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                                                                                        <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                            <div>
-                                                                                                                                <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                                                                                <div style="font-size: 0.8rem; color: #64748b;">
-                                                                                                                                    ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                                                                            <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                                <div>
+                                                                                                                                    <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                                                                                                    <div style="font-size: 0.8rem; color: #64748b;">
+                                                                                                                                        ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                                                                                    </div>
                                                                                                                                 </div>
+                                                                                                                                <a href="${draft.resume_url}"
+                                                                                                                                    style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                                                                                                    Resume
+                                                                                                                                </a>    
                                                                                                                             </div>
-                                                                                                                            <a href="${draft.resume_url}"
-                                                                                                                                style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                                                                                                Resume
-                                                                                                                            </a>    
-                                                                                                                        </div>
-                                                                                                                    `;
+                                                                                                                        `;
                             });
                             draftsHtml += '</div>';
 
@@ -3900,11 +3889,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                                                                                        <p style="color: #64748b; margin-bottom: 1rem;">
-                                                                                                                            You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                                                                                        </p>
-                                                                                                                        ${draftsHtml}
-                                                                                                                    `,
+                                                                                                                            <p style="color: #64748b; margin-bottom: 1rem;">
+                                                                                                                                You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                                                                                                            </p>
+                                                                                                                            ${draftsHtml}
+                                                                                                                        `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',
@@ -3949,43 +3938,6 @@
         applyTheme(savedTheme === 'dark');
 
         darkBtn?.addEventListener('click', () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            applyTheme(!isDark);
-        });
-
-        // ── GREETING + LIVE CLOCK ──
-        function updateGreetingClock() {
-            const now = new Date();
-            const h = now.getHours();
-            const name = window.authAdminName || 'Admin';
-            const greet = h < 12 ? '🌤 Good Morning' : h < 17 ? '☀️ Good Afternoon' : '🌙 Good Evening';
-            const chip = document.getElementById('greetingChip');
-            if (chip) chip.textContent = `${greet}, ${name.split(' ')[0]}!`;
-
-            const clock = document.getElementById('liveClock');
-            if (clock) {
-                const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                const date = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                clock.textContent = `${date} · ${time}`;
-            }
-        }
-        updateGreetingClock();
-        setInterval(updateGreetingClock, 30000);
-
-        // ── COMMAND PALETTE ──
-        const CMD_ITEMS = [
-            { group: 'Pages', icon: 'bi-house', color: '#6366f1', bg: 'rgba(99,102,241,0.1)', label: 'Dashboard', hint: 'Home', url: '{{ route("admin.dashboard") }}' },
-            { group: 'Pages', icon: 'bi-basket', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', label: 'Orders', hint: 'Manage orders', url: '{{ route("orders.index") }}' },
-            { group: 'Pages', icon: 'bi-gem', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', label: 'Stock List', hint: 'Diamonds', url: '{{ route("diamond.index") }}' },
-            { group: 'Pages', icon: 'bi-grid-3x3-gap', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', label: 'Melee Inventory', hint: 'Melee diamonds', url: '{{ route("melee.index") }}' },
-            { group: 'Pages', icon: 'bi-person-lines-fill', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', label: 'Shoppers', hint: 'Clients', url: '{{ route("clients.index") }}' },
-            { group: 'Pages', icon: 'bi-people', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', label: 'Vendors', hint: 'Parties', url: '{{ route("parties.index") }}' },
-            { group: 'Pages', icon: 'bi-graph-up-arrow', color: '#10b981', bg: 'rgba(16,185,129,0.1)', label: 'All Sales', hint: 'Dashboard', url: '{{ route("companies.all-sales-dashboard") }}' },
-            { group: 'Pages', icon: 'bi-receipt', color: '#10b981', bg: 'rgba(16,185,129,0.1)', label: 'Invoices', hint: 'Billing', url: '{{ route("invoices.index") }}' },
-            { group: 'Pages', icon: 'bi-inbox', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', label: 'Leads Inbox', hint: 'New leads', url: '{{ route("leads.index") }}' },
-            { group: 'Pages', icon: 'bi-bell', color: '#6366f1', bg: 'rgba(99,102,241,0.1)', label: 'Notifications', hint: 'Alerts', url: '{{ route("notifications.index") }}' },
-            { group: 'Actions', icon: 'bi-plus-circle', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', label: 'New Order', hint: 'Create order', url: '{{ route("orders.create") }}' },
-            { group: 'Actions', icon: 'bi-gem', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', label: 'Add Diamond', hint: 'Stock', url: '{{ route("diamond.create") }}' },
         ];
 
         let cmdActive = -1;

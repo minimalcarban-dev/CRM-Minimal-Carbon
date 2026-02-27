@@ -173,17 +173,7 @@
     </div>
 
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #64748b;
-            --dark: #1e293b;
-            --gray: #64748b;
-            --light-gray: #f8fafc;
-            --border: #e2e8f0;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
+        /* edit.blade.php — uses global theme variables from layouts.admin */
 
         /* Custom Button Styles */
         .header-right {
@@ -217,7 +207,7 @@
         }
 
         .btn-secondary-custom {
-            background: white;
+            background: var(--bg-card);
             color: var(--gray);
             border: 2px solid var(--border);
             padding: 0.6rem 1.25rem;
@@ -240,7 +230,7 @@
 
         /* Current Files Section */
         .current-files-section .card-custom {
-            background: white;
+            background: var(--bg-card);
             border-radius: 12px;
             border: 2px solid var(--border);
         }
@@ -260,7 +250,7 @@
         }
 
         .file-section {
-            background: var(--light-gray);
+            background: var(--bg-body);
             border: 2px solid var(--border);
             border-radius: 10px;
             padding: 1rem;
@@ -299,7 +289,7 @@
             aspect-ratio: 1;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: white;
+            background: var(--bg-card);
         }
 
         .current-image-item:hover {
@@ -357,7 +347,7 @@
             align-items: center;
             gap: 0.75rem;
             padding: 0.875rem;
-            background: white;
+            background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 8px;
             text-decoration: none;
@@ -476,7 +466,7 @@
             border: 2px solid var(--border);
             border-radius: 8px;
             padding: 0.5rem;
-            background: var(--light-gray);
+            background: var(--bg-body);
             text-align: center;
         }
 
@@ -524,7 +514,7 @@
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem;
-            background: white;
+            background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 8px;
             margin-bottom: 0.5rem;
@@ -694,9 +684,9 @@
         }
 
         .remove-pdf-btn {
-            background: #fef2f2;
+            background: rgba(239,68,68,0.08);
             color: #ef4444;
-            border: 1px solid #fee2e2;
+            border: 1px solid rgba(239,68,68,0.2);
             width: 36px;
             height: 48px;
             border-radius: 8px;
@@ -712,7 +702,38 @@
             color: white;
             border-color: #ef4444;
         }
+        /* ── Dark Mode Overrides ── */
+        [data-theme="dark"] .card-custom {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+            color: var(--dark);
+        }
+
+        [data-theme="dark"] .page-header {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .page-subtitle {
+            color: var(--dark) !important;
+        }
+
+        [data-theme="dark"] .form-select-custom,
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background: var(--bg-card) !important;
+            border-color: var(--border) !important;
+            color: var(--dark) !important;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background: rgba(239,68,68,0.1) !important;
+            border-color: rgba(239,68,68,0.3) !important;
+            color: #fca5a5 !important;
+        }
     </style>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

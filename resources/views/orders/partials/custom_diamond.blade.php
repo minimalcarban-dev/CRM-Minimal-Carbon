@@ -425,7 +425,7 @@
                         <option value="UPS - Ground" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - Ground' ? 'selected' : '' }}>UPS - Ground</option>
                         <option value="UPS - DDP" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - DDP' ? 'selected' : '' }}>UPS - DDP</option>
                         <option value="LP Service" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'LP Service' ? 'selected' : '' }}>LP Service</option>
-                        @if(!empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post', 'UPS - Ground', 'UPS - DDP', 'LP Service']))
+                        @if(isset($order) && !empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post', 'UPS - Ground', 'UPS - DDP', 'LP Service']))
                             <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}
                             </option>
                         @endif
@@ -486,16 +486,90 @@
 
 
 <style>
-    :root {
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --dark: #1e293b;
-        --gray: #64748b;
-        --light-gray: #f8fafc;
-        --border: #e2e8f0;
-        --danger: #ef4444;
-        --success: #10b981;
-        --info: #3b82f6;
+    /* ── Dark mode overrides for order form elements ── */
+    [data-theme="dark"] .form-section-card {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .section-header {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .section-title,
+    [data-theme="dark"] .upload-title,
+    [data-theme="dark"] .label-text,
+    [data-theme="dark"] .file-preview-name {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .section-description,
+    [data-theme="dark"] .form-hint,
+    [data-theme="dark"] .upload-subtitle,
+    [data-theme="dark"] .upload-formats,
+    [data-theme="dark"] .file-preview-size {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .form-control-modern {
+        background: var(--bg-body) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .form-control-modern::placeholder {
+        color: var(--muted) !important;
+    }
+
+    [data-theme="dark"] .form-label-modern {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .file-upload-area {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .file-upload-icon {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .file-preview-item,
+    [data-theme="dark"] .file-preview-list-item {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    /* Select2 dark mode */
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single {
+        background: var(--bg-body) !important;
+        border-color: var(--border) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-dropdown {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+        background: var(--bg-body) !important;
+        border-color: var(--border) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-results__option {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-results__option--selected {
+        background: rgba(99, 102, 241, 0.15) !important;
     }
 
     /* ── Select2 Dropdown Styling for Order Forms ── */
@@ -508,7 +582,7 @@
         min-height: 44px;
         font-size: 0.9rem;
         transition: border-color 0.2s, box-shadow 0.2s;
-        background: #fff;
+        background: var(--bg-card);
     }
 
     .select2-container--bootstrap-5 .select2-selection--single:focus,
@@ -599,7 +673,7 @@
 
     /* Section Card */
     .form-section-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
         border: 2px solid var(--border);
         overflow: hidden;
@@ -607,7 +681,7 @@
 
     .section-header {
         padding: 1.25rem 1.5rem;
-        background: linear-gradient(135deg, var(--light-gray), white);
+        background: linear-gradient(135deg, var(--light-gray), var(--bg-card));
         border-bottom: 2px solid var(--border);
         display: flex;
         align-items: center;
@@ -720,7 +794,7 @@
         border-radius: 10px;
         font-size: 0.875rem;
         transition: all 0.2s ease;
-        background: white;
+        background: var(--bg-card);
         color: var(--dark);
         font-family: inherit;
     }
@@ -801,7 +875,7 @@
         width: 64px;
         height: 64px;
         border-radius: 50%;
-        background: white;
+        background: var(--bg-card);
         border: 2px solid var(--border);
         display: flex;
         align-items: center;
@@ -853,7 +927,7 @@
         border-radius: 10px;
         overflow: hidden;
         border: 2px solid var(--border);
-        background: white;
+        background: var(--bg-card);
         aspect-ratio: 1;
     }
 
@@ -905,7 +979,7 @@
         align-items: center;
         gap: 0.875rem;
         padding: 0.875rem 1rem;
-        background: white;
+        background: var(--bg-card);
         border: 2px solid var(--border);
         border-radius: 10px;
     }

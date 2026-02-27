@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\ClosureTypeController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FactoryController;
 use App\Http\Controllers\GoldTrackingController;
+use App\Http\Controllers\JewelleryCalculatorController;
 use App\Http\Controllers\MeleeDiamondController;
 use App\Http\Controllers\MetalTypeController;
 use App\Http\Controllers\MetaWebhookController;
@@ -62,10 +64,9 @@ Route::post('admin/logout', [AdminAuthController::class, 'logout'])->name('admin
 
 // Admin CRUD routes (protected)
 Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
-    // Lightweight dashboard landing for safe redirects
-    Route::get('dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+    // Dashboard
+    Route::get('dashboard', [DashboardController::class, 'index'])
+        ->name('admin.dashboard');
 
     // DIAGNOSTIC ROUTE
     Route::get('test-blade', function () {
@@ -84,9 +85,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // Tools & Calculators
     // ─────────────────────────────────────────────────────────────
     Route::prefix('tools')->name('tools.')->group(function () {
-        Route::get('jewellery-calculator', [\App\Http\Controllers\JewelleryCalculatorController::class, 'index'])
+        Route::get('jewellery-calculator', [JewelleryCalculatorController::class, 'index'])
             ->name('jewellery-calculator');
-        Route::get('gold-rate', [\App\Http\Controllers\JewelleryCalculatorController::class, 'getRates'])
+        Route::get('gold-rate', [JewelleryCalculatorController::class, 'getRates'])
             ->name('gold-rate');
     });
 

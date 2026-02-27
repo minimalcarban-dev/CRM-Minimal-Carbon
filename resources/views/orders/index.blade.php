@@ -195,15 +195,14 @@
             {{-- In Transit Orders --}}
             @php $inTransitHref = request('in_transit') === '1' ? route('orders.index', request()->except(['in_transit', 'page'])) : route('orders.index', array_merge(request()->except(['page', 'order_type', 'diamond_status', 'shipped']), ['in_transit' => '1'])); @endphp
             <a href="{{ $inTransitHref }}"
-                class="stat-card stat-card-warning {{ request('in_transit') === '1' ? 'active-filter' : '' }}"
-                style="background: #fffbeb;">
-                <div class="stat-icon" style="background: #fbbf24; color: white;">
+                class="stat-card stat-card-warning {{ request('in_transit') === '1' ? 'active-filter' : '' }}">
+                <div class="stat-icon" style="background: rgba(251,191,36,0.18); color: #fbbf24;">
                     <i class="bi bi-geo-alt"></i>
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">In Transit</div>
-                    <div class="stat-value" style="color: #92400e;">{{ $inTransitCount ?? 0 }}</div>
-                    <div class="stat-trend" style="color: #b45309;">
+                    <div class="stat-value">{{ $inTransitCount ?? 0 }}</div>
+                    <div class="stat-trend">
                         <i class="bi bi-broadcast"></i> Live Tracking
                     </div>
                 </div>
@@ -214,7 +213,7 @@
                 <div class="stat-card stat-card-sales" id="todaysSalesCard" onclick="toggleCompanyProgress()"
                     style="cursor: pointer;">
                     <div class="stat-icon"
-                        style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); color: #10b981;">
+                        style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                         <i class="bi bi-currency-dollar"></i>
                     </div>
                     <div class="stat-content">
@@ -226,7 +225,7 @@
                             {{ $todaysOrderCount ?? 0 }} shipped orders
                         </div>
                         <div class="stat-month-sales"
-                            style="font-size: 0.7rem; color: #64748b; margin-top: 4px; border-top: 1px solid rgba(16, 185, 129, 0.1); padding-top: 4px;">
+                            style="font-size: 0.7rem; color: var(--gray); margin-top: 4px; border-top: 1px solid rgba(16, 185, 129, 0.1); padding-top: 4px;">
                             <span style="display: flex; justify-content: space-between; align-items: center;">
                                 <span>Month:</span>
                                 <span style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
@@ -687,7 +686,7 @@
                                     </td>
                                     <td>
                                         <div class="client-info">
-                                            <div class="client-name fw-bold text-dark mb-1">
+                                            <div class="client-name fw-bold mb-1">
                                                 {{ $order->display_client_name ?? '—' }}
                                             </div>
 
@@ -927,23 +926,6 @@
 
     <!-- CSS -->
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
-            --purple: #a855f7;
-            --dark: #1e293b;
-            --gray: #64748b;
-            --light-gray: #f1f5f9;
-            --border: #e2e8f0;
-            --shadow: rgba(0, 0, 0, 0.05);
-            --shadow-md: rgba(0, 0, 0, 0.1);
-            --shadow-lg: rgba(0, 0, 0, 0.15);
-        }
-
         * {
             box-sizing: border-box;
         }
@@ -952,13 +934,13 @@
             padding: 0rem;
             max-width: 1800px;
             margin: 0 auto;
-            background: #f8fafc;
+            background: var(--bg-body);
             min-height: 100vh;
         }
 
         /* Page Header */
         .page-header {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
@@ -1111,40 +1093,73 @@
             }
         }
 
-        /* Stat Card - Clean minimal style */
+        /* ── PREMIUM STAT CARDS ── */
         .stat-card {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 1.1rem 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.875rem;
-            border: none;
-            transition: all 0.2s ease;
+            gap: 1rem;
+            border: 1px solid var(--border);
+            border-left: 3px solid transparent;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
             flex: 1 1 0;
             min-width: 0;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
             text-decoration: none !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle shimmer line at top */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+            pointer-events: none;
         }
 
         .stat-card:hover {
-            border-color: #d1d5db;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
 
-        /* Icon - Compact circular style */
+        /* Accent border colors on hover */
+        .stat-card-primary:hover  { border-left-color: #6366f1; }
+        .stat-card-info:hover     { border-left-color: #3b82f6; }
+        .stat-card-warning:hover  { border-left-color: #f59e0b; }
+        .stat-card-success:hover  { border-left-color: #10b981; }
+        .stat-card-dark:hover     { border-left-color: #94a3b8; }
+        .stat-card-sales:hover    { border-left-color: #10b981; }
+
+        /* Active filter state */
+        .active-filter.stat-card-primary  { border-left-color: #6366f1; }
+        .active-filter.stat-card-info     { border-left-color: #3b82f6; }
+        .active-filter.stat-card-warning  { border-left-color: #f59e0b; }
+        .active-filter.stat-card-success  { border-left-color: #10b981; }
+        .active-filter.stat-card-dark     { border-left-color: #94a3b8; }
+
+        /* Icon */
         .stat-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 46px;
+            height: 46px;
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.125rem;
+            font-size: 1.2rem;
             flex-shrink: 0;
+            transition: transform 0.2s ease;
         }
 
-        /* Content - Clean typography */
+        .stat-card:hover .stat-icon {
+            transform: scale(1.08);
+        }
+
+        /* Content typography */
         .stat-content {
             flex: 1;
             min-width: 0;
@@ -1152,88 +1167,88 @@
         }
 
         .stat-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 500;
+            font-size: 0.68rem;
+            color: var(--gray);
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
-            margin-bottom: 0.125rem;
+            letter-spacing: 0.6px;
+            margin-bottom: 0.2rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .stat-value {
-            font-size: clamp(1.125rem, 2vw, 1.5rem);
-            font-weight: 600;
-            color: #1f2937;
-            line-height: 1.2;
+            font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1.1;
             white-space: nowrap;
+            letter-spacing: -0.5px;
         }
 
         .stat-trend {
             font-size: 0.7rem;
-            color: #9ca3af;
+            color: var(--gray);
             display: flex;
             align-items: center;
-            gap: 0.125rem;
-            margin-top: 0.125rem;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
             white-space: nowrap;
+            opacity: 0.8;
         }
 
-        /* Color variants - Subtle icon backgrounds */
+        /* Icon color variants — all rgba so dark mode works */
         .stat-card-primary .stat-icon {
-            background: #eef2ff;
-            color: #6366f1;
-        }
-
-        .stat-card-success .stat-icon {
-            background: #ecfdf5;
-            color: #10b981;
-        }
-
-        .stat-card-warning .stat-icon {
-            background: #fffbeb;
-            color: #f59e0b;
+            background: rgba(99, 102, 241, 0.13);
+            color: #818cf8;
         }
 
         .stat-card-info .stat-icon {
-            background: #eff6ff;
-            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.13);
+            color: #60a5fa;
+        }
+
+        .stat-card-success .stat-icon {
+            background: rgba(16, 185, 129, 0.13);
+            color: #34d399;
+        }
+
+        .stat-card-warning .stat-icon {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
         }
 
         .stat-card-dark .stat-icon {
-            background: #f3f4f6;
-            color: #374151;
+            background: rgba(148, 163, 184, 0.13);
+            color: #94a3b8;
         }
 
-        /* Sales card - Subtle highlight */
+        /* Sales card — subtle colored glow, no solid white */
         .stat-card-sales {
-            border-color: #d1fae5;
-            background: linear-gradient(to right, #f0fdf4, #ffffff);
+            border-color: rgba(16, 185, 129, 0.25);
+            background: linear-gradient(135deg, rgba(16,185,129,0.06), var(--bg-card));
         }
 
         .stat-card-sales .stat-icon {
-            background: #d1fae5;
-            color: #059669;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
         }
 
-        .stat-card-sales:hover {
-            border-color: #10b981;
-        }
-
-        /* Live badge - Compact */
+        /* Live badge */
         .live-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.2rem;
+            gap: 0.25rem;
             color: #10b981;
-            font-weight: 600;
-            font-size: 0.5rem;
+            font-weight: 700;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .live-badge i {
-            font-size: 0.4rem;
+            font-size: 0.45rem;
             animation: pulse 1.5s infinite;
         }
 
@@ -1251,7 +1266,7 @@
 
         /* Company Progress Section */
         .company-progress-section {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 1.5rem;
             margin-bottom: 2rem;
@@ -1284,7 +1299,7 @@
 
         /* Simplified Company Progress Cards - Clean design */
         .company-progress-card-simple {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 1.5rem;
             display: flex;
@@ -1407,8 +1422,8 @@
             align-items: center;
             justify-content: space-between;
             padding: 1rem 1.5rem;
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            border: 2px solid #fca5a5;
+            background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.08) 100%);
+            border: 2px solid rgba(239,68,68,0.35);
             border-radius: 12px;
             margin-bottom: 1.5rem;
             animation: slideDown 0.3s ease-out;
@@ -1459,13 +1474,13 @@
         }
 
         .overdue-alert-text {
-            color: #7f1d1d;
+            color: var(--danger);
             font-size: 0.95rem;
         }
 
         .overdue-count {
             font-weight: 700;
-            color: #dc2626;
+            color: var(--danger);
             font-size: 1.1rem;
         }
 
@@ -1507,7 +1522,7 @@
 
         /* Filter Section */
         .filter-section {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 1.5rem;
             margin-bottom: 2rem;
@@ -1549,7 +1564,7 @@
         .search-input:focus {
             outline: none;
             border-color: var(--primary);
-            background: white;
+            background: var(--bg-card);
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
@@ -1558,7 +1573,8 @@
             border: 2px solid var(--border);
             border-radius: 10px;
             font-size: 0.95rem;
-            background-color: white;
+            background-color: var(--bg-card);
+            color: var(--dark);
             cursor: pointer;
             transition: all 0.2s;
             min-width: 180px;
@@ -1581,7 +1597,8 @@
             border: 2px solid var(--border);
             border-radius: 10px;
             font-size: 0.95rem;
-            background-color: white;
+            background-color: var(--bg-card);
+            color: var(--dark);
             cursor: pointer;
             transition: all 0.2s;
             min-width: 140px;
@@ -1607,7 +1624,7 @@
             padding: 0.75rem 1.25rem;
             border: 2px solid var(--border);
             border-radius: 10px;
-            background: white;
+            background: var(--bg-card);
             color: var(--gray);
             font-weight: 600;
             cursor: pointer;
@@ -1635,7 +1652,7 @@
             padding: 0.75rem 1.25rem;
             border: 2px solid #ef4444;
             border-radius: 10px;
-            background: white;
+            background: var(--bg-card);
             color: #ef4444;
             font-weight: 600;
             cursor: pointer;
@@ -1666,7 +1683,7 @@
             padding: 0.75rem 1.25rem;
             border: 2px solid #ef4444;
             border-radius: 10px;
-            background: white;
+            background: var(--bg-card);
             color: #ef4444;
             font-weight: 600;
             cursor: pointer;
@@ -1706,7 +1723,7 @@
 
         /* Orders Table */
         .orders-table-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 16px;
             box-shadow: 0 1px 3px var(--shadow);
             overflow: hidden;
@@ -1722,7 +1739,7 @@
         }
 
         .orders-table thead {
-            background: linear-gradient(135deg, var(--light-gray), white);
+            background: linear-gradient(135deg, var(--light-gray), var(--bg-card));
             border-bottom: 2px solid var(--border);
         }
 
@@ -1956,7 +1973,7 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: white;
+            background: var(--bg-card);
             border: 3px solid #ef4444;
             /* Match Aramex red dot */
             z-index: 1;
@@ -2020,17 +2037,17 @@
 
         /* Overdue order row - red background for orders past dispatch date but not shipped */
         .table-row.overdue-row {
-            background: #FED4D4;
+            background: rgba(239, 68, 68, 0.08);
             border-left: 4px solid #ef4444;
         }
 
         .table-row.overdue-row:hover {
-            background: #ffafafff;
+            background: rgba(239, 68, 68, 0.13);
         }
 
         .table-row.overdue-row .order-id-badge {
-            background: #ffafafff;
-            color: #ff0000ff;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
         }
 
         .orders-table td {
@@ -2202,7 +2219,7 @@
             align-items: center;
             justify-content: center;
             border: 2px solid var(--border);
-            background: white;
+            background: var(--bg-card);
             color: var(--gray);
             cursor: pointer;
             transition: all 0.2s;

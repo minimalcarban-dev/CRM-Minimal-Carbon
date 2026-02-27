@@ -294,7 +294,7 @@
                     @if($diamond->barcode_image_url)
                         <div class="form-group full-width">
                             <label class="form-label">Barcode</label>
-                            <div style="padding: 20px; background-color: #f8f9fa; border-radius: 4px;">
+                            <div class="barcode-wrapper" style="padding: 20px; border-radius: 4px;">
                                 <img src="{{ $diamond->barcode_image_url }}" style="max-width: 200px; height: auto;"
                                     alt="Barcode">
                             </div>
@@ -354,8 +354,8 @@
                     <div class="image-gallery"
                         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
                         @foreach($diamond->multi_img_upload as $index => $image)
-                            <div onclick="viewImage('{{ $image }}', 'Diamond Image {{ $index + 1 }}')"
-                                style="border-radius: 8px; overflow: hidden; background-color: #f8f9fa; cursor: pointer; position: relative; transition: all 0.3s;">
+                            <div class="gallery-item" data-image-url="{{ $image }}" data-image-title="Diamond Image {{ $index + 1 }}"
+                                style="border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; transition: all 0.3s;">
                                 <img src="{{ $image }}" style="width: 100%; height: 150px; object-fit: cover;"
                                     alt="Diamond Image {{ $index + 1 }}">
                                 <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;"
@@ -424,6 +424,56 @@
             background: #fdeaea;
             color: #842029;
             border-color: #f6cccc;
+        }
+
+        .barcode-wrapper,
+        .gallery-item {
+            background-color: #f8f9fa;
+        }
+
+        /* ── Dark Mode Overrides ── */
+        [data-theme="dark"] .form-value {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .status-instock {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+
+        [data-theme="dark"] .status-sold {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        [data-theme="dark"] .barcode-wrapper,
+        [data-theme="dark"] .gallery-item {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .image-modal-content {
+            background: var(--bg-card);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        [data-theme="dark"] .image-modal-header {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom-color: var(--border);
+        }
+
+        [data-theme="dark"] .image-modal-header h3 {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .image-modal-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
         }
 
         /* Image Modal */
@@ -520,38 +570,46 @@
                 opacity: 1;
             }
         }
+
         @media (max-width: 575px) {
             .breadcrumb-nav {
                 gap: 5px;
             }
-            .header-right a:first-child{
+
+            .header-right a:first-child {
                 margin-bottom: 8px;
             }
+
             .header-right a {
                 padding: 5px;
                 font-size: 13px;
             }
+
             .section-icon {
                 width: 35px;
                 height: 35px;
                 border-radius: 5px;
                 font-size: 18px;
             }
+
             p.section-description {
                 font-size: 12px;
             }
+
             p.form-value {
                 font-size: 12px;
             }
+
             label.form-label {
                 font-size: 14px;
                 margin-bottom: 0px;
                 font-weight: 700;
             }
+
             .form-grid {
                 gap: 5px;
             }
-            
+
         }
     </style>
 

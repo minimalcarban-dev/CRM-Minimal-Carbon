@@ -32,7 +32,7 @@ class DiamondAssignedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['database'];
     }
 
     /**
@@ -68,8 +68,13 @@ class DiamondAssignedNotification extends Notification implements ShouldQueue
             'details' => [
                 'sku' => $this->diamond->sku,
                 'lot_no' => $this->diamond->lot_no,
-                'price' => '$. ' . number_format((float)($this->diamond->purchase_price ?? 0), 2),
-                'type' => $this->diamond->diamond_type ?? 'N/A',
+                'price' => '$' . number_format((float) ($this->diamond->purchase_price ?? 0), 2),
+                'assigned_by' => $this->assignedBy->name,
+            ]
+        ];
+    }
+}
+ . number_format((float) ($this->diamond->purchase_price ?? 0), 2),                'type' => $this->diamond->diamond_type ?? 'N/A',
                 'assigned_by' => $this->assignedBy->name,
             ]
         ];

@@ -635,16 +635,101 @@
 
 <!-- Custom CSS -->
 <style>
-    :root {
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --dark: #1e293b;
-        --gray: #64748b;
-        --light-gray: #f8fafc;
-        --border: #e2e8f0;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
+    /* ── Dark mode overrides for order form elements ── */
+    [data-theme="dark"] .form-section-card {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .section-header {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .section-title,
+    [data-theme="dark"] .label-text {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .section-description,
+    [data-theme="dark"] .form-hint {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .form-control-modern {
+        background: var(--bg-body) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .form-control-modern::placeholder {
+        color: var(--muted) !important;
+    }
+
+    [data-theme="dark"] .form-label-modern {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .file-upload-area {
+        background: rgba(255,255,255,0.04) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .file-upload-icon {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .upload-formats {
+        background: var(--bg-card) !important;
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .upload-title {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .preview-item,
+    [data-theme="dark"] .pdf-preview-item,
+    [data-theme="dark"] .file-preview-item,
+    [data-theme="dark"] .file-preview-list-item {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .preview-name {
+        background: var(--light-gray) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* Select2 dark mode */
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single {
+        background: var(--bg-body) !important;
+        border-color: var(--border) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-dropdown {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+        background: var(--bg-body) !important;
+        border-color: var(--border) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-results__option {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .select2-container--bootstrap-5 .select2-results__option--selected {
+        background: rgba(99, 102, 241, 0.15) !important;
     }
 
     /* ── Select2 Dropdown Styling for Order Forms ── */
@@ -657,7 +742,7 @@
         min-height: 44px;
         font-size: 0.9rem;
         transition: border-color 0.2s, box-shadow 0.2s;
-        background: #fff;
+        background: var(--bg-card);
     }
 
     .select2-container--bootstrap-5 .select2-selection--single:focus,
@@ -748,7 +833,7 @@
 
     /* Form Section Card */
     .form-section-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 16px;
         border: 2px solid var(--border);
         overflow: hidden;
@@ -761,7 +846,7 @@
 
     .section-header {
         padding: 1.5rem;
-        background: linear-gradient(135deg, var(--light-gray), white);
+        background: linear-gradient(135deg, var(--light-gray), var(--bg-card));
         border-bottom: 2px solid var(--border);
     }
 
@@ -872,7 +957,7 @@
         border-radius: 12px;
         font-size: 0.95rem;
         color: var(--dark);
-        background: white;
+        background: var(--bg-card);
         transition: all 0.3s ease;
     }
 
@@ -947,7 +1032,7 @@
         width: 64px;
         height: 64px;
         border-radius: 12px;
-        background: white;
+        background: var(--bg-card);
         color: var(--primary);
         display: flex;
         align-items: center;
@@ -991,7 +1076,7 @@
     .upload-formats {
         font-size: 0.85rem;
         color: var(--gray);
-        background: white;
+        background: var(--bg-card);
         padding: 0.5rem 1rem;
         border-radius: 8px;
         display: inline-block;
@@ -1010,7 +1095,7 @@
         border-radius: 12px;
         overflow: hidden;
         border: 2px solid var(--border);
-        background: white;
+        background: var(--bg-card);
         transition: all 0.3s ease;
     }
 
@@ -1080,7 +1165,7 @@
         padding: 1rem;
         border: 2px solid var(--border);
         border-radius: 12px;
-        background: white;
+        background: var(--bg-card);
         transition: all 0.3s ease;
     }
 

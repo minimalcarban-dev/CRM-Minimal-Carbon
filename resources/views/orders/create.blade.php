@@ -142,17 +142,7 @@
     <!-- CSS -->
     @push('styles')
         <style>
-            :root {
-                --primary: #6366f1;
-                --primary-dark: #4f46e5;
-                --dark: #1e293b;
-                --gray: #64748b;
-                --light-gray: #f8fafc;
-                --border: #e2e8f0;
-                --danger: #ef4444;
-                --success: #10b981;
-                --warning: #f59e0b;
-            }
+            /* Uses global theme variables from layouts/admin.blade.php */
 
             /* Draft Resume Banner */
             .draft-resume-banner {
@@ -209,11 +199,11 @@
             }
 
             .draft-banner-action {
-                background: white;
+                background: var(--bg-card);
                 color: var(--gray);
                 padding: 0.5rem 1rem;
                 border-radius: 8px;
-                border: 2px solid var(--border);
+                border: 1.5px solid var(--border);
                 text-decoration: none;
                 font-weight: 600;
                 font-size: 0.875rem;
@@ -259,9 +249,9 @@
             }
 
             .btn-secondary-custom {
-                background: white;
+                background: var(--bg-card);
                 color: var(--gray);
-                border: 2px solid var(--border);
+                border: 1.5px solid var(--border);
                 padding: 0.6rem 1.25rem;
                 border-radius: 12px;
                 font-weight: 600;
@@ -357,9 +347,9 @@
 
             /* Form Section Card */
             .form-section-card {
-                background: white;
+                background: var(--bg-card);
                 border-radius: 16px;
-                border: 2px solid var(--border);
+                border: 1px solid var(--border);
                 overflow: hidden;
                 transition: all 0.3s ease;
             }
@@ -370,8 +360,8 @@
 
             .section-header {
                 padding: 1.5rem;
-                background: linear-gradient(135deg, var(--light-gray), white);
-                border-bottom: 2px solid var(--border);
+                background: rgba(255,255,255,0.04);
+                border-bottom: 1px solid var(--border);
                 display: flex;
                 align-items: center;
                 gap: 1rem;
@@ -435,9 +425,9 @@
                 flex-direction: column;
                 gap: 1rem;
                 padding: 1.5rem;
-                border: 2px solid var(--border);
+                border: 1px solid var(--border);
                 border-radius: 16px;
-                background: white;
+                background: var(--bg-card);
                 cursor: pointer;
                 transition: all 0.3s ease;
                 position: relative;
@@ -461,7 +451,7 @@
                 width: 64px;
                 height: 64px;
                 border-radius: 16px;
-                background: linear-gradient(135deg, var(--light-gray), #e2e8f0);
+                background: rgba(255,255,255,0.07);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -521,7 +511,7 @@
             .empty-state {
                 padding: 4rem 2rem;
                 text-align: center;
-                background: var(--light-gray);
+                background: var(--bg-body);
                 border-radius: 16px;
                 border: 2px dashed var(--border);
             }
@@ -530,14 +520,14 @@
                 width: 80px;
                 height: 80px;
                 border-radius: 50%;
-                background: white;
+                background: var(--bg-card);
                 margin: 0 auto 1.5rem;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 2.5rem;
                 color: var(--gray);
-                border: 2px solid var(--border);
+                border: 1.5px solid var(--border);
             }
 
             .empty-state-title {
@@ -585,14 +575,14 @@
             .action-footer {
                 margin-top: 2rem;
                 padding: 1.5rem 2rem;
-                background: white;
+                background: var(--bg-card);
                 border-radius: 16px;
-                border: 2px solid var(--border);
+                border: 1px solid var(--border);
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 gap: 1rem;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             }
 
             .action-footer .btn-lg {
@@ -741,8 +731,8 @@
                 align-items: center;
                 gap: 0.5rem;
                 padding: 0.5rem 1rem;
-                background: white;
-                border: 2px solid var(--border);
+                background: var(--bg-card);
+                border: 1.5px solid var(--border);
                 border-radius: 10px;
                 font-size: 0.8125rem;
                 font-weight: 600;
@@ -809,13 +799,14 @@
             }
 
             .autosave-restore-content {
-                background: white;
+                background: var(--bg-card);
                 border-radius: 20px;
                 padding: 2.5rem;
                 max-width: 420px;
                 width: 90%;
                 text-align: center;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+                border: 1px solid var(--border);
             }
 
             .autosave-restore-icon {
@@ -858,9 +849,9 @@
             }
 
             .btn-restore-discard {
-                background: white;
+                background: var(--bg-card);
                 color: var(--gray);
-                border: 2px solid var(--border);
+                border: 1.5px solid var(--border);
             }
 
             .btn-restore-discard:hover {
@@ -979,6 +970,70 @@
                 .container-fluid{
                     padding: 0;
                 }
+            }
+
+            /* ── Dark Mode overrides ── */
+            [data-theme="dark"] .form-section-card {
+                border-color: rgba(255,255,255,0.07);
+            }
+
+            [data-theme="dark"] .section-header {
+                background: rgba(255,255,255,0.03);
+                border-bottom-color: rgba(255,255,255,0.06);
+            }
+
+            [data-theme="dark"] .order-type-label {
+                border-color: rgba(255,255,255,0.08);
+            }
+
+            [data-theme="dark"] .order-type-label:hover {
+                border-color: rgba(99,102,241,0.5);
+                background: rgba(99,102,241,0.05);
+            }
+
+            [data-theme="dark"] .order-type-input:checked+.order-type-label {
+                border-color: rgba(99,102,241,0.6);
+            }
+
+            [data-theme="dark"] .order-type-icon {
+                background: rgba(255,255,255,0.06);
+                color: var(--gray);
+            }
+
+            [data-theme="dark"] .page-header {
+                background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05));
+                border-color: rgba(99,102,241,0.15);
+            }
+
+            [data-theme="dark"] .card-custom {
+                background: var(--bg-card) !important;
+                border-color: rgba(255,255,255,0.07) !important;
+            }
+
+            [data-theme="dark"] .action-footer {
+                border-color: rgba(255,255,255,0.07);
+                box-shadow: none;
+            }
+
+            [data-theme="dark"] .autosave-indicator {
+                border-color: rgba(255,255,255,0.1);
+            }
+
+            [data-theme="dark"] .autosave-restore-modal {
+                background: rgba(0,0,0,0.7);
+            }
+
+            [data-theme="dark"] .btn-restore-discard {
+                border-color: rgba(255,255,255,0.12);
+            }
+
+            [data-theme="dark"] .empty-state {
+                background: rgba(255,255,255,0.02);
+                border-color: rgba(255,255,255,0.1);
+            }
+
+            [data-theme="dark"] .empty-state-icon {
+                border-color: rgba(255,255,255,0.08);
             }
         </style>
     @endpush

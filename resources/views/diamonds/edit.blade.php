@@ -195,8 +195,7 @@
                             <div class="input-with-icon">
                                 <i class="bi bi-layers input-icon"></i>
                                 <input type="text" class="form-control" id="material" name="material"
-                                    value="{{ old('material', $diamond->material) }}"
-                                    placeholder="e.g., Gold, Platinum">
+                                    value="{{ old('material', $diamond->material) }}" placeholder="e.g., Gold, Platinum">
                             </div>
                             <div class="form-hint">
                                 <i class="bi bi-info-circle"></i>
@@ -364,8 +363,7 @@
 
                         <div class="form-group">
                             <label class="form-label">Status</label>
-                            <div class="form-value"
-                                style="padding: 8px 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div class="form-value status-wrapper">
                                 @if($diamond->sold_out_date)
                                     <span class="status-pill status-sold">Sold Out</span>
                                 @else
@@ -523,31 +521,66 @@
         </form>
     </div>
     <style>
+        .status-wrapper {
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* ── Dark Mode Overrides ── */
+        [data-theme="dark"] .status-wrapper {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .status-instock {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+
+        [data-theme="dark"] .status-sold {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
         @media (max-width: 575px) {
-            .breadcrumb-current, .breadcrumb-link {
+
+            .breadcrumb-current,
+            .breadcrumb-link {
                 font-size: 10px;
             }
+
             .header-content {
                 gap: 1rem;
             }
-            a.btn-secondary-custom, button.btn-primary-custom, button.btn-secondary-custom{
+
+            a.btn-secondary-custom,
+            button.btn-primary-custom,
+            button.btn-secondary-custom {
                 padding: 6px;
                 font-size: 13px;
             }
+
             .form-control {
                 border-radius: 7px;
                 padding: 5px 9px;
                 font-size: 14px;
             }
+
             .form-grid {
                 gap: 9px;
             }
+
             .section-icon {
                 width: 35px;
                 height: 35px;
                 font-size: 19px;
                 border-radius: 6px;
             }
+
             .form-label {
                 margin-bottom: 3px;
                 font-size: 13px;

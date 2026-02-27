@@ -908,9 +908,9 @@ The current architecture is **single-server monolithic** and will **not scale to
 | ------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------ |
 | MySQL as sole datastore  | Write bottleneck, session contention      | **Read replicas** for reporting queries; **Redis** for sessions, cache, queues |
 | No table partitioning    | Audit logs, orders, emails grow unbounded | **Partition by date** for audit_logs, emails; **archival** to cold storage     |
-| Database-backed queue    | Queue table contention under load         | Migrate to**Redis queue with Laravel Horizon**                                 |
-| Database-backed sessions | Session table lock contention             | Migrate to**Redis sessions**                                                   |
-| No connection pooling    | Connection exhaustion at scale            | Use**PgBouncer** (if migrating to Postgres) or MySQL connection pooling        |
+| Database-backed queue    | Queue table contention under load         | Migrate to **Redis queue with Laravel Horizon**                                |
+| Database-backed sessions | Session table lock contention             | Migrate to **Redis sessions**                                                  |
+| No connection pooling    | Connection exhaustion at scale            | Use **PgBouncer** (if migrating to Postgres) or MySQL connection pooling       |
 
 #### Application Layer
 
@@ -924,10 +924,9 @@ The current architecture is **single-server monolithic** and will **not scale to
 
 #### Real-time Layer
 
-| Issue                              | Impact                                 | Recommendation                                 |
-| ---------------------------------- | -------------------------------------- | ---------------------------------------------- |
-| Pusher dependency                  | Connection limits, cost at scale       | Self-host with**Laravel Reverb** or **Soketi** |
-| No WebSocket connection management | Memory leaks, no graceful reconnection | Implement connection pooling and heartbeat     |
+| Issue             | Impact                           | Recommendation                                  |
+| ----------------- | -------------------------------- | ----------------------------------------------- | --- | ---------------------------------- | -------------------------------------- | ------------------------------------------ |
+| Pusher dependency | Connection limits, cost at scale | Self-host with **Laravel Reverb** or **Soketi** |     | No WebSocket connection management | Memory leaks, no graceful reconnection | Implement connection pooling and heartbeat |
 
 #### Infrastructure
 

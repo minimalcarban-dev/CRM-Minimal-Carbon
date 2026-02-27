@@ -5,13 +5,14 @@ namespace App\Notifications;
 use App\Models\Diamond;
 use App\Models\Admin;
 use Illuminate\Bus\Queueable;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class DiamondReassignedNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
     protected Diamond $diamond;
     protected $reassignedBy;
@@ -34,7 +35,7 @@ class DiamondReassignedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['database'];
     }
 
     /**
@@ -71,7 +72,7 @@ class DiamondReassignedNotification extends Notification implements ShouldQueue
             'details' => [
                 'sku' => $this->diamond->sku,
                 'stock_id' => $this->diamond->stockid,
-                'price' => 'Rs. ' . number_format((float)($this->diamond->purchase_price ?? 0), 2),
+                'price' => 'Rs. ' . number_format((float) ($this->diamond->purchase_price ?? 0), 2),
                 'type' => $this->diamond->diamond_type ?? 'N/A',
                 'reassigned_by' => $this->reassignedBy->name,
                 'previous_admin' => $this->previousAdmin->name,

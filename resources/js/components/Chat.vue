@@ -244,10 +244,7 @@
                     <!-- Messages List -->
                     <div v-else class="messages-list">
                         <!-- Load older messages -->
-                        <div
-                            v-if="hasMoreMessages"
-                            class="load-older-messages"
-                        >
+                        <div v-if="hasMoreMessages" class="load-older-messages">
                             <button
                                 class="btn-load-older"
                                 :disabled="loadingMessages"
@@ -318,7 +315,8 @@
                                             "
                                             @click="
                                                 scrollToMessageById(
-                                                    message.metadata.reply_to_id
+                                                    message.metadata
+                                                        .reply_to_id,
                                                 )
                                             "
                                             title="Jump to original message"
@@ -340,10 +338,10 @@
                                                         message.metadata
                                                             ?.reply_preview ||
                                                         resolveReply(
-                                                            message
+                                                            message,
                                                         )?.body?.slice(
                                                             0,
-                                                            100
+                                                            100,
                                                         ) ||
                                                         "Attachment"
                                                     }}
@@ -356,7 +354,7 @@
                                             class="message-text"
                                             v-html="
                                                 formatMessageWithMentions(
-                                                    message
+                                                    message,
                                                 )
                                             "
                                         ></div>
@@ -402,7 +400,7 @@
                                                     class="attachment-image"
                                                     @click="
                                                         openImageLightbox(
-                                                            attachment
+                                                            attachment,
                                                         )
                                                     "
                                                 />
@@ -691,7 +689,7 @@
                                 <div
                                     v-html="
                                         formatMessageWithMentions(
-                                            activeThreadMessage
+                                            activeThreadMessage,
                                         )
                                     "
                                     class="message-text"
@@ -740,7 +738,7 @@
                                             @click="
                                                 window.open(
                                                     attachment.url,
-                                                    '_blank'
+                                                    '_blank',
                                                 )
                                             "
                                         />
@@ -846,7 +844,7 @@
                                                 @click="
                                                     window.open(
                                                         attachment.url,
-                                                        '_blank'
+                                                        '_blank',
                                                     )
                                                 "
                                             />
@@ -1029,7 +1027,7 @@
                                     <p>
                                         {{
                                             formatFullDate(
-                                                channelInfo.created_at
+                                                channelInfo.created_at,
                                             )
                                         }}
                                     </p>
@@ -1264,7 +1262,7 @@
                             v-for="admin in members.filter((a) =>
                                 (a.name + ' ' + a.email)
                                     .toLowerCase()
-                                    .includes(memberSearch.toLowerCase())
+                                    .includes(memberSearch.toLowerCase()),
                             )"
                             :key="admin.id"
                             class="member-checkbox-item"
@@ -1354,7 +1352,7 @@
                             v-for="admin in members.filter((a) =>
                                 (a.name + ' ' + a.email)
                                     .toLowerCase()
-                                    .includes(createSearch.toLowerCase())
+                                    .includes(createSearch.toLowerCase()),
                             )"
                             :key="admin.id"
                             class="member-checkbox-item"
@@ -1491,7 +1489,7 @@ import * as pdfjsLib from "pdfjs-dist";
 // Set PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     "pdfjs-dist/build/pdf.worker.mjs",
-    import.meta.url
+    import.meta.url,
 ).toString();
 
 export default {
@@ -1828,10 +1826,10 @@ export default {
         const SIDEBAR_WIDTH = 320;
 
         const groupChannels = computed(() =>
-            channels.value.filter(isGroupChannel)
+            channels.value.filter(isGroupChannel),
         );
         const personalChannels = computed(() =>
-            channels.value.filter((c) => !isGroupChannel(c))
+            channels.value.filter((c) => !isGroupChannel(c)),
         );
         const showSidebar = computed(() => {
             const hint = channelInfo.value?.show_sidebar;
@@ -1841,18 +1839,18 @@ export default {
             );
         });
         const canSendMessage = computed(
-            () => newMessage.value.trim() || attachmentFiles.value.length > 0
+            () => newMessage.value.trim() || attachmentFiles.value.length > 0,
         );
         const isSuperAdmin = computed(() => !!window.authAdminIsSuper);
         const isPersonalChannel = computed(
             () =>
-                (currentChannel.value?.type || "").toLowerCase() === "personal"
+                (currentChannel.value?.type || "").toLowerCase() === "personal",
         );
         // Hide the About section in the sidebar (always hidden)
         const showAboutSection = computed(() => false);
         const showMembersSection = computed(
             // Hide Members section for personal/direct chats (1-to-1 conversations)
-            () => !isPersonalChannel.value
+            () => !isPersonalChannel.value,
         );
         const typingLabel = computed(() => {
             const now = Date.now();
@@ -1900,15 +1898,19 @@ export default {
             const text = message.body?.trim()
                 ? message.body.trim().slice(0, 40)
                 : message.attachments?.length
-                ? "📎 Attachment"
-                : "";
+                  ? "📎 Attachment"
+                  : "";
             const time = message.created_at
                 ? format(new Date(message.created_at), "HH:mm")
                 : "";
             lastMessagePreview.value[channelId] = { text, time };
         };
 
-        const loadMessages = async (channelId, reset = false, markAsRead = true) => {
+        const loadMessages = async (
+            channelId,
+            reset = false,
+            markAsRead = true,
+        ) => {
             if (reset) {
                 messages.value = [];
                 page.value = 1;
@@ -1919,7 +1921,7 @@ export default {
             try {
                 loadingMessages.value = true;
                 const response = await axios.get(
-                    `/admin/chat/channels/${channelId}/messages?page=${page.value}`
+                    `/admin/chat/channels/${channelId}/messages?page=${page.value}`,
                 );
 
                 const apiMessages = Array.isArray(response?.data?.data)
@@ -1933,18 +1935,21 @@ export default {
                 } else {
                     // Prepend older messages; de-duplicate defensively (page-based pagination can overlap).
                     const existingIds = new Set(
-                        (messages.value || []).map((m) => String(m.id))
+                        (messages.value || []).map((m) => String(m.id)),
                     );
                     const uniqueToAdd = pageMessages.filter(
-                        (m) => !existingIds.has(String(m.id))
+                        (m) => !existingIds.has(String(m.id)),
                     );
-                    messages.value = [...uniqueToAdd, ...(messages.value || [])];
+                    messages.value = [
+                        ...uniqueToAdd,
+                        ...(messages.value || []),
+                    ];
                 }
 
                 if (messages.value.length) {
                     updatePreview(
                         channelId,
-                        messages.value[messages.value.length - 1]
+                        messages.value[messages.value.length - 1],
                     );
                 }
 
@@ -1956,7 +1961,7 @@ export default {
                     channels.value = channels.value.map((c) =>
                         c.id === channelId
                             ? { ...c, unread_messages_count: 0 }
-                            : c
+                            : c,
                     );
                 }
                 return true;
@@ -1966,7 +1971,7 @@ export default {
                 } else {
                     window.showToast?.(
                         error?.response?.data?.message ||
-                            "Failed to load messages"
+                            "Failed to load messages",
                     );
                     if (import.meta.env.DEV)
                         console.error("Error loading messages:", error);
@@ -1984,7 +1989,7 @@ export default {
             try {
                 localStorage.setItem(
                     "chat_current_channel_id",
-                    String(channel.id)
+                    String(channel.id),
                 );
             } catch (e) {
                 // Ignore localStorage errors (e.g., private browsing mode)
@@ -1994,7 +1999,7 @@ export default {
             if (!ok) {
                 // Keep the header visible and surface the error so the UI is not blank
                 window.showToast?.(
-                    "Could not load messages for this conversation"
+                    "Could not load messages for this conversation",
                 );
             }
             await loadSidebar(channel.id);
@@ -2023,17 +2028,17 @@ export default {
             if (replyTo.value?.id) {
                 formData.append(
                     "metadata[reply_to_id]",
-                    String(replyTo.value.id)
+                    String(replyTo.value.id),
                 );
                 if (replyTo.value?.body)
                     formData.append(
                         "metadata[reply_preview]",
-                        replyTo.value.body.slice(0, 140)
+                        replyTo.value.body.slice(0, 140),
                     );
                 if (replyTo.value?.sender?.name)
                     formData.append(
                         "metadata[reply_sender]",
-                        replyTo.value.sender.name
+                        replyTo.value.sender.name,
                     );
             }
             if (pendingMentionIds.value.size) {
@@ -2046,7 +2051,7 @@ export default {
                 const { data } = await axios.post(
                     `/admin/chat/channels/${currentChannel.value.id}/messages`,
                     formData,
-                    { headers: { "Content-Type": "multipart/form-data" } }
+                    { headers: { "Content-Type": "multipart/form-data" } },
                 );
 
                 messages.value.push({
@@ -2057,7 +2062,7 @@ export default {
                     reads: Array.isArray(data.reads) ? data.reads : [],
                 });
                 messages.value.sort(
-                    (a, b) => new Date(a.created_at) - new Date(b.created_at)
+                    (a, b) => new Date(a.created_at) - new Date(b.created_at),
                 );
                 updatePreview(currentChannel.value.id, data);
 
@@ -2101,7 +2106,7 @@ export default {
             if (!message?.metadata?.reply_to_id) return null;
             return (
                 messages.value.find(
-                    (m) => m.id === message.metadata.reply_to_id
+                    (m) => m.id === message.metadata.reply_to_id,
                 ) || null
             );
         };
@@ -2122,7 +2127,7 @@ export default {
             const q = mentionQuery.value.trim().toLowerCase();
             const items = currentMembers()
                 .filter((m) =>
-                    (m.name + " " + (m.email || "")).toLowerCase().includes(q)
+                    (m.name + " " + (m.email || "")).toLowerCase().includes(q),
                 )
                 .slice(0, 8);
             mentionItems.value = items;
@@ -2169,7 +2174,7 @@ export default {
             if (mentionOpen.value) {
                 if (
                     ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(
-                        e.key
+                        e.key,
                     )
                 ) {
                     if (mentionItems.value.length === 0) {
@@ -2297,7 +2302,7 @@ export default {
                 emails.forEach((email, index) => {
                     content = content.replace(
                         `__EMAIL_PLACEHOLDER_${index}__`,
-                        email
+                        email,
                     );
                 });
 
@@ -2315,14 +2320,14 @@ export default {
                             `(@)(${memberNames
                                 .map(escapeRegExp)
                                 .join("|")})\\b`,
-                            "g"
+                            "g",
                         );
 
                         content = content.replace(
                             pattern,
                             (match, prefix, name) => {
                                 return `<span class="mention-token">${prefix}${name}</span>`;
-                            }
+                            },
                         );
                     }
                 } catch (e) {
@@ -2347,7 +2352,7 @@ export default {
             if (!channelId) return;
             try {
                 const { data } = await axios.get(
-                    `/admin/chat/channels/${channelId}/sidebar`
+                    `/admin/chat/channels/${channelId}/sidebar`,
                 );
                 channelInfo.value = data.channel || {
                     creator: null,
@@ -2392,7 +2397,7 @@ export default {
                 };
                 const response = await axios.get(
                     "/admin/chat/messages/search",
-                    { params }
+                    { params },
                 );
                 searchResults.value = response.data;
             } catch (error) {
@@ -2414,7 +2419,7 @@ export default {
             // If message belongs to a different channel, switch to it and wait for messages to load
             if (currentChannel.value?.id !== message.channel_id) {
                 const channel = channels.value.find(
-                    (c) => c.id === message.channel_id
+                    (c) => c.id === message.channel_id,
                 );
                 if (channel) await selectChannel(channel);
                 else return;
@@ -2441,7 +2446,7 @@ export default {
             if (shouldOpenThread) {
                 // Attempt to find the message object in the loaded messages; fall back to the search result
                 const msgObj = messages.value.find(
-                    (m) => m.id === targetId
+                    (m) => m.id === targetId,
                 ) || { id: targetId };
                 // Give DOM a moment to scroll and highlight
                 setTimeout(() => openThread(msgObj), 400);
@@ -2453,13 +2458,13 @@ export default {
 
             // First check if message exists in current loaded messages
             const targetMessage = messages.value.find(
-                (m) => m.id === messageId
+                (m) => m.id === messageId,
             );
 
             // Use Vue's nextTick to ensure DOM is updated
             nextTick(() => {
                 const messageElement = document.querySelector(
-                    `[data-message-id="${messageId}"]`
+                    `[data-message-id="${messageId}"]`,
                 );
                 if (messageElement && messageContainer.value) {
                     // Scroll to the message with smooth behavior
@@ -2505,10 +2510,15 @@ export default {
             const prevScrollHeight = el.scrollHeight;
             const prevScrollTop = el.scrollTop;
 
-            const ok = await loadMessages(currentChannel.value.id, false, false);
+            const ok = await loadMessages(
+                currentChannel.value.id,
+                false,
+                false,
+            );
             if (ok) {
                 await nextTick();
-                el.scrollTop = el.scrollHeight - prevScrollHeight + prevScrollTop;
+                el.scrollTop =
+                    el.scrollHeight - prevScrollHeight + prevScrollTop;
             }
         };
 
@@ -2533,13 +2543,14 @@ export default {
                 const ok = await loadMessages(
                     currentChannel.value.id,
                     false,
-                    false
+                    false,
                 );
                 if (ok) {
                     await nextTick();
                     const newScrollHeight = el.scrollHeight;
                     // Preserve visual position after prepending older messages
-                    el.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+                    el.scrollTop =
+                        newScrollHeight - prevScrollHeight + prevScrollTop;
                 }
             }
         };
@@ -2574,7 +2585,7 @@ export default {
         const readByOthers = (msg) => {
             if (!Array.isArray(msg.reads)) return false;
             return msg.reads.some(
-                (r) => r.user_id && r.user_id !== props.userId
+                (r) => r.user_id && r.user_id !== props.userId,
             );
         };
 
@@ -2585,7 +2596,7 @@ export default {
             if (currentChannel.value?.id) {
                 try {
                     Echo.private(
-                        `chat.channel.${currentChannel.value.id}`
+                        `chat.channel.${currentChannel.value.id}`,
                     ).whisper("typing", {
                         userId: props.userId,
                         name: window?.authAdminName || "Someone",
@@ -2621,7 +2632,7 @@ export default {
             membersLoading.value = true;
             try {
                 const { data } = await axios.get(
-                    `/admin/chat/channels/${currentChannel.value.id}/members`
+                    `/admin/chat/channels/${currentChannel.value.id}/members`,
                 );
                 members.value = data.admins || [];
                 const initial = (data.member_ids || []).slice();
@@ -2719,13 +2730,13 @@ export default {
             if (!currentChannel.value?.id) return;
             try {
                 const unique = Array.from(
-                    new Set([...memberIds.value, props.userId])
+                    new Set([...memberIds.value, props.userId]),
                 );
                 await axios.put(
                     `/admin/chat/channels/${currentChannel.value.id}/members`,
                     {
                         member_ids: unique,
-                    }
+                    },
                 );
                 window.showToast?.("Members updated");
                 manageOpen.value = false;
@@ -2796,7 +2807,7 @@ export default {
             }
             try {
                 const users = Array.from(
-                    new Set([...createMemberIds.value, props.userId])
+                    new Set([...createMemberIds.value, props.userId]),
                 );
                 await axios.post("/admin/chat/channels", {
                     name: createName.value.trim(),
@@ -2839,7 +2850,7 @@ export default {
         const chatMainStyle = computed(() => ({
             width: `calc(100% - ${SIDEBAR_WIDTH}px - ${Math.max(
                 0,
-                infoSidebarWidth.value
+                infoSidebarWidth.value,
             )}px)`,
         }));
         const infoSidebarStyle = computed(() => ({
@@ -2910,12 +2921,12 @@ export default {
 
             try {
                 const { data } = await axios.get(
-                    `/admin/chat/messages/${message.id}/thread`
+                    `/admin/chat/messages/${message.id}/thread`,
                 );
 
                 if (data.parent_message) {
                     const mainMsg = messages.value.find(
-                        (m) => m.id === message.id
+                        (m) => m.id === message.id,
                     );
                     if (mainMsg) {
                         mainMsg.thread_count = data.parent_message.thread_count;
@@ -2979,7 +2990,7 @@ export default {
                 const { data } = await axios.post(
                     `/admin/chat/messages/${activeThreadMessage.value.id}/thread/replies`,
                     formData,
-                    { headers: { "Content-Type": "multipart/form-data" } }
+                    { headers: { "Content-Type": "multipart/form-data" } },
                 );
 
                 if (data.success) {
@@ -2990,7 +3001,7 @@ export default {
                             data.parent_thread_count;
                     }
                     const mainMsg = messages.value.find(
-                        (m) => m.id === activeThreadMessage.value.id
+                        (m) => m.id === activeThreadMessage.value.id,
                     );
                     if (mainMsg) {
                         mainMsg.thread_count = data.parent_thread_count;
@@ -3050,8 +3061,9 @@ export default {
         // Play notification sound
         const playNotificationSound = () => {
             try {
-                const audioContext = new (window.AudioContext ||
-                    window.webkitAudioContext)();
+                const audioContext = new (
+                    window.AudioContext || window.webkitAudioContext
+                )();
                 const oscillator = audioContext.createOscillator();
                 const gain = audioContext.createGain();
 
@@ -3064,7 +3076,7 @@ export default {
                 gain.gain.setValueAtTime(0.3, audioContext.currentTime);
                 gain.gain.exponentialRampToValueAtTime(
                     0.01,
-                    audioContext.currentTime + 0.3
+                    audioContext.currentTime + 0.3,
                 );
 
                 oscillator.start(audioContext.currentTime);
@@ -3073,7 +3085,7 @@ export default {
                 // Fallback: try audio element if Web Audio API fails
                 try {
                     const beep = new Audio(
-                        "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAA="
+                        "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAA=",
                     );
                     beep.play().catch(() => {});
                 } catch (_) {}
@@ -3110,7 +3122,7 @@ export default {
                                 threadReplies.value.push({
                                     ...e.message,
                                     attachments: Array.isArray(
-                                        e.message.attachments
+                                        e.message.attachments,
                                     )
                                         ? e.message.attachments
                                         : [],
@@ -3118,7 +3130,7 @@ export default {
                                 nextTick(() => {
                                     const container =
                                         document.querySelector(
-                                            ".thread-replies"
+                                            ".thread-replies",
                                         );
                                     if (container)
                                         container.scrollTop =
@@ -3128,7 +3140,7 @@ export default {
 
                             // 2. Update parent count in main list
                             const parent = messages.value.find(
-                                (m) => m.id === e.message.reply_to_id
+                                (m) => m.id === e.message.reply_to_id,
                             );
                             if (parent) {
                                 parent.thread_count =
@@ -3150,7 +3162,7 @@ export default {
                         });
                         messages.value.sort(
                             (a, b) =>
-                                new Date(a.created_at) - new Date(b.created_at)
+                                new Date(a.created_at) - new Date(b.created_at),
                         );
                         updatePreview(channelId, e.message);
 
@@ -3185,7 +3197,7 @@ export default {
                         messages.value = messages.value.map((message) => {
                             if (
                                 !message.reads.some(
-                                    (read) => read.user_id === e.userId
+                                    (read) => read.user_id === e.userId,
                                 )
                             ) {
                                 message.reads.push({
@@ -3211,7 +3223,7 @@ export default {
             console.log(
                 "[Chat] Setting up global listeners for",
                 channels.value.length,
-                "channels"
+                "channels",
             );
 
             channels.value.forEach((channel) => {
@@ -3222,7 +3234,7 @@ export default {
                 ) {
                     console.log(
                         "[Chat] Skipping current channel:",
-                        channel.name
+                        channel.name,
                     );
                     return;
                 }
@@ -3238,12 +3250,12 @@ export default {
                             if (currentChannel.value?.id !== channel.id) {
                                 console.log(
                                     "[Chat] Message received in other channel:",
-                                    channel.name
+                                    channel.name,
                                 );
 
                                 // Increment unread count
                                 const ch = channels.value.find(
-                                    (c) => c.id === channel.id
+                                    (c) => c.id === channel.id,
                                 );
                                 if (ch) {
                                     ch.unread_messages_count =
@@ -3252,7 +3264,7 @@ export default {
                                         "[Chat] Unread count for",
                                         ch.name,
                                         ":",
-                                        ch.unread_messages_count
+                                        ch.unread_messages_count,
                                     );
                                 }
 
@@ -3274,7 +3286,7 @@ export default {
 
                                 console.log(
                                     "[Chat] Showing notification:",
-                                    notificationMessage
+                                    notificationMessage,
                                 );
 
                                 if (typeof window.showToast === "function") {
@@ -3284,16 +3296,16 @@ export default {
                                 // Play sound
                                 playNotificationSound();
                             }
-                        }
+                        },
                     );
                     console.log(
                         "[Chat] Listener setup for channel:",
-                        channel.name
+                        channel.name,
                     );
                 } catch (err) {
                     console.error(
                         `Failed to setup listener for channel ${channel.id}`,
-                        err
+                        err,
                     );
                 }
             });
@@ -3307,7 +3319,7 @@ export default {
             try {
                 if (window.Echo) {
                     const notificationChannel = window.Echo.private(
-                        `admin.notifications.${props.userId}`
+                        `admin.notifications.${props.userId}`,
                     );
                     notificationChannel.listen(
                         "ChannelMembershipChanged",
@@ -3317,21 +3329,21 @@ export default {
                                 if (currentChannel.value?.id === e.channelId) {
                                     try {
                                         window.Echo.leave(
-                                            `chat.channel.${e.channelId}`
+                                            `chat.channel.${e.channelId}`,
                                         );
                                     } catch (_) {}
                                     currentChannel.value = null;
                                 }
                                 channels.value = channels.value.filter(
-                                    (c) => c.id !== e.channelId
+                                    (c) => c.id !== e.channelId,
                                 );
                                 window.showToast?.(
-                                    "You were removed from a channel"
+                                    "You were removed from a channel",
                                 );
                             } else if (e.action === "added") {
                                 loadChannels();
                             }
-                        }
+                        },
                     );
                 }
             } catch (_) {}
@@ -3344,7 +3356,7 @@ export default {
             if (messageContainer.value) {
                 messageContainer.value.addEventListener(
                     "scroll",
-                    onScrollMessages
+                    onScrollMessages,
                 );
             }
         });
@@ -3353,7 +3365,7 @@ export default {
             if (messageContainer.value) {
                 messageContainer.value.removeEventListener(
                     "scroll",
-                    onScrollMessages
+                    onScrollMessages,
                 );
             }
         });
@@ -3427,11 +3439,11 @@ export default {
                     let channelToSelect = null;
                     try {
                         const savedId = localStorage.getItem(
-                            "chat_current_channel_id"
+                            "chat_current_channel_id",
                         );
                         if (savedId) {
                             channelToSelect = list.find(
-                                (c) => String(c.id) === savedId
+                                (c) => String(c.id) === savedId,
                             );
                         }
                     } catch (e) {
@@ -3442,7 +3454,7 @@ export default {
                     selectChannel(channelToSelect || list[0]);
                 }
             },
-            { deep: false }
+            { deep: false },
         );
 
         return {
@@ -3599,8 +3611,8 @@ export default {
     display: flex;
     height: 100%;
     background: white;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        sans-serif;
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overflow: hidden;
 }
 
@@ -5187,7 +5199,8 @@ export default {
 /* SweetAlert2 Custom Theme Styles */
 :deep(.swal-theme-popup) {
     border-radius: 20px !important;
-    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2),
+    box-shadow:
+        0 20px 60px rgba(99, 102, 241, 0.2),
         0 0 0 1px rgba(99, 102, 241, 0.1) !important;
     font-family: inherit !important;
     padding: 2rem !important;
