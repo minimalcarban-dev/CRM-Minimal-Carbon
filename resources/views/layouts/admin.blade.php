@@ -1542,17 +1542,16 @@
         }
 
         .profile-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 1px 3px;
-            /* border-radius: 10px; */
-            /* border: 2px solid var(--border); */
-            background: white;
-            color: var(--gray);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1.1rem;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px var(--shadow);
         }
 
         .profile-btn:hover {
@@ -1562,7 +1561,7 @@
         }
 
         .profile-avatar {
-            width: 39px;
+            width: 36px;
             height: 36px;
             border-radius: 9px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -1571,7 +1570,7 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 0.85rem;
+            /* font-size: 0.85rem; */
         }
 
         .profile-menu {
@@ -3869,19 +3868,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                                                                                            <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                                <div>
-                                                                                                                                    <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                                                                                    <div style="font-size: 0.8rem; color: #64748b;">
-                                                                                                                                        ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                                                                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                                    <div>
+                                                                                                                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                                                                                                        <div style="font-size: 0.8rem; color: #64748b;">
+                                                                                                                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                                                                                        </div>
                                                                                                                                     </div>
+                                                                                                                                    <a href="${draft.resume_url}"
+                                                                                                                                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                                                                                                        Resume
+                                                                                                                                    </a>    
                                                                                                                                 </div>
-                                                                                                                                <a href="${draft.resume_url}"
-                                                                                                                                    style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                                                                                                    Resume
-                                                                                                                                </a>    
-                                                                                                                            </div>
-                                                                                                                        `;
+                                                                                                                            `;
                             });
                             draftsHtml += '</div>';
 
@@ -3889,11 +3888,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                                                                                            <p style="color: #64748b; margin-bottom: 1rem;">
-                                                                                                                                You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                                                                                            </p>
-                                                                                                                            ${draftsHtml}
-                                                                                                                        `,
+                                                                                                                                <p style="color: #64748b; margin-bottom: 1rem;">
+                                                                                                                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                                                                                                                </p>
+                                                                                                                                ${draftsHtml}
+                                                                                                                            `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',
@@ -3938,6 +3937,25 @@
         applyTheme(savedTheme === 'dark');
 
         darkBtn?.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            applyTheme(!isDark);
+        });
+
+        // ── COMMAND PALETTE ──
+        const CMD_ITEMS = [
+            { label: 'Dashboard', group: 'Navigation', icon: 'bi-house', bg: 'rgba(99,102,241,0.1)', color: 'var(--primary)', url: '{{ route("admin.dashboard") }}', hint: 'Go to Home' },
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view']))
+                { label: 'Orders', group: 'Navigation', icon: 'bi-basket', bg: 'rgba(16,185,129,0.1)', color: '#10b981', url: '{{ route("orders.index") }}', hint: 'View all orders' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
+                { label: 'Stock List', group: 'Navigation', icon: 'bi-gem', bg: 'rgba(139,92,246,0.1)', color: '#8b5cf6', url: '{{ route("diamond.index") }}', hint: 'View diamonds' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+                { label: 'Clients', group: 'Navigation', icon: 'bi-people', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', url: '{{ route("clients.index") }}', hint: 'Manage clients' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
+                { label: 'Settings', group: 'System', icon: 'bi-gear', bg: 'rgba(100,116,139,0.1)', color: '#64748b', url: '{{ route("settings.security.index") }}', hint: 'System configuration' }
+            @endif
         ];
 
         let cmdActive = -1;

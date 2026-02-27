@@ -531,6 +531,143 @@
     border-color: #dc2626;
 }
 
+/* Dark Theme */
+[data-theme="dark"] .bulk-edit-backdrop {
+    background: rgba(2, 6, 23, 0.72);
+}
+
+[data-theme="dark"] .bulk-edit-container {
+    background: var(--bg-card, #1e293b);
+    border: 1px solid rgba(148, 163, 184, 0.36);
+    box-shadow: 0 10px 30px rgba(2, 6, 23, 0.35);
+}
+
+[data-theme="dark"] .bulk-edit-left {
+    background: rgba(15, 23, 42, 0.45);
+    border-right-color: rgba(148, 163, 184, 0.28);
+}
+
+[data-theme="dark"] .bulk-edit-filters,
+[data-theme="dark"] .bulk-edit-search,
+[data-theme="dark"] .bulk-edit-select-all,
+[data-theme="dark"] .bulk-edit-load-more {
+    background: rgba(15, 23, 42, 0.42);
+    border-color: rgba(148, 163, 184, 0.28);
+}
+
+[data-theme="dark"] .bulk-edit-filters select,
+[data-theme="dark"] .bulk-edit-filters input,
+[data-theme="dark"] .value-input-group input,
+[data-theme="dark"] .value-input-group select,
+[data-theme="dark"] .value-input-group textarea,
+[data-theme="dark"] .confirmation-input input {
+    background: rgba(15, 23, 42, 0.62);
+    border-color: rgba(148, 163, 184, 0.32);
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .bulk-edit-filters select:focus,
+[data-theme="dark"] .bulk-edit-filters input:focus,
+[data-theme="dark"] .value-input-group input:focus,
+[data-theme="dark"] .value-input-group select:focus,
+[data-theme="dark"] .value-input-group textarea:focus {
+    border-color: #6366f1;
+    background: rgba(15, 23, 42, 0.75);
+}
+
+[data-theme="dark"] .bulk-edit-filters input::placeholder,
+[data-theme="dark"] .confirmation-input input::placeholder {
+    color: var(--text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .bulk-edit-selection-count {
+    color: #818cf8;
+}
+
+[data-theme="dark"] .bulk-edit-loading,
+[data-theme="dark"] .bulk-edit-search i {
+    color: var(--text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .spinner {
+    border-color: rgba(148, 163, 184, 0.24);
+    border-top-color: #818cf8;
+}
+
+[data-theme="dark"] .diamond-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(148, 163, 184, 0.28);
+}
+
+[data-theme="dark"] .diamond-item:hover {
+    border-color: rgba(129, 140, 248, 0.75);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+[data-theme="dark"] .diamond-item.selected {
+    background: rgba(99, 102, 241, 0.14);
+    border-color: rgba(129, 140, 248, 0.85);
+}
+
+[data-theme="dark"] .diamond-item-sku,
+[data-theme="dark"] .bulk-edit-step h3,
+[data-theme="dark"] .value-input-group label,
+[data-theme="dark"] .confirmation-input label,
+[data-theme="dark"] .summary-item strong,
+[data-theme="dark"] .bulk-edit-select-all label {
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .diamond-item-details,
+[data-theme="dark"] .step-description,
+[data-theme="dark"] .field-category h4,
+[data-theme="dark"] .summary-item,
+[data-theme="dark"] .summary-item ul {
+    color: var(--text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .field-option {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 163, 184, 0.3);
+    color: var(--text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .field-option:hover {
+    border-color: rgba(129, 140, 248, 0.7);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] .field-option input:checked + span {
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .btn-back {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary, #f1f5f9);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+[data-theme="dark"] .btn-back:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .confirmation-summary {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.26);
+}
+
+[data-theme="dark"] .confirmation-warning {
+    background: rgba(127, 29, 29, 0.22);
+    border-color: rgba(248, 113, 113, 0.35);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .bulk-edit-left::-webkit-scrollbar-thumb,
+[data-theme="dark"] .bulk-edit-right::-webkit-scrollbar-thumb,
+[data-theme="dark"] .bulk-edit-diamond-list::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .bulk-edit-container {

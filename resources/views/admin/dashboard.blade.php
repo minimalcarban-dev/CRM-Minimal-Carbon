@@ -48,7 +48,7 @@
                             @endif
                         </span>
                         <i class="bi bi-chevron-down" style="margin-left:auto;font-size:0.75rem;opacity:0.6"></i>
-                    </div> <i class="bi bi-chevron-down" style="margin-left:auto;font-size:0.75rem;opacity:0.6"></i>
+                    </div>
             </div>
 
             @if($hasRange)

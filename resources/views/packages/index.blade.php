@@ -22,7 +22,7 @@
                     <p class="page-subtitle">Manage package issuance and returns</p>
                 </div>
                 <div class="header-right">
-                    @if(auth()->guard('admin')->user()->can('packages.create'))
+                    @if(auth()->guard('admin')->check() && auth()->guard('admin')->user()->canAccessAny(['packages.create']))
                         <a href="{{ route('packages.create') }}" class="btn-primary-custom">
                             <i class="bi bi-plus-circle"></i>
                             <span>Issue New Package</span>
@@ -272,39 +272,132 @@
 
     @push('styles')
         <style>
-            :root {
-                --primary: #6366f1;
-                --primary-dark: #4f46e5;
-                --secondary: #64748b;
-                --success: #10b981;
-                --warning: #f59e0b;
-                --danger: #ef4444;
-                --dark: #1e293b;
-                --gray: #64748b;
-                --light-gray: #f8fafc;
-                --border: #e2e8f0;
+            [data-theme="dark"] .packages-management-container {
+                background: var(--bg-body, #0f172a);
+            }
+
+            [data-theme="dark"] .page-header,
+            [data-theme="dark"] .stat-card,
+            [data-theme="dark"] .filter-section,
+            [data-theme="dark"] .orders-table-card,
+            [data-theme="dark"] .card-footer {
+                background: var(--bg-card, #1e293b) !important;
+                border-color: rgba(148, 163, 184, 0.34) !important;
+                box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+            }
+
+            [data-theme="dark"] .page-header {
+                background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.07));
+            }
+
+            [data-theme="dark"] .page-title,
+            [data-theme="dark"] .stat-value,
+            [data-theme="dark"] .client-name,
+            [data-theme="dark"] .orders-table td {
+                color: var(--text-primary, #f1f5f9) !important;
+            }
+
+            [data-theme="dark"] .page-subtitle,
+            [data-theme="dark"] .breadcrumb-nav,
+            [data-theme="dark"] .breadcrumb-link,
+            [data-theme="dark"] .stat-label,
+            [data-theme="dark"] .client-meta,
+            [data-theme="dark"] .orders-table th,
+            [data-theme="dark"] .text-muted {
+                color: var(--text-secondary, #94a3b8) !important;
+            }
+
+            [data-theme="dark"] .search-input,
+            [data-theme="dark"] .filter-select {
+                background: rgba(15, 23, 42, 0.62);
+                border-color: rgba(148, 163, 184, 0.32);
+                color: var(--text-primary, #f1f5f9);
+            }
+
+            [data-theme="dark"] .search-input::placeholder {
+                color: var(--text-secondary, #94a3b8);
+            }
+
+            [data-theme="dark"] .btn-filter {
+                background: rgba(15, 23, 42, 0.7);
+                border-color: rgba(148, 163, 184, 0.4);
+                color: var(--text-primary, #f1f5f9);
+            }
+
+            [data-theme="dark"] .btn-reset,
+            [data-theme="dark"] .btn-secondary-custom {
+                background: rgba(255, 255, 255, 0.04);
+                border-color: rgba(148, 163, 184, 0.35);
+                color: var(--text-secondary, #94a3b8);
+            }
+
+            [data-theme="dark"] .orders-table th {
+                background: rgba(15, 23, 42, 0.5);
+                border-bottom-color: rgba(148, 163, 184, 0.34);
+            }
+
+            [data-theme="dark"] .orders-table td {
+                border-bottom-color: rgba(148, 163, 184, 0.22);
+            }
+
+            [data-theme="dark"] .order-id-badge {
+                background: rgba(255, 255, 255, 0.06);
+                border-color: rgba(148, 163, 184, 0.3);
+                color: var(--text-primary, #f1f5f9);
+            }
+
+            [data-theme="dark"] .action-btn {
+                background: rgba(255, 255, 255, 0.03);
+                border-color: rgba(148, 163, 184, 0.3);
+                color: var(--text-secondary, #94a3b8);
+            }
+
+            [data-theme="dark"] .stat-card-primary .stat-icon {
+                background: rgba(99, 102, 241, 0.22);
+                border-color: rgba(129, 140, 248, 0.38);
+                color: #a5b4fc;
+            }
+
+            [data-theme="dark"] .stat-card-warning .stat-icon {
+                background: rgba(245, 158, 11, 0.22);
+                border-color: rgba(251, 191, 36, 0.38);
+                color: #fbbf24;
+            }
+
+            [data-theme="dark"] .stat-card-success .stat-icon {
+                background: rgba(16, 185, 129, 0.22);
+                border-color: rgba(52, 211, 153, 0.38);
+                color: #34d399;
+            }
+
+            [data-theme="dark"] .stat-card-danger .stat-icon {
+                background: rgba(239, 68, 68, 0.22);
+                border-color: rgba(248, 113, 113, 0.38);
+                color: #f87171;
             }
 
             /* Container & Header */
             .packages-management-container {
-                padding: 1.5rem;
-                max-width: 1400px;
+                padding: 2rem;
+                max-width: 1600px;
                 margin: 0 auto;
+                min-height: 100vh;
+                background: #f8fafc;
             }
 
             .page-header {
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+                background: white;
                 padding: 2rem;
                 border-radius: 16px;
-                border: 2px solid rgba(99, 102, 241, 0.1);
                 margin-bottom: 2rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             }
 
             .header-content {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-end;
-                gap: 1rem;
+                align-items: flex-start;
+                gap: 2rem;
                 flex-wrap: wrap;
             }
 
@@ -381,21 +474,22 @@
             .stats-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-                gap: 1.5rem;
-                margin-bottom: 2rem;
+                gap: 1.25rem;
+                margin-bottom: 1.75rem;
             }
 
             .stat-card {
                 background: white;
-                border-radius: 16px;
-                padding: 1.5rem;
+                border-radius: 15px;
+                padding: 1.35rem 1.4rem;
                 display: flex;
                 gap: 1.25rem;
                 text-decoration: none;
-                border: 2px solid var(--border);
+                border: 1.5px solid var(--border);
                 transition: all 0.3s ease;
                 position: relative;
                 overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
             }
 
             .stat-card:hover {
@@ -444,9 +538,33 @@
                 justify-content: center;
                 font-size: 1.75rem;
                 flex-shrink: 0;
-                background: currentColor;
-                color: white;
-                opacity: 0.9;
+                background: rgba(99, 102, 241, 0.14);
+                border: 1px solid rgba(99, 102, 241, 0.28);
+                color: var(--primary);
+            }
+
+            .stat-card-primary .stat-icon {
+                background: rgba(99, 102, 241, 0.14);
+                border-color: rgba(99, 102, 241, 0.28);
+                color: var(--primary);
+            }
+
+            .stat-card-warning .stat-icon {
+                background: rgba(245, 158, 11, 0.14);
+                border-color: rgba(245, 158, 11, 0.3);
+                color: var(--warning);
+            }
+
+            .stat-card-success .stat-icon {
+                background: rgba(16, 185, 129, 0.14);
+                border-color: rgba(16, 185, 129, 0.3);
+                color: var(--success);
+            }
+
+            .stat-card-danger .stat-icon {
+                background: rgba(239, 68, 68, 0.14);
+                border-color: rgba(239, 68, 68, 0.3);
+                color: var(--danger);
             }
 
             .stat-content {
@@ -484,10 +602,11 @@
             /* Filter Section */
             .filter-section {
                 background: white;
-                border-radius: 16px;
+                border-radius: 20px;
                 padding: 1rem;
-                border: 2px solid var(--border);
-                margin-bottom: 1.5rem;
+                border: 1.5px solid var(--border);
+                margin-bottom: 1.75rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
             }
 
             .filter-form {
@@ -579,10 +698,10 @@
             /* Table */
             .orders-table-card {
                 background: white;
-                border-radius: 16px;
-                border: 2px solid var(--border);
+                border-radius: 20px;
+                border: 1.5px solid var(--border);
                 overflow: hidden;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
             }
 
             .orders-table {

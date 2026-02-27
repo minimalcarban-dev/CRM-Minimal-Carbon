@@ -89,8 +89,74 @@
                             <label class="detail-label">Description</label>
                             <div class="detail-value text-pre-wrap">{{ $package->package_description }}</div>
                         </div>
+                        <div class="client-info-table mt-2">
+                            <div class="info-row">
+                                <span class="info-label">Party Type</span>
+                                <span class="info-value">{{ $package->party_type ?: '-' }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Company</span>
+                                <span class="info-value">{{ $package->company_name ?: '-' }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">GST / PAN</span>
+                                <span class="info-value">
+                                    {{ $package->gst_number ?: '-' }} / {{ $package->pan_number ?: '-' }}
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Purpose</span>
+                                <span class="info-value">{{ $package->purpose_of_handover ?: '-' }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Handover Location</span>
+                                <span class="info-value">{{ $package->handover_location ?: '-' }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Handover Mode</span>
+                                <span class="info-value">{{ $package->handover_mode ?: '-' }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                @if($package->stock_id || $package->diamond_shape || $package->diamond_size || $package->diamond_color || $package->diamond_clarity || $package->diamond_carat)
+                    <div class="info-section">
+                        <div class="section-header-simple">
+                            <h3 class="section-title">
+                                <i class="bi bi-gem"></i> Diamond Snapshot
+                            </h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="client-info-table">
+                                <div class="info-row">
+                                    <span class="info-label">Stock ID</span>
+                                    <span class="info-value fw-bold">{{ $package->stock_id ?: '-' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Shape</span>
+                                    <span class="info-value">{{ $package->diamond_shape ?: '-' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Size</span>
+                                    <span class="info-value">{{ $package->diamond_size ?: '-' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Color</span>
+                                    <span class="info-value">{{ $package->diamond_color ?: '-' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Clarity</span>
+                                    <span class="info-value">{{ $package->diamond_clarity ?: '-' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Carat</span>
+                                    <span class="info-value">{{ $package->diamond_carat ?: '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Recipient Info -->
                 <div class="info-section">
@@ -100,27 +166,32 @@
                         </h3>
                     </div>
                     <div class="section-content">
-                        <div class="client-info-table">
-                            <div class="info-row">
-                                <span class="info-label">Full Name</span>
-                                <span class="info-value fw-bold">{{ $package->person_name }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Mobile Number</span>
-                                <span class="info-value">{{ $package->mobile_number }}</span>
-                            </div>
-                        </div>
-
-                        @if($package->package_image)
-                            <div class="mt-4">
-                                <label class="detail-label mb-2">ID Proof / Photo</label>
-                                <div class="id-proof-wrapper">
-                                    <img src="{{ $package->package_image }}" alt="Recipient ID" class="id-proof-img"
-                                        onclick="viewImage(this.src)">
-                                    <div class="zoom-hint"><i class="bi bi-zoom-in"></i> Click to enlarge</div>
+                        <div class="recipient-layout">
+                            <div class="recipient-details">
+                                <div class="client-info-table">
+                                    <div class="info-row">
+                                        <span class="info-label">Full Name</span>
+                                        <span class="info-value fw-bold">{{ $package->person_name }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Mobile Number</span>
+                                        <span class="info-value">{{ $package->mobile_number }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        @endif
+
+                            @if($package->package_image_url)
+                                <div class="recipient-photo-block">
+                                    <label class="detail-label mb-2">ID Proof / Photo</label>
+                                    <div class="id-proof-wrapper">
+                                        <img src="{{ $package->package_image_url }}" onerror="this.style.display='none';"
+                                            alt="Recipient ID" class="id-proof-img"
+                                            onclick="viewImage(this.src)">
+                                        <div class="zoom-hint"><i class="bi bi-zoom-in"></i> Click to enlarge</div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,33 +307,95 @@
 
     @push('styles')
         <style>
-            :root {
-                --primary: #6366f1;
-                --primary-dark: #4f46e5;
-                --success: #10b981;
-                --danger: #ef4444;
-                --dark: #1e293b;
-                --gray: #64748b;
-                --light-gray: #f8fafc;
-                --border: #e2e8f0;
+            [data-theme="dark"] .package-details-wrapper {
+                background: var(--bg-body, #0f172a);
+            }
+
+            [data-theme="dark"] .page-header,
+            [data-theme="dark"] .status-card,
+            [data-theme="dark"] .info-section,
+            [data-theme="dark"] .section-header-simple,
+            [data-theme="dark"] .pdf-modal-header {
+                background: var(--bg-card, #1e293b) !important;
+                border-color: rgba(148, 163, 184, 0.34) !important;
+                box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+            }
+
+            [data-theme="dark"] .page-header {
+                background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.07));
+            }
+
+            [data-theme="dark"] .page-title,
+            [data-theme="dark"] .status-value,
+            [data-theme="dark"] .section-title,
+            [data-theme="dark"] .detail-value,
+            [data-theme="dark"] .info-row .info-value {
+                color: var(--text-primary, #f1f5f9);
+            }
+
+            [data-theme="dark"] .page-subtitle,
+            [data-theme="dark"] .breadcrumb-nav,
+            [data-theme="dark"] .breadcrumb-link,
+            [data-theme="dark"] .status-label,
+            [data-theme="dark"] .detail-label,
+            [data-theme="dark"] .info-row .info-label,
+            [data-theme="dark"] .text-muted {
+                color: var(--text-secondary, #94a3b8) !important;
+            }
+
+            [data-theme="dark"] .client-info-table .info-row {
+                border-bottom-color: rgba(148, 163, 184, 0.22);
+            }
+
+            [data-theme="dark"] .btn-secondary-custom {
+                background: rgba(255, 255, 255, 0.04);
+                border-color: rgba(148, 163, 184, 0.35);
+                color: var(--text-secondary, #94a3b8);
+            }
+
+            [data-theme="dark"] .bg-light-primary {
+                background: rgba(99, 102, 241, 0.15) !important;
+            }
+
+            [data-theme="dark"] .border-primary-light {
+                border-color: rgba(99, 102, 241, 0.28) !important;
+            }
+
+            [data-theme="dark"] .bg-light-success {
+                background: rgba(16, 185, 129, 0.14) !important;
+            }
+
+            [data-theme="dark"] .border-success-light {
+                border-color: rgba(16, 185, 129, 0.3) !important;
+            }
+
+            [data-theme="dark"] .pdf-modal-content {
+                background: var(--bg-card, #1e293b);
+                border-color: rgba(148, 163, 184, 0.34);
+            }
+
+            [data-theme="dark"] .pdf-modal-close {
+                color: var(--text-secondary, #94a3b8);
             }
 
             /* Screen Styles */
             .package-details-wrapper {
-                max-width: 1200px;
+                max-width: 1600px;
                 margin: 0 auto;
-                padding: 1.5rem;
+                padding: 2rem;
+                min-height: 100vh;
+                background: #f8fafc;
             }
 
             .page-header {
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+                background: white;
                 padding: 2rem;
                 border-radius: 16px;
-                border: 2px solid rgba(99, 102, 241, 0.1);
                 margin-bottom: 2rem;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             }
 
             .header-content {
@@ -368,18 +501,19 @@
             .status-cards {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 1.5rem;
-                margin-bottom: 2rem;
+                gap: 1.25rem;
+                margin-bottom: 1.75rem;
             }
 
             .status-card {
                 background: white;
-                border-radius: 16px;
-                padding: 1.5rem;
-                border: 2px solid var(--border);
+                border-radius: 20px;
+                padding: 1.35rem 1.4rem;
+                border: 1.5px solid var(--border);
                 display: flex;
                 flex-direction: column;
                 gap: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
             }
 
             .status-label {
@@ -437,7 +571,7 @@
             .content-grid {
                 display: grid;
                 grid-template-columns: 1fr 350px;
-                gap: 2rem;
+                gap: 1.5rem;
             }
 
             @media (max-width: 992px) {
@@ -449,15 +583,16 @@
             /* Info Sections */
             .info-section {
                 background: white;
-                border-radius: 16px;
-                border: 2px solid var(--border);
+                border-radius: 20px;
+                border: 1.5px solid var(--border);
                 overflow: hidden;
-                margin-bottom: 2rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
             }
 
             .section-header-simple {
                 padding: 1.25rem 1.5rem;
-                border-bottom: 2px solid var(--border);
+                border-bottom: 1.5px solid var(--border);
                 background: #f8fafc;
             }
 
@@ -533,6 +668,19 @@
                 max-width: 200px;
             }
 
+            .recipient-layout {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 240px;
+                gap: 1.5rem;
+                align-items: start;
+            }
+
+            .recipient-photo-block {
+                justify-self: end;
+                width: 100%;
+                max-width: 220px;
+            }
+
             .id-proof-wrapper:hover {
                 border-color: var(--primary);
             }
@@ -558,6 +706,17 @@
 
             .id-proof-wrapper:hover .zoom-hint {
                 opacity: 1;
+            }
+
+            @media (max-width: 768px) {
+                .recipient-layout {
+                    grid-template-columns: 1fr;
+                }
+
+                .recipient-photo-block {
+                    justify-self: start;
+                    max-width: 200px;
+                }
             }
 
             /* Action Box Colors */

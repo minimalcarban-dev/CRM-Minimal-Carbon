@@ -185,7 +185,7 @@ class Diamond extends Model
     public function admins(): BelongsToMany
     {
         return $this->belongsToMany(Admin::class, 'diamond_admin', 'diamond_id', 'admin_id')
-            ->withPivot('assign_by', 'assigned_at')
+            ->withPivot('assign_by', 'assigned_at', 'note')
             ->withTimestamps();
     }
 

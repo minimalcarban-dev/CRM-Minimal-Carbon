@@ -304,6 +304,73 @@
             </div>
         </div>
 
+        <!-- Assignment History Card -->
+        @if($diamond->admins->count() > 0)
+            <div class="form-section-card">
+                <div class="section-header">
+                    <div class="section-info">
+                        <div class="section-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div>
+                            <h5 class="section-title">Assignment History</h5>
+                            <p class="section-description">Log of admin assignments for this diamond</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-body p-0">
+                    <div class="table-responsive">
+                        <table class="table data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Assigned Admin</th>
+                                    <th>Assigned By</th>
+                                    <th>Date & Time</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($diamond->admins->sortByDesc('pivot.assigned_at') as $historicalAdmin)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px; font-weight: 600;">
+                                                    {{ substr($historicalAdmin->name, 0, 1) }}
+                                                </div>
+                                                <span class="text-semibold">{{ $historicalAdmin->name }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $assigner = \App\Models\Admin::find($historicalAdmin->pivot->assign_by);
+                                            @endphp
+                                            {{ $assigner ? $assigner->name : 'System' }}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span>{{ \Carbon\Carbon::parse($historicalAdmin->pivot->assigned_at)->format('M d, Y') }}</span>
+                                                <small
+                                                    class="text-muted">{{ \Carbon\Carbon::parse($historicalAdmin->pivot->assigned_at)->format('h:i A') }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($historicalAdmin->pivot->note)
+                                                <p class="mb-0" style="white-space: pre-wrap; font-size: 0.875rem;">
+                                                    {{ $historicalAdmin->pivot->note }}</p>
+                                            @else
+                                                <span class="text-muted"><i class="bi bi-dash"></i></span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Description & Notes -->
         @if($diamond->description || $diamond->note)
             <div class="form-section-card">
@@ -354,7 +421,8 @@
                     <div class="image-gallery"
                         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
                         @foreach($diamond->multi_img_upload as $index => $image)
-                            <div class="gallery-item" data-image-url="{{ $image }}" data-image-title="Diamond Image {{ $index + 1 }}"
+                            <div class="gallery-item" data-image-url="{{ $image }}"
+                                data-image-title="Diamond Image {{ $index + 1 }}"
                                 style="border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; transition: all 0.3s;">
                                 <img src="{{ $image }}" style="width: 100%; height: 150px; object-fit: cover;"
                                     alt="Diamond Image {{ $index + 1 }}">
@@ -455,6 +523,47 @@
         [data-theme="dark"] .barcode-wrapper,
         [data-theme="dark"] .gallery-item {
             background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Table Dark Mode */
+        [data-theme="dark"] .data-table,
+        [data-theme="dark"] .data-table > :not(caption) > * > * {
+            color: #e2e8f0;
+            border-color: rgba(255, 255, 255, 0.1);
+            background-color: transparent !important;
+            --bs-table-bg: transparent;
+        }
+
+        [data-theme="dark"] .data-table thead,
+        [data-theme="dark"] .data-table thead th,
+        [data-theme="dark"] .data-table thead tr {
+            color: #94a3b8;
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .data-table tbody td,
+        [data-theme="dark"] .data-table tbody tr {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+            background-color: transparent !important;
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .data-table tbody tr:hover td {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        [data-theme="dark"] .bg-primary-light {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+        }
+
+        [data-theme="dark"] .text-primary {
+            color: #818cf8 !important;
+        }
+
+        [data-theme="dark"] .text-semibold {
+            color: #f1f5f9;
         }
 
         [data-theme="dark"] .image-modal-content {

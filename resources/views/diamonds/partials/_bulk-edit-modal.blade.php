@@ -1,3 +1,4 @@
+
 {{-- Bulk Edit Modal --}}
 <div id="bulkEditModal" class="bulk-edit-modal d-none">
     <div class="bulk-edit-backdrop" onclick="BulkEdit.closeModal()"></div>

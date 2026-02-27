@@ -942,6 +942,10 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             ->name('store')
             ->middleware('admin.permission:packages.create');
 
+        Route::get('/lookup-stock', [\App\Http\Controllers\PackageController::class, 'lookupStock'])
+            ->name('lookup-stock')
+            ->middleware('admin.permission:packages.create');
+
         Route::get('/{package}', [\App\Http\Controllers\PackageController::class, 'show'])
             ->name('show')
             ->middleware('admin.permission:packages.view');

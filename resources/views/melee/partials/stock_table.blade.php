@@ -26,10 +26,10 @@
                     </td>
                     <td class="text-center">${{ number_format($diamond->purchase_price_per_ct, 2) }}</td>
                     <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-outline-success border" onclick="openTransactionModal('in', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $diamond->category->name }}')">
+                        <button class="btn btn-sm btn-theme-icon btn-theme-icon-in" onclick="openTransactionModal('in', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $diamond->category->name }}')">
                             <i class="bi bi-plus-lg"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger border ms-1" onclick="openTransactionModal('out', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $diamond->category->name }}')">
+                        <button class="btn btn-sm btn-theme-icon btn-theme-icon-out ms-1" onclick="openTransactionModal('out', '{{ $diamond->id }}', '{{ $diamond->shape }} {{ $diamond->size_label }}', '{{ $diamond->category->name }}')">
                             <i class="bi bi-dash-lg"></i>
                         </button>
                     </td>

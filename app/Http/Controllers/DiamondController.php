@@ -325,6 +325,15 @@ class DiamondController extends Controller
                 'assigned_at' => $assignedAt,
             ]);
 
+            // Save assignment history in pivot table if assigned
+            if ($adminId) {
+                $diamond->admins()->attach($adminId, [
+                    'assign_by' => $assignById,
+                    'assigned_at' => $assignedAt,
+                    'note' => $validated['note'] ?? null,
+                ]);
+            }
+
             // NOTE: is_sold_out, duration_days, duration_price, sold_out_month are calculated
             // automatically by model's boot event (recalculateDerivedFields) - no need for manual calc
 
@@ -419,6 +428,15 @@ class DiamondController extends Controller
                 $diamond->admin_id = $newAdminId;
                 $diamond->assign_by = $currentAdmin ? $currentAdmin->id : null;
                 $diamond->assigned_at = $newAdminId ? now() : null;
+
+                // Save assignment history in pivot table if assigned
+                if ($newAdminId) {
+                    $diamond->admins()->attach($newAdminId, [
+                        'assign_by' => $diamond->assign_by,
+                        'assigned_at' => $diamond->assigned_at,
+                        'note' => $validated['note'] ?? null,
+                    ]);
+                }
             }
 
             // Handle multi image uploads
@@ -546,6 +564,7 @@ class DiamondController extends Controller
     {
         $request->validate([
             'admin_id' => 'required|exists:admins,id',
+            'note' => 'nullable|string',
         ]);
 
         $currentAdmin = auth('admin')->user();
@@ -598,6 +617,13 @@ class DiamondController extends Controller
             'admin_id' => $newAdminId,
             'assign_by' => $currentAdmin ? $currentAdmin->id : null,
             'assigned_at' => now(),
+        ]);
+
+        // Save assignment history in pivot table
+        $diamond->admins()->attach($newAdminId, [
+            'assign_by' => $currentAdmin ? $currentAdmin->id : null,
+            'assigned_at' => now(),
+            'note' => $request->note,
         ]);
 
         return response()->json([

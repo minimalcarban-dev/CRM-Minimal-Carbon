@@ -698,7 +698,7 @@
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         border: 1px solid var(--border);
     }
 
@@ -860,7 +860,7 @@
         display: flex;
         align-items: center;
         gap: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         transition: all 0.3s ease;
         border: 1px solid var(--border);
     }
@@ -979,7 +979,7 @@
         background: var(--bg-card);
         border-radius: 16px;
         margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         border: 1px solid var(--border);
         overflow: hidden;
     }
@@ -989,7 +989,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 1.25rem 1.75rem;
-        background: rgba(255,255,255,0.04);
+        background: rgba(255, 255, 255, 0.04);
         border-bottom: 1px solid var(--border);
     }
 
@@ -1326,7 +1326,7 @@
     .table-card {
         background: var(--bg-card);
         border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         border: 1px solid var(--border);
         overflow: hidden;
     }
@@ -1341,7 +1341,7 @@
     }
 
     .data-table thead {
-        background: rgba(255,255,255,0.04);
+        background: rgba(255, 255, 255, 0.04);
         border-bottom: 1px solid var(--border);
     }
 
@@ -1590,7 +1590,7 @@
         padding: 2rem;
         max-width: 450px;
         width: 90%;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         border: 1px solid var(--border);
     }
 
@@ -1715,7 +1715,7 @@
         width: 95%;
         max-height: 90vh;
         overflow: hidden;
-        box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
         display: flex;
         flex-direction: column;
         border: 1px solid var(--border);
@@ -2265,76 +2265,99 @@
         .filter-section-title {
             font-size: 12px;
         }
+
         @media (max-width: 575px) {
-            .filter-row-3, .filter-row-4 {
+
+            .filter-row-3,
+            .filter-row-4 {
                 grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
                 gap: 7px;
             }
+
             .filter-actions {
                 padding-top: 5px;
                 margin-top: 5px;
             }
+
             .filter-actions-right {
                 flex-direction: column;
                 align-items: stretch;
             }
-            .filter-input, .filter-select {
+
+            .filter-input,
+            .filter-select {
                 padding: 5px;
             }
-            .filter-actions-left{
+
+            .filter-actions-left {
                 flex-direction: column;
             }
+
             span.result-count {
                 padding-bottom: 10px;
             }
+
             .per-page-filter {
                 border: none;
                 margin-bottom: 11px;
                 padding-left: 0;
                 margin-left: 0;
             }
+
             .badge-custom {
                 font-size: 11px;
             }
-            .status-sold, .status-instock {
+
+            .status-sold,
+            .status-instock {
                 white-space: nowrap;
                 font-size: 11px;
                 padding: 4px;
                 border-radius: 8px;
             }
+
             .barcode-image {
                 height: 30px;
                 max-width: 90px;
             }
+
             .cell-content .action-buttons {
                 flex-wrap: nowrap;
                 text-align: left;
                 justify-content: start;
                 align-items: center;
             }
+
             .reassign-modal {
                 padding: 1rem;
             }
-            .btn-filter-apply,.filter-actions .filter-actions-right a.btn-filter-reset {
+
+            .btn-filter-apply,
+            .filter-actions .filter-actions-right a.btn-filter-reset {
                 padding: 4px;
                 border-radius: 8px;
                 font-size: 13px;
             }
+
             .tutorial-modal-header {
                 padding: 14px 8px;
                 font-size: 15px;
             }
+
             .tutorial-modal-body {
                 padding: 10px;
             }
+
             .tutorial-step {
                 margin-bottom: 10px;
                 padding-bottom: 10px;
                 gap: 7px;
             }
+
             .step-content p {
                 font-size: 13px;
             }
+
             .field-item {
                 font-size: 13px;
             }
@@ -2343,56 +2366,69 @@
 
     /* ── Dark Mode overrides ── */
     [data-theme="dark"] .data-table thead {
-        background: rgba(255,255,255,0.03);
+        background: rgba(255, 255, 255, 0.03);
     }
+
     [data-theme="dark"] .data-table tbody tr.sold-row {
-        background: rgba(239,68,68,0.06);
+        background: rgba(239, 68, 68, 0.06);
     }
+
     [data-theme="dark"] .data-table tbody tr.sold-row:hover {
-        background: rgba(239,68,68,0.1);
+        background: rgba(239, 68, 68, 0.1);
     }
+
     [data-theme="dark"] .status-instock {
-        background: rgba(16,185,129,0.15);
+        background: rgba(16, 185, 129, 0.15);
         color: #6ee7b7;
-        border-color: rgba(16,185,129,0.3);
+        border-color: rgba(16, 185, 129, 0.3);
     }
+
     [data-theme="dark"] .status-sold {
-        background: rgba(239,68,68,0.12);
+        background: rgba(239, 68, 68, 0.12);
         color: #fca5a5;
-        border-color: rgba(239,68,68,0.3);
+        border-color: rgba(239, 68, 68, 0.3);
     }
+
     [data-theme="dark"] .badge-info {
-        background: rgba(59,130,246,0.15);
+        background: rgba(59, 130, 246, 0.15);
         color: #93c5fd;
     }
+
     [data-theme="dark"] .badge-success {
-        background: rgba(16,185,129,0.15);
+        background: rgba(16, 185, 129, 0.15);
         color: #6ee7b7;
     }
+
     [data-theme="dark"] .badge-secondary {
-        background: rgba(255,255,255,0.06);
+        background: rgba(255, 255, 255, 0.06);
         color: var(--gray);
     }
+
     [data-theme="dark"] .filter-section-title {
-        border-bottom-color: rgba(255,255,255,0.08);
+        border-bottom-color: rgba(255, 255, 255, 0.08);
     }
+
     [data-theme="dark"] .filter-actions {
-        border-top-color: rgba(255,255,255,0.08);
+        border-top-color: rgba(255, 255, 255, 0.08);
     }
+
     [data-theme="dark"] .per-page-filter {
-        border-left-color: rgba(255,255,255,0.08);
+        border-left-color: rgba(255, 255, 255, 0.08);
     }
+
     [data-theme="dark"] .tutorial-modal-body {
         background: var(--bg-card);
     }
+
     [data-theme="dark"] .tutorial-modal-footer {
         background: var(--bg-card);
-        border-top: 1px solid rgba(255,255,255,0.08);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
+
     [data-theme="dark"] .date-range-input {
         background: var(--bg-body);
         color: var(--dark);
-        border-color: rgba(255,255,255,0.12);
+        border-color: rgba(255, 255, 255, 0.12);
     }
 </style>
 
@@ -2415,6 +2451,11 @@
                         <option value="{{ $admin->id }}">{{ $admin->name }}</option>
                     @endforeach
                 </select>
+            </div>
+            <div style="margin-top: 1rem;">
+                <label class="modal-label" for="assignNote">Note (Optional)</label>
+                <textarea id="assignNote" name="note" class="modal-select" rows="3"
+                    placeholder="Enter reason for assignment or any details..."></textarea>
             </div>
         </div>
         <div class="modal-footer">
@@ -2611,6 +2652,7 @@
         const cancelBtn = document.getElementById('cancelReassign');
         const confirmBtn = document.getElementById('confirmReassign');
         const modalDiamondSku = document.getElementById('modalDiamondSku');
+        const assignNote = document.getElementById('assignNote');
         let currentDiamondId = null;
 
         // Open modal when reassign button clicked
@@ -2622,6 +2664,7 @@
 
                 modalDiamondSku.textContent = sku;
                 adminSelect.value = '';
+                assignNote.value = '';
                 modal.classList.remove('d-none');
             });
         });
@@ -2660,7 +2703,8 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                     },
                     body: JSON.stringify({
-                        admin_id: adminId
+                        admin_id: adminId,
+                        note: assignNote.value
                     })
                 });
 
