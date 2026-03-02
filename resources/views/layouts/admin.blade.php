@@ -265,6 +265,7 @@
             justify-content: center;
             align-items: center;
             padding: 2rem 0;
+            padding-bottom: 6rem !important;
             margin-top: 2rem;
         }
 
@@ -1000,6 +1001,9 @@
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
+                width: var(--sidebar-width) !important;
+                z-index: 1050 !important;
+                /* Above navbar */
             }
 
             .sidebar.show {
@@ -1013,6 +1017,97 @@
             .sidebar.collapsed~#mainContent {
                 margin-left: 0;
             }
+
+            /* FORCE disable collapsed styles on mobile */
+            .sidebar.collapsed .logo-text,
+            .sidebar.collapsed .user-details,
+            .sidebar.collapsed .nav-link span,
+            .sidebar.collapsed .dropdown-toggle-link .left-content span,
+            .sidebar.collapsed .dropdown-toggle-link .chevron-icon {
+                opacity: 1 !important;
+                width: auto !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+
+            .sidebar.collapsed .user-card,
+            .sidebar.collapsed .nav-link {
+                justify-content: flex-start !important;
+                padding: 0.875rem 1rem !important;
+                gap: 0.875rem !important;
+            }
+
+            .sidebar.collapsed .dropdown-toggle-link {
+                justify-content: space-between !important;
+                padding: 0.875rem 1rem !important;
+                gap: 0.875rem !important;
+            }
+
+            .sidebar.collapsed .nav-link::after,
+            .sidebar.collapsed .dropdown-toggle-link::after {
+                display: none !important;
+            }
+
+            .sidebar.collapsed .nav-section-label {
+                opacity: 1 !important;
+                width: auto !important;
+                height: auto !important;
+                margin: 1rem 1rem 0.5rem !important;
+            }
+
+            .sidebar.collapsed .logo-icon {
+                width: 100px !important;
+                height: auto !important;
+                margin: 0 auto !important;
+            }
+
+            .sidebar.collapsed .sidebar-header {
+                justify-content: center !important;
+                padding: 1.5rem !important;
+            }
+
+            /* Mobile close button and overlay */
+            .mobile-close-sidebar {
+                display: flex !important;
+                position: absolute;
+                top: 24px;
+                right: 15px;
+                background: var(--light-gray);
+                border: 1px solid var(--border);
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                align-items: center;
+                justify-content: center;
+                color: var(--dark);
+                cursor: pointer;
+                z-index: 1051;
+            }
+
+            [data-theme="dark"] .mobile-close-sidebar {
+                background: #1e293b;
+                color: #f1f5f9;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+                opacity: 1;
+            }
+        }
+
+        .mobile-close-sidebar {
+            display: none;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1040;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         /* Mobile Toggle */
@@ -2468,22 +2563,27 @@
 </head>
 
 <body>
-    <!-- Mobile Toggle Button -->
-    <button class="mobile-toggle" id="mobileToggle">
-        <i class="bi bi-list" style="font-size: 1.5rem;"></i>
-    </button>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Sidebar -->
     <nav id="sidebar" class="sidebar">
+        <!-- Close button visible only on mobile -->
+        <button id="mobileCloseSidebar" class="mobile-close-sidebar">
+            <i class="bi bi-x-lg"></i>
+        </button>
 
         <!-- Sidebar Header -->
-        <!-- <div class="sidebar-header">
+        <div class="sidebar-header">
             <div class="logo-section">
-                <a href="{{ route('admin.dashboard') }}">
+                <!-- Updated logo handling to show name next to logo, or keep the existing logo image if it has the name -->
+                <a href="{{ route('admin.dashboard') }}"
+                    style="display:flex; align-items:center; gap:0.5rem; text-decoration:none;">
                     <img src="{{ asset('images/Luxurious-Logo.png') }}" alt="Logo" class="logo-icon">
+                    <span class="logo-text">Carbon</span>
                 </a>
             </div>
-        </div> -->
+        </div>
 
         <!-- Navigation -->
         <div class="nav-section">
@@ -3275,6 +3375,10 @@
 
     <!-- ── MOBILE BOTTOM NAV ── -->
     <nav class="mobile-bottom-nav">
+        <button class="mob-nav-item" id="mobileToggle" style="border:none;background:none;cursor:pointer;">
+            <i class="bi bi-list"></i>
+            <span>Menu</span>
+        </button>
         <a href="{{ route('admin.dashboard') }}"
             class="mob-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-fill"></i>
@@ -3478,11 +3582,21 @@
 
         function toggleMobileSidebar() {
             sidebar.classList.toggle('show');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (overlay) {
+                overlay.classList.toggle('show', sidebar.classList.contains('show'));
+            }
         }
 
         toggleBtn?.addEventListener('click', toggleSidebar);
         topToggleBtn?.addEventListener('click', toggleSidebar);
         mobileToggle?.addEventListener('click', toggleMobileSidebar);
+
+        const mobileCloseBtn = document.getElementById('mobileCloseSidebar');
+        mobileCloseBtn?.addEventListener('click', toggleMobileSidebar);
+
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        sidebarOverlay?.addEventListener('click', toggleMobileSidebar);
 
         // Load saved state
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
@@ -3868,19 +3982,19 @@
                                     ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
                                     : '';
                                 draftsHtml += `
-                                                                                                                                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                                    <div>
-                                                                                                                                        <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                                                                                        <div style="font-size: 0.8rem; color: #64748b;">
-                                                                                                                                            ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
-                                                                                                                                        </div>
-                                                                                                                                    </div>
-                                                                                                                                    <a href="${draft.resume_url}"
-                                                                                                                                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                                                                                                        Resume
-                                                                                                                                    </a>    
-                                                                                                                                </div>
-                                                                                                                            `;
+                                                                                                                                                    <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                                                        <div>
+                                                                                                                                                            <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                                                                                                                            <div style="font-size: 0.8rem; color: #64748b;">
+                                                                                                                                                                ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                                                                                                                            </div>
+                                                                                                                                                        </div>
+                                                                                                                                                        <a href="${draft.resume_url}"
+                                                                                                                                                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                                                                                                                            Resume
+                                                                                                                                                        </a>    
+                                                                                                                                                    </div>
+                                                                                                                                                `;
                             });
                             draftsHtml += '</div>';
 
@@ -3888,11 +4002,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                                                                                                <p style="color: #64748b; margin-bottom: 1rem;">
-                                                                                                                                    You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                                                                                                </p>
-                                                                                                                                ${draftsHtml}
-                                                                                                                            `,
+                                                                                                                                                    <p style="color: #64748b; margin-bottom: 1rem;">
+                                                                                                                                                        You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                                                                                                                                    </p>
+                                                                                                                                                    ${draftsHtml}
+                                                                                                                                                `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',
@@ -3952,6 +4066,27 @@
             @endif
             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
                 { label: 'Clients', group: 'Navigation', icon: 'bi-people', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', url: '{{ route("clients.index") }}', hint: 'Manage clients' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['invoices.view']))
+                { label: 'Invoices', group: 'Finance', icon: 'bi-receipt', bg: 'rgba(16,185,129,0.1)', color: '#10b981', url: '{{ route("invoices.index") }}', hint: 'Manage invoices' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['purchases.view']))
+                { label: 'Purchases', group: 'Finance', icon: 'bi-cart', bg: 'rgba(59,130,246,0.1)', color: '#3b82f6', url: '{{ route("purchases.index") }}', hint: 'Manage purchases' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['expenses.view']))
+                { label: 'Expenses', group: 'Finance', icon: 'bi-wallet2', bg: 'rgba(239,68,68,0.1)', color: '#ef4444', url: '{{ route("expenses.index") }}', hint: 'Manage expenses' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['gold-tracking.view']))
+                { label: 'Gold Tracking', group: 'Tracking', icon: 'bi-bar-chart', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', url: '{{ route("gold-tracking.index") }}', hint: 'Manage gold tracking' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['parties.view']))
+                { label: 'Parties', group: 'Tracking', icon: 'bi-briefcase', bg: 'rgba(168,85,247,0.1)', color: '#a855f7', url: '{{ route("parties.index") }}', hint: 'Manage parties' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['factories.view']))
+                { label: 'Factories', group: 'Tracking', icon: 'bi-building', bg: 'rgba(99,102,241,0.1)', color: '#6366f1', url: '{{ route("factories.index") }}', hint: 'Manage factories' },
+            @endif
+            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['leads.view']))
+                { label: 'Leads', group: 'Navigation', icon: 'bi-magnet', bg: 'rgba(14,165,233,0.1)', color: '#0ea5e9', url: '{{ route("leads.index") }}', hint: 'Manage leads' },
             @endif
             @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
                 { label: 'Settings', group: 'System', icon: 'bi-gear', bg: 'rgba(100,116,139,0.1)', color: '#64748b', url: '{{ route("settings.security.index") }}', hint: 'System configuration' }
