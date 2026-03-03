@@ -1473,11 +1473,9 @@
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 2,
                     }]
-                    pointHoverBorderWidth: 2,
-                    }]
                 },
                 options: {
-                    responsive: true,                    responsive: true,
+                    responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {

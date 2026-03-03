@@ -3,7 +3,7 @@
 @section('title', 'Add New Purchase')
 
 @section('content')
-<div class="diamond-management-container tracker-page">
+<div class="diamond-management-container tracker-page purchase-page">
     <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">

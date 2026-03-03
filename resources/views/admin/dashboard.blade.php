@@ -404,9 +404,9 @@
 
     <style>
         /* ═══════════════════════════════════════════
-                       DASHBOARD — v3.0
-                       Full dark mode support via [data-theme="dark"]
-                    ═══════════════════════════════════════════ */
+                           DASHBOARD — v3.0
+                           Full dark mode support via [data-theme="dark"]
+                        ═══════════════════════════════════════════ */
         .dash-wrap {
             max-width: 1600px;
             margin: 0 auto;
@@ -827,7 +827,7 @@
 
         .welcome-actions {
             display: flex;
-            gap: 0.75rem;
+            gap: 1rem;
             flex-wrap: wrap;
             margin-bottom: 1rem;
         }
@@ -837,7 +837,8 @@
             align-items: center;
             gap: 0.45rem;
             padding: 0.6rem 1.2rem;
-            border-radius: 10px;
+            border-radius: 12px;
+            min-height: 44px;
             font-weight: 700;
             font-size: 0.85rem;
             text-decoration: none;
@@ -860,13 +861,13 @@
         }
 
         .welcome-btn-outline {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.18);
             color: white;
-            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            border: 1.5px solid rgba(255, 255, 255, 0.45);
         }
 
         .welcome-btn-outline:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.28);
             color: white;
         }
 
@@ -1275,8 +1276,8 @@
         }
 
         /* ════════════════════════════════
-                       RESPONSIVE — MOBILE FIRST
-                    ════════════════════════════════ */
+                           RESPONSIVE — MOBILE FIRST
+                        ════════════════════════════════ */
         @media (max-width: 1280px) {
             .stats-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -1339,6 +1340,19 @@
                 font-size: 1.4rem;
             }
 
+            .welcome-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.72rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .welcome-btn {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 0.72rem 0.95rem;
+            }
+
             .activity-item {
                 gap: 0.65rem;
             }
@@ -1356,20 +1370,95 @@
             }
 
             .stat-card {
-                padding: 0.9rem;
-                gap: 0.6rem;
+                padding: 0.85rem 0.78rem 0.78rem;
+                gap: 0.5rem;
+                flex-direction: column;
+                align-items: flex-start;
+                min-height: 126px;
+            }
+
+            .stat-icon-wrap {
+                width: 34px;
+                height: 34px;
+                font-size: 0.95rem;
+                border-radius: 9px;
+            }
+
+            .stat-body {
+                width: 100%;
             }
 
             .stat-label {
-                font-size: 0.65rem;
+                font-size: 0.62rem;
+                line-height: 1.25;
+                letter-spacing: 0.04em;
+                margin-bottom: 0.15rem;
+                min-height: 2.35em;
             }
 
             .stat-val {
-                font-size: 1.25rem;
+                font-size: 1.5rem;
+                line-height: 1.05;
+                margin-bottom: 0.25rem;
             }
 
             .stat-badge {
-                font-size: 0.6rem;
+                font-size: 0.58rem;
+                padding: 0.12rem 0.42rem;
+                max-width: 100%;
+                line-height: 1.2;
+                white-space: normal;
+            }
+
+            .stat-arrow {
+                position: absolute;
+                top: 0.55rem;
+                right: 0.55rem;
+                font-size: 0.85rem;
+            }
+
+            .welcome-card {
+                padding: 1.15rem;
+                border-radius: 16px;
+            }
+
+            .welcome-title {
+                font-size: 1.05rem;
+            }
+
+            .welcome-sub {
+                font-size: 0.82rem;
+            }
+
+            .draft-banner {
+                padding: 0.75rem 0.8rem;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 0.6rem;
+            }
+
+            .draft-title {
+                font-size: 0.82rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .draft-sub {
+                font-size: 0.72rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .draft-left {
+                min-width: 0;
+            }
+
+            .draft-cta {
+                justify-self: end;
+                align-self: center;
             }
         }
 

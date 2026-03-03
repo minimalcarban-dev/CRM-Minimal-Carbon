@@ -134,7 +134,7 @@
                                             <a href="{{ route('parties.edit', $p->id) }}" class="action-btn edit-btn" title="Edit Party">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
-                                            <form action="{{ route('parties.destroy', $p->id) }}" method="POST" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this party?')">
+                                            <form action="{{ route('parties.destroy', $p->id) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="action-btn delete-btn" title="Delete Party">
@@ -740,5 +740,78 @@
                 text-align: center;
             }
         }
+
+        [data-theme="dark"] .parties-management-wrapper {
+            --text-dark: #e2e8f0;
+            --text-gray: #94a3b8;
+            --bg-light: #0f172a;
+            --bg-white: #1e293b;
+            --border-color: rgba(148, 163, 184, 0.28);
+            --shadow-sm: 0 1px 3px rgba(2, 6, 23, 0.45);
+            --shadow-md: 0 4px 14px rgba(2, 6, 23, 0.5);
+            --shadow-lg: 0 14px 24px rgba(2, 6, 23, 0.55);
+        }
+
+        [data-theme="dark"] .parties-table thead {
+            background: linear-gradient(135deg, #1a2436, #1e293b);
+        }
+
+        [data-theme="dark"] .table-row:hover {
+            background: #162033;
+        }
+
+        [data-theme="dark"] .search-field {
+            color: #e2e8f0;
+            background: #0f172a;
+        }
+
+        [data-theme="dark"] .search-field::placeholder {
+            color: #64748b;
+        }
+
+        [data-theme="dark"] .search-field:focus {
+            background: #111b2d;
+        }
+
+        [data-theme="dark"] .search-btn,
+        [data-theme="dark"] .reset-btn,
+        [data-theme="dark"] .action-btn {
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .success-alert {
+            color: #86efac;
+            border-color: rgba(16, 185, 129, 0.45);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.1));
+        }
     </style>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.delete-form').forEach(form => {
+                    form.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+
+                        let confirmed = false;
+                        if (typeof window.showConfirm === 'function') {
+                            confirmed = await window.showConfirm(
+                                'This action cannot be undone',
+                                'Are you sure you want to delete this party?',
+                                'Yes, Delete',
+                                'Cancel'
+                            );
+                        } else {
+                            confirmed = window.confirm('Are you sure you want to delete this party?');
+                        }
+
+                        if (confirmed) {
+                            this.submit();
+                        }
+                    });
+                });
+            });
+        </script>
+    @endpush
 @endsection

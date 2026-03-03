@@ -38,13 +38,45 @@
             max-width: 1500px;
         }
 
+        [data-theme="dark"] .container {
+            background: var(--bg-body, #0f172a);
+        }
+
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h6 {
+            color: var(--text-primary, #f1f5f9);
+        }
+
+        [data-theme="dark"] .text-muted,
+        [data-theme="dark"] p {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fecaca;
+        }
+
         .btn-outline-secondary {
             border-radius: 8px;
             font-weight: 500;
         }
 
+        [data-theme="dark"] .btn-outline-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(148, 163, 184, 0.35);
+            color: var(--text-secondary, #94a3b8);
+        }
+
         .btn-outline-secondary:hover {
             background: #f1f5f9;
+        }
+
+        [data-theme="dark"] .btn-outline-secondary:hover {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(129, 140, 248, 0.55);
+            color: #c7d2fe;
         }
     </style>
 @endsection

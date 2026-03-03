@@ -423,5 +423,36 @@
             margin-bottom: 1rem;
             display: block;
         }
+
+        [data-theme="dark"] .client-detail-wrapper {
+            --text-dark: #e2e8f0;
+            --text-gray: #94a3b8;
+            --bg-light: #0f172a;
+            --bg-white: #1e293b;
+            --border-color: rgba(148, 163, 184, 0.28);
+            --shadow-sm: 0 1px 3px rgba(2, 6, 23, 0.45);
+        }
+
+        [data-theme="dark"] .card-header,
+        [data-theme="dark"] .orders-table th {
+            background: #162033;
+        }
+
+        [data-theme="dark"] .orders-table tbody tr:hover {
+            background: #162033;
+        }
+
+        [data-theme="dark"] .back-btn,
+        [data-theme="dark"] .view-btn {
+            background: #0f172a;
+            color: #cbd5e1;
+            border-color: rgba(148, 163, 184, 0.28);
+        }
+
+        [data-theme="dark"] .back-btn:hover,
+        [data-theme="dark"] .view-btn:hover {
+            background: #111b2d;
+            color: #e2e8f0;
+        }
     </style>
 @endsection

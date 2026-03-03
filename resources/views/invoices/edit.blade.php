@@ -257,6 +257,42 @@
             overflow: hidden;
         }
 
+        [data-theme="dark"] .edit-invoice-wrapper {
+            background: var(--bg-body, #0f172a);
+        }
+
+        [data-theme="dark"] .page-header,
+        [data-theme="dark"] .form-container,
+        [data-theme="dark"] .alert-error {
+            background: var(--bg-card, #1e293b) !important;
+            border-color: rgba(148, 163, 184, 0.34) !important;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+        }
+
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .settings-card-title,
+        [data-theme="dark"] .alert-title {
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] .page-subtitle,
+        [data-theme="dark"] .alert-list li,
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .btn-back-header {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(148, 163, 184, 0.35);
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .btn-back-header:hover {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(129, 140, 248, 0.55);
+            color: #c7d2fe;
+        }
+
         .invoice-form {
             padding: 0;
         }

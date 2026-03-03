@@ -300,6 +300,73 @@
             --radius-lg: 16px;
         }
 
+        [data-theme="dark"] .invoice-wrapper {
+            background: var(--bg-body, #0f172a);
+        }
+
+        [data-theme="dark"] .invoice-content,
+        [data-theme="dark"] .party-card,
+        [data-theme="dark"] .details-card,
+        [data-theme="dark"] .summary-card,
+        [data-theme="dark"] .table-container,
+        [data-theme="dark"] .invoice-date,
+        [data-theme="dark"] .btn-outline {
+            background: var(--bg-card, #1e293b) !important;
+            border-color: rgba(148, 163, 184, 0.34) !important;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+        }
+
+        [data-theme="dark"] .invoice-header,
+        [data-theme="dark"] .card-header,
+        [data-theme="dark"] .card-title,
+        [data-theme="dark"] .footer-section {
+            background: rgba(15, 23, 42, 0.62) !important;
+            border-color: rgba(148, 163, 184, 0.24) !important;
+        }
+
+        [data-theme="dark"] .invoice-number,
+        [data-theme="dark"] .card-body h3,
+        [data-theme="dark"] .item-desc,
+        [data-theme="dark"] .item-amount,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .detail-value,
+        [data-theme="dark"] .summary-row span:last-child {
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] .btn-back,
+        [data-theme="dark"] .invoice-date,
+        [data-theme="dark"] .address,
+        [data-theme="dark"] .detail-label,
+        [data-theme="dark"] .summary-row span:first-child,
+        [data-theme="dark"] .gst-info .label,
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .gst-info {
+            background: rgba(15, 23, 42, 0.62) !important;
+            border-color: rgba(148, 163, 184, 0.28) !important;
+        }
+
+        [data-theme="dark"] .items-table,
+        [data-theme="dark"] .items-table th,
+        [data-theme="dark"] .items-table td {
+            border-color: rgba(148, 163, 184, 0.24) !important;
+        }
+
+        [data-theme="dark"] .items-table thead {
+            background: rgba(15, 23, 42, 0.75) !important;
+        }
+
+        [data-theme="dark"] .items-table th {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .items-table tbody tr:hover {
+            background: rgba(99, 102, 241, 0.1) !important;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: var(--gray-50);

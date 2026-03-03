@@ -702,5 +702,39 @@
                 align-items: flex-start;
             }
         }
+
+        [data-theme="dark"] .party-details-wrapper {
+            --text-dark: #e2e8f0;
+            --text-gray: #94a3b8;
+            --text-light: #64748b;
+            --bg-light: #0f172a;
+            --bg-white: #1e293b;
+            --border: rgba(148, 163, 184, 0.28);
+            --shadow-sm: 0 1px 3px rgba(2, 6, 23, 0.45);
+            --shadow-md: 0 4px 14px rgba(2, 6, 23, 0.5);
+            --shadow-lg: 0 14px 24px rgba(2, 6, 23, 0.55);
+        }
+
+        [data-theme="dark"] .card-header {
+            background: linear-gradient(135deg, #1a2436, #1e293b);
+        }
+
+        [data-theme="dark"] .invoice-item {
+            background: #0f172a;
+        }
+
+        [data-theme="dark"] .invoice-item:hover {
+            background: #111b2d;
+        }
+
+        [data-theme="dark"] .back-action {
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .back-action:hover {
+            background: #111b2d;
+            color: #e2e8f0;
+        }
     </style>
 @endsection

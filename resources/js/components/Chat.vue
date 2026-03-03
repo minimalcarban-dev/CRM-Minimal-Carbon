@@ -1,7 +1,7 @@
 <template>
     <div class="chat-container">
         <!-- Channel List Sidebar -->
-        <div class="channels-sidebar">
+        <div class="channels-sidebar" :class="{ show: mobileSidebarOpen }">
             <!-- Search Header -->
             <div class="sidebar-header">
                 <div class="search-wrapper">
@@ -129,12 +129,30 @@
                 </div>
             </div>
         </div>
+        <div
+            v-if="isMobile && mobileSidebarOpen"
+            class="mobile-sidebar-overlay"
+            @click="closeChannelList"
+        ></div>
 
         <!-- Main Chat Area -->
-        <div class="chat-main" v-if="currentChannel" :style="chatMainStyle">
+        <div
+            class="chat-main"
+            :class="{ 'sidebar-open-mobile': isMobile && mobileSidebarOpen }"
+            v-if="currentChannel"
+            :style="chatMainStyle"
+        >
             <!-- Chat Header -->
             <div class="chat-header">
                 <div class="header-left">
+                    <button
+                        v-if="isMobile"
+                        class="btn-icon-secondary mobile-channels-toggle"
+                        @click="openChannelList"
+                        title="Open conversations"
+                    >
+                        <i class="bi bi-list"></i>
+                    </button>
                     <div class="header-avatar">
                         <div
                             v-if="isGroupChannel(currentChannel)"
@@ -162,7 +180,7 @@
                 </div>
                 <div class="header-actions">
                     <button
-                        v-if="isSuperAdmin"
+                        v-if="isSuperAdmin && !isMobile"
                         class="btn-icon-primary"
                         @click="openCreateChannel"
                         title="New Channel"
@@ -170,7 +188,7 @@
                         <i class="bi bi-plus-lg"></i>
                     </button>
                     <button
-                        v-if="isSuperAdmin"
+                        v-if="isSuperAdmin && !isMobile"
                         class="btn-icon-secondary"
                         @click="openManageMembers"
                         title="Manage Members"
@@ -179,7 +197,7 @@
                     </button>
                     <!-- Toggle info sidebar -->
                     <button
-                        class="btn-icon-secondary"
+                        class="btn-icon-secondary info-toggle-btn"
                         :class="{ active: userInfoOpen }"
                         @click="userInfoOpen = !userInfoOpen"
                         title="Toggle Info"
@@ -527,7 +545,11 @@
             </button>
 
             <!-- Message Input -->
-            <div class="message-input-container" ref="inputContainer">
+            <div
+                class="message-input-container"
+                ref="inputContainer"
+                v-show="!(isMobile && userInfoOpen)"
+            >
                 <!-- Attachment Preview -->
                 <div v-if="attachmentFiles.length" class="attachments-preview">
                     <div
@@ -588,7 +610,7 @@
                             v-model="newMessage"
                             @keydown="onKeyDownInEditor"
                             @input="onEditorInput"
-                            placeholder="Type a message... Use @ to mention"
+                            :placeholder="mobileInputPlaceholder"
                             ref="messageInput"
                             class="message-textarea"
                             style="width: 100%"
@@ -633,10 +655,17 @@
         </div>
 
         <!-- Right Sidebar (Channel Info) -->
+        <!-- Mobile Info Overlay Backdrop -->
+        <div
+            v-if="isMobile && userInfoOpen && !threadPanelOpen"
+            class="mobile-info-overlay"
+            @click="userInfoOpen = false"
+        ></div>
         <!-- Right Sidebar (Channel Info or Thread) -->
         <div
             class="info-sidebar"
-            v-if="currentChannel && (showSidebar || threadPanelOpen)"
+            v-if="shouldShowInfoSidebar"
+            :class="{ 'is-mobile': isMobile }"
             :style="infoSidebarStyle"
         >
             <!-- THREAD PANEL -->
@@ -930,8 +959,9 @@
                             @click="sendThreadReply"
                             class="btn-send-thread"
                             :disabled="
-                                !threadReplyInput.trim() &&
-                                !threadReplyFiles.length
+                                (!threadReplyInput.trim() &&
+                                    !threadReplyFiles.length) ||
+                                isSendingThread
                             "
                             title="Send reply"
                         >
@@ -1295,8 +1325,12 @@
                     <button @click="manageOpen = false" class="btn-secondary">
                         Cancel
                     </button>
-                    <button @click="saveMembers" class="btn-primary">
-                        Save Changes
+                    <button
+                        @click="saveMembers"
+                        class="btn-primary"
+                        :disabled="isSavingMembers"
+                    >
+                        {{ isSavingMembers ? "Saving..." : "Save Changes" }}
                     </button>
                 </div>
             </div>
@@ -1385,8 +1419,14 @@
                     <button @click="createOpen = false" class="btn-secondary">
                         Cancel
                     </button>
-                    <button @click="saveCreateChannel" class="btn-primary">
-                        Create Channel
+                    <button
+                        @click="saveCreateChannel"
+                        class="btn-primary"
+                        :disabled="isCreatingChannel"
+                    >
+                        {{
+                            isCreatingChannel ? "Creating..." : "Create Channel"
+                        }}
                     </button>
                 </div>
             </div>
@@ -1512,6 +1552,7 @@ export default {
         const attachmentFiles = ref([]);
         const replyTo = ref(null);
         const isSending = ref(false);
+        const isSendingThread = ref(false);
         // Mentions state
         const mentionOpen = ref(false);
         const mentionQuery = ref("");
@@ -1537,16 +1578,23 @@ export default {
         const lastTypingSentAt = ref(0);
         const manageOpen = ref(false);
         const membersLoading = ref(false);
+        const isSavingMembers = ref(false);
         const members = ref([]);
         const memberIds = ref([]);
         const memberSearch = ref("");
         const canCreateChannel = ref(false);
         const createOpen = ref(false);
+        const isCreatingChannel = ref(false);
         const createName = ref("");
         const createDescription = ref("");
         const createSearch = ref("");
         const createMemberIds = ref([]);
         const openPanel = ref("info");
+        const viewportWidth = ref(
+            typeof window !== "undefined" ? window.innerWidth : 1280,
+        );
+        const isMobile = computed(() => viewportWidth.value <= 768);
+        const mobileSidebarOpen = ref(false);
 
         // PDF Viewer Modal State
         const pdfModalOpen = ref(false);
@@ -1824,6 +1872,12 @@ export default {
 
         // Computed Properties
         const SIDEBAR_WIDTH = 320;
+        const leftSidebarWidth = computed(() => {
+            if (isMobile.value) return 0;
+            if (viewportWidth.value <= 1024) return 280;
+            if (viewportWidth.value <= 1200) return 300;
+            return SIDEBAR_WIDTH;
+        });
 
         const groupChannels = computed(() =>
             channels.value.filter(isGroupChannel),
@@ -1838,6 +1892,16 @@ export default {
                 (currentChannel.value?.type || "").toLowerCase() !== "public"
             );
         });
+        const shouldShowInfoSidebar = computed(() => {
+            if (!currentChannel.value) return false;
+            if (threadPanelOpen.value) return true;
+            return isMobile.value ? userInfoOpen.value : showSidebar.value;
+        });
+        const mobileInputPlaceholder = computed(() =>
+            isMobile.value
+                ? "Type a message..."
+                : "Type a message... Use @ to mention",
+        );
         const canSendMessage = computed(
             () => newMessage.value.trim() || attachmentFiles.value.length > 0,
         );
@@ -1984,6 +2048,10 @@ export default {
 
         const selectChannel = async (channel) => {
             currentChannel.value = channel;
+            if (isMobile.value) {
+                mobileSidebarOpen.value = false;
+                userInfoOpen.value = false;
+            }
 
             // Persist the selected channel ID to localStorage for page refresh persistence
             try {
@@ -2085,9 +2153,8 @@ export default {
                 // }
             } catch (error) {
                 console.error("Error sending message:", error);
-                window.showToast?.("Failed to send attachment");
+                window.showToast?.("Failed to send message. Please try again.");
             } finally {
-                attachmentFiles.value = [];
                 isSending.value = false;
             }
         };
@@ -2334,14 +2401,11 @@ export default {
                     // Ignore mention format errors
                 }
 
-                // 6. Sanitize final HTML
-                if (DOMPurify && DOMPurify.sanitize) {
-                    return DOMPurify.sanitize(content, {
-                        ALLOWED_TAGS: ["span", "a"],
-                        ALLOWED_ATTR: ["class", "href", "target", "rel"],
-                    });
-                }
-                return content;
+                // 6. Sanitize final HTML to prevent XSS
+                return DOMPurify.sanitize(content, {
+                    ALLOWED_TAGS: ["span", "a"],
+                    ALLOWED_ATTR: ["class", "href", "target", "rel"],
+                });
             } catch (e) {
                 console.error("Message formatting failed", e);
                 return message.body || "";
@@ -2727,7 +2791,8 @@ export default {
         };
 
         const saveMembers = async () => {
-            if (!currentChannel.value?.id) return;
+            if (!currentChannel.value?.id || isSavingMembers.value) return;
+            isSavingMembers.value = true;
             try {
                 const unique = Array.from(
                     new Set([...memberIds.value, props.userId]),
@@ -2745,6 +2810,8 @@ export default {
                 if (import.meta.env.DEV)
                     console.error("Failed to update members", e);
                 window.showToast?.("Failed to update members");
+            } finally {
+                isSavingMembers.value = false;
             }
         };
 
@@ -2805,6 +2872,8 @@ export default {
                 window.showToast?.("Enter channel name");
                 return;
             }
+            if (isCreatingChannel.value) return;
+            isCreatingChannel.value = true;
             try {
                 const users = Array.from(
                     new Set([...createMemberIds.value, props.userId]),
@@ -2821,6 +2890,8 @@ export default {
                 if (import.meta.env.DEV)
                     console.error("Failed to create channel", e);
                 window.showToast?.("Failed to create channel");
+            } finally {
+                isCreatingChannel.value = false;
             }
         };
 
@@ -2844,18 +2915,45 @@ export default {
         const resizeInfoStartWidth = ref(0);
         const userInfoOpen = ref(true);
         const infoSidebarWidth = computed(() => {
+            if (isMobile.value) {
+                return threadPanelOpen.value
+                    ? viewportWidth.value
+                    : userInfoOpen.value
+                      ? Math.min(380, Math.max(280, viewportWidth.value - 24))
+                      : 0;
+            }
             if (threadPanelOpen.value) return threadPanelWidth.value;
             return userInfoOpen.value ? Math.max(0, infoPanelWidth.value) : 0;
         });
-        const chatMainStyle = computed(() => ({
-            width: `calc(100% - ${SIDEBAR_WIDTH}px - ${Math.max(
-                0,
-                infoSidebarWidth.value,
-            )}px)`,
-        }));
+        const chatMainStyle = computed(() => {
+            if (isMobile.value) return { width: "100%" };
+            return {
+                width: `calc(100% - ${leftSidebarWidth.value}px - ${Math.max(
+                    0,
+                    infoSidebarWidth.value,
+                )}px)`,
+            };
+        });
         const infoSidebarStyle = computed(() => ({
             width: `${Math.max(0, infoSidebarWidth.value)}px`,
         }));
+        const openChannelList = () => {
+            if (!isMobile.value) return;
+            mobileSidebarOpen.value = true;
+        };
+        const closeChannelList = () => {
+            mobileSidebarOpen.value = false;
+        };
+        const handleViewportChange = () => {
+            if (typeof window === "undefined") return;
+            viewportWidth.value = window.innerWidth;
+            if (viewportWidth.value <= 768) {
+                mobileSidebarOpen.value = !currentChannel.value;
+                if (threadPanelOpen.value) userInfoOpen.value = true;
+            } else {
+                mobileSidebarOpen.value = false;
+            }
+        };
 
         const startResizeThread = (e) => {
             isResizingThread.value = true;
@@ -2949,7 +3047,8 @@ export default {
 
         // Ensure initial visibility for info panel follows server-driven hint
         onMounted(() => {
-            userInfoOpen.value = showSidebar.value;
+            handleViewportChange();
+            userInfoOpen.value = isMobile.value ? false : showSidebar.value;
         });
 
         const closeThread = () => {
@@ -2973,6 +3072,8 @@ export default {
                 !threadReplyFiles.value.length
             )
                 return;
+            if (isSendingThread.value) return;
+            isSendingThread.value = true;
             if (!activeThreadMessage.value) {
                 console.warn("No active thread message");
                 return;
@@ -3021,6 +3122,8 @@ export default {
                 if (import.meta.env.DEV)
                     console.error("Failed to send thread reply", e);
                 window.showToast?.("Failed to send reply");
+            } finally {
+                isSendingThread.value = false;
             }
         };
 
@@ -3313,6 +3416,10 @@ export default {
 
         // Lifecycle Hooks
         onMounted(() => {
+            handleViewportChange();
+            window.addEventListener("resize", handleViewportChange, {
+                passive: true,
+            });
             loadChannels();
             checkCreateCapability();
 
@@ -3362,6 +3469,7 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            window.removeEventListener("resize", handleViewportChange);
             if (messageContainer.value) {
                 messageContainer.value.removeEventListener(
                     "scroll",
@@ -3372,32 +3480,50 @@ export default {
 
         // Adjust messages container bottom padding dynamically based on input container height
         let _resizeObserver = null;
+        const ensureInputResizeObserver = () => {
+            try {
+                if (!window.ResizeObserver) return;
+                if (!_resizeObserver) {
+                    _resizeObserver = new ResizeObserver(() => {
+                        nextTick(adjustMessagePadding);
+                    });
+                }
+                if (inputContainer.value) {
+                    _resizeObserver.disconnect();
+                    _resizeObserver.observe(inputContainer.value);
+                }
+            } catch (_) {}
+        };
+
         const adjustMessagePadding = () => {
             const mc = messageContainer.value;
             const ic = inputContainer.value;
             if (!mc || !ic) return;
-            // Use offsetHeight to include padding and borders
-            const height = ic.offsetHeight || ic.getBoundingClientRect().height;
-            // Add a small extra gap so messages don't touch the input
-            const gap = 16;
-            mc.style.paddingBottom = `${height + gap}px`;
+            // Include composer height and fixed bottom offset (mobile floating composer)
+            const rect = ic.getBoundingClientRect();
+            const height = ic.offsetHeight || rect.height || 0;
+            const style = window.getComputedStyle(ic);
+            const bottomOffset =
+                style.position === "fixed"
+                    ? Math.max(0, parseFloat(style.bottom || "0") || 0)
+                    : 0;
+            const gap = isMobile.value ? 14 : 16;
+            mc.style.paddingBottom = `${Math.ceil(height + bottomOffset + gap)}px`;
         };
 
         onMounted(() => {
             // existing onMounted logic above will run; ensure resize observer and initial adjust
-            try {
-                if (window.ResizeObserver && inputContainer.value) {
-                    _resizeObserver = new ResizeObserver(() => {
-                        nextTick(adjustMessagePadding);
-                    });
-                    _resizeObserver.observe(inputContainer.value);
-                }
-            } catch (_) {}
+            ensureInputResizeObserver();
 
             // adjust on window resize as well
-            window.addEventListener("resize", adjustMessagePadding);
+            window.addEventListener("resize", adjustMessagePadding, {
+                passive: true,
+            });
             // initial adjust after DOM settled
-            nextTick(adjustMessagePadding);
+            nextTick(() => {
+                ensureInputResizeObserver();
+                adjustMessagePadding();
+            });
         });
 
         onBeforeUnmount(() => {
@@ -3415,6 +3541,18 @@ export default {
             deep: true,
         });
         watch(replyTo, () => nextTick(adjustMessagePadding));
+        watch(mobileSidebarOpen, () => {
+            nextTick(adjustMessagePadding);
+        });
+        watch(
+            () => inputContainer.value,
+            () => {
+                nextTick(() => {
+                    ensureInputResizeObserver();
+                    adjustMessagePadding();
+                });
+            },
+        );
 
         watch(currentChannel, (newChannel, oldChannel) => {
             if (oldChannel?.id && window.Echo) {
@@ -3424,6 +3562,13 @@ export default {
             }
             if (newChannel?.id) {
                 setupChannelListeners(newChannel.id);
+                if (isMobile.value) mobileSidebarOpen.value = false;
+                nextTick(() => {
+                    ensureInputResizeObserver();
+                    adjustMessagePadding();
+                });
+            } else if (isMobile.value) {
+                mobileSidebarOpen.value = true;
             }
         });
 
@@ -3476,8 +3621,12 @@ export default {
             groupChannels,
             personalChannels,
             showSidebar,
+            shouldShowInfoSidebar,
+            mobileInputPlaceholder,
             chatMainStyle,
             infoSidebarStyle,
+            isMobile,
+            mobileSidebarOpen,
             channelInfo,
             sidebarImages,
             sidebarFiles,
@@ -3539,11 +3688,15 @@ export default {
             openManageMembers,
             toggleMember,
             saveMembers,
+            isSavingMembers, // Added
             deleteChannel,
             openCreateChannel,
             toggleCreateMember,
             saveCreateChannel,
+            isCreatingChannel, // Added
             startDirect,
+            openChannelList,
+            closeChannelList,
             // Thread Logic
             threadPanelOpen,
             activeThreadMessage,
@@ -3551,6 +3704,7 @@ export default {
             threadReplyInput,
             threadLoading,
             threadReplyFiles,
+            isSendingThread,
             threadPanelWidth,
             startResizeThread,
             // Info panel controls
@@ -3852,6 +4006,7 @@ export default {
     background: linear-gradient(180deg, #fafbfc 0%, white 100%);
     flex-shrink: 1;
     min-width: 0;
+    min-height: 0;
 }
 
 .chat-header {
@@ -3969,6 +4124,19 @@ export default {
     background: var(--gray-200);
 }
 
+.btn-icon-secondary.active {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.mobile-channels-toggle {
+    display: none;
+}
+
+.mobile-sidebar-overlay {
+    display: none;
+}
+
 /* Messages Container */
 .messages-container {
     flex: 1;
@@ -3977,6 +4145,9 @@ export default {
     padding: 1.5rem;
     padding-bottom: calc(1.5rem + 140px);
     position: relative;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 /* Search Results */
@@ -4356,13 +4527,21 @@ export default {
 
 /* Message Input */
 .message-input-container {
-    border-top: 2px solid var(--gray-200);
-    padding: 1.25rem 1.5rem;
-    background: white;
+    border-top: 0px solid var(--gray-200);
+    padding: 2rem 1.2rem;
+    /* background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.82) 0%,
+        rgba(255, 255, 255, 0.97) 40%,
+        #ffffff 100%
+    ); */
     /* Keep the input visible when scrolling messages on small screens */
     position: sticky;
     bottom: 0;
     z-index: 30;
+    width: 100%;
+    display: block;
+    min-height: 72px;
 }
 
 .attachments-preview {
@@ -4403,21 +4582,31 @@ export default {
     background: var(--danger);
 }
 
-.input-row {
+.message-input-container .input-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: var(--gray-50);
-    border: 2px solid var(--gray-200);
-    border-radius: 16px;
-    padding: 0.5rem;
-    box-shadow: var(--shadow-sm);
+    min-height: 60px;
+    background: #ffffff;
+    border: 1.5px solid #d9deea;
+    border-radius: 20px;
+    padding: 0.5rem 0.58rem 0.5rem 0.62rem;
+    box-shadow:
+        0 8px 22px rgba(15, 23, 42, 0.08),
+        0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.message-input-container .input-row:focus-within {
+    border-color: #a5b4fc;
+    box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.13),
+        0 10px 24px rgba(15, 23, 42, 0.12);
 }
 
 .btn-attach {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
     background: transparent;
     border: none;
     color: var(--gray-600);
@@ -4431,23 +4620,24 @@ export default {
 }
 
 .btn-attach:hover {
-    background: var(--gray-200);
+    background: #f1f5ff;
     border-color: var(--gray-300);
 }
 
 .message-textarea {
     flex: 1;
-    padding: 0.625rem 0.75rem;
+    padding: 0.68rem 0.52rem;
     border: none;
-    border-radius: 10px;
-    font-size: 0.95rem;
+    border-radius: 12px;
+    font-size: 1rem;
     font-family: inherit;
     resize: none;
-    min-height: 22px;
+    min-height: 26px;
     max-height: 176px;
     overflow-y: auto;
-    line-height: 22px;
+    line-height: 1.4;
     background: transparent;
+    color: var(--gray-800);
 }
 
 .message-textarea:focus {
@@ -4458,6 +4648,7 @@ export default {
 .input-with-suggestions {
     position: relative;
     flex: 1;
+    min-width: 0; /* CRITICAL: prevents textarea intrinsic width from breaking flex container causing right-padding to disappear on mobile */
 }
 
 .input-with-suggestions.has-reply {
@@ -4627,9 +4818,9 @@ export default {
 }
 
 .btn-send {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     border: none;
     color: white;
@@ -4638,7 +4829,7 @@ export default {
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 1.05rem;
+    font-size: 1.12rem;
     flex-shrink: 0;
     box-shadow: var(--shadow);
 }
@@ -4661,6 +4852,8 @@ export default {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .info-profile {
@@ -4721,6 +4914,30 @@ export default {
     color: #374151;
 }
 
+.channel-info-panel {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.info-resize-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+    background: transparent;
+    z-index: 8;
+    transition: background 0.2s;
+}
+
+.info-resize-handle:hover {
+    background: var(--primary);
+}
+
 .profile-name {
     font-size: 1.25rem;
     font-weight: 700;
@@ -4739,6 +4956,11 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .info-section {
@@ -4776,6 +4998,7 @@ export default {
     padding: 1rem;
     border-top: 2px solid var(--gray-200);
     background: var(--gray-50);
+    overflow: visible;
 }
 
 .info-item {
@@ -5282,19 +5505,35 @@ export default {
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+    .channels-sidebar {
+        width: 300px;
+    }
+
     .info-sidebar {
-        display: none;
+        width: 300px;
+    }
+
+    .message-group {
+        max-width: 72%;
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .channels-sidebar {
         width: 280px;
     }
 
+    .chat-header {
+        padding: 1rem 1.1rem;
+    }
+
+    .messages-container {
+        padding: 1rem;
+    }
+
     .message-group {
-        max-width: 85%;
+        max-width: 82%;
     }
 
     .modal-container {
@@ -5303,19 +5542,247 @@ export default {
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .chat-container {
+        position: relative;
+    }
+
+    .mobile-channels-toggle {
+        display: inline-flex;
+    }
+
     .channels-sidebar {
         position: absolute;
         left: 0;
         top: 0;
         bottom: 0;
-        z-index: 100;
-        transform: translateX(-100%);
-        transition: transform 0.3s;
+        width: min(88vw, 340px);
+        max-width: 340px;
+        z-index: 90;
+        transform: translateX(-102%);
+        transition: transform 0.24s ease;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
+        border-right: 1px solid var(--gray-200);
     }
 
     .channels-sidebar.show {
         transform: translateX(0);
+    }
+
+    .mobile-sidebar-overlay {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 80;
+        background: rgba(15, 23, 42, 0.34);
+        backdrop-filter: blur(1.5px);
+    }
+
+    .chat-main {
+        width: 100% !important;
+    }
+
+    .chat-header {
+        padding: 0.75rem;
+        gap: 0.55rem;
+    }
+
+    .header-left {
+        gap: 0.6rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .avatar-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-width: 1.5px;
+    }
+
+    .header-info {
+        min-width: 0;
+    }
+
+    .header-title {
+        font-size: 0.94rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 42vw;
+    }
+
+    .header-subtitle {
+        font-size: 0.72rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .header-actions {
+        gap: 0.35rem;
+        flex-shrink: 0;
+    }
+
+    .header-actions .btn-icon-primary,
+    .header-actions .btn-icon-secondary {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        font-size: 1rem;
+    }
+
+    .messages-container {
+        padding: 0.85rem;
+        padding-bottom: calc(132px + env(safe-area-inset-bottom));
+    }
+
+    .message-group {
+        max-width: 94%;
+    }
+
+    .message-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+
+    .message-bubble {
+        padding: 8px 12px;
+    }
+
+    .message-text {
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
+
+    .message-input-container {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(60px + env(safe-area-inset-bottom));
+        z-index: 90;
+        padding: 0.4rem 0.25rem 0.25rem;
+        min-height: 68px;
+        background: transparent;
+        border-top: none;
+        box-shadow: none;
+    }
+
+    .chat-main.sidebar-open-mobile .message-input-container {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px); 
+    }
+
+    .message-input-container .input-row {
+        border-radius: 28px;
+        padding: 6px 12px 6px 16px; /* Increased right padding to prevent button from hitting the curve */
+        gap: 0.4rem;
+        min-height: 52px;
+        border-color: #d7ddea;
+        box-shadow:
+            0 8px 18px rgba(15, 23, 42, 0.08),
+            0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .btn-attach {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+    }
+
+    .btn-send {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%; /* Make it perfectly circular on mobile for modern HIG/MD3 look */
+        padding: 0;
+        margin: 0;
+    }
+
+    .message-textarea {
+        font-size: 1rem;
+        line-height: 1.45;
+        padding: 0.5rem 0.2rem; /* reduce inner padding so it doesn't constrain flex */
+    }
+
+    .info-sidebar.is-mobile {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 95;
+        box-shadow: -10px 0 28px rgba(15, 23, 42, 0.2);
+        border-left: 1px solid var(--gray-200);
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+    }
+
+    .info-sidebar.is-mobile .channel-info-panel {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .info-sidebar.is-mobile .info-sections {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    .info-sidebar.is-mobile .thread-panel {
+        min-width: 0;
+        max-width: none;
+    }
+
+    .info-sidebar.is-mobile .thread-resize-handle,
+    .info-sidebar.is-mobile .info-resize-handle {
+        display: none;
+    }
+
+    .thread-header,
+    .thread-content,
+    .thread-input-area {
+        padding-left: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .channels-sidebar {
+        width: 100%;
+        max-width: none;
+    }
+
+    .header-title {
+        max-width: 30vw;
+    }
+
+    .messages-container {
+        padding: 0.72rem;
+        padding-bottom: calc(126px + env(safe-area-inset-bottom));
+    }
+
+    .message-group {
+        max-width: 98%;
+    }
+
+    .message-input-container {
+        left: 0px;
+        right: 10px;
+        bottom: calc(60px + env(safe-area-inset-bottom));
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
     }
 }
 
@@ -5381,6 +5848,8 @@ export default {
     padding: 1rem;
     padding-left: 1.5rem; /* Extra padding for resize handle */
     width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 .thread-divider {
     padding: 1rem;
@@ -5506,7 +5975,7 @@ export default {
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.input-row {
+.thread-input-area .input-row {
     display: flex;
     align-items: center; /* Center align for single line */
     gap: 0.75rem;
@@ -5516,7 +5985,7 @@ export default {
     border: 1px solid var(--gray-200);
 }
 
-.input-row:focus-within {
+.thread-input-area .input-row:focus-within {
     border-color: var(--primary-light);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }

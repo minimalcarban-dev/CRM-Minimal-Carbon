@@ -601,4 +601,42 @@
             font-size: 1rem;
         }
     }
+
+    [data-theme="dark"] .party-form-wrapper {
+        --clr-text: #e2e8f0;
+        --clr-text-muted: #94a3b8;
+        --clr-text-light: #64748b;
+        --clr-bg: #0f172a;
+        --clr-card: #1e293b;
+        --clr-border: rgba(148, 163, 184, 0.28);
+        --clr-input-bg: #0f172a;
+        --shadow: 0 1px 3px rgba(2, 6, 23, 0.45);
+        --shadow-lg: 0 12px 24px rgba(2, 6, 23, 0.55);
+    }
+
+    [data-theme="dark"] .field-input::placeholder,
+    [data-theme="dark"] .field-textarea::placeholder {
+        color: #64748b;
+    }
+
+    [data-theme="dark"] .field-input:focus,
+    [data-theme="dark"] .field-select:focus,
+    [data-theme="dark"] .field-textarea:focus {
+        background: #111b2d;
+    }
+
+    [data-theme="dark"] .toggle-field {
+        background: #0f172a;
+    }
+
+    [data-theme="dark"] .btn-secondary {
+        background: #0f172a;
+        color: #cbd5e1;
+    }
+
+    [data-theme="dark"] .btn-secondary:hover {
+        background: #111b2d;
+        color: #e2e8f0;
+        border-color: rgba(148, 163, 184, 0.45);
+    }
 </style>

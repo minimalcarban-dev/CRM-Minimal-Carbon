@@ -373,6 +373,246 @@
                 max-height: 400px;
             }
         }
+
+        [data-theme="dark"] .leads-inbox-container {
+            --dark: #e2e8f0;
+            --gray: #94a3b8;
+            --border: rgba(148, 163, 184, 0.28);
+            --light-gray: #0f172a;
+            --shadow: rgba(2, 6, 23, 0.45);
+            --shadow-md: rgba(2, 6, 23, 0.55);
+        }
+
+        [data-theme="dark"] .quick-stat-card,
+        [data-theme="dark"] .kanban-column-header,
+        [data-theme="dark"] .lead-card,
+        [data-theme="dark"] .filter-bar,
+        [data-theme="dark"] .filter-select {
+            background: #1e293b;
+            border-color: rgba(148, 163, 184, 0.28);
+        }
+
+        [data-theme="dark"] .kanban-column {
+            background: #0f172a;
+        }
+
+        [data-theme="dark"] .kanban-cards.drag-over {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="dark"] .quick-stat-value,
+        [data-theme="dark"] .column-title,
+        [data-theme="dark"] .lead-name {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .lead-card-footer {
+            border-top-color: rgba(148, 163, 184, 0.28);
+        }
+
+        [data-theme="dark"] .filter-search input {
+            background: #0f172a;
+            border-color: rgba(148, 163, 184, 0.28);
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .filter-search input::placeholder {
+            color: #64748b;
+        }
+
+        [data-theme="dark"] .filter-select {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .kanban-empty {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] #newLeadModal .modal-content {
+            background: #1e293b;
+            border: 1px solid rgba(148, 163, 184, 0.28) !important;
+        }
+
+        [data-theme="dark"] #newLeadModal .modal-header,
+        [data-theme="dark"] #newLeadModal .modal-footer {
+            border-color: rgba(148, 163, 184, 0.28) !important;
+        }
+
+        [data-theme="dark"] #newLeadModal .modal-title,
+        [data-theme="dark"] #newLeadModal .form-label {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] #newLeadModal .form-control {
+            background: #0f172a;
+            border-color: rgba(148, 163, 184, 0.28);
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] #newLeadModal .form-control::placeholder {
+            color: #64748b;
+        }
+
+        /* Compact + Less Loud System */
+        .leads-inbox-container {
+            max-width: 1500px;
+        }
+
+        .quick-stats-bar {
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-stat-card {
+            border-radius: 10px;
+            padding: 0.75rem 0.9rem;
+            box-shadow: none;
+        }
+
+        .quick-stat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            font-size: 0.95rem;
+        }
+
+        .quick-stat-icon.primary {
+            background: rgba(99, 102, 241, 0.16);
+            color: #6366f1;
+        }
+
+        .quick-stat-icon.success {
+            background: rgba(16, 185, 129, 0.16);
+            color: #10b981;
+        }
+
+        .quick-stat-icon.warning {
+            background: rgba(245, 158, 11, 0.16);
+            color: #f59e0b;
+        }
+
+        .quick-stat-icon.danger {
+            background: rgba(239, 68, 68, 0.16);
+            color: #ef4444;
+        }
+
+        .quick-stat-value {
+            font-size: 1.25rem;
+        }
+
+        .quick-stat-label {
+            font-size: 0.74rem;
+            margin-top: 0.1rem;
+        }
+
+        .kanban-board {
+            gap: 1rem;
+        }
+
+        .kanban-column {
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+
+        .kanban-column-header {
+            border-radius: 9px;
+            padding: 0.55rem 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .column-title {
+            font-size: 0.86rem;
+        }
+
+        .lead-card {
+            border-radius: 10px;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+
+        .lead-card:hover {
+            transform: translateY(-1px);
+            box-shadow: none;
+        }
+
+        .lead-card-meta {
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+
+        .lead-card-footer {
+            margin-top: 0.6rem;
+            padding-top: 0.6rem;
+        }
+
+        .filter-bar {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-search input,
+        .filter-select {
+            min-height: 40px;
+            font-size: 0.84rem;
+            border-width: 1.5px;
+        }
+
+        @media (max-width: 1024px) {
+            .page-header {
+                padding: 0.95rem !important;
+            }
+
+            .header-content {
+                gap: 0.75rem;
+            }
+
+            .header-right {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .header-right .btn-secondary-custom,
+            .header-right .btn-primary-custom {
+                min-height: 40px;
+                padding: 0.55rem 0.8rem;
+                font-size: 0.82rem;
+            }
+
+            .kanban-column {
+                max-height: 360px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quick-stats-bar {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .quick-stat-card {
+                min-height: 64px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .quick-stats-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        [data-theme="dark"] .quick-stat-card,
+        [data-theme="dark"] .kanban-column-header,
+        [data-theme="dark"] .lead-card,
+        [data-theme="dark"] .filter-bar,
+        [data-theme="dark"] .filter-select,
+        [data-theme="dark"] #newLeadModal .modal-content {
+            background: #1b263b;
+            border-color: rgba(148, 163, 184, 0.2);
+            box-shadow: none;
+        }
     </style>
 @endpush
 

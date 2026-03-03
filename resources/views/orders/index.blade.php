@@ -93,7 +93,7 @@
                         </a>
                     @endif
                     <a href="{{ route('orders.sync-all-tracking') }}" class="btn-primary-custom" id="btnSyncAll"
-                        style="margin-right: 10px; background: #6366f1;">
+                        style="background: #6366f1;">
                         <i class="bi bi-arrow-repeat"></i>
                         <span>Sync All</span>
                     </a>
@@ -212,8 +212,7 @@
             @if(auth('admin')->user()->hasExplicitPermission('sales.view'))
                 <div class="stat-card stat-card-sales" id="todaysSalesCard" onclick="toggleCompanyProgress()"
                     style="cursor: pointer;">
-                    <div class="stat-icon"
-                        style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                         <i class="bi bi-currency-dollar"></i>
                     </div>
                     <div class="stat-content">
@@ -886,10 +885,10 @@
 
     <!-- Tracking History Modal -->
     <div class="modal fade" id="trackingHistoryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                <div class="modal-header bg-light border-bottom p-3">
-                    <h5 class="modal-title fw-bold">
+        <div class="modal-dialog modal-lg modal-dialog-centered tracking-history-dialog">
+            <div class="modal-content border-0 shadow-lg tracking-modal-shell" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header bg-light border-bottom p-3 tracking-modal-header">
+                    <h5 class="modal-title fw-bold tracking-modal-title">
                         <i class="bi bi-truck text-primary me-2"></i>
                         Shipment Journey: <span id="modalTrackingNumber" class="text-primary"></span>
                     </h5>
@@ -911,12 +910,15 @@
                         <!-- History items will be injected here -->
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-top p-3">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-                    <button type="button" id="modalSyncBtn" class="btn btn-warning rounded-pill px-4 text-white">
-                        <i class="bi bi-arrow-repeat me-1"></i> Sync Status
+                <div class="modal-footer bg-light border-top p-3 tracking-modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 tracking-modal-btn"
+                        data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="modalSyncBtn"
+                        class="btn btn-warning rounded-pill px-4 text-white tracking-modal-btn">
+                        <i class="bi bi-arrow-repeat me-1"></i> Sync Parcel
                     </button>
-                    <a href="#" id="modalOfficialLink" target="_blank" class="btn btn-primary rounded-pill px-4">
+                    <a href="#" id="modalOfficialLink" target="_blank"
+                        class="btn btn-primary rounded-pill px-4 tracking-modal-btn">
                         <i class="bi bi-box-arrow-up-right me-1"></i> Official Page
                     </a>
                 </div>
@@ -1106,7 +1108,7 @@
             transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
             flex: 1 1 0;
             min-width: 0;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
             text-decoration: none !important;
             position: relative;
             overflow: hidden;
@@ -1116,31 +1118,64 @@
         .stat-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
             pointer-events: none;
         }
 
         .stat-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
 
         /* Accent border colors on hover */
-        .stat-card-primary:hover  { border-left-color: #6366f1; }
-        .stat-card-info:hover     { border-left-color: #3b82f6; }
-        .stat-card-warning:hover  { border-left-color: #f59e0b; }
-        .stat-card-success:hover  { border-left-color: #10b981; }
-        .stat-card-dark:hover     { border-left-color: #94a3b8; }
-        .stat-card-sales:hover    { border-left-color: #10b981; }
+        .stat-card-primary:hover {
+            border-left-color: #6366f1;
+        }
+
+        .stat-card-info:hover {
+            border-left-color: #3b82f6;
+        }
+
+        .stat-card-warning:hover {
+            border-left-color: #f59e0b;
+        }
+
+        .stat-card-success:hover {
+            border-left-color: #10b981;
+        }
+
+        .stat-card-dark:hover {
+            border-left-color: #94a3b8;
+        }
+
+        .stat-card-sales:hover {
+            border-left-color: #10b981;
+        }
 
         /* Active filter state */
-        .active-filter.stat-card-primary  { border-left-color: #6366f1; }
-        .active-filter.stat-card-info     { border-left-color: #3b82f6; }
-        .active-filter.stat-card-warning  { border-left-color: #f59e0b; }
-        .active-filter.stat-card-success  { border-left-color: #10b981; }
-        .active-filter.stat-card-dark     { border-left-color: #94a3b8; }
+        .active-filter.stat-card-primary {
+            border-left-color: #6366f1;
+        }
+
+        .active-filter.stat-card-info {
+            border-left-color: #3b82f6;
+        }
+
+        .active-filter.stat-card-warning {
+            border-left-color: #f59e0b;
+        }
+
+        .active-filter.stat-card-success {
+            border-left-color: #10b981;
+        }
+
+        .active-filter.stat-card-dark {
+            border-left-color: #94a3b8;
+        }
 
         /* Icon */
         .stat-icon {
@@ -1227,7 +1262,7 @@
         /* Sales card — subtle colored glow, no solid white */
         .stat-card-sales {
             border-color: rgba(16, 185, 129, 0.25);
-            background: linear-gradient(135deg, rgba(16,185,129,0.06), var(--bg-card));
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), var(--bg-card));
         }
 
         .stat-card-sales .stat-icon {
@@ -1422,8 +1457,8 @@
             align-items: center;
             justify-content: space-between;
             padding: 1rem 1.5rem;
-            background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.08) 100%);
-            border: 2px solid rgba(239,68,68,0.35);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 100%);
+            border: 2px solid rgba(239, 68, 68, 0.35);
             border-radius: 12px;
             margin-bottom: 1.5rem;
             animation: slideDown 0.3s ease-out;
@@ -2024,6 +2059,64 @@
             font-size: 0.85rem;
             color: #475569;
             line-height: 1.4;
+        }
+
+        .tracking-history-dialog {
+            max-width: 760px;
+        }
+
+        .tracking-modal-shell {
+            border-radius: 14px;
+        }
+
+        .tracking-modal-title {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-right: 0.75rem;
+            line-height: 1.25;
+        }
+
+        .tracking-modal-footer {
+            display: flex;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .tracking-modal-btn {
+            min-width: 140px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        /* Theme-matched modal footer buttons */
+        .tracking-modal-btn.btn-secondary {
+            background: #64748b !important;
+            border-color: #64748b !important;
+            color: #fff !important;
+        }
+
+        #modalSyncBtn {
+            background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+            border-color: #4f46e5 !important;
+            color: #fff !important;
+        }
+
+        #modalOfficialLink {
+            background: #eef2ff !important;
+            border-color: rgba(99, 102, 241, 0.35) !important;
+            color: #4f46e5 !important;
+        }
+
+        [data-theme="dark"] #modalOfficialLink {
+            background: rgba(99, 102, 241, 0.2) !important;
+            border-color: rgba(129, 140, 248, 0.45) !important;
+            color: #c7d2fe !important;
         }
 
         .table-row {
@@ -3032,8 +3125,8 @@
             }
 
             /* .client-info {
-                                                                                                                                                                                                                                    text-align: start;
-                                                                                                                                                                                                                                } */
+                                                                                                                                                                                                                                        text-align: start;
+                                                                                                                                                                                                                                    } */
         }
 
         /* Print Styles */
@@ -3055,6 +3148,285 @@
             .orders-table {
                 font-size: 0.85rem;
             }
+        }
+
+        /* Compact Mobile System (Order Index) */
+        @media (max-width: 1024px) {
+            .orders-management-container {
+                padding: 0.5rem !important;
+            }
+
+            .page-header,
+            .filter-section,
+            .stats-grid a.stat-card,
+            .orders-table-card {
+                border-radius: 10px !important;
+                box-shadow: none !important;
+            }
+
+            .page-header {
+                padding: 0.9rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .page-title {
+                font-size: 1.15rem !important;
+                line-height: 1.2;
+            }
+
+            .page-subtitle {
+                font-size: 0.78rem !important;
+                margin-bottom: 0 !important;
+            }
+
+            .stats-grid {
+                gap: 0.55rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .stats-grid a.stat-card {
+                padding: 0.55rem 0.7rem !important;
+                min-height: 64px;
+                border-left-width: 2px !important;
+            }
+
+            .stat-value {
+                font-size: 1.1rem !important;
+                line-height: 1;
+            }
+
+            .stat-label {
+                font-size: 0.72rem !important;
+                margin-top: 0.1rem !important;
+            }
+
+            .filter-section {
+                padding: 0.7rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .filter-form {
+                gap: 0.55rem !important;
+            }
+
+            .search-input,
+            .filter-select,
+            input#orderDateRange,
+            .btn-filter,
+            .btn-reset,
+            .btn-overdue-filter,
+            .btn-cancelled-filter {
+                min-height: 40px;
+                font-size: 0.8rem !important;
+                padding: 0.5rem 0.7rem !important;
+                border-width: 1.5px !important;
+                border-radius: 9px !important;
+            }
+
+            .search-box {
+                min-width: 100% !important;
+            }
+
+            .search-box .search-icon {
+                left: 0.72rem !important;
+                font-size: 0.82rem !important;
+                line-height: 1;
+            }
+
+            .search-box .search-input {
+                padding-left: 2.15rem !important;
+                padding-right: 0.7rem !important;
+            }
+        }
+
+        @media (min-width: 430px) and (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-right {
+                width: 100%;
+                display: flex;
+                gap: 0.45rem;
+                flex-wrap: wrap;
+            }
+
+            .header-right .btn-primary-custom,
+            .header-right .btn-drafts-custom {
+                width: 100%;
+                justify-content: center;
+                min-height: 40px;
+                padding: 0.52rem 0.75rem !important;
+                font-size: 0.8rem !important;
+                margin-right: 0 !important;
+            }
+
+            .btn-overdue-filter,
+            .btn-cancelled-filter {
+                width: 100%;
+                justify-content: center;
+                margin-left: 0 !important;
+            }
+
+            .orders-table-card {
+                margin-bottom: 0.75rem !important;
+                overflow: auto;
+            }
+
+            .orders-table {
+                min-width: 760px !important;
+            }
+
+            .orders-table th,
+            .orders-table td {
+                padding: 0.5rem !important;
+                font-size: 0.76rem !important;
+                line-height: 1.25 !important;
+            }
+
+            .order-id-badge,
+            .order-type-badge,
+            .status-badge,
+            .badge-item,
+            .badge-status {
+                font-size: 0.68rem !important;
+                padding: 0.22rem 0.42rem !important;
+                border-radius: 6px !important;
+            }
+
+            .shipping-company,
+            .tracking-number-link,
+            .creator-name {
+                font-size: 0.74rem !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .orders-table {
+                min-width: 700px !important;
+            }
+
+            /* Neutralize old floating fixed action buttons */
+            form.d-inline.delete-form,
+            a.action-btn.action-btn-edit,
+            a.action-btn.action-btn-view {
+                position: static !important;
+                bottom: auto !important;
+                right: auto !important;
+                z-index: auto !important;
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 12px !important;
+            }
+
+            form.d-inline.delete-form button {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 12px !important;
+            }
+
+            .tracking-history-dialog {
+                max-width: calc(100vw - 16px);
+                margin: 0.2rem auto calc(60px + env(safe-area-inset-bottom, 0px) + 0.45rem);
+            }
+
+            .tracking-modal-content {
+                padding: 0.85rem;
+            }
+
+            .tracking-modal-shell {
+                border-radius: 12px !important;
+                display: flex;
+                flex-direction: column;
+                max-height: calc(100dvh - 0.5rem - (60px + env(safe-area-inset-bottom, 0px) + 0.5rem) - 0.5rem);
+                overflow: hidden;
+            }
+
+            .tracking-modal-header {
+                flex-shrink: 0;
+            }
+
+            .tracking-modal-content {
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tracking-history-list {
+                padding-left: 1.45rem;
+            }
+
+            .tracking-history-list::before {
+                left: 5px;
+            }
+
+            .tracking-history-dot {
+                left: -1.45rem;
+                top: 4px;
+                width: 12px;
+                height: 12px;
+                border-width: 2px;
+            }
+
+            .tracking-history-details {
+                padding: 0 0.45rem 0.5rem 0.55rem;
+            }
+
+            .tracking-history-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.1rem;
+            }
+
+            .tracking-history-date {
+                font-size: 0.68rem;
+            }
+
+            .tracking-modal-footer {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                width: 100%;
+                gap: 0.35rem;
+                padding: 0.7rem !important;
+                flex-shrink: 0;
+                position: sticky;
+                bottom: 0;
+                z-index: 1;
+            }
+
+            .tracking-modal-btn {
+                width: 100%;
+                min-width: 0;
+                padding: 0.45rem 0.35rem !important;
+                font-size: 0.73rem !important;
+                line-height: 1.2;
+                border-radius: 999px !important;
+            }
+        }
+
+        [data-theme="dark"] .page-header,
+        [data-theme="dark"] .filter-section,
+        [data-theme="dark"] .stats-grid a.stat-card,
+        [data-theme="dark"] .orders-table-card {
+            background: #1b263b !important;
+            border: 1px solid rgba(148, 163, 184, 0.2) !important;
+            box-shadow: none !important;
+        }
+
+        [data-theme="dark"] .orders-table thead {
+            background: #162033 !important;
+        }
+
+        [data-theme="dark"] .table-row:hover {
+            background: #17243a !important;
         }
     </style>
 
@@ -3255,17 +3627,17 @@
                         const historyItem = document.createElement('div');
                         historyItem.className = 'tracking-history-item';
                         historyItem.innerHTML = `
-                                                                <div class="tracking-history-dot"></div>
-                                                                <div class="tracking-history-details shadow-sm">
-                                                                    <div class="tracking-history-header">
-                                                                        <span class="tracking-history-status">${escapeHtml(item.status)}</span>
-                                                                        <span class="tracking-history-date">${escapeHtml(item.date)}</span>
-                                                                    </div>
-                                                                    <div class="tracking-history-location">
-                                                                        <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
-                                                                    </div>
-                                                                    ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
-                                                                </div>`;
+                                                                        <div class="tracking-history-dot"></div>
+                                                                        <div class="tracking-history-details shadow-sm">
+                                                                            <div class="tracking-history-header">
+                                                                                <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                                                                <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                                                            </div>
+                                                                            <div class="tracking-history-location">
+                                                                                <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                                                            </div>
+                                                                            ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                                                                        </div>`;
                         container.appendChild(historyItem);
                     });
                 }

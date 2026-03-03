@@ -858,6 +858,363 @@
     white-space: nowrap;
 }
 
+/* ---------------- Dark Theme: Tracker Module ---------------- */
+[data-theme="dark"] .tracker-page .stat-card,
+[data-theme="dark"] .tracker-page .tracker-filter,
+[data-theme="dark"] .tracker-page .tracker-table-card,
+[data-theme="dark"] .tracker-page .tracker-chart-card {
+    background: var(--bg-card, #1e293b);
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.25));
+    box-shadow: none;
+}
+
+[data-theme="dark"] .tracker-page .stat-label,
+[data-theme="dark"] .tracker-page .tracker-result-count,
+[data-theme="dark"] .tracker-page .tracker-filter-label,
+[data-theme="dark"] .tracker-page .detail-label,
+[data-theme="dark"] .tracker-page .tracker-empty-desc {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .tracker-page .stat-value,
+[data-theme="dark"] .tracker-page .tracker-filter-label i,
+[data-theme="dark"] .tracker-page .tracker-chart-title,
+[data-theme="dark"] .tracker-page .detail-value,
+[data-theme="dark"] .tracker-page .tracker-empty-title {
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .tracker-page .tracker-filter-input,
+[data-theme="dark"] .tracker-page .tracker-filter-select,
+[data-theme="dark"] .tracker-page .date-range-wrapper .date-range-input,
+[data-theme="dark"] .tracker-page .payment-toggle .toggle-btn,
+[data-theme="dark"] .tracker-page .transaction-type-toggle .type-btn {
+    background: rgba(15, 23, 42, 0.72) !important;
+    border-color: var(--border, rgba(148, 163, 184, 0.25)) !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .tracker-page .tracker-filter-input::placeholder,
+[data-theme="dark"]
+    .tracker-page
+    .date-range-wrapper
+    .date-range-input::placeholder {
+    color: #64748b !important;
+}
+
+[data-theme="dark"] .tracker-page .btn-tracker-reset {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: var(--border, rgba(148, 163, 184, 0.25));
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .tracker-page .tracker-table thead {
+    background: rgba(15, 23, 42, 0.85);
+}
+
+[data-theme="dark"] .tracker-page .tracker-table th {
+    color: #94a3b8;
+    border-bottom-color: var(--border, rgba(148, 163, 184, 0.25));
+}
+
+[data-theme="dark"] .tracker-page .tracker-table td {
+    color: #e2e8f0;
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .tracker-page .tracker-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+[data-theme="dark"] .tracker-page .tracker-badge-secondary {
+    background: rgba(51, 65, 85, 0.7);
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .tracker-page .detail-notes,
+[data-theme="dark"] .tracker-page .tracker-detail-notes {
+    border-top-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .tracker-page .dropdown-menu-custom {
+    background: #0f172a !important;
+    border-color: var(--border, rgba(148, 163, 184, 0.3)) !important;
+    box-shadow: 0 16px 30px rgba(2, 6, 23, 0.45) !important;
+}
+
+[data-theme="dark"] .tracker-page .dropdown-item-custom {
+    border-bottom-color: rgba(148, 163, 184, 0.15) !important;
+}
+
+[data-theme="dark"] .tracker-page .dropdown-item-custom > div:first-child {
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .tracker-page .dropdown-item-custom > div:last-child {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .tracker-page .dropdown-item-custom:hover {
+    background: rgba(99, 102, 241, 0.14) !important;
+}
+
+[data-theme="dark"] .tracker-page #totalPriceDisplay {
+    background: rgba(16, 185, 129, 0.14) !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+    color: #34d399 !important;
+}
+
+/* ---------------- Purchases: Mobile Responsive ---------------- */
+.purchase-page .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.purchase-page .tracker-table {
+    min-width: 980px;
+}
+
+.purchase-page .header-right {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.purchase-page .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.purchase-page .custom-searchable-dropdown,
+.purchase-page .dropdown-input-wrapper,
+.purchase-page .dropdown-search-input {
+    width: 100%;
+}
+
+.purchase-page .tracker-action-btn {
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.purchase-page .stat-card {
+    border-left-width: 3px;
+}
+
+@media (max-width: 992px) {
+    .purchase-page .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .purchase-page .tracker-filter-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: end;
+        gap: 0.75rem;
+    }
+
+    .purchase-page .tracker-filter-field.date-range-field {
+        min-width: 0;
+        max-width: 100%;
+        flex: initial;
+    }
+
+    .purchase-page .tracker-filter-actions {
+        margin-left: 0;
+        justify-content: flex-start;
+        grid-column: 1 / -1;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .purchase-page .header-content {
+        gap: 1rem;
+    }
+
+    .purchase-page .header-right {
+        width: 100%;
+    }
+
+    .purchase-page .header-right .btn-primary-custom,
+    .purchase-page .header-right .btn-secondary-custom,
+    .purchase-page .form-actions .btn-primary-custom,
+    .purchase-page .form-actions .btn-secondary-custom {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .purchase-page .tracker-filter {
+        padding: 5px;
+        margin-bottom: 15px;
+    }
+
+    .purchase-page .tracker-filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .purchase-page .tracker-filter-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .purchase-page .tracker-result-count {
+        border-right: 0;
+        margin-right: 0;
+        padding-right: 0;
+        margin-bottom: 0.25rem;
+        font-size: 12px;
+    }
+
+    .purchase-page .btn-tracker-reset,
+    .purchase-page .btn-tracker-apply {
+        width: 100%;
+        justify-content: center;
+        min-height: 36px;
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .purchase-page .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 15px;
+    }
+
+    .purchase-page .stat-card {
+        padding: 5px 12px;
+        border-left-width: 2px;
+        border-radius: 12px;
+        gap: 5px;
+        box-shadow: none;
+    }
+
+    .purchase-page .stat-icon {
+        display: none;
+    }
+
+    .purchase-page .stat-label {
+        font-size: 10px;
+        margin-bottom: 0;
+        letter-spacing: 0.3px;
+    }
+
+    .purchase-page .stat-value {
+        font-size: 0.95rem;
+        line-height: 1.2;
+    }
+
+    .purchase-page .tracker-filter-input,
+    .purchase-page .tracker-filter-select,
+    .purchase-page .date-range-wrapper .date-range-input {
+        padding: 5px 10px;
+        font-size: 12px;
+        height: 36px;
+    }
+
+    .purchase-page .section-body {
+        padding: 1rem;
+    }
+
+    .purchase-page .form-grid,
+    .purchase-page .detail-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+
+    .purchase-page .payment-toggle {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .purchase-page .payment-toggle .toggle-btn {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+    }
+
+    .purchase-page .tracker-action-btn {
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .purchase-page #completeModal .modal-content {
+        width: calc(100% - 1rem) !important;
+        margin: 0.5rem !important;
+        max-height: calc(100vh - 1rem);
+        overflow: auto;
+    }
+
+    .purchase-page .tracker-filter,
+    .purchase-page .tracker-table-card,
+    .purchase-page .form-section-card {
+        border-radius: 12px;
+    }
+
+    .purchase-page .stat-card:hover {
+        transform: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .purchase-page {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .purchase-page .page-header {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .purchase-page .page-title {
+        font-size: 17px;
+    }
+
+    .purchase-page .stats-grid {
+        gap: 0.5rem;
+        margin-bottom: 15px;
+    }
+
+    .purchase-page .stat-card {
+        padding: 5px 12px;
+        gap: 5px;
+        border-left-width: 2px;
+    }
+
+    .purchase-page .stat-icon {
+        display: none;
+    }
+
+    .purchase-page .stat-label {
+        font-size: 10px;
+    }
+
+    .purchase-page .stat-value {
+        font-size: 0.95rem;
+        font-weight: 650;
+    }
+
+    .purchase-page .tracker-table {
+        min-width: 860px;
+    }
+
+    .purchase-page .tracker-table th,
+    .purchase-page .tracker-table td {
+        padding: 0.75rem 0.7rem;
+        font-size: 0.82rem;
+    }
+}
+
+@media (max-width: 768px) {
+    [data-theme="dark"] .purchase-page .stat-card {
+        border-color: rgba(148, 163, 184, 0.2);
+        box-shadow: none;
+    }
+}
+
 .tracker-page .payment-toggle .toggle-btn i {
     font-size: 1.1rem;
 }
