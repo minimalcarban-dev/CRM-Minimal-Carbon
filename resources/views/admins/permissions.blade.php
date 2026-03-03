@@ -898,6 +898,120 @@
                     padding: 0;
                 }
             }
+
+            /* Admin Module Dark Theme */
+            [data-theme="dark"] .page-header,
+            [data-theme="dark"] .admin-info-card,
+            [data-theme="dark"] .control-bar,
+            [data-theme="dark"] .permission-category-card {
+                background: var(--bg-card, #1e293b) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                box-shadow: none !important;
+            }
+
+            [data-theme="dark"] .category-header {
+                background: rgba(15, 23, 42, 0.5) !important;
+                border-bottom-color: rgba(148, 163, 184, 0.25) !important;
+            }
+
+            [data-theme="dark"] .page-title,
+            [data-theme="dark"] .category-title,
+            [data-theme="dark"] .permission-name,
+            [data-theme="dark"] .admin-details h5,
+            [data-theme="dark"] .super-admin-title {
+                color: var(--text-primary, #f1f5f9) !important;
+            }
+
+            [data-theme="dark"] .page-subtitle,
+            [data-theme="dark"] .category-count,
+            [data-theme="dark"] .permission-slug,
+            [data-theme="dark"] .permission-description,
+            [data-theme="dark"] .admin-details p,
+            [data-theme="dark"] .super-admin-desc,
+            [data-theme="dark"] .stat-label,
+            [data-theme="dark"] .form-check-label {
+                color: var(--text-secondary, #94a3b8) !important;
+            }
+
+            [data-theme="dark"] .search-box .form-control,
+            [data-theme="dark"] .permission-item,
+            [data-theme="dark"] .admin-stats {
+                background: rgba(15, 23, 42, 0.62) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                color: var(--text-secondary, #cbd5e1) !important;
+            }
+
+            [data-theme="dark"] .search-box .form-control:focus {
+                border-color: rgba(129, 140, 248, 0.75) !important;
+                box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+            }
+
+            [data-theme="dark"] .super-admin-card {
+                background: linear-gradient(135deg, #3f2f0f 0%, #6d4b0d 55%, #8b5a10 100%) !important;
+                border-color: rgba(251, 191, 36, 0.5) !important;
+                box-shadow: none !important;
+            }
+
+            /* Admin Module Mobile Compact */
+            @media (max-width: 768px) {
+                .container-fluid {
+                    padding-left: 0.25rem !important;
+                    padding-right: 0.25rem !important;
+                }
+
+                .page-header,
+                .admin-info-card,
+                .control-bar,
+                .permission-category-card,
+                .super-admin-card {
+                    border-radius: 12px !important;
+                }
+
+                .header-right .btn,
+                #globalSelectAll {
+                    min-height: 40px;
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+
+            @media (max-width: 992px) {
+                .page-header {
+                    padding: 1.15rem;
+                }
+
+                .admin-info-card,
+                .super-admin-card,
+                .control-bar {
+                    padding: 0.95rem 1rem;
+                }
+
+                .permissions-grid {
+                    gap: 0.8rem;
+                }
+            }
+
+            @media (max-width: 420px) {
+                .page-title {
+                    font-size: 1.06rem !important;
+                }
+
+                .page-subtitle {
+                    font-size: 0.75rem !important;
+                }
+
+                .category-title {
+                    font-size: 0.86rem !important;
+                }
+
+                .permission-name {
+                    font-size: 0.8rem !important;
+                }
+
+                .permission-slug {
+                    font-size: 0.7rem !important;
+                }
+            }
         </style>
     @endpush
 

@@ -818,6 +818,109 @@
                     justify-content: center;
                 }
             }
+
+            /* Admin Module Dark Theme */
+            [data-theme="dark"] .page-header,
+            [data-theme="dark"] .form-section-card,
+            [data-theme="dark"] .action-footer {
+                background: var(--bg-card, #1e293b) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                box-shadow: none !important;
+            }
+
+            [data-theme="dark"] .section-header {
+                background: rgba(15, 23, 42, 0.55) !important;
+                border-bottom-color: rgba(148, 163, 184, 0.25) !important;
+            }
+
+            [data-theme="dark"] .page-title,
+            [data-theme="dark"] .section-title,
+            [data-theme="dark"] .form-label-modern {
+                color: var(--text-primary, #f1f5f9) !important;
+            }
+
+            [data-theme="dark"] .page-subtitle,
+            [data-theme="dark"] .section-description,
+            [data-theme="dark"] .form-text,
+            [data-theme="dark"] .text-muted {
+                color: var(--text-secondary, #94a3b8) !important;
+            }
+
+            [data-theme="dark"] .form-control-modern,
+            [data-theme="dark"] .file-upload-label,
+            [data-theme="dark"] .file-upload-label-compact {
+                background: rgba(15, 23, 42, 0.62) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                color: var(--text-secondary, #cbd5e1) !important;
+            }
+
+            [data-theme="dark"] .form-control-modern:focus {
+                border-color: rgba(129, 140, 248, 0.75) !important;
+                box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+            }
+
+            [data-theme="dark"] .file-preview.active {
+                background: rgba(30, 41, 59, 0.7) !important;
+                border-color: rgba(148, 163, 184, 0.28) !important;
+            }
+
+            /* Admin Module Mobile Compact */
+            @media (max-width: 768px) {
+                .container-fluid {
+                    padding-left: 0.25rem !important;
+                    padding-right: 0.25rem !important;
+                }
+
+                .page-header,
+                .form-section-card {
+                    border-radius: 12px !important;
+                }
+
+                .section-body {
+                    padding: 0.85rem !important;
+                }
+
+                .action-footer .btn-lg,
+                .header-actions .btn,
+                .btn-outline-secondary {
+                    min-height: 40px;
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+
+            @media (max-width: 992px) {
+                .page-header {
+                    padding: 1.15rem;
+                }
+
+                .section-header {
+                    padding: 0.9rem 1rem;
+                    gap: 0.7rem;
+                }
+
+                .section-body {
+                    padding: 1rem !important;
+                }
+            }
+
+            @media (max-width: 420px) {
+                .page-title {
+                    font-size: 1.06rem !important;
+                }
+
+                .page-subtitle {
+                    font-size: 0.75rem !important;
+                }
+
+                .section-title {
+                    font-size: 0.9rem !important;
+                }
+
+                .form-control-modern {
+                    min-height: 38px;
+                }
+            }
         </style>
     @endpush
 

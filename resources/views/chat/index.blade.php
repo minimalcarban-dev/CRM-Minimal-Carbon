@@ -77,9 +77,9 @@
 
         #mainContent {
             overflow: hidden !important;
-            height: calc(100vh - 70px) !important;
-            max-height: calc(100vh - 70px) !important;
-            /* min-height: auto !important; */
+            height: calc(100dvh - 70px) !important;
+            min-height: calc(100dvh - 70px) !important;
+            max-height: calc(100dvh - 70px) !important;
             margin-top: 70px !important;
             padding: 0rem !important;
             box-sizing: border-box !important;
@@ -88,7 +88,7 @@
         /* Reset and base styles for chat wrapper */
         .chat-wrapper {
             margin: 0;
-            height: calc(100% - 5rem);
+            height: 100%;
             background: linear-gradient(135deg, var(--bg-body) 0%, var(--light-gray) 100%);
         }
 
@@ -109,9 +109,30 @@
         /* Override default styles */
         .chat-container {
             height: 100% !important;
-            min-height: 500px;
+            min-height: 0;
             border-radius: 20px;
             overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            #mainContent {
+                height: calc(100dvh - 70px - 60px) !important;
+                min-height: calc(100dvh - 70px - 60px) !important;
+                max-height: calc(100dvh - 70px - 60px) !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            .chat-container-outer {
+                border-radius: 0;
+                border-left: 0;
+                border-right: 0;
+                border-bottom: 0;
+            }
+
+            .chat-container {
+                border-radius: 0;
+            }
         }
 
         /* Fix chat main area flex layout */
@@ -122,21 +143,15 @@
             overflow: hidden !important;
         }
 
-        /* Messages area should scroll but not have excessive bottom padding */
+        /* Messages area should scroll; mobile padding is handled in media query */
         .messages-container {
             flex: 1 1 auto !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
-            padding-bottom: 1.5rem !important;
             min-height: 0 !important;
         }
 
-        /* Message input should stay at bottom without being cut off */
-        .message-input-container {
-            flex-shrink: 0 !important;
-            position: relative !important;
-            bottom: auto !important;
-        }
+        /* Mobile composer positioning is handled natively by Chat.vue component CSS */
 
         /* Modern scrollbar */
         .chat-container ::-webkit-scrollbar {
@@ -559,13 +574,13 @@
 
         @media (max-width: 768px) {
             .chat-wrapper {
-                margin: -1rem;
-                height: calc(100vh - 60px);
+                margin: 0;
+                height: 100%;
             }
 
             .chat-container-outer {
-                margin: 0.5rem;
-                border-radius: 12px;
+                margin: 0;
+                border-radius: 0;
             }
         }
 

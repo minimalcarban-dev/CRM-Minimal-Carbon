@@ -398,8 +398,26 @@
             }
 
             .meta-badge.super-admin {
-                background: rgba(255, 215, 0, 0.3);
-                border-color: rgba(255, 215, 0, 0.5);
+                background: linear-gradient(135deg, #fbbf24, #f59e0b);
+                border-color: rgba(251, 191, 36, 0.95);
+                color: #1f2937;
+                font-weight: 800;
+                box-shadow: 0 0 0 1px rgba(146, 64, 14, 0.3), 0 8px 20px rgba(245, 158, 11, 0.45);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .meta-badge.super-admin::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(120deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+                pointer-events: none;
+            }
+
+            .meta-badge.super-admin i {
+                color: #92400e;
+                filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
             }
 
             /* Info Card */
@@ -681,58 +699,141 @@
             }
 
             /* Responsive */
-            @media (max-width: 768px) {
-                .page-header {
-                    padding: 1.5rem;
+            @media (max-width: 1200px) {
+                .profile-overview-card {
+                    padding: 2rem;
                 }
 
+                .profile-name {
+                    font-size: 1.8rem;
+                }
+
+                .profile-avatar-large {
+                    width: 100px;
+                    height: 100px;
+                    font-size: 2.1rem;
+                }
+            }
+
+            @media (max-width: 992px) {
                 .header-actions {
                     width: 100%;
+                    gap: 0.55rem;
                 }
 
-                .header-actions .btn {
-                    flex: 1;
+                .header-actions .btn,
+                .header-actions button {
+                    flex: 1 1 calc(50% - 0.55rem);
+                    min-height: 42px;
+                    justify-content: center;
                 }
 
                 .profile-overview-card {
-                    padding: 1.5rem;
+                    padding: 1.6rem;
+                }
+
+                .profile-header {
+                    gap: 1.2rem;
+                }
+
+                .profile-name {
+                    font-size: 1.55rem;
+                }
+
+                .profile-email {
+                    font-size: 1rem;
+                    margin-bottom: 0.75rem;
+                }
+
+                .meta-badge {
+                    font-size: 0.8rem;
+                    padding: 0.45rem 0.8rem;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .container-fluid {
+                    padding-left: 0.25rem !important;
+                    padding-right: 0.25rem !important;
+                }
+
+                .page-header,
+                .profile-overview-card,
+                .info-card {
+                    border-radius: 12px;
+                }
+
+                .page-header {
+                    padding: 1rem;
+                }
+
+                .profile-overview-card {
+                    padding: 1rem;
                 }
 
                 .profile-header {
                     flex-direction: column;
-                    text-align: center;
+                    align-items: flex-start;
+                    text-align: left;
+                    gap: 0.9rem;
                 }
 
                 .profile-name {
-                    font-size: 1.5rem;
+                    font-size: 1.25rem;
+                    margin-bottom: 0.35rem;
                 }
 
                 .profile-email {
-                    justify-content: center;
+                    justify-content: flex-start;
+                    font-size: 0.9rem;
+                    margin-bottom: 0.6rem;
+                    word-break: break-word;
                 }
 
                 .profile-meta {
-                    justify-content: center;
+                    gap: 0.45rem;
+                }
+
+                .meta-badge {
+                    width: 100%;
+                    justify-content: flex-start;
+                }
+
+                .info-card-header,
+                .info-card-body {
+                    padding: 0.9rem;
                 }
 
                 .info-item {
+                    padding: 0.8rem;
+                    margin-bottom: 0.65rem;
+                    gap: 0.45rem;
                     flex-direction: column;
-                    gap: 0.5rem;
                 }
 
                 .info-value {
                     text-align: left;
                 }
 
+                .address-box {
+                    padding: 0.9rem;
+                    gap: 0.55rem;
+                }
+
+                .document-header {
+                    padding: 0.8rem;
+                    font-size: 0.86rem;
+                }
+
                 .image-modal-content {
-                    padding: 1rem;
+                    padding: 0.9rem;
                 }
 
                 #modalImage {
-                    max-height: 60vh;
+                    max-height: 58vh;
                 }
             }
-             @media (max-width: 575px) {
+            @media (max-width: 575px) {
                 #mainContent {
                     margin-top: 84px;
                 }
@@ -794,6 +895,140 @@
                 #mainContent .container-fluid {
                     padding-left: 0;
                     padding-right: 0;
+                }
+            }
+
+            /* Admin Module Dark Theme */
+            [data-theme="dark"] .page-header,
+            [data-theme="dark"] .info-card {
+                background: var(--bg-card, #1e293b) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                box-shadow: none !important;
+            }
+
+            [data-theme="dark"] .info-card-header {
+                background: rgba(15, 23, 42, 0.5) !important;
+                border-bottom-color: rgba(148, 163, 184, 0.25) !important;
+            }
+
+            [data-theme="dark"] .info-card-body {
+                background: rgba(30, 41, 59, 0.35) !important;
+            }
+
+            [data-theme="dark"] .info-item {
+                background: rgba(15, 23, 42, 0.62) !important;
+                border-color: rgba(148, 163, 184, 0.28) !important;
+            }
+
+            [data-theme="dark"] .info-item:hover {
+                background: rgba(30, 41, 59, 0.75) !important;
+                border-color: rgba(99, 102, 241, 0.5) !important;
+            }
+
+            [data-theme="dark"] .page-title,
+            [data-theme="dark"] .info-title,
+            [data-theme="dark"] .info-label {
+                color: var(--text-primary, #f1f5f9) !important;
+            }
+
+            [data-theme="dark"] .page-subtitle,
+            [data-theme="dark"] .info-value,
+            [data-theme="dark"] .address-text,
+            [data-theme="dark"] .text-muted {
+                color: var(--text-secondary, #94a3b8) !important;
+            }
+
+            [data-theme="dark"] .meta-badge,
+            [data-theme="dark"] .address-box,
+            [data-theme="dark"] .document-empty {
+                background: rgba(15, 23, 42, 0.62) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                color: var(--text-secondary, #cbd5e1) !important;
+            }
+
+            [data-theme="dark"] .meta-badge.super-admin {
+                background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+                border-color: rgba(251, 191, 36, 0.9) !important;
+                color: #fff7ed !important;
+                box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.28), 0 10px 24px rgba(245, 158, 11, 0.4) !important;
+            }
+
+            [data-theme="dark"] .meta-badge.super-admin i {
+                color: #fde68a !important;
+            }
+
+            [data-theme="dark"] .document-card {
+                background: rgba(30, 41, 59, 0.55) !important;
+                border-color: rgba(148, 163, 184, 0.26) !important;
+            }
+
+            [data-theme="dark"] .document-header {
+                background: rgba(15, 23, 42, 0.48) !important;
+                border-bottom-color: rgba(148, 163, 184, 0.25) !important;
+                color: var(--text-primary, #e2e8f0) !important;
+            }
+
+            [data-theme="dark"] .header-actions .btn {
+                border-radius: 10px;
+                border-width: 1px;
+                min-height: 40px;
+                box-shadow: none !important;
+            }
+
+            [data-theme="dark"] .header-actions .btn-primary {
+                background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+                border-color: rgba(129, 140, 248, 0.55) !important;
+                color: #eef2ff !important;
+            }
+
+            [data-theme="dark"] .header-actions .btn-primary:hover {
+                background: linear-gradient(135deg, #4338ca, #3730a3) !important;
+            }
+
+            [data-theme="dark"] .header-actions .btn-danger {
+                background: rgba(239, 68, 68, 0.16) !important;
+                border-color: rgba(248, 113, 113, 0.45) !important;
+                color: #fecaca !important;
+            }
+
+            [data-theme="dark"] .header-actions .btn-danger:hover {
+                background: rgba(239, 68, 68, 0.24) !important;
+                color: #fff1f2 !important;
+            }
+
+            [data-theme="dark"] .header-actions .btn-outline-secondary {
+                background: rgba(15, 23, 42, 0.5) !important;
+                border-color: rgba(148, 163, 184, 0.4) !important;
+                color: #cbd5e1 !important;
+            }
+
+            [data-theme="dark"] .header-actions .btn-outline-secondary:hover {
+                background: rgba(51, 65, 85, 0.5) !important;
+                color: #f1f5f9 !important;
+            }
+
+            [data-theme="dark"] .image-modal-close {
+                background: rgba(30, 41, 59, 0.95) !important;
+                color: #e2e8f0 !important;
+            }
+
+            /* Admin Module Mobile Compact */
+            @media (max-width: 768px) {
+                .container-fluid {
+                    padding-left: 0.25rem !important;
+                    padding-right: 0.25rem !important;
+                }
+
+                .page-header,
+                .info-card,
+                .profile-overview-card {
+                    border-radius: 12px !important;
+                }
+
+                .header-actions .btn,
+                .header-actions button {
+                    min-height: 40px;
+                    justify-content: center;
                 }
             }
         </style>

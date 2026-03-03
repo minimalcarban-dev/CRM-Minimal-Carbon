@@ -70,6 +70,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- NOTIFICATION CHANNEL LISTENER (Updates Dropdown & Badge) ---
     try {
+        const escapeHtml = (value) =>
+            String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        const getNotificationVisual = (notif) => {
+            const title = String(notif?.title || "").toLowerCase();
+            const nType = String(notif?.type || "");
+
+            if (title.includes("cancel")) {
+                return { icon: "bi-x-circle-fill", color: "red", tag: "Cancelled" };
+            }
+            if (title.includes("diamond") && title.includes("sold")) {
+                return { icon: "bi-gem", color: "purple", tag: "Sold Out" };
+            }
+            if (nType === "App\\Notifications\\DiamondAssignedNotification" || title.includes("diamond") || title.includes("melee")) {
+                return { icon: "bi-gem", color: "purple", tag: "Diamond" };
+            }
+            if (nType === "App\\Notifications\\ChatMentionNotification") {
+                return { icon: "bi-at", color: "blue", tag: "Mention" };
+            }
+            if (nType === "App\\Notifications\\ImportCompleted") {
+                return { icon: "bi-upload", color: "blue", tag: "Import" };
+            }
+            if (nType === "App\\Notifications\\ExportCompleted") {
+                return { icon: "bi-download", color: "blue", tag: "Export" };
+            }
+            if (title.includes("reminder")) {
+                return { icon: "bi-alarm-fill", color: "amber", tag: "Reminder" };
+            }
+            if (title.includes("updated") || title.includes("update") || nType === "App\\Notifications\\OrderUpdatedNotification") {
+                return { icon: "bi-arrow-repeat", color: "blue", tag: "Updated" };
+            }
+            if (title.includes("created") || title.includes("new order") || nType === "App\\Notifications\\OrderCreatedNotification") {
+                return { icon: "bi-plus-circle-fill", color: "green", tag: "New Order" };
+            }
+            return { icon: "bi-bell-fill", color: "gray", tag: "Alert" };
+        };
+
         const notificationChannel = window.Echo.private(
             `admin.notifications.${userId}`,
         );
@@ -103,60 +145,33 @@ document.addEventListener("DOMContentLoaded", () => {
                     item.className = "notification-item unread";
                     item.setAttribute("data-notification-id", e.id);
                     item.setAttribute("data-url", e.url || "#");
-                    item.style.cursor = "pointer"; // Ensure it looks clickable
 
-                    // Determine Icon
-                    let iconClass = "bi-info-circle";
-                    if (
-                        e.type === "App\\Notifications\\ChatMentionNotification"
-                    )
-                        iconClass = "bi-at";
-                    else if (
-                        e.type ===
-                        "App\\Notifications\\ChannelAddedNotification"
-                    )
-                        iconClass = "bi-people-fill";
-                    else if (
-                        e.type ===
-                        "App\\Notifications\\DiamondAssignedNotification"
-                    )
-                        iconClass = "bi-gem";
-                    else if (e.type === "App\\Notifications\\ImportCompleted")
-                        iconClass = "bi-cloud-upload";
-                    else if (e.type === "App\\Notifications\\ExportCompleted")
-                        iconClass = "bi-cloud-download";
-                    else if (
-                        e.type === "App\\Notifications\\DiamondSoldNotification"
-                    )
-                        iconClass = "bi-gem";
-                    else if (
-                        e.type === "App\\Notifications\\OrderCreatedNotification"
-                    )
-                        iconClass = "bi-cart-plus-fill";
-                    else if (
-                        e.type === "App\\Notifications\\OrderUpdatedNotification"
-                    )
-                        iconClass = "bi-pencil-square";
-                    else if (
-                        e.type === "App\\Notifications\\MeleeLowStockNotification"
-                    )
-                        iconClass = "bi-exclamation-triangle-fill text-danger";
+                    const visual = getNotificationVisual(e);
+                    const safeTitle = escapeHtml(e.title || "Notification");
+                    const safeMessage = escapeHtml(e.message || "New notification");
+                    const safePreview = e.message_preview ? escapeHtml(e.message_preview) : "";
 
                     item.innerHTML = `
-                    <div class="notification-icon">
-                        <i class="bi ${iconClass}"></i>
+                    <div class="notification-icon notif-icon-${visual.color}">
+                        <i class="bi ${visual.icon}"></i>
                     </div>
                     <div class="notification-content">
+                        <div class="notification-title-row">
+                            <span class="notif-type-tag tag-${visual.color}">${visual.tag}</span>
+                            <strong style="font-size:0.8rem;color:var(--dark);">${safeTitle}</strong>
+                        </div>
                         <p class="notification-message">
-                            ${e.title ? `<strong>${e.title}</strong><br>` : ""}
-                            ${e.message || "New notification"}
+                            ${safeMessage}
                         </p>
-                        ${e.message_preview
-                            ? `<p class="notification-preview" style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; font-style: italic;">${e.message_preview}</p>`
+                        ${safePreview
+                            ? `<p class="notification-preview">${safePreview}</p>`
                             : ""
                         }
-                        <span class="notification-time">Just now</span>
+                        <div class="notification-time"><i class="bi bi-clock"></i> Just now</div>
                     </div>
+                    <button class="notification-close" onclick="closeNotification('${e.id}')">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 `;
 
                     // Add Click Handler (Reuse logic from admin.blade.php)

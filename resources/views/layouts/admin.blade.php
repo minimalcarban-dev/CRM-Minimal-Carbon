@@ -28,7 +28,59 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @php
+        $viteHotPath = public_path('hot');
+        $useViteDevServer = false;
+        $viteManifest = null;
+
+        if (file_exists($viteHotPath)) {
+            $hotUrl = trim((string) file_get_contents($viteHotPath));
+            $hotHost = parse_url($hotUrl, PHP_URL_HOST);
+            $requestHost = request()->getHost();
+            $localHosts = ['localhost', '127.0.0.1', '::1'];
+
+            $useViteDevServer = (bool) $hotHost && (
+                $hotHost === $requestHost ||
+                (in_array($hotHost, $localHosts, true) && in_array($requestHost, $localHosts, true))
+            );
+        }
+
+        if (!$useViteDevServer) {
+            $manifestPath = public_path('build/manifest.json');
+            if (file_exists($manifestPath)) {
+                $viteManifest = json_decode((string) file_get_contents($manifestPath), true);
+            }
+        }
+    @endphp
+
+    @if($useViteDevServer)
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @elseif(is_array($viteManifest))
+        @php
+            $cssFiles = [];
+            $mainCss = $viteManifest['resources/css/app.css']['file'] ?? null;
+            $mainJs = $viteManifest['resources/js/app.js']['file'] ?? null;
+            $jsCss = $viteManifest['resources/js/app.js']['css'] ?? [];
+
+            if ($mainCss) {
+                $cssFiles[] = $mainCss;
+            }
+            foreach ($jsCss as $cssFile) {
+                if (!in_array($cssFile, $cssFiles, true)) {
+                    $cssFiles[] = $cssFile;
+                }
+            }
+        @endphp
+
+        @foreach($cssFiles as $cssFile)
+            <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
+        @endforeach
+        @if($mainJs)
+            <script type="module" src="{{ asset('build/' . $mainJs) }}"></script>
+        @endif
+    @else
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
     <link href="{{ asset('css/diamond.css') }}" rel="stylesheet">
     <link href="{{ asset('css/attributes.css') }}" rel="stylesheet">
     <link href="{{ asset('css/tracker.css') }}" rel="stylesheet">
@@ -2086,10 +2138,6 @@
                 font-size: 12px;
             }
 
-            #mainContent .welcome-actions {
-                display: unset;
-            }
-
             .section-header {
                 padding: 10px;
             }
@@ -2114,6 +2162,57 @@
             #mainContent .quick-link-card {
                 padding: 10px;
                 gap: 10px;
+            }
+        }
+
+        /* Mobile dropdown UX fix: stable, reachable, and non-overlapping with bottom nav */
+        @media (max-width: 768px) {
+            .notification-menu {
+                position: fixed;
+                top: calc(72px + 0.5rem);
+                left: 0.75rem;
+                right: 0.75rem;
+                width: auto;
+                margin-top: 0;
+                transform: none !important;
+                border-radius: 14px;
+                z-index: 2005;
+                max-height: calc(100dvh - 72px - 72px - 1rem);
+            }
+
+            .notification-list {
+                max-height: calc(100dvh - 72px - 72px - 140px);
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .profile-menu {
+                position: fixed;
+                top: calc(72px + 0.5rem);
+                right: 0.75rem;
+                left: auto;
+                width: min(320px, calc(100vw - 1.5rem));
+                margin-top: 0;
+                transform: none !important;
+                border-radius: 14px;
+                z-index: 2006;
+            }
+        }
+
+        @media (max-width: 575px) {
+            .notification-menu {
+                left: 0.5rem;
+                right: 0.5rem;
+                max-height: calc(100dvh - 72px - 72px - 0.75rem);
+            }
+
+            .notification-list {
+                max-height: calc(100dvh - 72px - 72px - 145px);
+            }
+
+            .profile-menu {
+                right: 0.5rem;
+                width: min(300px, calc(100vw - 1rem));
             }
         }
 

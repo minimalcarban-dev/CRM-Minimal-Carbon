@@ -208,8 +208,7 @@
                                     <td><input type="number" step="0.01" name="items[{{$i}}][rate]" class="input-cell rate"
                                             value="{{ $it['rate'] ?? '' }}" placeholder="0.00"></td>
                                     <td><input type="number" step="0.01" name="items[{{$i}}][amount]" class="input-cell amount"
-                                            value="{{ $it['amount'] ?? '' }}"></td>
-                                    <td class="td-action">
+                                            value="{{ $it['amount'] ?? '' }}" readonly></td>                                    <td class="td-action">
                                         <button type="button" class="btn-remove remove-row" title="Remove Item">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -469,7 +468,6 @@
         });
     })();
 </script>
-
 <style>
     :root {
         --primary: #6366f1;
@@ -1252,7 +1250,11 @@
                 return;
             }
             fetch('/admin/companies/' + id)
-                .then(function (r) { return r.json(); })
+            fetch('/admin/companies/' + id)
+                .then(function (r) {
+                    if (!r.ok) throw new Error('Failed to fetch company');
+                    return r.json();
+                })
                 .then(function (data) {
                     document.getElementById('company_gst').innerText = data.gst_no || '—';
                     document.getElementById('company_gst').dataset.state = data.state_code || '';
@@ -1263,10 +1265,12 @@
                     recalcAll();
                 }).catch(function () {
                     console.error('company fetch failed');
+                    document.getElementById('company_gst').innerText = '—';
+                    document.getElementById('company_address').innerText = '—';
+                    document.getElementById('company_bank').innerText = '—';
+                    alert('Failed to load company details. Please try again.');
                 });
-        });
-
-        // initial recalc
+        });        // initial recalc
         setTimeout(recalcAll, 200);
 
         // Handle region change - update currency symbol and GST visibility
@@ -1317,4 +1321,4 @@
             }
         }
     })();
-</script
+</script>
