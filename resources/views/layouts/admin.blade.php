@@ -1171,6 +1171,7 @@
             align-items: center;
             gap: 0.5rem;
             flex: 1;
+            min-width: 0;
         }
 
         .navbar-title {
@@ -1796,7 +1797,86 @@
             }
 
             .navbar-title {
-                font-size: 1.25rem;
+                font-size: 0.95rem;
+                font-weight: 600;
+                line-height: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: clamp(90px, 34vw, 150px);
+            }
+
+            /* Keep right controls compact on mobile */
+            .greeting-wrapper,
+            .live-clock {
+                display: none !important;
+            }
+
+            .navbar-right {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: nowrap;
+            }
+
+            .navbar-left {
+                min-width: 0;
+                gap: 0.5rem;
+            }
+
+            .navbar-right .dark-mode-btn,
+            .navbar-right .notification-btn,
+            .navbar-right>a.dark-mode-btn,
+            .navbar-right .profile-btn {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                padding: 0;
+                border-radius: 12px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+            }
+
+            .navbar-right .dark-mode-btn i,
+            .navbar-right .notification-btn i,
+            .navbar-right>a.dark-mode-btn i {
+                width: 18px;
+                height: 18px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                line-height: 1;
+            }
+
+            .navbar-right .profile-btn {
+                overflow: hidden;
+            }
+
+            .navbar-right .profile-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
+                line-height: 1;
+            }
+
+            .navbar-right #darkModeBtn {
+                order: 1;
+            }
+
+            .navbar-right .notification-dropdown {
+                order: 2;
+                display: block !important;
+            }
+
+            .navbar-right>a.dark-mode-btn {
+                order: 3;
+            }
+
+            .navbar-right .profile-dropdown {
+                order: 4;
             }
         }
 
@@ -1819,36 +1899,91 @@
                 display: none;
             }
 
-            .notification-btn {
-                width: 34px;
-                height: 34px;
-            }
-
             .notification-badge {
                 font-size: 7px;
                 padding: 1px 5px;
-            }
-
-            .profile-btn {
-                padding: 5px 7px;
-                font-size: 13px;
-            }
-
-            .profile-avatar {
-                width: 23px;
-                height: 23px;
-                font-size: 11px;
-                border-radius: 50%;
             }
 
             .navbar-right {
                 gap: 10px;
             }
 
+            /* In small mobile, always show bell next to dark mode and hide date/clock */
+            .greeting-wrapper,
+            .live-clock {
+                display: none !important;
+            }
+
+            .navbar-right {
+                gap: 8px;
+                flex-wrap: nowrap;
+            }
+
+            .navbar-right .dark-mode-btn,
+            .navbar-right .notification-btn,
+            .navbar-right>a.dark-mode-btn,
+            .navbar-right .profile-btn {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                padding: 0;
+            }
+
+            .navbar-right .dark-mode-btn i,
+            .navbar-right .notification-btn i,
+            .navbar-right>a.dark-mode-btn i {
+                width: 17px;
+                height: 17px;
+                font-size: 17px;
+                line-height: 1;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .navbar-right .profile-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 11px;
+                line-height: 1;
+                border-radius: 50%;
+            }
+
+            .navbar-right #darkModeBtn {
+                order: 1;
+            }
+
+            .navbar-right .notification-dropdown {
+                order: 2;
+                display: block !important;
+            }
+
+            .navbar-right .notification-btn {
+                display: flex !important;
+            }
+
+            .navbar-right>a.dark-mode-btn {
+                order: 3;
+            }
+
+            .navbar-right .profile-dropdown {
+                order: 4;
+            }
+
             .notification-menu {
-                width: calc(100vw - 28px);
-                left: 0;
-                transform: translateX(-63%);
+                position: fixed;
+                top: 74px;
+                left: 8px;
+                right: 8px;
+                width: auto;
+                max-height: calc(100vh - 86px);
+                transform: none !important;
+                border-radius: 14px;
+                z-index: 2005;
+            }
+
+            .notification-list {
+                max-height: calc(100vh - 170px);
             }
 
             .notification-header {
@@ -1983,7 +2118,7 @@
         }
 
         /* ══════════════════════════════════════════════
-           NEW ENHANCEMENTS
+            NEW ENHANCEMENTS
         ══════════════════════════════════════════════ */
 
         /* ── SIDEBAR NAV SECTION LABELS ── */
@@ -2131,7 +2266,7 @@
             }
 
             .mobile-search-btn {
-                display: flex;
+                display: none !important;
             }
         }
 
@@ -2574,16 +2709,15 @@
         </button>
 
         <!-- Sidebar Header -->
-        <div class="sidebar-header">
+        <!-- <div class="sidebar-header">
             <div class="logo-section">
-                <!-- Updated logo handling to show name next to logo, or keep the existing logo image if it has the name -->
                 <a href="{{ route('admin.dashboard') }}"
                     style="display:flex; align-items:center; gap:0.5rem; text-decoration:none;">
                     <img src="{{ asset('images/Luxurious-Logo.png') }}" alt="Logo" class="logo-icon">
                     <span class="logo-text">Carbon</span>
                 </a>
             </div>
-        </div>
+        </div> -->
 
         <!-- Navigation -->
         <div class="nav-section">
@@ -3036,19 +3170,10 @@
                     <span class="global-search-kbd">⌘K</span>
                 </div>
 
-                {{-- Mobile Search Icon Button --}}
-                <button class="mobile-search-btn" id="mobileSearchBtn" onclick="openCommandPalette()"
-                    title="Search modules">
-                    <i class="bi bi-search"></i>
-                </button>
             </div>
 
             <div class="navbar-right">
                 {{-- Greeting + Clock --}}
-
-                <!-- <span class="greeting-chip" id="greetingChip"></span>
-                <span class="live-clock" id="liveClock"></span> -->
-
                 <div class="greeting-wrapper">
                     <span class="greeting-chip" id="greetingChip"></span>
                     <span class="live-clock" id="liveClock"></span>
@@ -3341,7 +3466,7 @@
     </div>
 
     <!-- ── SPEED DIAL ── -->
-    <div class="speed-dial" id="speedDial">
+    <!-- <div class="speed-dial" id="speedDial">
         <button class="speed-dial-main" id="speedDialBtn" title="Quick actions">
             <i class="bi bi-plus-lg"></i>
         </button>
@@ -3371,7 +3496,7 @@
                 </div>
             @endif
         </div>
-    </div>
+    </div> -->
 
     <!-- ── MOBILE BOTTOM NAV ── -->
     <nav class="mobile-bottom-nav">

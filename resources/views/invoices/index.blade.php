@@ -315,6 +315,82 @@
             --shadow-lg: rgba(0, 0, 0, 0.15);
         }
 
+        [data-theme="dark"] .orders-management-container {
+            background: var(--bg-body, #0f172a);
+        }
+
+        [data-theme="dark"] .page-header,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .filter-section,
+        [data-theme="dark"] .orders-table-card {
+            background: var(--bg-card, #1e293b) !important;
+            border-color: rgba(148, 163, 184, 0.34) !important;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+        }
+
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .stat-value,
+        [data-theme="dark"] .invoice-no,
+        [data-theme="dark"] .company-name,
+        [data-theme="dark"] .date-main,
+        [data-theme="dark"] .empty-title,
+        [data-theme="dark"] .orders-table td {
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] .breadcrumb-nav,
+        [data-theme="dark"] .breadcrumb-link,
+        [data-theme="dark"] .page-subtitle,
+        [data-theme="dark"] .stat-label,
+        [data-theme="dark"] .stat-trend,
+        [data-theme="dark"] .date-time,
+        [data-theme="dark"] .result-count,
+        [data-theme="dark"] .text-muted,
+        [data-theme="dark"] .empty-description {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .search-input,
+        [data-theme="dark"] .filter-select {
+            background: rgba(15, 23, 42, 0.62) !important;
+            border-color: rgba(148, 163, 184, 0.32) !important;
+            color: var(--text-primary, #f1f5f9) !important;
+        }
+
+        [data-theme="dark"] .search-input::placeholder {
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .btn-filter,
+        [data-theme="dark"] .btn-reset,
+        [data-theme="dark"] .action-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(148, 163, 184, 0.35);
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        [data-theme="dark"] .orders-table thead {
+            background: rgba(15, 23, 42, 0.75) !important;
+            border-bottom-color: rgba(148, 163, 184, 0.24) !important;
+        }
+
+        [data-theme="dark"] .orders-table th,
+        [data-theme="dark"] .th-content i {
+            color: var(--text-secondary, #94a3b8) !important;
+        }
+
+        [data-theme="dark"] .table-row {
+            border-bottom-color: rgba(148, 163, 184, 0.22);
+        }
+
+        [data-theme="dark"] .table-row:hover {
+            background: rgba(99, 102, 241, 0.1) !important;
+        }
+
+        [data-theme="dark"] .pagination-container {
+            border-top-color: rgba(148, 163, 184, 0.22);
+        }
+
         * {
             box-sizing: border-box;
         }

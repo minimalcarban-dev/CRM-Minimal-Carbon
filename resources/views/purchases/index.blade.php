@@ -3,7 +3,7 @@
 @section('title', 'Purchase Tracker')
 
 @section('content')
-    <div class="diamond-management-container tracker-page">
+    <div class="diamond-management-container tracker-page purchase-page">
         <!-- Page Header -->
         <div class="page-header">
             <div class="header-content">
@@ -217,6 +217,80 @@
 
     {{-- Date Range Picker Styles --}}
     @include('partials.daterangepicker-styles')
+
+    @push('styles')
+        <style>
+            [data-theme="dark"] #completeModal .modal-content {
+                background: var(--bg-card, #1e293b) !important;
+                border: 1px solid var(--border, rgba(148, 163, 184, 0.3));
+                box-shadow: 0 20px 40px rgba(2, 6, 23, 0.45) !important;
+            }
+
+            [data-theme="dark"] #completeModal .modal-content>div:first-child,
+            [data-theme="dark"] #completeModal .modal-content>form>div:first-child,
+            [data-theme="dark"] #completeModal .modal-content>form>div:last-child {
+                border-color: rgba(148, 163, 184, 0.25) !important;
+            }
+
+            [data-theme="dark"] #completeModal h3,
+            [data-theme="dark"] #completeModal label,
+            [data-theme="dark"] #completeModal small {
+                color: #e2e8f0 !important;
+            }
+
+            [data-theme="dark"] #completeModal .form-control {
+                background: rgba(15, 23, 42, 0.72) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                color: #e2e8f0 !important;
+            }
+
+            [data-theme="dark"] #completeModal .form-control::placeholder {
+                color: #64748b !important;
+            }
+
+            [data-theme="dark"] #completeModal button[type="button"] {
+                background: rgba(15, 23, 42, 0.72) !important;
+                border-color: rgba(148, 163, 184, 0.3) !important;
+                color: #cbd5e1 !important;
+            }
+
+            .modal-toggle-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: .5rem;
+                padding: .625rem .95rem;
+                border: 1px solid #cbd5e1;
+                border-radius: 10px;
+                background: #f8fafc;
+                color: #475569;
+                font-weight: 600;
+                transition: all .2s ease;
+            }
+
+            .modal-toggle-btn:hover {
+                border-color: #6366f1;
+                color: #4338ca;
+            }
+
+            #completeModal input[type="radio"]:checked + .modal-toggle-btn {
+                background: rgba(99, 102, 241, 0.12);
+                border-color: #6366f1;
+                color: #4338ca;
+            }
+
+            [data-theme="dark"] .modal-toggle-btn {
+                background: rgba(15, 23, 42, 0.72);
+                border-color: rgba(148, 163, 184, 0.3);
+                color: #cbd5e1;
+            }
+
+            [data-theme="dark"] #completeModal input[type="radio"]:checked + .modal-toggle-btn {
+                background: rgba(99, 102, 241, 0.2);
+                border-color: #818cf8;
+                color: #c7d2fe;
+            }
+        </style>
+    @endpush
 
     @push('scripts')
         <script>

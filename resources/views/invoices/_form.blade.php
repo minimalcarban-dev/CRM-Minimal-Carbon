@@ -853,6 +853,85 @@
         box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
     }
 
+    [data-theme="dark"] .invoice-form-container,
+    [data-theme="dark"] .form-card,
+    [data-theme="dark"] .card-header {
+        background: var(--bg-card, #1e293b) !important;
+        border-color: rgba(148, 163, 184, 0.34) !important;
+        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+    }
+
+    [data-theme="dark"] .card-body,
+    [data-theme="dark"] .table-responsive,
+    [data-theme="dark"] .items-table,
+    [data-theme="dark"] .tax-summary-grid,
+    [data-theme="dark"] .summary-total {
+        background: rgba(15, 23, 42, 0.62) !important;
+        border-color: rgba(148, 163, 184, 0.3) !important;
+    }
+
+    [data-theme="dark"] .card-title,
+    [data-theme="dark"] .form-label,
+    [data-theme="dark"] .tax-label,
+    [data-theme="dark"] .summary-value,
+    [data-theme="dark"] .detail-value {
+        color: var(--text-primary, #f1f5f9) !important;
+    }
+
+    [data-theme="dark"] .card-subtitle,
+    [data-theme="dark"] .summary-label,
+    [data-theme="dark"] .detail-label,
+    [data-theme="dark"] .tax-info-alert,
+    [data-theme="dark"] .text-muted {
+        color: var(--text-secondary, #94a3b8) !important;
+    }
+
+    [data-theme="dark"] .form-input,
+    [data-theme="dark"] .form-select,
+    [data-theme="dark"] .input-cell,
+    [data-theme="dark"] .tax-input {
+        background: rgba(15, 23, 42, 0.62) !important;
+        border-color: rgba(148, 163, 184, 0.32) !important;
+        color: var(--text-primary, #f1f5f9) !important;
+    }
+
+    [data-theme="dark"] .form-input::placeholder,
+    [data-theme="dark"] .input-cell::placeholder,
+    [data-theme="dark"] .tax-input::placeholder {
+        color: var(--text-secondary, #94a3b8) !important;
+    }
+
+    [data-theme="dark"] .form-input:focus,
+    [data-theme="dark"] .form-select:focus,
+    [data-theme="dark"] .input-cell:focus,
+    [data-theme="dark"] .tax-input:focus {
+        border-color: rgba(129, 140, 248, 0.7) !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18) !important;
+    }
+
+    [data-theme="dark"] .items-table thead,
+    [data-theme="dark"] .items-table th {
+        background: rgba(15, 23, 42, 0.75) !important;
+        color: var(--text-secondary, #94a3b8) !important;
+        border-color: rgba(148, 163, 184, 0.24) !important;
+    }
+
+    [data-theme="dark"] .items-table tbody tr:hover {
+        background: rgba(99, 102, 241, 0.1) !important;
+    }
+
+    [data-theme="dark"] .btn-remove,
+    [data-theme="dark"] .btn.btn-outline-secondary {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-color: rgba(148, 163, 184, 0.35) !important;
+        color: var(--text-secondary, #94a3b8) !important;
+    }
+
+    [data-theme="dark"] .btn-add-item {
+        background: linear-gradient(135deg, var(--primary, #6366f1), var(--primary-dark, #4f46e5)) !important;
+        color: #fff !important;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .invoice-form-container {

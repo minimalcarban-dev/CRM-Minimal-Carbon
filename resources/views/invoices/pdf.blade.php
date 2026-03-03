@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
             color: #1e293b;
             line-height: 1.4;
-            background: #f8fafc;
+            background: #f3f4f6;
         }
 
         /* Print Toolbar - Hidden when printing */
@@ -166,6 +166,8 @@
         .page-wrapper {
             padding-top: 84px;
             padding-bottom: 30px;
+            min-height: 100vh;
+            background: #f3f4f6;
         }
 
         @media print {
@@ -190,6 +192,7 @@
             border: 1px solid #000;
             border-radius: 8px;
             background: white;
+            color: #0f172a;
         }
 
         /* Header Styles */

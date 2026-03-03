@@ -276,9 +276,223 @@
         }
 
         @media (max-width: 768px) {
+            .analytics-container {
+                padding: 0 0.15rem;
+            }
+
+            .page-header {
+                padding: 0.85rem !important;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .header-left {
+                min-width: 0;
+            }
+
+            .breadcrumb-nav {
+                flex-wrap: wrap;
+                row-gap: 0.35rem;
+            }
+
+            .page-title {
+                font-size: 1.25rem;
+                line-height: 1.2;
+            }
+
+            .page-subtitle {
+                font-size: 0.82rem;
+            }
+
+            .header-right {
+                width: 100%;
+            }
+
+            .filter-select {
+                width: 100%;
+                min-height: 44px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+                gap: 0.6rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .kpi-card {
+                padding: 0.7rem 0.8rem;
+                gap: 0.65rem;
+                border-radius: 10px;
+                min-height: 70px;
+            }
+
+            .kpi-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                font-size: 0.95rem;
+            }
+
+            .kpi-value {
+                font-size: 1.35rem;
+                line-height: 1;
+            }
+
+            .kpi-label {
+                font-size: 0.74rem;
+                margin-bottom: 0;
+                line-height: 1.2;
+            }
+
             .charts-row {
                 grid-template-columns: 1fr;
+                gap: 0.7rem;
+                margin-bottom: 0.7rem;
             }
+
+            .chart-card {
+                padding: 0.85rem;
+                border-radius: 10px;
+            }
+
+            .chart-header {
+                margin-bottom: 0.8rem;
+            }
+
+            .chart-title {
+                font-size: 0.88rem;
+            }
+
+            .status-bar-item {
+                gap: 0.45rem;
+            }
+
+            .status-bar-label {
+                width: 60px;
+                font-size: 0.75rem;
+            }
+
+            .status-bar-value {
+                width: 28px;
+                font-size: 0.76rem;
+            }
+
+            .platform-pie {
+                gap: 0.9rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .pie-chart {
+                width: 88px;
+                height: 88px;
+                align-self: center;
+            }
+
+            .pie-legend {
+                width: 100%;
+                gap: 0.45rem;
+            }
+
+            .pie-legend-item {
+                font-size: 0.74rem;
+            }
+
+            .performers-scroll {
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .performers-table {
+                min-width: 100%;
+                table-layout: fixed;
+            }
+
+            .performers-table th,
+            .performers-table td {
+                padding: 0.55rem 0.4rem;
+                font-size: 0.7rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .performers-table th:nth-child(4),
+            .performers-table td:nth-child(4) {
+                display: none;
+            }
+
+            .performers-table th:nth-child(2),
+            .performers-table td:nth-child(2) {
+                width: 34%;
+            }
+
+            .kpi-icon.primary {
+                background: rgba(99, 102, 241, 0.18);
+                color: #818cf8;
+            }
+
+            .kpi-icon.success {
+                background: rgba(16, 185, 129, 0.18);
+                color: #34d399;
+            }
+
+            .kpi-icon.info {
+                background: rgba(59, 130, 246, 0.18);
+                color: #60a5fa;
+            }
+
+            .kpi-icon.warning {
+                background: rgba(245, 158, 11, 0.18);
+                color: #fbbf24;
+            }
+
+            .kpi-icon.danger {
+                background: rgba(239, 68, 68, 0.18);
+                color: #f87171;
+            }
+        }
+
+        @media (min-width: 430px) and (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        [data-theme="dark"] .analytics-container {
+            --dark: #e2e8f0;
+            --gray: #94a3b8;
+            --border: rgba(148, 163, 184, 0.28);
+            --light-gray: #0f172a;
+            --shadow: rgba(2, 6, 23, 0.45);
+        }
+
+        [data-theme="dark"] .kpi-card,
+        [data-theme="dark"] .chart-card {
+            background: #1b263b;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .status-bar-track {
+            background: #0f172a;
+        }
+
+        [data-theme="dark"] .performers-table th,
+        [data-theme="dark"] .performers-table td {
+            border-color: rgba(148, 163, 184, 0.28);
+        }
+
+        [data-theme="dark"] .filter-select {
+            background: #0f172a;
+            border: 2px solid rgba(148, 163, 184, 0.28);
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
         }
     </style>
 @endpush
@@ -431,46 +645,48 @@
                     <i class="bi bi-trophy"></i> Top Performers
                 </span>
             </div>
-            <table class="performers-table">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Agent</th>
-                        <th>Leads</th>
-                        <th>Completed</th>
-                        <th>Conversion</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($topAgents as $index => $agent)
+            <div class="performers-scroll">
+                <table class="performers-table">
+                    <thead>
                         <tr>
-                            <td>
-                                @if($index === 0)
-                                    <span class="rank-badge gold">🥇</span>
-                                @elseif($index === 1)
-                                    <span class="rank-badge silver">🥈</span>
-                                @elseif($index === 2)
-                                    <span class="rank-badge bronze">🥉</span>
-                                @else
-                                    {{ $index + 1 }}
-                                @endif
-                            </td>
-                            <td><strong>{{ $agent->name }}</strong></td>
-                            <td>{{ $agent->lead_count }}</td>
-                            <td>{{ $agent->completed_count }}</td>
-                            <td>
-                                {{ $agent->lead_count > 0 ? round($agent->completed_count / $agent->lead_count * 100) : 0 }}%
-                            </td>
+                            <th>Rank</th>
+                            <th>Agent</th>
+                            <th>Leads</th>
+                            <th>Completed</th>
+                            <th>Conversion</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: var(--gray);">
-                                No data available
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse($topAgents as $index => $agent)
+                            <tr>
+                                <td>
+                                    @if($index === 0)
+                                        <span class="rank-badge gold">🥇</span>
+                                    @elseif($index === 1)
+                                        <span class="rank-badge silver">🥈</span>
+                                    @elseif($index === 2)
+                                        <span class="rank-badge bronze">🥉</span>
+                                    @else
+                                        {{ $index + 1 }}
+                                    @endif
+                                </td>
+                                <td><strong>{{ $agent->name }}</strong></td>
+                                <td>{{ $agent->lead_count }}</td>
+                                <td>{{ $agent->completed_count }}</td>
+                                <td>
+                                    {{ $agent->lead_count > 0 ? round($agent->completed_count / $agent->lead_count * 100) : 0 }}%
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--gray);">
+                                    No data available
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 @endsection

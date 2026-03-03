@@ -3,7 +3,7 @@
 @section('title', 'Purchase Details')
 
 @section('content')
-    <div class="diamond-management-container tracker-page">
+    <div class="diamond-management-container tracker-page purchase-page">
         <div class="page-header">
             <div class="header-content">
                 <div class="header-left">
@@ -61,7 +61,7 @@
                         <span class="detail-label">Discount</span>
                         <span class="detail-value">{{ $purchase->discount_percent }}%</span>
                     </div>
-                    <div class="detail-item"
+                    <div class="detail-item detail-total-card"
                         style="grid-column: 1 / -1; text-align: center; padding: 1.5rem; background: var(--light-gray); border-radius: 12px;">
                         <span class="detail-label">Total Price</span>
                         <span class="detail-value text-success" style="font-size: 2rem;">
@@ -124,4 +124,13 @@
             </div>
         </div>
     </div>
+
+    @push('styles')
+        <style>
+            [data-theme="dark"] .tracker-page .detail-total-card {
+                background: rgba(15, 23, 42, 0.72) !important;
+                border: 1px solid rgba(148, 163, 184, 0.25);
+            }
+        </style>
+    @endpush
 @endsection
