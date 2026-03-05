@@ -3,7 +3,7 @@
 @section('title', 'Office Expenses')
 
 @section('content')
-    <div class="diamond-management-container tracker-page">
+    <div class="diamond-management-container tracker-page expense-page">
         <!-- Page Header -->
         <div class="page-header">
             <div class="header-content">
@@ -66,14 +66,14 @@
                 </div>
             </div>
             <!-- <div class="stat-card stat-card-info">
-                <div class="stat-icon"><i class="bi bi-bank"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label">All Time Balance</div>
-                    <div class="stat-value" style="color: {{ $totalBalance >= 0 ? '#10b981' : '#ef4444' }};">
-                        ₹{{ number_format($totalBalance, 0) }}
+                    <div class="stat-icon"><i class="bi bi-bank"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-label">All Time Balance</div>
+                        <div class="stat-value" style="color: {{ $totalBalance >= 0 ? '#10b981' : '#ef4444' }};">
+                            ₹{{ number_format($totalBalance, 0) }}
+                        </div>
                     </div>
-                </div>
-            </div> -->
+                </div> -->
         </div>
 
         <!-- Filter Section -->
@@ -102,16 +102,18 @@
                         value="{{ request('search') }}">
                 </div>
                 <div class="tracker-filter-actions">
-                    <span class="tracker-result-count">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>{{ $expenses->count() }}</strong> items
-                    </span>
-                    <a href="{{ route('expenses.index') }}" class="btn-tracker-reset">
-                        <i class="bi bi-arrow-counterclockwise"></i> Clear
-                    </a>
-                    <button type="submit" class="btn-tracker-apply">
-                        <i class="bi bi-funnel"></i> Apply
-                    </button>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end; width: 100%;">
+                        <span class="tracker-result-count" style="margin-right: auto;">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>{{ $expenses->total() }}</strong> items
+                        </span> 
+                        <a href="{{ route('expenses.index') }}" class="btn-tracker-reset">
+                            <i class="bi bi-arrow-counterclockwise"></i> Clear
+                        </a>
+                        <button type="submit" class="btn-tracker-apply">
+                            <i class="bi bi-funnel"></i> Apply
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

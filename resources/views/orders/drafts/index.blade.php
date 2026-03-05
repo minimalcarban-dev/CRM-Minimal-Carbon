@@ -198,7 +198,7 @@
                             @csrf
                             @method('DELETE')
                             <button type="button" class="btn-action btn-discard"
-                                onclick="confirmDeleteDraft({{ $draft->id }}, @json($draft->client_name ?? 'Unnamed Draft'))">
+                                onclick='confirmDeleteDraft({{ $draft->id }}, @json($draft->client_name ?? "Unnamed Draft"))'>
                                 <i class="bi bi-trash"></i>
                                 Discard
                             </button>
@@ -616,109 +616,104 @@
             height: 6px;
             background: var(--bg-body);
             border-radius: 3px;
+            overflow: hidden;
+        }
 
-            .progress-bar {
-                height: 6px;
-                background: var(--bg-body);
-                border-radius: 3px;
-                overflow: hidden;
-            }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--info));
+            border-radius: 3px;
+        }
 
-            .progress-fill {
-                height: 100%;
-                background: linear-gradient(90deg, var(--primary), var(--info));
-                border-radius: 3px;
-            }
+        .expiry-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--warning);
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-            .expiry-warning {
-                background: rgba(245, 158, 11, 0.1);
-                border: 1px solid rgba(245, 158, 11, 0.2);
-                border-radius: 8px;
-                padding: 0.5rem 1rem;
-                color: var(--warning);
-                font-size: 0.75rem;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
+        .draft-actions {
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            display: flex;
+            gap: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
 
-            .draft-actions {
-                padding: 1rem 1.5rem;
-                background: rgba(255, 255, 255, 0.03);
-                display: flex;
-                gap: 0.75rem;
-                border-top: 1px solid var(--border);
-            }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+        }
 
-            .btn-action {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.375rem;
-                padding: 0.5rem 1rem;
-                border-radius: 8px;
-                font-size: 0.875rem;
-                font-weight: 600;
-                cursor: pointer;
-                text-decoration: none;
-                border: none;
-            }
+        .btn-resume {
+            background: var(--primary);
+            color: white;
+        }
 
-            .btn-resume {
-                background: var(--primary);
-                color: white;
-            }
+        .btn-preview {
+            background: var(--bg-card);
+            color: var(--gray);
+            border: 1.5px solid var(--border);
+        }
 
-            .btn-preview {
-                background: var(--bg-card);
-                color: var(--gray);
-                border: 1.5px solid var(--border);
-            }
+        .btn-discard {
+            background: transparent;
+            color: var(--danger);
+            border: 1.5px solid rgba(239, 68, 68, 0.3);
+        }
 
-            .btn-discard {
-                background: transparent;
-                color: var(--danger);
-                border: 1.5px solid rgba(239, 68, 68, 0.3);
-            }
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
 
-            /* Empty State */
-            .empty-state {
-                text-align: center;
-                padding: 4rem 2rem;
-                background: var(--bg-card);
-                border-radius: 16px;
-                border: 1px solid var(--border);
-            }
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-body);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+            color: var(--success);
+        }
 
-            .empty-icon {
-                width: 80px;
-                height: 80px;
-                background: var(--bg-body);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 1.5rem;
-                font-size: 2.5rem;
-                color: var(--success);
-            }
+        .empty-title {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin: 0 0 0.5rem;
+        }
 
-            .empty-title {
-                font-size: 1.5rem;
-                color: var(--dark);
-                margin: 0 0 0.5rem;
-            }
+        .empty-description {
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+        }
 
-            .empty-description {
-                color: var(--gray);
-                margin-bottom: 1.5rem;
-            }
-
-            /* Pagination */
-            .pagination-container {
-                margin-top: 2rem;
-                display: flex;
-                justify-content: center;
-            }
+        /* Pagination */
+        .pagination-container {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+        }
     </style>
 
     <!-- JavaScript -->

@@ -88,8 +88,12 @@ class Expense extends Model
      */
     public function getCategoryNameAttribute(): string
     {
+        $category = $this->category ?? '';
+        if (empty($category)) {
+            return 'Uncategorized';
+        }
         $allCategories = array_merge(self::INCOME_CATEGORIES, self::EXPENSE_CATEGORIES);
-        return $allCategories[$this->category] ?? $this->category;
+        return $allCategories[$category] ?? (string) $category;
     }
 
     public function admin()
@@ -129,8 +133,8 @@ class Expense extends Model
         if (!$this->invoice_image) {
             return null;
         }
-        return is_array($this->invoice_image) 
-            ? ($this->invoice_image['url'] ?? null) 
+        return is_array($this->invoice_image)
+            ? ($this->invoice_image['url'] ?? null)
             : $this->invoice_image;
     }
 
