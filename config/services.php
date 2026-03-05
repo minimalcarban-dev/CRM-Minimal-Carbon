@@ -42,4 +42,9 @@ return [
         'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
     ],
 
+    // 17Track Shipping Tracking API
+    '17track' => [
+        'api_key' => env('SEVENTEEN_TRACK_API_KEY'),
+    ],
+
 ];

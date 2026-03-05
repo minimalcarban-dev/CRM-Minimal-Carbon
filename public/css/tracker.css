@@ -262,6 +262,7 @@
     border-radius: 16px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     overflow: visible;
+    min-width: 0;
 }
 
 .tracker-page .tracker-table {
@@ -467,10 +468,11 @@
     border-radius: 16px;
     padding: 1.25rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    min-width: 0;
 }
 
 .tracker-page .tracker-chart-card canvas {
-    max-width: 280px;
+    max-width: 100% !important;
     max-height: 280px;
     margin: 0 auto;
     display: block;
@@ -484,6 +486,28 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.tracker-page .tracker-chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+}
+
+.tracker-page .tracker-report-chart-layout {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.tracker-page .tracker-report-chart-canvas {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    height: 250px;
+}
+.tracker-page .tracker-report-legend {
+    width: 200px;
+    flex-shrink: 0;
 }
 
 /* Transaction Type Toggle - Scoped */
@@ -631,6 +655,21 @@
     gap: 0.5rem;
 }
 
+/* Report Header Forms */
+.tracker-page .tracker-report-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tracker-page .tracker-report-filter-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 /* Cash Flow Row */
 .tracker-page .tracker-cashflow-row {
     background: rgba(99, 102, 241, 0.03);
@@ -639,6 +678,27 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .tracker-page .page-header {
+        padding: 1.25rem;
+    }
+    .tracker-page .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.25rem;
+    }
+    .tracker-page .header-right,
+    .tracker-page .header-right .tracker-actions-stack,
+    .tracker-page .header-right .tracker-actions-row a,
+    .tracker-page .header-right .btn-primary-custom,
+    .tracker-page .header-right .btn-secondary-custom {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+    .tracker-page .tracker-actions-row {
+        flex-direction: column;
+        width: 100%;
+    }
     .tracker-page .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
@@ -646,13 +706,54 @@
         flex-direction: column;
         align-items: stretch;
     }
+    .tracker-page .tracker-filter-field.date-range-field {
+        min-width: 100%;
+        max-width: none;
+    }
     .tracker-page .tracker-filter-actions {
         margin-left: 0;
-        justify-content: flex-end;
+        justify-content: space-between;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    .tracker-page .tracker-filter-actions .btn-tracker-reset,
+    .tracker-page .tracker-filter-actions .btn-tracker-apply {
+        flex: 1;
+        justify-content: center;
     }
     .tracker-page .tracker-charts-row,
     .tracker-page .tracker-tables-row {
         grid-template-columns: 1fr;
+    }
+    /* Pie charts stay side-by-side on mobile */
+    .tracker-page .tracker-pie-charts-row {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.75rem;
+    }
+    .tracker-page .tracker-pie-charts-row .tracker-chart-card {
+        padding: 0.875rem 0.625rem;
+    }
+    .tracker-page .tracker-pie-charts-row .tracker-chart-title {
+        font-size: 0.8rem;
+        margin-bottom: 0.625rem;
+        gap: 0.3rem;
+    }
+    .tracker-page .tracker-pie-charts-row .tracker-report-chart-layout {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .tracker-page .tracker-pie-charts-row .tracker-report-chart-canvas {
+        height: 130px;
+    }
+    .tracker-page .tracker-pie-charts-row .tracker-report-legend {
+        width: 100%;
+        margin-top: 0;
+    }
+    .tracker-page .tracker-pie-charts-row .tracker-report-legend > div {
+        gap: 0.25rem !important;
+    }
+    .tracker-page .tracker-pie-charts-row .tracker-report-legend > div > div {
+        font-size: 0.72rem;
     }
     .tracker-page .tracker-form-actions {
         flex-direction: column;
@@ -667,17 +768,90 @@
     .tracker-page .tracker-type-btn {
         width: 100%;
     }
+    .tracker-page .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .tracker-page .tracker-report-header-right {
+        flex-direction: column;
+        width: 100%;
+        align-items: stretch;
+    }
+    .tracker-page .tracker-report-filter-form {
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    .tracker-page .tracker-report-filter-form select {
+        flex: 1;
+        min-width: 100px;
+    }
+    .tracker-page .tracker-report-filter-form button {
+        flex-shrink: 0;
+    }
+    .tracker-page .tracker-report-filter-form .btn-secondary-custom {
+        flex: 1;
+        justify-content: center;
+    }
+    .tracker-page .tracker-report-header-right .btn-secondary-custom {
+        width: 100%;
+        justify-content: center;
+    }
+    .tracker-page .tracker-report-chart-layout {
+        flex-direction: column;
+    }
+    .tracker-page .tracker-report-legend {
+        width: 100%;
+        margin-top: 1rem;
+    }
+    .tracker-page .tracker-report-comparison .tracker-chart-container {
+        height: 200px;
+    }
+    .tracker-page .tracker-report-comparison .tracker-table-card {
+        padding: 0.75rem !important;
+    }
+    .tracker-page .tracker-report-comparison .tracker-tables-row {
+        gap: 0.75rem;
+    }
 }
 
 @media (max-width: 576px) {
     .tracker-page .stats-grid {
         grid-template-columns: 1fr;
     }
+    .tracker-page .stats-grid.stats-grid-compact {
+        grid-template-columns: 1fr 1fr;
+    }
+    .tracker-page .stats-grid.stats-grid-compact .stat-card {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem 0.5rem;
+        gap: 0.5rem;
+    }
+    .tracker-page .stats-grid.stats-grid-compact .stat-icon {
+        margin-bottom: 0px;
+    }
+    .tracker-page .stats-grid.stats-grid-compact .stat-label {
+        font-size: 0.75rem;
+    }
+    .tracker-page .stats-grid.stats-grid-compact .stat-value {
+        font-size: 1.1rem;
+    }
     .tracker-page .stat-card {
         padding: 1rem;
     }
     .tracker-page .stat-value {
         font-size: 1.25rem;
+    }
+    .tracker-page .page-title {
+        font-size: 1.5rem;
+    }
+    .tracker-page .tracker-result-count {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        border-right: none;
+        padding-right: 0;
     }
 }
 
@@ -965,61 +1139,74 @@
 }
 
 /* ---------------- Purchases: Mobile Responsive ---------------- */
-.purchase-page .table-responsive {
+.purchase-page .table-responsive,
+.expense-page .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
-.purchase-page .tracker-table {
+.purchase-page .tracker-table,
+.expense-page .tracker-table {
     min-width: 980px;
 }
 
-.purchase-page .header-right {
+.purchase-page .header-right,
+.expense-page .header-right {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
-.purchase-page .form-actions {
+.purchase-page .form-actions,
+.expense-page .form-actions {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
 .purchase-page .custom-searchable-dropdown,
+.expense-page .custom-searchable-dropdown,
 .purchase-page .dropdown-input-wrapper,
-.purchase-page .dropdown-search-input {
+.expense-page .dropdown-input-wrapper,
+.purchase-page .dropdown-search-input,
+.expense-page .dropdown-search-input {
     width: 100%;
 }
 
-.purchase-page .tracker-action-btn {
+.purchase-page .tracker-action-btn,
+.expense-page .tracker-action-btn {
     min-width: 36px;
     min-height: 36px;
 }
 
-.purchase-page .stat-card {
+.purchase-page .stat-card,
+.expense-page .stat-card {
     border-left-width: 3px;
 }
 
 @media (max-width: 992px) {
-    .purchase-page .stats-grid {
+    .purchase-page .stats-grid,
+    .expense-page .stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .purchase-page .tracker-filter-form {
+    .purchase-page .tracker-filter-form,
+    .expense-page .tracker-filter-form {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         align-items: end;
         gap: 0.75rem;
     }
 
-    .purchase-page .tracker-filter-field.date-range-field {
+    .purchase-page .tracker-filter-field.date-range-field,
+    .expense-page .tracker-filter-field.date-range-field {
         min-width: 0;
         max-width: 100%;
         flex: initial;
     }
 
-    .purchase-page .tracker-filter-actions {
+    .purchase-page .tracker-filter-actions,
+    .expense-page .tracker-filter-actions {
         margin-left: 0;
         justify-content: flex-start;
         grid-column: 1 / -1;
@@ -1028,37 +1215,47 @@
 }
 
 @media (max-width: 768px) {
-    .purchase-page .header-content {
+    .purchase-page .header-content,
+    .expense-page .header-content {
         gap: 1rem;
     }
 
-    .purchase-page .header-right {
+    .purchase-page .header-right,
+    .expense-page .header-right {
         width: 100%;
     }
 
     .purchase-page .header-right .btn-primary-custom,
+    .expense-page .header-right .btn-primary-custom,
     .purchase-page .header-right .btn-secondary-custom,
+    .expense-page .header-right .btn-secondary-custom,
     .purchase-page .form-actions .btn-primary-custom,
-    .purchase-page .form-actions .btn-secondary-custom {
+    .expense-page .form-actions .btn-primary-custom,
+    .purchase-page .form-actions .btn-secondary-custom,
+    .expense-page .form-actions .btn-secondary-custom {
         width: 100%;
         justify-content: center;
     }
 
-    .purchase-page .tracker-filter {
+    .purchase-page .tracker-filter,
+    .expense-page .tracker-filter {
         padding: 5px;
         margin-bottom: 15px;
     }
 
-    .purchase-page .tracker-filter-form {
+    .purchase-page .tracker-filter-form,
+    .expense-page .tracker-filter-form {
         grid-template-columns: 1fr;
     }
 
-    .purchase-page .tracker-filter-actions {
+    .purchase-page .tracker-filter-actions,
+    .expense-page .tracker-filter-actions {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .purchase-page .tracker-result-count {
+    .purchase-page .tracker-result-count,
+    .expense-page .tracker-result-count {
         border-right: 0;
         margin-right: 0;
         padding-right: 0;
@@ -1067,7 +1264,9 @@
     }
 
     .purchase-page .btn-tracker-reset,
-    .purchase-page .btn-tracker-apply {
+    .expense-page .btn-tracker-reset,
+    .purchase-page .btn-tracker-apply,
+    .expense-page .btn-tracker-apply {
         width: 100%;
         justify-content: center;
         min-height: 36px;
@@ -1075,13 +1274,15 @@
         font-size: 12px;
     }
 
-    .purchase-page .stats-grid {
+    .purchase-page .stats-grid,
+    .expense-page .stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.5rem;
         margin-bottom: 15px;
     }
 
-    .purchase-page .stat-card {
+    .purchase-page .stat-card,
+    .expense-page .stat-card {
         padding: 5px 12px;
         border-left-width: 2px;
         border-radius: 12px;
@@ -1089,58 +1290,94 @@
         box-shadow: none;
     }
 
-    .purchase-page .stat-icon {
+    .purchase-page .stat-icon,
+    .expense-page .stat-icon {
         display: none;
     }
 
-    .purchase-page .stat-label {
+    .purchase-page .stat-label,
+    .expense-page .stat-label {
         font-size: 10px;
         margin-bottom: 0;
         letter-spacing: 0.3px;
     }
 
-    .purchase-page .stat-value {
+    .purchase-page .stat-value,
+    .expense-page .stat-value {
         font-size: 0.95rem;
         line-height: 1.2;
     }
 
     .purchase-page .tracker-filter-input,
+    .expense-page .tracker-filter-input,
     .purchase-page .tracker-filter-select,
-    .purchase-page .date-range-wrapper .date-range-input {
+    .expense-page .tracker-filter-select,
+    .purchase-page .date-range-wrapper .date-range-input,
+    .expense-page .date-range-wrapper .date-range-input {
         padding: 5px 10px;
         font-size: 12px;
         height: 36px;
     }
 
-    .purchase-page .section-body {
+    .purchase-page .section-body,
+    .expense-page .section-body {
         padding: 1rem;
     }
 
     .purchase-page .form-grid,
-    .purchase-page .detail-grid {
+    .expense-page .form-grid,
+    .purchase-page .detail-grid,
+    .expense-page .detail-grid,
+    .purchase-page .tracker-charts-row,
+    .expense-page .tracker-charts-row,
+    .purchase-page .tracker-tables-row,
+    .expense-page .tracker-tables-row {
         grid-template-columns: 1fr !important;
         gap: 1rem;
     }
+    /* Pie chart rows stay 2-col on mobile even in expense-page context */
+    .expense-page .tracker-pie-charts-row {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.75rem;
+    }
 
-    .purchase-page .payment-toggle {
+    .tracker-page .tracker-report-chart-layout {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tracker-page .tracker-report-legend {
+        width: 100%;
+    }
+
+    .tracker-page .tracker-report-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .purchase-page .payment-toggle,
+    .expense-page .payment-toggle {
         display: grid;
         grid-template-columns: 1fr;
         gap: 0.5rem;
     }
 
-    .purchase-page .payment-toggle .toggle-btn {
+    .purchase-page .payment-toggle .toggle-btn,
+    .expense-page .payment-toggle .toggle-btn {
         width: 100%;
         min-height: 44px;
         justify-content: center;
         padding: 0.75rem 1rem;
     }
 
-    .purchase-page .tracker-action-btn {
+    .purchase-page .tracker-action-btn,
+    .expense-page .tracker-action-btn {
         min-width: 40px;
         min-height: 40px;
     }
 
-    .purchase-page #completeModal .modal-content {
+    .purchase-page #completeModal .modal-content,
+    .expense-page #completeModal .modal-content {
         width: calc(100% - 1rem) !important;
         margin: 0.5rem !important;
         max-height: calc(100vh - 1rem);
@@ -1148,68 +1385,106 @@
     }
 
     .purchase-page .tracker-filter,
+    .expense-page .tracker-filter,
     .purchase-page .tracker-table-card,
-    .purchase-page .form-section-card {
+    .expense-page .tracker-table-card,
+    .purchase-page .form-section-card,
+    .expense-page .form-section-card {
         border-radius: 12px;
     }
 
-    .purchase-page .stat-card:hover {
+    .purchase-page .stat-card:hover,
+    .expense-page .stat-card:hover {
         transform: none;
     }
 }
 
 @media (max-width: 576px) {
-    .purchase-page {
+    .purchase-page,
+    .expense-page {
         padding-left: 0.5rem;
         padding-right: 0.5rem;
     }
 
-    .purchase-page .page-header {
+    .purchase-page .page-header,
+    .expense-page .page-header {
         padding: 15px;
         margin-bottom: 15px;
     }
 
-    .purchase-page .page-title {
+    .purchase-page .page-title,
+    .expense-page .page-title {
         font-size: 17px;
     }
 
-    .purchase-page .stats-grid {
+    .purchase-page .stats-grid,
+    .expense-page .stats-grid {
         gap: 0.5rem;
         margin-bottom: 15px;
+        grid-template-columns: 1fr;
+    }
+    /* Keep compact stats grid 2-col on report pages */
+    .expense-page .stats-grid.stats-grid-compact {
+        grid-template-columns: 1fr 1fr;
+    }
+    /* Pie chart row: even smaller canvas on very small screens */
+    .expense-page .tracker-pie-charts-row {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem;
+    }
+    .expense-page .tracker-pie-charts-row .tracker-chart-card {
+        padding: 0.75rem 0.5rem;
+    }
+    .expense-page .tracker-pie-charts-row .tracker-chart-title {
+        font-size: 0.72rem;
+    }
+    .expense-page .tracker-pie-charts-row .tracker-report-chart-canvas {
+        height: 110px;
+    }
+    .expense-page .tracker-pie-charts-row .tracker-report-legend > div > div {
+        font-size: 0.75rem;
     }
 
-    .purchase-page .stat-card {
+    .purchase-page .stat-card,
+    .expense-page .stat-card {
         padding: 5px 12px;
         gap: 5px;
         border-left-width: 2px;
     }
 
-    .purchase-page .stat-icon {
+    .purchase-page .stat-icon,
+    .expense-page .stat-icon {
         display: none;
     }
 
-    .purchase-page .stat-label {
+    .purchase-page .stat-label,
+    .expense-page .stat-label {
         font-size: 10px;
     }
 
-    .purchase-page .stat-value {
+    .purchase-page .stat-value,
+    .expense-page .stat-value {
         font-size: 0.95rem;
-        font-weight: 650;
+        font-weight: 600;
     }
 
-    .purchase-page .tracker-table {
+    .purchase-page .tracker-table,
+    .expense-page .tracker-table {
         min-width: 860px;
     }
 
     .purchase-page .tracker-table th,
-    .purchase-page .tracker-table td {
+    .expense-page .tracker-table th,
+    .purchase-page .tracker-table td,
+    .expense-page .tracker-table td {
         padding: 0.75rem 0.7rem;
         font-size: 0.82rem;
     }
 }
 
 @media (max-width: 768px) {
-    [data-theme="dark"] .purchase-page .stat-card {
+    [data-theme="dark"] .purchase-page .stat-card,
+    .expense-page .stat-card {
         border-color: rgba(148, 163, 184, 0.2);
         box-shadow: none;
     }

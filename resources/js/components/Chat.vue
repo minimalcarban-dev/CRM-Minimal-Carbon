@@ -327,10 +327,6 @@
                                         <div
                                             v-if="message.metadata?.reply_to_id"
                                             class="reply-inline rounded-2"
-                                            style="
-                                                background: #dde7ff;
-                                                cursor: pointer;
-                                            "
                                             @click="
                                                 scrollToMessageById(
                                                     message.metadata
@@ -568,88 +564,100 @@
                     </div>
                 </div>
 
-                <!-- Input Row -->
-                <div class="input-row">
-                    <input
-                        type="file"
-                        ref="fileInput"
-                        @change="handleFiles"
-                        multiple
-                        style="display: none"
-                    />
-                    <button
-                        @click="$refs.fileInput.click()"
-                        class="btn-attach"
-                        title="Attach files"
-                    >
-                        <i class="bi bi-paperclip"></i>
-                    </button>
-                    <div
-                        :class="[
-                            'input-with-suggestions',
-                            { 'has-reply': !!replyTo },
-                        ]"
-                    >
-                        <div v-if="replyTo" class="reply-chip">
-                            <div class="reply-title">
+                <!-- Input Box: reply (optional) + textarea row — one unified container -->
+                <div
+                    class="input-box-wrapper"
+                    :class="{ 'has-reply': !!replyTo }"
+                >
+                    <!-- Reply Preview (inside the box, top portion) -->
+                    <div v-if="replyTo" class="reply-bar">
+                        <div class="reply-bar-icon">
+                            <i class="bi bi-arrow-return-right"></i>
+                        </div>
+                        <div class="reply-bar-content">
+                            <div class="reply-bar-title">
                                 Replying to
                                 {{ replyTo.sender?.name || "message" }}
                             </div>
-                            <div class="reply-preview">
-                                {{ replyTo.body?.slice(0, 80) || "Attachment" }}
+                            <div class="reply-bar-preview">
+                                "{{
+                                    replyTo.body?.slice(0, 80) || "Attachment"
+                                }}"
                             </div>
-                            <button
-                                class="reply-cancel"
-                                @click="replyTo = null"
-                                title="Cancel reply"
-                            >
-                                <i class="bi bi-x"></i>
-                            </button>
                         </div>
-                        <textarea
-                            v-model="newMessage"
-                            @keydown="onKeyDownInEditor"
-                            @input="onEditorInput"
-                            :placeholder="mobileInputPlaceholder"
-                            ref="messageInput"
-                            class="message-textarea"
-                            style="width: 100%"
-                            rows="1"
-                        ></textarea>
-
-                        <div
-                            v-if="mentionOpen && mentionItems.length"
-                            class="mention-popover"
+                        <button
+                            class="reply-bar-cancel"
+                            @click="replyTo = null"
+                            title="Cancel reply"
                         >
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+
+                    <!-- Bottom row: attach + textarea + send -->
+                    <div class="input-row">
+                        <input
+                            type="file"
+                            ref="fileInput"
+                            @change="handleFiles"
+                            multiple
+                            style="display: none"
+                        />
+                        <button
+                            @click="$refs.fileInput.click()"
+                            class="btn-attach"
+                            title="Attach files"
+                        >
+                            <i class="bi bi-paperclip"></i>
+                        </button>
+                        <div class="input-with-suggestions">
+                            <textarea
+                                v-model="newMessage"
+                                @keydown="onKeyDownInEditor"
+                                @input="onEditorInput"
+                                :placeholder="mobileInputPlaceholder"
+                                ref="messageInput"
+                                class="message-textarea"
+                                style="width: 100%"
+                                rows="1"
+                            ></textarea>
+
                             <div
-                                v-for="(m, i) in mentionItems"
-                                :key="m.id"
-                                :class="[
-                                    'mention-item',
-                                    { active: i === mentionIndex },
-                                ]"
-                                @mousedown.prevent="pickMention(m)"
+                                v-if="mentionOpen && mentionItems.length"
+                                class="mention-popover"
                             >
-                                <span class="mention-avatar">{{
-                                    avatarInitials(m.name)
-                                }}</span>
-                                <div class="mention-info">
-                                    <div class="mention-name">{{ m.name }}</div>
-                                    <div class="mention-email">
-                                        {{ m.email }}
+                                <div
+                                    v-for="(m, i) in mentionItems"
+                                    :key="m.id"
+                                    :class="[
+                                        'mention-item',
+                                        { active: i === mentionIndex },
+                                    ]"
+                                    @mousedown.prevent="pickMention(m)"
+                                >
+                                    <span class="mention-avatar">{{
+                                        avatarInitials(m.name)
+                                    }}</span>
+                                    <div class="mention-info">
+                                        <div class="mention-name">
+                                            {{ m.name }}
+                                        </div>
+                                        <div class="mention-email">
+                                            {{ m.email }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <button
+                            @click="sendMessage"
+                            :disabled="!canSendMessage"
+                            class="btn-send"
+                            title="Send message"
+                        >
+                            <i class="bi bi-send-fill"></i>
+                        </button>
                     </div>
-                    <button
-                        @click="sendMessage"
-                        :disabled="!canSendMessage"
-                        class="btn-send"
-                        title="Send message"
-                    >
-                        <i class="bi bi-send-fill"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -2220,21 +2228,55 @@ export default {
             textarea.style.height = newHeight + "px";
         };
 
+        // const onEditorInput = (e) => {
+        //     handleTyping();
+        //     autoResizeTextarea(); // Auto-resize on input
+        //     const val = newMessage.value;
+        //     const caret = e.target.selectionStart;
+        //     const before = val.slice(0, caret);
+        //     // Mention trigger: @ followed by name characters (no spaces)
+        //     const match = before.match(/(^|\s)@([\w.\-]*)$/);
+        //     if (match) {
+        //         mentionQuery.value = match[2] || "";
+        //         updateMentionList();
+        //     } else {
+        //         mentionOpen.value = false;
+        //     }
+        // };
+
         const onEditorInput = (e) => {
-            handleTyping();
-            autoResizeTextarea(); // Auto-resize on input
-            const val = newMessage.value;
-            const caret = e.target.selectionStart;
-            const before = val.slice(0, caret);
-            // Mention trigger: @ followed by name characters (no spaces)
-            const match = before.match(/(^|\s)@([\w.\-]*)$/);
-            if (match) {
-                mentionQuery.value = match[2] || "";
-                updateMentionList();
-            } else {
-                mentionOpen.value = false;
+    handleTyping();
+    autoResizeTextarea();
+    
+    const val = newMessage.value;
+    const caret = e.target.selectionStart;
+    const before = val.slice(0, caret);
+    const match = before.match(/(^|\s)@([\w.\-]*)$/);
+    
+    if (match) {
+        mentionQuery.value = match[2] || "";
+        updateMentionList();
+        
+        // ✅ Position mention popup dynamically
+        nextTick(() => {
+            const textarea = messageInput.value;
+            const popup = document.querySelector('.mention-popover');
+            
+            if (textarea && popup && mentionOpen.value) {
+                const rect = textarea.getBoundingClientRect();
+                
+                // Position popup above the textarea (fixed positioning)
+                popup.style.position = 'fixed';
+                popup.style.left = `${rect.left}px`;
+                popup.style.bottom = `${window.innerHeight - rect.top + 10}px`;
+                popup.style.width = `${Math.min(400, rect.width)}px`;
+                popup.style.zIndex = '9999';
             }
-        };
+        });
+    } else {
+        mentionOpen.value = false;
+    }
+};
 
         const onKeyDownInEditor = (e) => {
             // If mention popover is open, intercept navigation/selection keys
@@ -3780,6 +3822,17 @@ export default {
     overflow: hidden;
 }
 
+[data-theme="dark"] .chat-container,
+[data-theme="dark"] .chat-main,
+[data-theme="dark"] .channels-sidebar {
+    background: transparent !important;
+}
+
+[data-theme="dark"] .sidebar-header {
+    background: transparent !important;
+    border-color: var(--gray-700) !important;
+}
+
 .sidebar-header {
     padding: 1.25rem;
     border-bottom: 2px solid var(--gray-200);
@@ -4528,20 +4581,14 @@ export default {
 /* Message Input */
 .message-input-container {
     border-top: 0px solid var(--gray-200);
-    padding: 2rem 1.2rem;
-    /* background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.82) 0%,
-        rgba(255, 255, 255, 0.97) 40%,
-        #ffffff 100%
-    ); */
-    /* Keep the input visible when scrolling messages on small screens */
+    padding: 0rem 5px;
     position: sticky;
-    bottom: 0;
+    bottom: 10px;
     z-index: 30;
     width: 100%;
-    display: block;
-    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 .attachments-preview {
@@ -4582,25 +4629,51 @@ export default {
     background: var(--danger);
 }
 
-.message-input-container .input-row {
+/* Unified input box: wraps reply-bar (optional) + input-row */
+.input-box-wrapper {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 60px;
-    background: #ffffff;
-    border: 1.5px solid #d9deea;
+    flex-direction: column;
+    background: var(--bs-body-bg, #ffffff);
+    border: 1.5px solid var(--bs-border-color, #d9deea);
     border-radius: 20px;
-    padding: 0.5rem 0.58rem 0.5rem 0.62rem;
     box-shadow:
         0 8px 22px rgba(15, 23, 42, 0.08),
         0 1px 2px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s,
+        background-color 0.3s;
 }
 
-.message-input-container .input-row:focus-within {
+[data-theme="dark"] .input-box-wrapper {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: var(--gray-700);
+    box-shadow: none;
+}
+
+.input-box-wrapper:focus-within {
     border-color: #a5b4fc;
     box-shadow:
         0 0 0 4px rgba(99, 102, 241, 0.13),
         0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="dark"] .input-box-wrapper:focus-within {
+    border-color: var(--bs-primary, #6366f1);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.message-input-container .input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    min-height: 50px;
+    padding: 0.5rem 0.58rem 0.5rem 0.62rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    align-items: center;
 }
 
 .btn-attach {
@@ -4651,23 +4724,16 @@ export default {
     min-width: 0; /* CRITICAL: prevents textarea intrinsic width from breaking flex container causing right-padding to disappear on mobile */
 }
 
-.input-with-suggestions.has-reply {
-    padding-top: 64px;
-}
-
 .mention-popover {
-    position: absolute;
-    left: 0;
-    bottom: 100%;
-    margin-bottom: 6px;
+    position: fixed; /* ✅ CHANGED from absolute to fixed */
+    /* left, bottom, width will be set by JavaScript */
     background: white;
     border: 2px solid var(--gray-200);
     border-radius: 12px;
-    box-shadow: var(--shadow);
-    width: 100%;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     max-height: 220px;
     overflow-y: auto;
-    z-index: 20;
+    z-index: 9999; /* ✅ Very high z-index */
 }
 
 .mention-item {
@@ -4721,19 +4787,98 @@ export default {
     cursor: pointer;
 }
 
-.reply-chip {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    top: 6px;
-    background: var(--gray-100);
-    border: 1px solid var(--gray-200);
-    border-radius: 10px;
-    padding: 8px 36px 8px 12px;
-    font-size: 0.8125rem;
-    color: var(--gray-700);
+/* Reply bar — sits seamlessly integrated above the input */
+.reply-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    padding: 10px 12px 2px 14px;
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+    animation: slideDown 0.12s ease-out;
 }
 
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reply-bar-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-500);
+    font-size: 1.1rem;
+    padding-bottom: 2px;
+}
+
+.reply-bar-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.reply-bar-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 2px;
+}
+
+[data-theme="dark"] .reply-bar-title {
+    color: var(--gray-400);
+}
+
+.reply-bar-preview {
+    font-size: 0.88rem;
+    color: var(--gray-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-style: italic;
+}
+
+[data-theme="dark"] .reply-bar-preview {
+    color: var(--gray-500);
+}
+
+.reply-bar-cancel {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--gray-500);
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    width: 28px;
+    height: 28px;
+    transition: all 0.15s;
+}
+
+.reply-bar-cancel:hover {
+    background: var(--gray-200);
+    color: var(--gray-800);
+}
+
+[data-theme="dark"] .reply-bar-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--gray-300);
+}
+
+/* Legacy classes kept for backward compat (message bubble reply display) */
 .reply-title {
     font-weight: 700;
     margin-bottom: 2px;
@@ -4745,38 +4890,58 @@ export default {
     text-overflow: ellipsis;
 }
 
-.reply-cancel {
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: var(--gray-600);
-}
-
 .reply-inline {
     display: flex;
     gap: 8px;
     align-items: flex-start;
     margin-bottom: 6px;
     transition: all 0.2s;
+    background: #f1f5f9;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+}
+
+.own-message .reply-inline {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] .reply-inline {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .own-message .reply-inline {
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .reply-inline:hover {
-    background: #e5e7eb !important;
+    background: #e2e8f0;
     transform: translateX(2px);
+}
+
+.own-message .reply-inline:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .own-message .reply-inline:hover {
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .reply-inline-bar {
     width: 3px;
     background: var(--primary);
     border-radius: 2px;
+    align-self: stretch;
+}
+
+[data-theme="dark"] .own-message .reply-inline-bar,
+.own-message .reply-inline-bar {
+    background: rgba(255, 255, 255, 0.6);
 }
 
 .reply-inline-content {
     flex: 1;
-    padding-left: 4px;
+    padding-left: 2px;
     padding-right: 8px;
 }
 
@@ -4784,11 +4949,41 @@ export default {
     font-size: 0.75rem;
     font-weight: 700;
     color: var(--gray-600);
+    margin-bottom: 2px;
+}
+
+.own-message .reply-inline-title {
+    color: var(--primary-dark);
+}
+
+[data-theme="dark"] .reply-inline-title {
+    color: var(--gray-300);
+}
+
+[data-theme="dark"] .own-message .reply-inline-title {
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .reply-inline-text {
     font-size: 0.8125rem;
     color: var(--gray-600);
+    line-height: 1.3;
+}
+
+.own-message .reply-inline-text {
+    color: var(--gray-800);
+}
+
+[data-theme="dark"] .reply-inline-text {
+    color: var(--gray-400);
+}
+
+[data-theme="dark"] .own-message .reply-inline-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .reply-inline-text {
+    color: var(--gray-400);
 }
 
 /* Message highlight animation when jumping to replied message */
@@ -5668,8 +5863,7 @@ export default {
         right: 12px;
         bottom: calc(60px + env(safe-area-inset-bottom));
         z-index: 90;
-        padding: 0.4rem 0.25rem 0.25rem;
-        min-height: 68px;
+        padding: 0;
         background: transparent;
         border-top: none;
         box-shadow: none;
@@ -5678,18 +5872,25 @@ export default {
     .chat-main.sidebar-open-mobile .message-input-container {
         opacity: 0;
         pointer-events: none;
-        transform: translateY(8px); 
+        transform: translateY(8px);
     }
 
-    .message-input-container .input-row {
+    /* Mobile: unified box gets the rounded pill style */
+    .message-input-container .input-box-wrapper {
         border-radius: 28px;
-        padding: 6px 12px 6px 16px; /* Increased right padding to prevent button from hitting the curve */
-        gap: 0.4rem;
-        min-height: 52px;
         border-color: #d7ddea;
         box-shadow:
             0 8px 18px rgba(15, 23, 42, 0.08),
             0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .message-input-container .input-row {
+        padding: 6px 12px 6px 16px;
+        gap: 0.4rem;
+        min-height: 52px;
+        border: none;
+        box-shadow: none;
+        /* background: transparent; */
     }
 
     .btn-attach {
@@ -5781,8 +5982,7 @@ export default {
         left: 0px;
         right: 10px;
         bottom: calc(60px + env(safe-area-inset-bottom));
-        padding-left: 0.2rem;
-        padding-right: 0.2rem;
+        padding: 0;
     }
 }
 

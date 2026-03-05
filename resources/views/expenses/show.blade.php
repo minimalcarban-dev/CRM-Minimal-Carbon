@@ -3,7 +3,7 @@
 @section('title', 'Transaction Details')
 
 @section('content')
-    <div class="diamond-management-container tracker-page">
+    <div class="diamond-management-container tracker-page expense-page">
         <div class="page-header">
             <div class="header-content">
                 <div class="header-left">
@@ -30,20 +30,17 @@
             </div>
         </div>
 
-        <div class="form-section-card">
-            <div class="section-header">
-                <div class="section-info">
-                    <div class="section-icon"
-                        style="background: {{ $expense->transaction_type == 'in' ? 'linear-gradient(135deg, var(--success), var(--success-dark))' : 'linear-gradient(135deg, var(--danger), var(--danger-dark))' }};">
-                        <i class="bi bi-{{ $expense->transaction_type == 'in' ? 'arrow-down' : 'arrow-up' }}"></i>
-                    </div>
-                    <div class="section-text">
-                        <h5 class="section-title">{{ $expense->transaction_type == 'in' ? 'Money In' : 'Money Out' }}</h5>
-                        <p class="section-description">{{ $expense->date->format('d M Y') }}</p>
-                    </div>
+        <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="background: {{ $expense->transaction_type == 'in' ? 'linear-gradient(135deg, var(--success), var(--success-dark))' : 'linear-gradient(135deg, var(--danger), var(--danger-dark))' }}; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                    <i class="bi bi-{{ $expense->transaction_type == 'in' ? 'arrow-down' : 'arrow-up' }}"></i>
                 </div>
-            </div>
-            <div class="section-body">
+                <div>
+                    <div>{{ $expense->transaction_type == 'in' ? 'Money In' : 'Money Out' }}</div>
+                    <div style="font-size: 0.85rem; font-weight: 400; color: #64748b;">{{ $expense->date->format('d M Y') }}</div>
+                </div>
+            </h3>
+            <div>
                 <div class="detail-grid">
                     <div class="detail-item"
                         style="grid-column: 1 / -1; text-align: center; padding: 1.5rem; background: var(--light-gray); border-radius: 12px;">

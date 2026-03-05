@@ -3,7 +3,7 @@
 @section('title', 'Annual Report')
 
 @section('content')
-    <div class="diamond-management-container tracker-page">
+    <div class="diamond-management-container tracker-page expense-page">
         <div class="page-header">
             <div class="header-content">
                 <div class="header-left">
@@ -20,24 +20,25 @@
                         Annual Report - {{ $year }}
                     </h1>
                 </div>
-                <div class="header-right" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:nowrap;">
-                    <form method="GET" action="{{ route('expenses.annual-report') }}"
-                        style="display:flex; gap:0.5rem; align-items:center;">
-                        <select name="year" class="tracker-filter-select" style="width:auto; padding:0.5rem 0.75rem;">
+                <div class="header-right tracker-report-header-right">
+                    <form method="GET" action="{{ route('expenses.annual-report') }}" class="tracker-report-filter-form"
+                        style="flex-wrap:nowrap; align-items:center;">
+                        <select name="year" class="tracker-filter-select" style="padding:0.5rem 0.75rem;">
                             @for($y = date('Y'); $y >= date('Y') - 5; $y--)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
                         </select>
-                        <button type="submit" class="btn-primary-custom" style="padding:0.5rem 0.75rem;"><i
+                        <button type="submit" class="btn-primary-custom" style="padding:0.5rem 0.75rem; flex-shrink:0;"><i
                                 class="bi bi-search"></i></button>
+                        <a href="{{ route('expenses.export-annual', ['year' => $year]) }}" class="btn-secondary-custom"
+                            style="padding:0.5rem 1rem; flex-shrink:0;">
+                            <i class="bi bi-download"></i> Excel
+                        </a>
+                        <a href="{{ route('expenses.index') }}" class="btn-secondary-custom"
+                            style="padding:0.5rem 1rem; flex-shrink:0;">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </a>
                     </form>
-                    <a href="{{ route('expenses.export-annual', ['year' => $year]) }}" class="btn-secondary-custom"
-                        style="padding:0.5rem 1rem;">
-                        <i class="bi bi-download"></i> Excel
-                    </a>
-                    <a href="{{ route('expenses.index') }}" class="btn-secondary-custom" style="padding:0.5rem 1rem;">
-                        <i class="bi bi-arrow-left"></i> Back
-                    </a>
                 </div>
             </div>
         </div>
@@ -76,46 +77,31 @@
         </div>
 
         <!-- Monthly Charts -->
-        <div class="form-section-card">
-            <div class="section-header">
-                <div class="section-info">
-                    <div class="section-icon"><i class="bi bi-bar-chart-line"></i></div>
-                    <div class="section-text">
-                        <h5 class="section-title">Monthly Overview</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="section-body">
-                <canvas id="monthlyChart" height="80"></canvas>
+        <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                <i class="bi bi-bar-chart-line" style="color: #6366f1;"></i> Monthly Overview
+            </h3>
+            <div class="tracker-chart-container">
+                <canvas id="monthlyChart"></canvas>
             </div>
         </div>
 
         <!-- Cash Flow Chart -->
-        <div class="form-section-card" style="margin-top: 1.5rem;">
-            <div class="section-header">
-                <div class="section-info">
-                    <div class="section-icon"><i class="bi bi-graph-up"></i></div>
-                    <div class="section-text">
-                        <h5 class="section-title">Cash Flow Trend</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="section-body">
-                <canvas id="cashflowChart" height="60"></canvas>
+        <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                <i class="bi bi-graph-up" style="color: #6366f1;"></i> Cash Flow Trend
+            </h3>
+            <div class="tracker-chart-container">
+                <canvas id="cashflowChart"></canvas>
             </div>
         </div>
 
         <!-- Monthly Data Table -->
-        <div class="form-section-card" style="margin-top: 1.5rem;">
-            <div class="section-header">
-                <div class="section-info">
-                    <div class="section-icon"><i class="bi bi-table"></i></div>
-                    <div class="section-text">
-                        <h5 class="section-title">Monthly Breakdown</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="section-body" style="padding: 0;">
+        <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                <i class="bi bi-table" style="color: #6366f1;"></i> Monthly Breakdown
+            </h3>
+            <div style="padding: 0;">
                 <div class="table-responsive">
                     <table class="tracker-table">
                         <thead>
@@ -132,7 +118,8 @@
                             <tr>
                                 <td><strong style="color:#10b981;">Income</strong></td>
                                 @for($m = 1; $m <= 12; $m++)
-                                    <td style="text-align: center;">₹{{ number_format($monthlyData[$m]['income'] / 1000, 0) }}k
+                                    <td style="text-align: center;">
+                                        ₹{{ number_format(($monthlyData[$m]['income'] ?? 0) / 1000, 0) }}k
                                     </td>
                                 @endfor
                                 <td style="text-align: right;"><strong
@@ -169,7 +156,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const monthlyData = @json($monthlyData);
@@ -241,6 +228,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         y: {
@@ -286,6 +274,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         y: {
                             grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },

@@ -90,6 +90,7 @@
             margin: 0;
             height: 100%;
             background: linear-gradient(135deg, var(--bg-body) 0%, var(--light-gray) 100%);
+            padding-top: 3px;
         }
 
         .chat-container-outer {
