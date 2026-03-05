@@ -37,929 +37,970 @@ use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return redirect()->route('admin.login');
-    // return view('welcome');
+// return view('welcome');
 });
 
 // Public IP check (no auth needed - for Cloudflare tunnel testing)
 Route::get('check-ip', function () {
     return response()->json([
-        'your_ip' => request()->ip(),
-        'message' => 'This is the IP address the server sees for you. Add this IP to the whitelist.',
+    'your_ip' => request()->ip(),
+    'message' => 'This is the IP address the server sees for you. Add this IP to the whitelist.',
     ]);
 });
 
 // Public access request (from 403 page — no auth needed)
-Route::post('ip/request-access', [SettingsController::class, 'submitAccessRequest'])
+Route::post('ip/request-access', [SettingsController::class , 'submitAccessRequest'])
     ->middleware('throttle:3,10') // Max 3 requests per 10 minutes
     ->name('ip.request-access');
 
 // Admin auth routes
-Route::get('admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
-Route::post('admin/login', [AdminAuthController::class, 'login'])
+Route::get('admin/login', [AdminAuthController::class , 'showLogin'])->name('admin.login');
+Route::post('admin/login', [AdminAuthController::class , 'login'])
     ->middleware('throttle:login')
     ->name('admin.login.post');
-Route::post('admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+Route::post('admin/logout', [AdminAuthController::class , 'logout'])->name('admin.logout');
 
 // Broadcasting auth is registered in BroadcastServiceProvider with admin guard and admin prefix
 
 // Admin CRUD routes (protected)
 Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // Dashboard
-    Route::get('dashboard', [DashboardController::class, 'index'])
+    Route::get('dashboard', [DashboardController::class , 'index'])
         ->name('admin.dashboard');
 
     // DIAGNOSTIC ROUTE
     Route::get('test-blade', function () {
-        return view('admin.dashboard');
+            return view('admin.dashboard');
+        }
+        );
+
+        // DIAGNOSTIC ROUTE
+        Route::any('test-broadcast', [ChatController::class , 'testBroadcast'])->name('admin.test-broadcast');
+
+        // Chat routes with middleware
+        Route::get('chat', [ChatController::class , 'index'])
+            ->name('chat.index')
+            ->middleware('admin.permission:chat.access');
+
+        // ─────────────────────────────────────────────────────────────
+        // Tools & Calculators
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('tools')->name('tools.')->group(function () {
+            Route::get('jewellery-calculator', [JewelleryCalculatorController::class , 'index'])
+                ->name('jewellery-calculator');
+            Route::get('gold-rate', [JewelleryCalculatorController::class , 'getRates'])
+                ->name('gold-rate');
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // Chat routes
+    
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('chat')->middleware('admin.permission:chat.access')->group(function () {
+            Route::post('/channels', [ChatController::class , 'createChannel']);
+            Route::get('/channels', [ChatController::class , 'getChannels']);
+            Route::post('/direct', [ChatController::class , 'direct']);
+            Route::get('/channels/{channel}/messages', [ChatController::class , 'getMessages']);
+            Route::post('/channels/{channel}/messages', [ChatController::class , 'sendMessage']);
+            Route::post('/channels/{channel}/read', [ChatController::class , 'markAsRead']);
+            Route::get('/channels/{channel}/sidebar', [ChatController::class , 'sidebar']);
+            Route::get('/messages/search', [ChatController::class , 'searchMessages']);
+            Route::get('/attachments/{attachment}/download', [ChatController::class , 'downloadAttachment'])->name('chat.attachment.download');
+            Route::get('/attachments/{attachment}/proxy', [ChatController::class , 'proxyAttachment'])->name('chat.attachment.proxy');
+
+            // Thread Routes (Missing previously)
+            Route::get('/messages/{message}/thread', [ChatController::class , 'getThreadMessages']);
+            Route::post('/messages/{message}/thread/replies', [ChatController::class , 'postThreadReply']);
+
+            // Get unread message count
+            Route::get('/unread-count', [ChatController::class , 'getUnreadCount']);
+
+            // Admins list for channel creation (super admin only)
+            Route::get('/admins', [ChatController::class , 'listAdmins']);
+            // Manage members (owner or super admin)
+            Route::get('/channels/{channel}/members', [ChatController::class , 'getChannelMembers']);
+            Route::put('/channels/{channel}/members', [ChatController::class , 'updateChannelMembers']);
+            // Delete channel (super admin only)
+            Route::delete('/channels/{channel}', [ChatController::class , 'deleteChannel']);
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // Notification routes
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class , 'index']);
+            Route::get('/unread-count', [NotificationController::class , 'unreadCount']);
+            Route::post('/{id}/read', [NotificationController::class , 'markAsRead']);
+            Route::post('/mark-all-read', [NotificationController::class , 'markAllAsRead']);
+            Route::delete('/{id}', [NotificationController::class , 'destroy']);
+        }
+        );
+
+        // Admin management (CRUD)
+        // ─────────────────────────────────────────────────────────────
+        Route::get('admins', [AdminController::class , 'index'])
+            ->name('admins.index')
+            ->middleware('admin.permission:admins.view');
+        Route::get('admins/create', [AdminController::class , 'create'])
+            ->name('admins.create')
+            ->middleware('admin.permission:admins.create');
+        Route::post('admins', [AdminController::class , 'store'])
+            ->name('admins.store')
+            ->middleware('admin.permission:admins.create');
+        Route::get('admins/{admin}/edit', [AdminController::class , 'edit'])
+            ->name('admins.edit')
+            ->middleware('admin.permission:admins.edit');
+        Route::put('admins/{admin}', [AdminController::class , 'update'])
+            ->name('admins.update')
+            ->middleware('admin.permission:admins.edit');
+        Route::get('admins/{admin}', [AdminController::class , 'show'])
+            ->name('admins.show')
+            ->middleware('admin.permission:admins.view');
+        Route::delete('admins/{admin}', [AdminController::class , 'destroy'])
+            ->name('admins.destroy')
+            ->middleware('admin.permission:admins.delete');
+
+        // ─────────────────────────────────────────────────────────────
+        // Admin Permissions Management (consolidated)
+        // ─────────────────────────────────────────────────────────────
+        Route::get('admins/{admin}/permissions', [AdminPermissionController::class , 'show'])
+            ->name('admins.permissions.show')
+            ->middleware('admin.permission:admins.assign_permissions');
+        Route::put('admins/{admin}/permissions', [AdminPermissionController::class , 'update'])
+            ->name('admins.permissions.update')
+            ->middleware('admin.permission:admins.assign_permissions');
+
+        // ─────────────────────────────────────────────────────────────
+        // Permission management (CRUD)
+        // ─────────────────────────────────────────────────────────────
+        Route::get('permissions', [PermissionController::class , 'index'])
+            ->name('permissions.index')
+            ->middleware('admin.permission:permissions.view');
+        Route::get('permissions/create', [PermissionController::class , 'create'])
+            ->name('permissions.create')
+            ->middleware('admin.permission:permissions.create');
+        Route::post('permissions', [PermissionController::class , 'store'])
+            ->name('permissions.store')
+            ->middleware('admin.permission:permissions.create');
+        Route::get('permissions/{permission}', [PermissionController::class , 'show'])
+            ->name('permissions.show')
+            ->middleware('admin.permission:permissions.view');
+        Route::get('permissions/{permission}/edit', [PermissionController::class , 'edit'])
+            ->name('permissions.edit')
+            ->middleware('admin.permission:permissions.edit');
+        Route::put('permissions/{permission}', [PermissionController::class , 'update'])
+            ->name('permissions.update')
+            ->middleware('admin.permission:permissions.edit');
+        Route::delete('permissions/{permission}', [PermissionController::class , 'destroy'])
+            ->name('permissions.delete')
+            ->middleware('admin.permission:permissions.delete');
+
+        // ─────────────────────────────────────────────────────────────
+        // Orders
+        // ─────────────────────────────────────────────────────────────
+        Route::get('orders', [OrderController::class , 'index'])
+            ->name('orders.index')
+            ->middleware('admin.permission:orders.view');
+        Route::get('orders/create', [OrderController::class , 'create'])
+            ->name('orders.create')
+            ->middleware('admin.permission:orders.create');
+        Route::post('orders', [OrderController::class , 'store'])
+            ->name('orders.store')
+            ->middleware('admin.permission:orders.create');
+        Route::post('orders/sync-all-tracking', [OrderController::class , 'syncAllTracking'])
+            ->name('orders.sync-all-tracking')
+            ->middleware('admin.permission:orders.edit');
+        Route::get('orders/form/{type}', [OrderController::class , 'loadFormPartial'])
+            ->name('orders.loadFormPartial')
+            ->middleware('admin.permission:orders.create');
+
+        // ─────────────────────────────────────────────────────────────
+        // Order Drafts Module (MUST be before {order} wildcard routes!)
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('orders/drafts')->name('orders.drafts.')->middleware('admin.permission:orders.create')->group(function () {
+            // Drafts listing page
+            Route::get('/', [\App\Http\Controllers\OrderDraftController::class , 'index'])
+                ->name('index');
+
+            // AJAX: Auto-save draft
+            Route::post('/save', [\App\Http\Controllers\OrderDraftController::class , 'save'])
+                ->name('save');
+
+            // AJAX: Get draft count for badge
+            Route::get('/count', [\App\Http\Controllers\OrderDraftController::class , 'count'])
+                ->name('count');
+
+            // AJAX: Get current admin's drafts for notification popup
+            Route::get('/my-drafts', [\App\Http\Controllers\OrderDraftController::class , 'myDrafts'])
+                ->name('my-drafts');
+
+            // Resume editing a draft
+            Route::get('/{draft}/resume', [\App\Http\Controllers\OrderDraftController::class , 'resume'])
+                ->name('resume');
+
+            // Preview draft
+            Route::get('/{draft}', [\App\Http\Controllers\OrderDraftController::class , 'show'])
+                ->name('show');
+
+            // Delete draft
+            Route::delete('/{draft}', [\App\Http\Controllers\OrderDraftController::class , 'destroy'])
+                ->name('destroy');
+
+            // AJAX: Delete draft
+            Route::delete('/{draft}/ajax', [\App\Http\Controllers\OrderDraftController::class , 'ajaxDestroy'])
+                ->name('ajax-destroy');
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // Order CRUD with {order} parameter (AFTER specific routes)
+        // ─────────────────────────────────────────────────────────────
+        Route::get('orders/{order}', [OrderController::class , 'show'])
+            ->name('orders.show')
+            ->middleware('admin.permission:orders.view');
+        Route::get('orders/{order}/edit', [OrderController::class , 'edit'])
+            ->name('orders.edit')
+            ->middleware('admin.permission:orders.edit');
+        Route::put('orders/{order}', [OrderController::class , 'update'])
+            ->name('orders.update')
+            ->middleware('admin.permission:orders.edit');
+        Route::get('orders/{order}/quick-view', [OrderController::class , 'quickView'])
+            ->name('orders.quick-view')
+            ->middleware('admin.permission:orders.view');
+        Route::post('orders/{order}/cancel', [OrderController::class , 'cancel'])
+            ->name('orders.cancel')
+            ->middleware('admin.permission:orders.cancel');
+        Route::delete('orders/{order}', [OrderController::class , 'destroy'])
+            ->name('orders.destroy')
+            ->middleware('admin.permission:orders.delete');
+        Route::post('orders/{order}/remove-file', [OrderController::class , 'removeFile'])
+            ->name('orders.remove-file')
+            ->middleware('admin.permission:orders.edit');
+        Route::post('orders/{order}/sync-tracking', [OrderController::class , 'syncTracking'])
+            ->name('orders.sync-tracking')
+            ->middleware('admin.permission:orders.edit');
+
+        // ─────────────────────────────────────────────────────────────
+        // Client Dashboard Module
+        // ─────────────────────────────────────────────────────────────
+        Route::get('clients', [\App\Http\Controllers\ClientController::class , 'index'])
+            ->name('clients.index')
+            ->middleware('admin.permission:clients.view');
+        Route::get('clients/data', [\App\Http\Controllers\ClientController::class , 'data'])
+            ->name('clients.data')
+            ->middleware('admin.permission:clients.view');
+        Route::get('clients/export', [\App\Http\Controllers\ClientController::class , 'export'])
+            ->name('clients.export')
+            ->middleware('admin.permission:clients.export');
+        Route::get('clients/search', [\App\Http\Controllers\ClientController::class , 'search'])
+            ->name('clients.search')
+            ->middleware('admin.permission:orders.create');
+        Route::get('clients/{client}', [\App\Http\Controllers\ClientController::class , 'show'])
+            ->name('clients.show')
+            ->middleware('admin.permission:clients.view');
+
+
+
+        // Invoices (basic CRUD)
+        Route::get('invoices', [InvoiceController::class , 'index'])
+            ->name('invoices.index')
+            ->middleware('admin.permission:invoices.view');
+        Route::get('invoices/create', [InvoiceController::class , 'create'])
+            ->name('invoices.create')
+            ->middleware('admin.permission:invoices.create');
+        Route::post('invoices', [InvoiceController::class , 'store'])
+            ->name('invoices.store')
+            ->middleware('admin.permission:invoices.create');
+        Route::get('invoices/{invoice}', [InvoiceController::class , 'show'])
+            ->name('invoices.show')
+            ->middleware('admin.permission:invoices.view');
+        Route::get('invoices/{invoice}/pdf', [InvoiceController::class , 'pdf'])
+            ->name('invoices.pdf')
+            ->middleware('admin.permission:invoices.view');
+        Route::get('invoices/{invoice}/edit', [InvoiceController::class , 'edit'])
+            ->name('invoices.edit')
+            ->middleware('admin.permission:invoices.edit');
+        Route::put('invoices/{invoice}', [InvoiceController::class , 'update'])
+            ->name('invoices.update')
+            ->middleware('admin.permission:invoices.edit');
+        Route::delete('invoices/{invoice}', [InvoiceController::class , 'destroy'])
+            ->name('invoices.destroy')
+            ->middleware('admin.permission:invoices.delete');
+
+
+        // Metal Types
+        Route::get('metal-types', [MetalTypeController::class , 'index'])
+            ->name('metal_types.index')
+            ->middleware('admin.permission:metal_types.view');
+        Route::get('metal-types/create', [MetalTypeController::class , 'create'])
+            ->name('metal_types.create')
+            ->middleware('admin.permission:metal_types.create');
+        Route::post('metal-types', [MetalTypeController::class , 'store'])
+            ->name('metal_types.store')
+            ->middleware('admin.permission:metal_types.create');
+        Route::get('metal-types/{metal_type}', [MetalTypeController::class , 'show'])
+            ->name('metal_types.show')
+            ->middleware('admin.permission:metal_types.view');
+        Route::get('metal-types/{metal_type}/edit', [MetalTypeController::class , 'edit'])
+            ->name('metal_types.edit')
+            ->middleware('admin.permission:metal_types.edit');
+        Route::put('metal-types/{metal_type}', [MetalTypeController::class , 'update'])
+            ->name('metal_types.update')
+            ->middleware('admin.permission:metal_types.edit');
+        Route::delete('metal-types/{metal_type}', [MetalTypeController::class , 'destroy'])
+            ->name('metal_types.destroy')
+            ->middleware('admin.permission:metal_types.delete');
+
+        // Setting Types
+        Route::get('setting-types', [SettingTypeController::class , 'index'])
+            ->name('setting_types.index')
+            ->middleware('admin.permission:setting_types.view');
+        Route::get('setting-types/create', [SettingTypeController::class , 'create'])
+            ->name('setting_types.create')
+            ->middleware('admin.permission:setting_types.create');
+        Route::post('setting-types', [SettingTypeController::class , 'store'])
+            ->name('setting_types.store')
+            ->middleware('admin.permission:setting_types.create');
+        Route::get('setting-types/{setting_type}', [SettingTypeController::class , 'show'])
+            ->name('setting_types.show')
+            ->middleware('admin.permission:setting_types.view');
+        Route::get('setting-types/{setting_type}/edit', [SettingTypeController::class , 'edit'])
+            ->name('setting_types.edit')
+            ->middleware('admin.permission:setting_types.edit');
+        Route::put('setting-types/{setting_type}', [SettingTypeController::class , 'update'])
+            ->name('setting_types.update')
+            ->middleware('admin.permission:setting_types.edit');
+        Route::delete('setting-types/{setting_type}', [SettingTypeController::class , 'destroy'])
+            ->name('setting_types.destroy')
+            ->middleware('admin.permission:setting_types.delete');
+
+        // Closure Types
+        Route::get('closure-types', [ClosureTypeController::class , 'index'])
+            ->name('closure_types.index')
+            ->middleware('admin.permission:closure_types.view');
+        Route::get('closure-types/create', [ClosureTypeController::class , 'create'])
+            ->name('closure_types.create')
+            ->middleware('admin.permission:closure_types.create');
+        Route::post('closure-types', [ClosureTypeController::class , 'store'])
+            ->name('closure_types.store')
+            ->middleware('admin.permission:closure_types.create');
+        Route::get('closure-types/{closure_type}', [ClosureTypeController::class , 'show'])
+            ->name('closure_types.show')
+            ->middleware('admin.permission:closure_types.view');
+        Route::get('closure-types/{closure_type}/edit', [ClosureTypeController::class , 'edit'])
+            ->name('closure_types.edit')
+            ->middleware('admin.permission:closure_types.edit');
+        Route::put('closure-types/{closure_type}', [ClosureTypeController::class , 'update'])
+            ->name('closure_types.update')
+            ->middleware('admin.permission:closure_types.edit');
+        Route::delete('closure-types/{closure_type}', [ClosureTypeController::class , 'destroy'])
+            ->name('closure_types.destroy')
+            ->middleware('admin.permission:closure_types.delete');
+
+        // Ring Sizes
+        Route::get('ring-sizes', [RingSizeController::class , 'index'])
+            ->name('ring_sizes.index')
+            ->middleware('admin.permission:ring_sizes.view');
+        Route::get('ring-sizes/create', [RingSizeController::class , 'create'])
+            ->name('ring_sizes.create')
+            ->middleware('admin.permission:ring_sizes.create');
+        Route::post('ring-sizes', [RingSizeController::class , 'store'])
+            ->name('ring_sizes.store')
+            ->middleware('admin.permission:ring_sizes.create');
+        Route::get('ring-sizes/{ring_size}', [RingSizeController::class , 'show'])
+            ->name('ring_sizes.show')
+            ->middleware('admin.permission:ring_sizes.view');
+        Route::get('ring-sizes/{ring_size}/edit', [RingSizeController::class , 'edit'])
+            ->name('ring_sizes.edit')
+            ->middleware('admin.permission:ring_sizes.edit');
+        Route::put('ring-sizes/{ring_size}', [RingSizeController::class , 'update'])
+            ->name('ring_sizes.update')
+            ->middleware('admin.permission:ring_sizes.edit');
+        Route::delete('ring-sizes/{ring_size}', [RingSizeController::class , 'destroy'])
+            ->name('ring_sizes.destroy')
+            ->middleware('admin.permission:ring_sizes.delete');
+
+        // Stone Types
+        Route::get('stone-types', [StoneTypeController::class , 'index'])
+            ->name('stone_types.index')
+            ->middleware('admin.permission:stone_types.view');
+        Route::get('stone-types/create', [StoneTypeController::class , 'create'])
+            ->name('stone_types.create')
+            ->middleware('admin.permission:stone_types.create');
+        Route::post('stone-types', [StoneTypeController::class , 'store'])
+            ->name('stone_types.store')
+            ->middleware('admin.permission:stone_types.create');
+        Route::get('stone-types/{stone_type}', [StoneTypeController::class , 'show'])
+            ->name('stone_types.show')
+            ->middleware('admin.permission:stone_types.view');
+        Route::get('stone-types/{stone_type}/edit', [StoneTypeController::class , 'edit'])
+            ->name('stone_types.edit')
+            ->middleware('admin.permission:stone_types.edit');
+        Route::put('stone-types/{stone_type}', [StoneTypeController::class , 'update'])
+            ->name('stone_types.update')
+            ->middleware('admin.permission:stone_types.edit');
+        Route::delete('stone-types/{stone_type}', [StoneTypeController::class , 'destroy'])
+            ->name('stone_types.destroy')
+            ->middleware('admin.permission:stone_types.delete');
+
+        // Stone Shapes
+        Route::get('stone-shapes', [StoneShapeController::class , 'index'])
+            ->name('stone_shapes.index')
+            ->middleware('admin.permission:stone_shapes.view');
+        Route::get('stone-shapes/create', [StoneShapeController::class , 'create'])
+            ->name('stone_shapes.create')
+            ->middleware('admin.permission:stone_shapes.create');
+        Route::post('stone-shapes', [StoneShapeController::class , 'store'])
+            ->name('stone_shapes.store')
+            ->middleware('admin.permission:stone_shapes.create');
+        Route::get('stone-shapes/{stone_shape}', [StoneShapeController::class , 'show'])
+            ->name('stone_shapes.show')
+            ->middleware('admin.permission:stone_shapes.view');
+        Route::get('stone-shapes/{stone_shape}/edit', [StoneShapeController::class , 'edit'])
+            ->name('stone_shapes.edit')
+            ->middleware('admin.permission:stone_shapes.edit');
+        Route::put('stone-shapes/{stone_shape}', [StoneShapeController::class , 'update'])
+            ->name('stone_shapes.update')
+            ->middleware('admin.permission:stone_shapes.edit');
+        Route::delete('stone-shapes/{stone_shape}', [StoneShapeController::class , 'destroy'])
+            ->name('stone_shapes.destroy')
+            ->middleware('admin.permission:stone_shapes.delete');
+
+        // Stone Colors
+        Route::get('stone-colors', [StoneColorController::class , 'index'])
+            ->name('stone_colors.index')
+            ->middleware('admin.permission:stone_colors.view');
+        Route::get('stone-colors/create', [StoneColorController::class , 'create'])
+            ->name('stone_colors.create')
+            ->middleware('admin.permission:stone_colors.create');
+        Route::post('stone-colors', [StoneColorController::class , 'store'])
+            ->name('stone_colors.store')
+            ->middleware('admin.permission:stone_colors.create');
+        Route::get('stone-colors/{stone_color}', [StoneColorController::class , 'show'])
+            ->name('stone_colors.show')
+            ->middleware('admin.permission:stone_colors.view');
+        Route::get('stone-colors/{stone_color}/edit', [StoneColorController::class , 'edit'])
+            ->name('stone_colors.edit')
+            ->middleware('admin.permission:stone_colors.edit');
+        Route::put('stone-colors/{stone_color}', [StoneColorController::class , 'update'])
+            ->name('stone_colors.update')
+            ->middleware('admin.permission:stone_colors.edit');
+        Route::delete('stone-colors/{stone_color}', [StoneColorController::class , 'destroy'])
+            ->name('stone_colors.destroy')
+            ->middleware('admin.permission:stone_colors.delete');
+
+        // Diamond Clarities
+        Route::get('diamond-clarities', [DiamondClarityController::class , 'index'])
+            ->name('diamond_clarities.index')
+            ->middleware('admin.permission:diamond_clarities.view');
+        Route::get('diamond-clarities/create', [DiamondClarityController::class , 'create'])
+            ->name('diamond_clarities.create')
+            ->middleware('admin.permission:diamond_clarities.create');
+        Route::post('diamond-clarities', [DiamondClarityController::class , 'store'])
+            ->name('diamond_clarities.store')
+            ->middleware('admin.permission:diamond_clarities.create');
+        Route::get('diamond-clarities/{diamond_clarity}', [DiamondClarityController::class , 'show'])
+            ->name('diamond_clarities.show')
+            ->middleware('admin.permission:diamond_clarities.view');
+        Route::get('diamond-clarities/{diamond_clarity}/edit', [DiamondClarityController::class , 'edit'])
+            ->name('diamond_clarities.edit')
+            ->middleware('admin.permission:diamond_clarities.edit');
+        Route::put('diamond-clarities/{diamond_clarity}', [DiamondClarityController::class , 'update'])
+            ->name('diamond_clarities.update')
+            ->middleware('admin.permission:diamond_clarities.edit');
+        Route::delete('diamond-clarities/{diamond_clarity}', [DiamondClarityController::class , 'destroy'])
+            ->name('diamond_clarities.destroy')
+            ->middleware('admin.permission:diamond_clarities.delete');
+
+        // Diamond Cuts
+        Route::get('diamond-cuts', [DiamondCutController::class , 'index'])
+            ->name('diamond_cuts.index')
+            ->middleware('admin.permission:diamond_cuts.view');
+        Route::get('diamond-cuts/create', [DiamondCutController::class , 'create'])
+            ->name('diamond_cuts.create')
+            ->middleware('admin.permission:diamond_cuts.create');
+        Route::post('diamond-cuts', [DiamondCutController::class , 'store'])
+            ->name('diamond_cuts.store')
+            ->middleware('admin.permission:diamond_cuts.create');
+        Route::get('diamond-cuts/{diamond_cut}', [DiamondCutController::class , 'show'])
+            ->name('diamond_cuts.show')
+            ->middleware('admin.permission:diamond_cuts.view');
+        Route::get('diamond-cuts/{diamond_cut}/edit', [DiamondCutController::class , 'edit'])
+            ->name('diamond_cuts.edit')
+            ->middleware('admin.permission:diamond_cuts.edit');
+        Route::put('diamond-cuts/{diamond_cut}', [DiamondCutController::class , 'update'])
+            ->name('diamond_cuts.update')
+            ->middleware('admin.permission:diamond_cuts.edit');
+        Route::delete('diamond-cuts/{diamond_cut}', [DiamondCutController::class , 'destroy'])
+            ->name('diamond_cuts.destroy')
+            ->middleware('admin.permission:diamond_cuts.delete');
+
+
+        // Company CRUD
+        Route::get('companies', [CompanyController::class , 'index'])
+            ->name('companies.index')
+            ->middleware('admin.permission:companies.view');
+        Route::get('companies/create', [CompanyController::class , 'create'])
+            ->name('companies.create')
+            ->middleware('admin.permission:companies.create');
+        Route::post('companies', [CompanyController::class , 'store'])
+            ->name('companies.store')
+            ->middleware('admin.permission:companies.create');
+        Route::get('companies/{company}', [CompanyController::class , 'show'])
+            ->name('companies.show')
+            ->middleware('admin.permission:companies.view');
+        Route::get('companies/{company}/edit', [CompanyController::class , 'edit'])
+            ->name('companies.edit')
+            ->middleware('admin.permission:companies.edit');
+        Route::put('companies/{company}', [CompanyController::class , 'update'])
+            ->name('companies.update')
+            ->middleware('admin.permission:companies.edit');
+        Route::delete('companies/{company}', [CompanyController::class , 'destroy'])
+            ->name('companies.destroy')
+            ->middleware('admin.permission:companies.delete');
+
+        // All Company Sales Dashboard Routes
+        Route::get('all-company-sales', [CompanyController::class , 'allSalesDashboard'])
+            ->name('companies.all-sales-dashboard')
+            ->middleware('admin.permission:sales.view_all');
+
+        Route::post('all-company-sales/set-targets', [CompanyController::class , 'saveAllTargets'])
+            ->name('companies.save-all-targets')
+            ->middleware('admin.permission:sales.view_all');
+
+        Route::get('all-company-sales/export-csv', [CompanyController::class , 'exportAllSalesCsv'])
+            ->name('companies.export-all-sales-csv')
+            ->middleware('admin.permission:sales.view_all');
+
+        // Company Sales Dashboard Routes
+        Route::get('companies/{company}/sales-dashboard', [CompanyController::class , 'salesDashboard'])
+            ->name('companies.sales-dashboard')
+            ->middleware('admin.permission:companies.view');
+        Route::post('companies/{company}/set-target', [CompanyController::class , 'setTarget'])
+            ->name('companies.set-target')
+            ->middleware('admin.permission:companies.edit');
+        Route::get('companies/{company}/export-pdf', [CompanyController::class , 'exportPdf'])
+            ->name('companies.export-pdf')
+            ->middleware('admin.permission:companies.view');
+        Route::get('companies/{company}/export-csv', [CompanyController::class , 'exportCsv'])
+            ->name('companies.export-csv')
+            ->middleware('admin.permission:companies.view');
+
+        // Diamond Import/Export  (KEEP THESE FIRST)
+        // Rate limited: Import is CPU/memory intensive
+        Route::post('diamonds/import', [DiamondController::class , 'import'])
+            ->name('diamonds.import')
+            ->middleware('throttle:10,1'); // 10 imports per minute
+    
+        // Import result page - shows success/failure count with error report download
+        Route::get('diamonds/import-result', [DiamondController::class , 'importResult'])
+            ->name('diamond.import.result');
+
+        // Download error report Excel file with failed rows
+        Route::get('diamonds/download-errors/{fileName}', [DiamondController::class , 'downloadErrorReport'])
+            ->name('diamond.download-errors');
+
+        // Rate limited: Export can be heavy on large datasets
+        Route::get('diamonds/export', [DiamondController::class , 'export'])
+            ->name('diamonds.export')
+            ->middleware('throttle:20,1'); // 20 exports per minute
+    
+        // Background Job Routes
+        Route::get('diamonds/jobs/history', [DiamondController::class , 'jobHistory'])
+            ->name('diamond.job.history')
+            ->middleware('admin.permission:diamond_jobs.view');
+        Route::get('diamonds/jobs/{id}', [DiamondController::class , 'jobStatus'])
+            ->name('diamond.job.status')
+            ->middleware('admin.permission:diamond_jobs.view');
+        Route::get('diamonds/jobs/{id}/status-json', [DiamondController::class , 'jobStatusJson'])
+            ->name('diamond.job.status.json')
+            ->middleware('admin.permission:diamond_jobs.view');
+        Route::get('diamonds/jobs/{id}/download', [DiamondController::class , 'jobDownload'])
+            ->name('diamond.job.download')
+            ->middleware('admin.permission:diamond_jobs.view');
+
+        // Diamond SKU availability check for orders (real-time validation)
+        Route::get('diamonds/check-sku', [DiamondController::class , 'checkSkuAvailability'])
+            ->name('diamond.check-sku')
+            ->middleware('admin.permission:orders.create');
+
+        // Diamond CRUD 
+        Route::get('diamonds/create', [DiamondController::class , 'create'])
+            ->name('diamond.create')
+            ->middleware('admin.permission:diamonds.create');
+        Route::post('diamonds', [DiamondController::class , 'store'])
+            ->name('diamond.store')
+            ->middleware('admin.permission:diamonds.create');
+        Route::get('diamonds', [DiamondController::class , 'index'])
+            ->name('diamond.index')
+            ->middleware('admin.permission:diamonds.view');
+
+        // Restock sold diamonds
+        // Rate limited: Prevents accidental duplicate restocks
+        Route::post('diamonds/{diamond}/restock', [DiamondController::class , 'restockAction'])
+            ->name('diamond.restock')
+            ->middleware('throttle:30,1'); // 30 restocks per minute
+        Route::get('diamonds/{diamond}', [DiamondController::class , 'show'])
+            ->name('diamond.show')
+            ->middleware('admin.permission:diamonds.view');
+        Route::get('diamonds/{diamond}/edit', [DiamondController::class , 'edit'])
+            ->name('diamond.edit')
+            ->middleware('admin.permission:diamonds.edit');
+        Route::put('diamonds/{diamond}', [DiamondController::class , 'update'])
+            ->name('diamond.update')
+            ->middleware('admin.permission:diamonds.edit');
+        Route::delete('diamonds/{diamond}', [DiamondController::class , 'destroy'])
+            ->name('diamond.destroy')
+            ->middleware('admin.permission:diamonds.delete');
+        Route::post('diamonds/{diamond}/assign', [DiamondController::class , 'assignToAdmin'])
+            ->name('diamond.assign')
+            ->middleware('admin.permission:diamonds.assign');
+
+
+        // Bulk Edit Routes
+        Route::get('diamonds/bulk-edit/diamonds', [DiamondController::class , 'bulkEditDiamonds'])
+            ->name('diamond.bulk-edit.diamonds')
+            ->middleware('admin.permission:diamonds.edit');
+        Route::post('diamonds/bulk-edit', [DiamondController::class , 'bulkEdit'])
+            ->name('diamond.bulk-edit')
+            ->middleware(['admin.permission:diamonds.edit', 'throttle:10,1']);
+
+        // Notification Routes
+        Route::get('notifications', [AdminController::class , 'showNotifications'])
+            ->name('notifications.index');
+        Route::post('notifications/{notification}/read', [AdminController::class , 'markNotificationAsRead'])
+            ->name('notifications.read');
+        Route::post('notifications/mark-all-read', [AdminController::class , 'markAllNotificationsAsRead'])
+            ->name('notifications.mark-all-read');
+
+        // Parties CRUD
+        Route::get('parties', [PartyController::class , 'index'])
+            ->name('parties.index')
+            ->middleware('admin.permission:parties.view');
+        Route::get('parties/create', [PartyController::class , 'create'])
+            ->name('parties.create')
+            ->middleware('admin.permission:parties.create');
+        Route::post('parties', [PartyController::class , 'store'])
+            ->name('parties.store')
+            ->middleware('admin.permission:parties.create');
+        Route::get('parties/{party}', [PartyController::class , 'show'])
+            ->name('parties.show')
+            ->middleware('admin.permission:parties.view');
+        Route::get('parties/{party}/edit', [PartyController::class , 'edit'])
+            ->name('parties.edit')
+            ->middleware('admin.permission:parties.edit');
+        Route::put('parties/{party}', [PartyController::class , 'update'])
+            ->name('parties.update')
+            ->middleware('admin.permission:parties.edit');
+        Route::delete('parties/{party}', [PartyController::class , 'destroy'])
+            ->name('parties.destroy')
+            ->middleware('admin.permission:parties.delete');
+
+        // ─────────────────────────────────────────────────────────────
+        // Lead Management Module
+        // ─────────────────────────────────────────────────────────────
+    
+        // Lead Inbox (Kanban Board)
+        Route::get('leads', [\App\Http\Controllers\LeadController::class , 'index'])
+            ->name('leads.index')
+            ->middleware('admin.permission:leads.view');
+
+        // Lead Analytics
+        Route::get('leads/analytics', [\App\Http\Controllers\LeadController::class , 'analytics'])
+            ->name('leads.analytics')
+            ->middleware('admin.permission:leads.view');
+
+        // Lead CRUD
+        Route::post('leads', [\App\Http\Controllers\LeadController::class , 'store'])
+            ->name('leads.store')
+            ->middleware('admin.permission:leads.create');
+
+        Route::get('leads/{lead}', [\App\Http\Controllers\LeadController::class , 'show'])
+            ->name('leads.show')
+            ->middleware('admin.permission:leads.view');
+
+        Route::put('leads/{lead}', [\App\Http\Controllers\LeadController::class , 'update'])
+            ->name('leads.update')
+            ->middleware('admin.permission:leads.edit');
+
+        Route::delete('leads/{lead}', [\App\Http\Controllers\LeadController::class , 'destroy'])
+            ->name('leads.destroy')
+            ->middleware('admin.permission:leads.delete');
+
+        // Lead Actions
+        Route::patch('leads/{lead}/status', [\App\Http\Controllers\LeadController::class , 'updateStatus'])
+            ->name('leads.updateStatus')
+            ->middleware('admin.permission:leads.edit');
+
+        Route::post('leads/{lead}/assign', [\App\Http\Controllers\LeadController::class , 'assign'])
+            ->name('leads.assign')
+            ->middleware('admin.permission:leads.assign');
+
+        Route::post('leads/{lead}/message', [\App\Http\Controllers\LeadController::class , 'sendMessage'])
+            ->name('leads.sendMessage')
+            ->middleware(['admin.permission:leads.message', 'throttle:meta-api']);
+
+        Route::post('leads/{lead}/note', [\App\Http\Controllers\LeadController::class , 'addNote'])
+            ->name('leads.addNote')
+            ->middleware('admin.permission:leads.edit');
+
+        // Bulk Operations
+        Route::post('leads/bulk-action', [\App\Http\Controllers\LeadController::class , 'bulkAction'])
+            ->name('leads.bulkAction')
+            ->middleware(['admin.permission:leads.edit', 'throttle:critical-ops']);
+
+        // ─────────────────────────────────────────────────────────────
+        // Meta Settings Routes
+        // ─────────────────────────────────────────────────────────────
+    
+        Route::prefix('settings/meta')->name('settings.meta.')->middleware(['admin.permission:meta_leads.settings', 'throttle:meta-api'])->group(function () {
+            Route::get('/', [\App\Http\Controllers\MetaSettingsController::class , 'index'])
+                ->name('index');
+
+            Route::post('/', [\App\Http\Controllers\MetaSettingsController::class , 'store'])
+                ->name('store');
+
+            Route::post('/{account}/toggle', [\App\Http\Controllers\MetaSettingsController::class , 'toggle'])
+                ->name('toggle');
+
+            Route::post('/{account}/refresh', [\App\Http\Controllers\MetaSettingsController::class , 'refresh'])
+                ->name('refresh');
+
+            Route::delete('/{account}', [\App\Http\Controllers\MetaSettingsController::class , 'destroy'])
+                ->name('destroy');
+
+            Route::post('/test-webhook', [\App\Http\Controllers\MetaSettingsController::class , 'testWebhook'])
+                ->name('test-webhook');
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // IP Security Settings Routes
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('settings/security')->name('settings.security.')->middleware(['admin.permission:settings.manage'])->group(function () {
+            Route::get('/', [SettingsController::class , 'index'])->name('index');
+            Route::post('/ip', [SettingsController::class , 'storeIp'])->name('ip.store');
+            Route::post('/ip/{ip}/toggle', [SettingsController::class , 'toggleIp'])->name('ip.toggle');
+            Route::delete('/ip/{ip}', [SettingsController::class , 'destroyIp'])->name('ip.destroy');
+            Route::post('/ip-restriction/toggle', [SettingsController::class , 'toggleIpRestriction'])->name('ip-restriction.toggle');
+            Route::get('/my-ip', [SettingsController::class , 'getMyIp'])->name('my-ip');
+            Route::post('/request/{accessRequest}/approve', [SettingsController::class , 'approveRequest'])->name('request.approve');
+            Route::post('/request/{accessRequest}/reject', [SettingsController::class , 'rejectRequest'])->name('request.reject');
+            Route::post('/logs/clear', [SettingsController::class , 'clearLogs'])->name('logs.clear');
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // Purchase Tracker Module
+        // ─────────────────────────────────────────────────────────────
+        Route::get('purchases', [PurchaseController::class , 'index'])
+            ->name('purchases.index')
+            ->middleware('admin.permission:purchases.view');
+        Route::get('purchases/create', [PurchaseController::class , 'create'])
+            ->name('purchases.create')
+            ->middleware('admin.permission:purchases.create');
+        Route::post('purchases', [PurchaseController::class , 'store'])
+            ->name('purchases.store')
+            ->middleware('admin.permission:purchases.create');
+        Route::get('purchases/{purchase}', [PurchaseController::class , 'show'])
+            ->name('purchases.show')
+            ->middleware('admin.permission:purchases.view');
+        Route::get('purchases/{purchase}/edit', [PurchaseController::class , 'edit'])
+            ->name('purchases.edit')
+            ->middleware('admin.permission:purchases.edit');
+        Route::put('purchases/{purchase}', [PurchaseController::class , 'update'])
+            ->name('purchases.update')
+            ->middleware('admin.permission:purchases.edit');
+        Route::delete('purchases/{purchase}', [PurchaseController::class , 'destroy'])
+            ->name('purchases.destroy')
+            ->middleware('admin.permission:purchases.delete');
+        Route::post('purchases/{purchase}/complete', [PurchaseController::class , 'complete'])
+            ->name('purchases.complete')
+            ->middleware('admin.permission:purchases.edit');
+
+        // ─────────────────────────────────────────────────────────────
+        // Office Expense Manager Module
+        // ─────────────────────────────────────────────────────────────
+    
+        // Reports (must be before resource route)
+        Route::get('expenses/report/monthly', [ExpenseController::class , 'monthlyReport'])
+            ->name('expenses.monthly-report')
+            ->middleware('admin.permission:expenses.reports');
+        Route::get('expenses/report/annual', [ExpenseController::class , 'annualReport'])
+            ->name('expenses.annual-report')
+            ->middleware('admin.permission:expenses.reports');
+
+        // Excel Exports
+        Route::get('expenses/export/monthly', [ExpenseController::class , 'exportMonthly'])
+            ->name('expenses.export-monthly')
+            ->middleware('admin.permission:expenses.reports');
+        Route::get('expenses/export/annual', [ExpenseController::class , 'exportAnnual'])
+            ->name('expenses.export-annual')
+            ->middleware('admin.permission:expenses.reports');
+
+        // Expense CRUD
+        Route::get('expenses', [ExpenseController::class , 'index'])
+            ->name('expenses.index')
+            ->middleware('admin.permission:expenses.view');
+        Route::get('expenses/create', [ExpenseController::class , 'create'])
+            ->name('expenses.create')
+            ->middleware('admin.permission:expenses.create');
+        Route::post('expenses', [ExpenseController::class , 'store'])
+            ->name('expenses.store')
+            ->middleware('admin.permission:expenses.create');
+        Route::get('expenses/{expense}', [ExpenseController::class , 'show'])
+            ->name('expenses.show')
+            ->middleware('admin.permission:expenses.view');
+        Route::get('expenses/{expense}/edit', [ExpenseController::class , 'edit'])
+            ->name('expenses.edit')
+            ->middleware('admin.permission:expenses.edit');
+        Route::put('expenses/{expense}', [ExpenseController::class , 'update'])
+            ->name('expenses.update')
+            ->middleware('admin.permission:expenses.edit');
+        Route::delete('expenses/{expense}', [ExpenseController::class , 'destroy'])
+            ->name('expenses.destroy')
+            ->middleware('admin.permission:expenses.delete');
+
+        // ─────────────────────────────────────────────────────────────
+        // Factory Management
+        // ─────────────────────────────────────────────────────────────
+        Route::get('factories', [FactoryController::class , 'index'])
+            ->name('factories.index')
+            ->middleware('admin.permission:factories.view');
+        Route::get('factories/create', [FactoryController::class , 'create'])
+            ->name('factories.create')
+            ->middleware('admin.permission:factories.create');
+        Route::post('factories', [FactoryController::class , 'store'])
+            ->name('factories.store')
+            ->middleware('admin.permission:factories.create');
+        Route::get('factories/{factory}', [FactoryController::class , 'show'])
+            ->name('factories.show')
+            ->middleware('admin.permission:factories.view');
+        Route::get('factories/{factory}/edit', [FactoryController::class , 'edit'])
+            ->name('factories.edit')
+            ->middleware('admin.permission:factories.edit');
+        Route::put('factories/{factory}', [FactoryController::class , 'update'])
+            ->name('factories.update')
+            ->middleware('admin.permission:factories.edit');
+        Route::delete('factories/{factory}', [FactoryController::class , 'destroy'])
+            ->name('factories.destroy')
+            ->middleware('admin.permission:factories.delete');
+
+        // ─────────────────────────────────────────────────────────────
+        // Gold Tracking Module
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('gold-tracking')->name('gold-tracking.')->middleware('admin.permission:gold_tracking.view')->group(function () {
+            // Dashboard
+            Route::get('/', [GoldTrackingController::class , 'index'])->name('index');
+
+            // Gold Purchases CRUD
+            Route::get('/purchases/create', [GoldTrackingController::class , 'createPurchase'])->name('purchases.create');
+            Route::post('/purchases', [GoldTrackingController::class , 'storePurchase'])->name('purchases.store');
+            Route::get('/purchases/{purchase}', [GoldTrackingController::class , 'showPurchase'])->name('purchases.show');
+            Route::get('/purchases/{purchase}/edit', [GoldTrackingController::class , 'editPurchase'])->name('purchases.edit');
+            Route::put('/purchases/{purchase}', [GoldTrackingController::class , 'updatePurchase'])->name('purchases.update');
+            Route::delete('/purchases/{purchase}', [GoldTrackingController::class , 'destroyPurchase'])->name('purchases.destroy');
+            Route::post('/purchases/{purchase}/complete', [GoldTrackingController::class , 'completePurchase'])->name('purchases.complete');
+
+            // Gold Distribution
+            Route::get('/distribute', [GoldTrackingController::class , 'distribute'])->name('distribute');
+            Route::post('/distribute', [GoldTrackingController::class , 'storeDistribution'])->name('distribute.store');
+
+            // Gold Return
+            Route::get('/return', [GoldTrackingController::class , 'returnGold'])->name('return');
+            Route::post('/return', [GoldTrackingController::class , 'storeReturn'])->name('return.store');
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // Melee Diamond Inventory
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('melee')->name('melee.')->group(function () {
+            Route::get('/', [MeleeDiamondController::class , 'index'])->name('index'); // View
+            Route::get('/search', [MeleeDiamondController::class , 'search'])->name('search');
+            Route::get('/stock/{id}', [MeleeDiamondController::class , 'getStock'])->name('get-stock');
+            Route::get('/history/{id}', [MeleeDiamondController::class , 'getHistory'])->name('history');
+            Route::post('/transaction', [MeleeDiamondController::class , 'transaction'])->name('transaction'); // Stock IN/OUT
+            Route::post('/add-shape', [MeleeDiamondController::class , 'addShape'])->name('add-shape'); // Add new Shape+Size
+            Route::put('/{id}', [MeleeDiamondController::class , 'update'])->name('update');
+            Route::delete('/{id}', [MeleeDiamondController::class , 'destroy'])->name('destroy');
+            Route::put('/transaction/{id}', [MeleeDiamondController::class , 'updateTransaction'])->name('update-transaction');
+            Route::delete('/transaction/{id}', [MeleeDiamondController::class , 'destroyTransaction'])->name('destroy-transaction');
+
+            // Category Management
+            Route::post('/category', [\App\Http\Controllers\MeleeCategoryController::class , 'store'])->name('category.store');
+            Route::delete('/category/{id}', [\App\Http\Controllers\MeleeCategoryController::class , 'destroy'])->name('category.destroy');
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // Package Handover & Return Management System
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('packages')->name('packages.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\PackageController::class , 'index'])
+                ->name('index')
+                ->middleware('admin.permission:packages.view');
+
+            Route::get('/create', [\App\Http\Controllers\PackageController::class , 'create'])
+                ->name('create')
+                ->middleware('admin.permission:packages.create');
+
+            Route::post('/', [\App\Http\Controllers\PackageController::class , 'store'])
+                ->name('store')
+                ->middleware('admin.permission:packages.create');
+
+            Route::get('/lookup-stock', [\App\Http\Controllers\PackageController::class , 'lookupStock'])
+                ->name('lookup-stock')
+                ->middleware('admin.permission:packages.create');
+
+            Route::get('/{package}', [\App\Http\Controllers\PackageController::class , 'show'])
+                ->name('show')
+                ->middleware('admin.permission:packages.view');
+
+            Route::post('/{package}/return', [\App\Http\Controllers\PackageController::class , 'returnPackage'])
+                ->name('return')
+                ->middleware('admin.permission:packages.return');
+
+            Route::delete('/{package}', [\App\Http\Controllers\PackageController::class , 'destroy'])
+                ->name('destroy')
+                ->middleware('admin.permission:packages.delete');
+        }
+        );
+
+        // ─────────────────────────────────────────────────────────────
+        // Shopify Integration Module
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('shopify')->name('shopify.')->group(function () {
+            Route::get('settings', [\App\Http\Controllers\ShopifyController::class , 'settings'])
+                ->name('settings');
+            Route::post('settings', [\App\Http\Controllers\ShopifyController::class , 'saveSettings'])
+                ->name('settings.save');
+            Route::post('test-connection', [\App\Http\Controllers\ShopifyController::class , 'testConnection'])
+                ->name('test-connection');
+
+            Route::get('products', [\App\Http\Controllers\ShopifyController::class , 'products'])
+                ->name('products');
+            Route::post('products/import', [\App\Http\Controllers\ShopifyController::class , 'importProducts'])
+                ->name('products.import');
+            Route::get('products/{id}', [\App\Http\Controllers\ShopifyController::class , 'showProduct'])
+                ->name('products.show');
+            Route::post('products/{id}/export', [\App\Http\Controllers\ShopifyController::class , 'exportProduct'])
+                ->name('products.export');
+            Route::post('products/{id}/sync', [\App\Http\Controllers\ShopifyController::class , 'syncProduct'])
+                ->name('products.sync');
+
+            Route::get('collections', [\App\Http\Controllers\ShopifyController::class , 'collections'])
+                ->name('collections');
+            Route::post('collections/import', [\App\Http\Controllers\ShopifyController::class , 'importCollections'])
+                ->name('collections.import');
+
+            Route::get('logs', [\App\Http\Controllers\ShopifyController::class , 'syncLogs'])
+                ->name('logs');
+        }
+        );
     });
-
-    // DIAGNOSTIC ROUTE
-    Route::any('test-broadcast', [ChatController::class, 'testBroadcast'])->name('admin.test-broadcast');
-
-    // Chat routes with middleware
-    Route::get('chat', [ChatController::class, 'index'])
-        ->name('chat.index')
-        ->middleware('admin.permission:chat.access');
-
-    // ─────────────────────────────────────────────────────────────
-    // Tools & Calculators
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('tools')->name('tools.')->group(function () {
-        Route::get('jewellery-calculator', [JewelleryCalculatorController::class, 'index'])
-            ->name('jewellery-calculator');
-        Route::get('gold-rate', [JewelleryCalculatorController::class, 'getRates'])
-            ->name('gold-rate');
-    });
-
-    // ─────────────────────────────────────────────────────────────
-    // Chat routes
-
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('chat')->middleware('admin.permission:chat.access')->group(function () {
-        Route::post('/channels', [ChatController::class, 'createChannel']);
-        Route::get('/channels', [ChatController::class, 'getChannels']);
-        Route::post('/direct', [ChatController::class, 'direct']);
-        Route::get('/channels/{channel}/messages', [ChatController::class, 'getMessages']);
-        Route::post('/channels/{channel}/messages', [ChatController::class, 'sendMessage']);
-        Route::post('/channels/{channel}/read', [ChatController::class, 'markAsRead']);
-        Route::get('/channels/{channel}/sidebar', [ChatController::class, 'sidebar']);
-        Route::get('/messages/search', [ChatController::class, 'searchMessages']);
-        Route::get('/attachments/{attachment}/download', [ChatController::class, 'downloadAttachment'])->name('chat.attachment.download');
-        Route::get('/attachments/{attachment}/proxy', [ChatController::class, 'proxyAttachment'])->name('chat.attachment.proxy');
-
-        // Thread Routes (Missing previously)
-        Route::get('/messages/{message}/thread', [ChatController::class, 'getThreadMessages']);
-        Route::post('/messages/{message}/thread/replies', [ChatController::class, 'postThreadReply']);
-
-        // Get unread message count
-        Route::get('/unread-count', [ChatController::class, 'getUnreadCount']);
-
-        // Admins list for channel creation (super admin only)
-        Route::get('/admins', [ChatController::class, 'listAdmins']);
-        // Manage members (owner or super admin)
-        Route::get('/channels/{channel}/members', [ChatController::class, 'getChannelMembers']);
-        Route::put('/channels/{channel}/members', [ChatController::class, 'updateChannelMembers']);
-        // Delete channel (super admin only)
-        Route::delete('/channels/{channel}', [ChatController::class, 'deleteChannel']);
-    });
-
-    // ─────────────────────────────────────────────────────────────
-    // Notification routes
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'index']);
-        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
-        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
-        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-        Route::delete('/{id}', [NotificationController::class, 'destroy']);
-    });
-
-    // Admin management (CRUD)
-    // ─────────────────────────────────────────────────────────────
-    Route::get('admins', [AdminController::class, 'index'])
-        ->name('admins.index')
-        ->middleware('admin.permission:admins.view');
-    Route::get('admins/create', [AdminController::class, 'create'])
-        ->name('admins.create')
-        ->middleware('admin.permission:admins.create');
-    Route::post('admins', [AdminController::class, 'store'])
-        ->name('admins.store')
-        ->middleware('admin.permission:admins.create');
-    Route::get('admins/{admin}/edit', [AdminController::class, 'edit'])
-        ->name('admins.edit')
-        ->middleware('admin.permission:admins.edit');
-    Route::put('admins/{admin}', [AdminController::class, 'update'])
-        ->name('admins.update')
-        ->middleware('admin.permission:admins.edit');
-    Route::get('admins/{admin}', [AdminController::class, 'show'])
-        ->name('admins.show')
-        ->middleware('admin.permission:admins.view');
-    Route::delete('admins/{admin}', [AdminController::class, 'destroy'])
-        ->name('admins.destroy')
-        ->middleware('admin.permission:admins.delete');
-
-    // ─────────────────────────────────────────────────────────────
-    // Admin Permissions Management (consolidated)
-    // ─────────────────────────────────────────────────────────────
-    Route::get('admins/{admin}/permissions', [AdminPermissionController::class, 'show'])
-        ->name('admins.permissions.show')
-        ->middleware('admin.permission:admins.assign_permissions');
-    Route::put('admins/{admin}/permissions', [AdminPermissionController::class, 'update'])
-        ->name('admins.permissions.update')
-        ->middleware('admin.permission:admins.assign_permissions');
-
-    // ─────────────────────────────────────────────────────────────
-    // Permission management (CRUD)
-    // ─────────────────────────────────────────────────────────────
-    Route::get('permissions', [PermissionController::class, 'index'])
-        ->name('permissions.index')
-        ->middleware('admin.permission:permissions.view');
-    Route::get('permissions/create', [PermissionController::class, 'create'])
-        ->name('permissions.create')
-        ->middleware('admin.permission:permissions.create');
-    Route::post('permissions', [PermissionController::class, 'store'])
-        ->name('permissions.store')
-        ->middleware('admin.permission:permissions.create');
-    Route::get('permissions/{permission}', [PermissionController::class, 'show'])
-        ->name('permissions.show')
-        ->middleware('admin.permission:permissions.view');
-    Route::get('permissions/{permission}/edit', [PermissionController::class, 'edit'])
-        ->name('permissions.edit')
-        ->middleware('admin.permission:permissions.edit');
-    Route::put('permissions/{permission}', [PermissionController::class, 'update'])
-        ->name('permissions.update')
-        ->middleware('admin.permission:permissions.edit');
-    Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])
-        ->name('permissions.delete')
-        ->middleware('admin.permission:permissions.delete');
-
-    // ─────────────────────────────────────────────────────────────
-    // Orders
-    // ─────────────────────────────────────────────────────────────
-    Route::get('orders', [OrderController::class, 'index'])
-        ->name('orders.index')
-        ->middleware('admin.permission:orders.view');
-    Route::get('orders/create', [OrderController::class, 'create'])
-        ->name('orders.create')
-        ->middleware('admin.permission:orders.create');
-    Route::post('orders', [OrderController::class, 'store'])
-        ->name('orders.store')
-        ->middleware('admin.permission:orders.create');
-    Route::post('orders/sync-all-tracking', [OrderController::class, 'syncAllTracking'])
-        ->name('orders.sync-all-tracking')
-        ->middleware('admin.permission:orders.edit');
-    Route::get('orders/form/{type}', [OrderController::class, 'loadFormPartial'])
-        ->name('orders.loadFormPartial')
-        ->middleware('admin.permission:orders.create');
-
-    // ─────────────────────────────────────────────────────────────
-    // Order Drafts Module (MUST be before {order} wildcard routes!)
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('orders/drafts')->name('orders.drafts.')->middleware('admin.permission:orders.create')->group(function () {
-        // Drafts listing page
-        Route::get('/', [\App\Http\Controllers\OrderDraftController::class, 'index'])
-            ->name('index');
-
-        // AJAX: Auto-save draft
-        Route::post('/save', [\App\Http\Controllers\OrderDraftController::class, 'save'])
-            ->name('save');
-
-        // AJAX: Get draft count for badge
-        Route::get('/count', [\App\Http\Controllers\OrderDraftController::class, 'count'])
-            ->name('count');
-
-        // AJAX: Get current admin's drafts for notification popup
-        Route::get('/my-drafts', [\App\Http\Controllers\OrderDraftController::class, 'myDrafts'])
-            ->name('my-drafts');
-
-        // Resume editing a draft
-        Route::get('/{draft}/resume', [\App\Http\Controllers\OrderDraftController::class, 'resume'])
-            ->name('resume');
-
-        // Preview draft
-        Route::get('/{draft}', [\App\Http\Controllers\OrderDraftController::class, 'show'])
-            ->name('show');
-
-        // Delete draft
-        Route::delete('/{draft}', [\App\Http\Controllers\OrderDraftController::class, 'destroy'])
-            ->name('destroy');
-
-        // AJAX: Delete draft
-        Route::delete('/{draft}/ajax', [\App\Http\Controllers\OrderDraftController::class, 'ajaxDestroy'])
-            ->name('ajax-destroy');
-    });
-
-    // ─────────────────────────────────────────────────────────────
-    // Order CRUD with {order} parameter (AFTER specific routes)
-    // ─────────────────────────────────────────────────────────────
-    Route::get('orders/{order}', [OrderController::class, 'show'])
-        ->name('orders.show')
-        ->middleware('admin.permission:orders.view');
-    Route::get('orders/{order}/edit', [OrderController::class, 'edit'])
-        ->name('orders.edit')
-        ->middleware('admin.permission:orders.edit');
-    Route::put('orders/{order}', [OrderController::class, 'update'])
-        ->name('orders.update')
-        ->middleware('admin.permission:orders.edit');
-    Route::get('orders/{order}/quick-view', [OrderController::class, 'quickView'])
-        ->name('orders.quick-view')
-        ->middleware('admin.permission:orders.view');
-    Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])
-        ->name('orders.cancel')
-        ->middleware('admin.permission:orders.cancel');
-    Route::delete('orders/{order}', [OrderController::class, 'destroy'])
-        ->name('orders.destroy')
-        ->middleware('admin.permission:orders.delete');
-    Route::post('orders/{order}/remove-file', [OrderController::class, 'removeFile'])
-        ->name('orders.remove-file')
-        ->middleware('admin.permission:orders.edit');
-    Route::post('orders/{order}/sync-tracking', [OrderController::class, 'syncTracking'])
-        ->name('orders.sync-tracking')
-        ->middleware('admin.permission:orders.edit');
-
-    // ─────────────────────────────────────────────────────────────
-    // Client Dashboard Module
-    // ─────────────────────────────────────────────────────────────
-    Route::get('clients', [\App\Http\Controllers\ClientController::class, 'index'])
-        ->name('clients.index')
-        ->middleware('admin.permission:clients.view');
-    Route::get('clients/data', [\App\Http\Controllers\ClientController::class, 'data'])
-        ->name('clients.data')
-        ->middleware('admin.permission:clients.view');
-    Route::get('clients/export', [\App\Http\Controllers\ClientController::class, 'export'])
-        ->name('clients.export')
-        ->middleware('admin.permission:clients.export');
-    Route::get('clients/search', [\App\Http\Controllers\ClientController::class, 'search'])
-        ->name('clients.search')
-        ->middleware('admin.permission:orders.create');
-    Route::get('clients/{client}', [\App\Http\Controllers\ClientController::class, 'show'])
-        ->name('clients.show')
-        ->middleware('admin.permission:clients.view');
-
-
-
-    // Invoices (basic CRUD)
-    Route::get('invoices', [InvoiceController::class, 'index'])
-        ->name('invoices.index')
-        ->middleware('admin.permission:invoices.view');
-    Route::get('invoices/create', [InvoiceController::class, 'create'])
-        ->name('invoices.create')
-        ->middleware('admin.permission:invoices.create');
-    Route::post('invoices', [InvoiceController::class, 'store'])
-        ->name('invoices.store')
-        ->middleware('admin.permission:invoices.create');
-    Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])
-        ->name('invoices.show')
-        ->middleware('admin.permission:invoices.view');
-    Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])
-        ->name('invoices.pdf')
-        ->middleware('admin.permission:invoices.view');
-    Route::get('invoices/{invoice}/edit', [InvoiceController::class, 'edit'])
-        ->name('invoices.edit')
-        ->middleware('admin.permission:invoices.edit');
-    Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])
-        ->name('invoices.update')
-        ->middleware('admin.permission:invoices.edit');
-    Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])
-        ->name('invoices.destroy')
-        ->middleware('admin.permission:invoices.delete');
-
-
-    // Metal Types
-    Route::get('metal-types', [MetalTypeController::class, 'index'])
-        ->name('metal_types.index')
-        ->middleware('admin.permission:metal_types.view');
-    Route::get('metal-types/create', [MetalTypeController::class, 'create'])
-        ->name('metal_types.create')
-        ->middleware('admin.permission:metal_types.create');
-    Route::post('metal-types', [MetalTypeController::class, 'store'])
-        ->name('metal_types.store')
-        ->middleware('admin.permission:metal_types.create');
-    Route::get('metal-types/{metal_type}', [MetalTypeController::class, 'show'])
-        ->name('metal_types.show')
-        ->middleware('admin.permission:metal_types.view');
-    Route::get('metal-types/{metal_type}/edit', [MetalTypeController::class, 'edit'])
-        ->name('metal_types.edit')
-        ->middleware('admin.permission:metal_types.edit');
-    Route::put('metal-types/{metal_type}', [MetalTypeController::class, 'update'])
-        ->name('metal_types.update')
-        ->middleware('admin.permission:metal_types.edit');
-    Route::delete('metal-types/{metal_type}', [MetalTypeController::class, 'destroy'])
-        ->name('metal_types.destroy')
-        ->middleware('admin.permission:metal_types.delete');
-
-    // Setting Types
-    Route::get('setting-types', [SettingTypeController::class, 'index'])
-        ->name('setting_types.index')
-        ->middleware('admin.permission:setting_types.view');
-    Route::get('setting-types/create', [SettingTypeController::class, 'create'])
-        ->name('setting_types.create')
-        ->middleware('admin.permission:setting_types.create');
-    Route::post('setting-types', [SettingTypeController::class, 'store'])
-        ->name('setting_types.store')
-        ->middleware('admin.permission:setting_types.create');
-    Route::get('setting-types/{setting_type}', [SettingTypeController::class, 'show'])
-        ->name('setting_types.show')
-        ->middleware('admin.permission:setting_types.view');
-    Route::get('setting-types/{setting_type}/edit', [SettingTypeController::class, 'edit'])
-        ->name('setting_types.edit')
-        ->middleware('admin.permission:setting_types.edit');
-    Route::put('setting-types/{setting_type}', [SettingTypeController::class, 'update'])
-        ->name('setting_types.update')
-        ->middleware('admin.permission:setting_types.edit');
-    Route::delete('setting-types/{setting_type}', [SettingTypeController::class, 'destroy'])
-        ->name('setting_types.destroy')
-        ->middleware('admin.permission:setting_types.delete');
-
-    // Closure Types
-    Route::get('closure-types', [ClosureTypeController::class, 'index'])
-        ->name('closure_types.index')
-        ->middleware('admin.permission:closure_types.view');
-    Route::get('closure-types/create', [ClosureTypeController::class, 'create'])
-        ->name('closure_types.create')
-        ->middleware('admin.permission:closure_types.create');
-    Route::post('closure-types', [ClosureTypeController::class, 'store'])
-        ->name('closure_types.store')
-        ->middleware('admin.permission:closure_types.create');
-    Route::get('closure-types/{closure_type}', [ClosureTypeController::class, 'show'])
-        ->name('closure_types.show')
-        ->middleware('admin.permission:closure_types.view');
-    Route::get('closure-types/{closure_type}/edit', [ClosureTypeController::class, 'edit'])
-        ->name('closure_types.edit')
-        ->middleware('admin.permission:closure_types.edit');
-    Route::put('closure-types/{closure_type}', [ClosureTypeController::class, 'update'])
-        ->name('closure_types.update')
-        ->middleware('admin.permission:closure_types.edit');
-    Route::delete('closure-types/{closure_type}', [ClosureTypeController::class, 'destroy'])
-        ->name('closure_types.destroy')
-        ->middleware('admin.permission:closure_types.delete');
-
-    // Ring Sizes
-    Route::get('ring-sizes', [RingSizeController::class, 'index'])
-        ->name('ring_sizes.index')
-        ->middleware('admin.permission:ring_sizes.view');
-    Route::get('ring-sizes/create', [RingSizeController::class, 'create'])
-        ->name('ring_sizes.create')
-        ->middleware('admin.permission:ring_sizes.create');
-    Route::post('ring-sizes', [RingSizeController::class, 'store'])
-        ->name('ring_sizes.store')
-        ->middleware('admin.permission:ring_sizes.create');
-    Route::get('ring-sizes/{ring_size}', [RingSizeController::class, 'show'])
-        ->name('ring_sizes.show')
-        ->middleware('admin.permission:ring_sizes.view');
-    Route::get('ring-sizes/{ring_size}/edit', [RingSizeController::class, 'edit'])
-        ->name('ring_sizes.edit')
-        ->middleware('admin.permission:ring_sizes.edit');
-    Route::put('ring-sizes/{ring_size}', [RingSizeController::class, 'update'])
-        ->name('ring_sizes.update')
-        ->middleware('admin.permission:ring_sizes.edit');
-    Route::delete('ring-sizes/{ring_size}', [RingSizeController::class, 'destroy'])
-        ->name('ring_sizes.destroy')
-        ->middleware('admin.permission:ring_sizes.delete');
-
-    // Stone Types
-    Route::get('stone-types', [StoneTypeController::class, 'index'])
-        ->name('stone_types.index')
-        ->middleware('admin.permission:stone_types.view');
-    Route::get('stone-types/create', [StoneTypeController::class, 'create'])
-        ->name('stone_types.create')
-        ->middleware('admin.permission:stone_types.create');
-    Route::post('stone-types', [StoneTypeController::class, 'store'])
-        ->name('stone_types.store')
-        ->middleware('admin.permission:stone_types.create');
-    Route::get('stone-types/{stone_type}', [StoneTypeController::class, 'show'])
-        ->name('stone_types.show')
-        ->middleware('admin.permission:stone_types.view');
-    Route::get('stone-types/{stone_type}/edit', [StoneTypeController::class, 'edit'])
-        ->name('stone_types.edit')
-        ->middleware('admin.permission:stone_types.edit');
-    Route::put('stone-types/{stone_type}', [StoneTypeController::class, 'update'])
-        ->name('stone_types.update')
-        ->middleware('admin.permission:stone_types.edit');
-    Route::delete('stone-types/{stone_type}', [StoneTypeController::class, 'destroy'])
-        ->name('stone_types.destroy')
-        ->middleware('admin.permission:stone_types.delete');
-
-    // Stone Shapes
-    Route::get('stone-shapes', [StoneShapeController::class, 'index'])
-        ->name('stone_shapes.index')
-        ->middleware('admin.permission:stone_shapes.view');
-    Route::get('stone-shapes/create', [StoneShapeController::class, 'create'])
-        ->name('stone_shapes.create')
-        ->middleware('admin.permission:stone_shapes.create');
-    Route::post('stone-shapes', [StoneShapeController::class, 'store'])
-        ->name('stone_shapes.store')
-        ->middleware('admin.permission:stone_shapes.create');
-    Route::get('stone-shapes/{stone_shape}', [StoneShapeController::class, 'show'])
-        ->name('stone_shapes.show')
-        ->middleware('admin.permission:stone_shapes.view');
-    Route::get('stone-shapes/{stone_shape}/edit', [StoneShapeController::class, 'edit'])
-        ->name('stone_shapes.edit')
-        ->middleware('admin.permission:stone_shapes.edit');
-    Route::put('stone-shapes/{stone_shape}', [StoneShapeController::class, 'update'])
-        ->name('stone_shapes.update')
-        ->middleware('admin.permission:stone_shapes.edit');
-    Route::delete('stone-shapes/{stone_shape}', [StoneShapeController::class, 'destroy'])
-        ->name('stone_shapes.destroy')
-        ->middleware('admin.permission:stone_shapes.delete');
-
-    // Stone Colors
-    Route::get('stone-colors', [StoneColorController::class, 'index'])
-        ->name('stone_colors.index')
-        ->middleware('admin.permission:stone_colors.view');
-    Route::get('stone-colors/create', [StoneColorController::class, 'create'])
-        ->name('stone_colors.create')
-        ->middleware('admin.permission:stone_colors.create');
-    Route::post('stone-colors', [StoneColorController::class, 'store'])
-        ->name('stone_colors.store')
-        ->middleware('admin.permission:stone_colors.create');
-    Route::get('stone-colors/{stone_color}', [StoneColorController::class, 'show'])
-        ->name('stone_colors.show')
-        ->middleware('admin.permission:stone_colors.view');
-    Route::get('stone-colors/{stone_color}/edit', [StoneColorController::class, 'edit'])
-        ->name('stone_colors.edit')
-        ->middleware('admin.permission:stone_colors.edit');
-    Route::put('stone-colors/{stone_color}', [StoneColorController::class, 'update'])
-        ->name('stone_colors.update')
-        ->middleware('admin.permission:stone_colors.edit');
-    Route::delete('stone-colors/{stone_color}', [StoneColorController::class, 'destroy'])
-        ->name('stone_colors.destroy')
-        ->middleware('admin.permission:stone_colors.delete');
-
-    // Diamond Clarities
-    Route::get('diamond-clarities', [DiamondClarityController::class, 'index'])
-        ->name('diamond_clarities.index')
-        ->middleware('admin.permission:diamond_clarities.view');
-    Route::get('diamond-clarities/create', [DiamondClarityController::class, 'create'])
-        ->name('diamond_clarities.create')
-        ->middleware('admin.permission:diamond_clarities.create');
-    Route::post('diamond-clarities', [DiamondClarityController::class, 'store'])
-        ->name('diamond_clarities.store')
-        ->middleware('admin.permission:diamond_clarities.create');
-    Route::get('diamond-clarities/{diamond_clarity}', [DiamondClarityController::class, 'show'])
-        ->name('diamond_clarities.show')
-        ->middleware('admin.permission:diamond_clarities.view');
-    Route::get('diamond-clarities/{diamond_clarity}/edit', [DiamondClarityController::class, 'edit'])
-        ->name('diamond_clarities.edit')
-        ->middleware('admin.permission:diamond_clarities.edit');
-    Route::put('diamond-clarities/{diamond_clarity}', [DiamondClarityController::class, 'update'])
-        ->name('diamond_clarities.update')
-        ->middleware('admin.permission:diamond_clarities.edit');
-    Route::delete('diamond-clarities/{diamond_clarity}', [DiamondClarityController::class, 'destroy'])
-        ->name('diamond_clarities.destroy')
-        ->middleware('admin.permission:diamond_clarities.delete');
-
-    // Diamond Cuts
-    Route::get('diamond-cuts', [DiamondCutController::class, 'index'])
-        ->name('diamond_cuts.index')
-        ->middleware('admin.permission:diamond_cuts.view');
-    Route::get('diamond-cuts/create', [DiamondCutController::class, 'create'])
-        ->name('diamond_cuts.create')
-        ->middleware('admin.permission:diamond_cuts.create');
-    Route::post('diamond-cuts', [DiamondCutController::class, 'store'])
-        ->name('diamond_cuts.store')
-        ->middleware('admin.permission:diamond_cuts.create');
-    Route::get('diamond-cuts/{diamond_cut}', [DiamondCutController::class, 'show'])
-        ->name('diamond_cuts.show')
-        ->middleware('admin.permission:diamond_cuts.view');
-    Route::get('diamond-cuts/{diamond_cut}/edit', [DiamondCutController::class, 'edit'])
-        ->name('diamond_cuts.edit')
-        ->middleware('admin.permission:diamond_cuts.edit');
-    Route::put('diamond-cuts/{diamond_cut}', [DiamondCutController::class, 'update'])
-        ->name('diamond_cuts.update')
-        ->middleware('admin.permission:diamond_cuts.edit');
-    Route::delete('diamond-cuts/{diamond_cut}', [DiamondCutController::class, 'destroy'])
-        ->name('diamond_cuts.destroy')
-        ->middleware('admin.permission:diamond_cuts.delete');
-
-
-    // Company CRUD
-    Route::get('companies', [CompanyController::class, 'index'])
-        ->name('companies.index')
-        ->middleware('admin.permission:companies.view');
-    Route::get('companies/create', [CompanyController::class, 'create'])
-        ->name('companies.create')
-        ->middleware('admin.permission:companies.create');
-    Route::post('companies', [CompanyController::class, 'store'])
-        ->name('companies.store')
-        ->middleware('admin.permission:companies.create');
-    Route::get('companies/{company}', [CompanyController::class, 'show'])
-        ->name('companies.show')
-        ->middleware('admin.permission:companies.view');
-    Route::get('companies/{company}/edit', [CompanyController::class, 'edit'])
-        ->name('companies.edit')
-        ->middleware('admin.permission:companies.edit');
-    Route::put('companies/{company}', [CompanyController::class, 'update'])
-        ->name('companies.update')
-        ->middleware('admin.permission:companies.edit');
-    Route::delete('companies/{company}', [CompanyController::class, 'destroy'])
-        ->name('companies.destroy')
-        ->middleware('admin.permission:companies.delete');
-
-    // All Company Sales Dashboard Routes
-    Route::get('all-company-sales', [CompanyController::class, 'allSalesDashboard'])
-        ->name('companies.all-sales-dashboard')
-        ->middleware('admin.permission:sales.view_all');
-
-    Route::post('all-company-sales/set-targets', [CompanyController::class, 'saveAllTargets'])
-        ->name('companies.save-all-targets')
-        ->middleware('admin.permission:sales.view_all');
-
-    Route::get('all-company-sales/export-csv', [CompanyController::class, 'exportAllSalesCsv'])
-        ->name('companies.export-all-sales-csv')
-        ->middleware('admin.permission:sales.view_all');
-
-    // Company Sales Dashboard Routes
-    Route::get('companies/{company}/sales-dashboard', [CompanyController::class, 'salesDashboard'])
-        ->name('companies.sales-dashboard')
-        ->middleware('admin.permission:companies.view');
-    Route::post('companies/{company}/set-target', [CompanyController::class, 'setTarget'])
-        ->name('companies.set-target')
-        ->middleware('admin.permission:companies.edit');
-    Route::get('companies/{company}/export-pdf', [CompanyController::class, 'exportPdf'])
-        ->name('companies.export-pdf')
-        ->middleware('admin.permission:companies.view');
-    Route::get('companies/{company}/export-csv', [CompanyController::class, 'exportCsv'])
-        ->name('companies.export-csv')
-        ->middleware('admin.permission:companies.view');
-
-    // Diamond Import/Export  (KEEP THESE FIRST)
-    // Rate limited: Import is CPU/memory intensive
-    Route::post('diamonds/import', [DiamondController::class, 'import'])
-        ->name('diamonds.import')
-        ->middleware('throttle:10,1'); // 10 imports per minute
-
-    // Import result page - shows success/failure count with error report download
-    Route::get('diamonds/import-result', [DiamondController::class, 'importResult'])
-        ->name('diamond.import.result');
-
-    // Download error report Excel file with failed rows
-    Route::get('diamonds/download-errors/{fileName}', [DiamondController::class, 'downloadErrorReport'])
-        ->name('diamond.download-errors');
-
-    // Rate limited: Export can be heavy on large datasets
-    Route::get('diamonds/export', [DiamondController::class, 'export'])
-        ->name('diamonds.export')
-        ->middleware('throttle:20,1'); // 20 exports per minute
-
-    // Background Job Routes
-    Route::get('diamonds/jobs/history', [DiamondController::class, 'jobHistory'])
-        ->name('diamond.job.history')
-        ->middleware('admin.permission:diamond_jobs.view');
-    Route::get('diamonds/jobs/{id}', [DiamondController::class, 'jobStatus'])
-        ->name('diamond.job.status')
-        ->middleware('admin.permission:diamond_jobs.view');
-    Route::get('diamonds/jobs/{id}/status-json', [DiamondController::class, 'jobStatusJson'])
-        ->name('diamond.job.status.json')
-        ->middleware('admin.permission:diamond_jobs.view');
-    Route::get('diamonds/jobs/{id}/download', [DiamondController::class, 'jobDownload'])
-        ->name('diamond.job.download')
-        ->middleware('admin.permission:diamond_jobs.view');
-
-    // Diamond SKU availability check for orders (real-time validation)
-    Route::get('diamonds/check-sku', [DiamondController::class, 'checkSkuAvailability'])
-        ->name('diamond.check-sku')
-        ->middleware('admin.permission:orders.create');
-
-    // Diamond CRUD 
-    Route::get('diamonds/create', [DiamondController::class, 'create'])
-        ->name('diamond.create')
-        ->middleware('admin.permission:diamonds.create');
-    Route::post('diamonds', [DiamondController::class, 'store'])
-        ->name('diamond.store')
-        ->middleware('admin.permission:diamonds.create');
-    Route::get('diamonds', [DiamondController::class, 'index'])
-        ->name('diamond.index')
-        ->middleware('admin.permission:diamonds.view');
-
-    // Restock sold diamonds
-    // Rate limited: Prevents accidental duplicate restocks
-    Route::post('diamonds/{diamond}/restock', [DiamondController::class, 'restockAction'])
-        ->name('diamond.restock')
-        ->middleware('throttle:30,1'); // 30 restocks per minute
-    Route::get('diamonds/{diamond}', [DiamondController::class, 'show'])
-        ->name('diamond.show')
-        ->middleware('admin.permission:diamonds.view');
-    Route::get('diamonds/{diamond}/edit', [DiamondController::class, 'edit'])
-        ->name('diamond.edit')
-        ->middleware('admin.permission:diamonds.edit');
-    Route::put('diamonds/{diamond}', [DiamondController::class, 'update'])
-        ->name('diamond.update')
-        ->middleware('admin.permission:diamonds.edit');
-    Route::delete('diamonds/{diamond}', [DiamondController::class, 'destroy'])
-        ->name('diamond.destroy')
-        ->middleware('admin.permission:diamonds.delete');
-    Route::post('diamonds/{diamond}/assign', [DiamondController::class, 'assignToAdmin'])
-        ->name('diamond.assign')
-        ->middleware('admin.permission:diamonds.assign');
-
-
-    // Bulk Edit Routes
-    Route::get('diamonds/bulk-edit/diamonds', [DiamondController::class, 'bulkEditDiamonds'])
-        ->name('diamond.bulk-edit.diamonds')
-        ->middleware('admin.permission:diamonds.edit');
-    Route::post('diamonds/bulk-edit', [DiamondController::class, 'bulkEdit'])
-        ->name('diamond.bulk-edit')
-        ->middleware(['admin.permission:diamonds.edit', 'throttle:10,1']);
-
-    // Notification Routes
-    Route::get('notifications', [AdminController::class, 'showNotifications'])
-        ->name('notifications.index');
-    Route::post('notifications/{notification}/read', [AdminController::class, 'markNotificationAsRead'])
-        ->name('notifications.read');
-    Route::post('notifications/mark-all-read', [AdminController::class, 'markAllNotificationsAsRead'])
-        ->name('notifications.mark-all-read');
-
-    // Parties CRUD
-    Route::get('parties', [PartyController::class, 'index'])
-        ->name('parties.index')
-        ->middleware('admin.permission:parties.view');
-    Route::get('parties/create', [PartyController::class, 'create'])
-        ->name('parties.create')
-        ->middleware('admin.permission:parties.create');
-    Route::post('parties', [PartyController::class, 'store'])
-        ->name('parties.store')
-        ->middleware('admin.permission:parties.create');
-    Route::get('parties/{party}', [PartyController::class, 'show'])
-        ->name('parties.show')
-        ->middleware('admin.permission:parties.view');
-    Route::get('parties/{party}/edit', [PartyController::class, 'edit'])
-        ->name('parties.edit')
-        ->middleware('admin.permission:parties.edit');
-    Route::put('parties/{party}', [PartyController::class, 'update'])
-        ->name('parties.update')
-        ->middleware('admin.permission:parties.edit');
-    Route::delete('parties/{party}', [PartyController::class, 'destroy'])
-        ->name('parties.destroy')
-        ->middleware('admin.permission:parties.delete');
-
-    // ─────────────────────────────────────────────────────────────
-    // Lead Management Module
-    // ─────────────────────────────────────────────────────────────
-
-    // Lead Inbox (Kanban Board)
-    Route::get('leads', [\App\Http\Controllers\LeadController::class, 'index'])
-        ->name('leads.index')
-        ->middleware('admin.permission:leads.view');
-
-    // Lead Analytics
-    Route::get('leads/analytics', [\App\Http\Controllers\LeadController::class, 'analytics'])
-        ->name('leads.analytics')
-        ->middleware('admin.permission:leads.view');
-
-    // Lead CRUD
-    Route::post('leads', [\App\Http\Controllers\LeadController::class, 'store'])
-        ->name('leads.store')
-        ->middleware('admin.permission:leads.create');
-
-    Route::get('leads/{lead}', [\App\Http\Controllers\LeadController::class, 'show'])
-        ->name('leads.show')
-        ->middleware('admin.permission:leads.view');
-
-    Route::put('leads/{lead}', [\App\Http\Controllers\LeadController::class, 'update'])
-        ->name('leads.update')
-        ->middleware('admin.permission:leads.edit');
-
-    Route::delete('leads/{lead}', [\App\Http\Controllers\LeadController::class, 'destroy'])
-        ->name('leads.destroy')
-        ->middleware('admin.permission:leads.delete');
-
-    // Lead Actions
-    Route::patch('leads/{lead}/status', [\App\Http\Controllers\LeadController::class, 'updateStatus'])
-        ->name('leads.updateStatus')
-        ->middleware('admin.permission:leads.edit');
-
-    Route::post('leads/{lead}/assign', [\App\Http\Controllers\LeadController::class, 'assign'])
-        ->name('leads.assign')
-        ->middleware('admin.permission:leads.assign');
-
-    Route::post('leads/{lead}/message', [\App\Http\Controllers\LeadController::class, 'sendMessage'])
-        ->name('leads.sendMessage')
-        ->middleware(['admin.permission:leads.message', 'throttle:meta-api']);
-
-    Route::post('leads/{lead}/note', [\App\Http\Controllers\LeadController::class, 'addNote'])
-        ->name('leads.addNote')
-        ->middleware('admin.permission:leads.edit');
-
-    // Bulk Operations
-    Route::post('leads/bulk-action', [\App\Http\Controllers\LeadController::class, 'bulkAction'])
-        ->name('leads.bulkAction')
-        ->middleware(['admin.permission:leads.edit', 'throttle:critical-ops']);
-
-    // ─────────────────────────────────────────────────────────────
-    // Meta Settings Routes
-    // ─────────────────────────────────────────────────────────────
-
-    Route::prefix('settings/meta')->name('settings.meta.')->middleware(['admin.permission:meta_leads.settings', 'throttle:meta-api'])->group(function () {
-        Route::get('/', [\App\Http\Controllers\MetaSettingsController::class, 'index'])
-            ->name('index');
-
-        Route::post('/', [\App\Http\Controllers\MetaSettingsController::class, 'store'])
-            ->name('store');
-
-        Route::post('/{account}/toggle', [\App\Http\Controllers\MetaSettingsController::class, 'toggle'])
-            ->name('toggle');
-
-        Route::post('/{account}/refresh', [\App\Http\Controllers\MetaSettingsController::class, 'refresh'])
-            ->name('refresh');
-
-        Route::delete('/{account}', [\App\Http\Controllers\MetaSettingsController::class, 'destroy'])
-            ->name('destroy');
-
-        Route::post('/test-webhook', [\App\Http\Controllers\MetaSettingsController::class, 'testWebhook'])
-            ->name('test-webhook');
-    });
-
-    // ─────────────────────────────────────────────────────────────
-    // IP Security Settings Routes
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('settings/security')->name('settings.security.')->middleware(['admin.permission:settings.manage'])->group(function () {
-        Route::get('/', [SettingsController::class, 'index'])->name('index');
-        Route::post('/ip', [SettingsController::class, 'storeIp'])->name('ip.store');
-        Route::post('/ip/{ip}/toggle', [SettingsController::class, 'toggleIp'])->name('ip.toggle');
-        Route::delete('/ip/{ip}', [SettingsController::class, 'destroyIp'])->name('ip.destroy');
-        Route::post('/ip-restriction/toggle', [SettingsController::class, 'toggleIpRestriction'])->name('ip-restriction.toggle');
-        Route::get('/my-ip', [SettingsController::class, 'getMyIp'])->name('my-ip');
-        Route::post('/request/{accessRequest}/approve', [SettingsController::class, 'approveRequest'])->name('request.approve');
-        Route::post('/request/{accessRequest}/reject', [SettingsController::class, 'rejectRequest'])->name('request.reject');
-        Route::post('/logs/clear', [SettingsController::class, 'clearLogs'])->name('logs.clear');
-    });
-
-    // ─────────────────────────────────────────────────────────────
-    // Purchase Tracker Module
-    // ─────────────────────────────────────────────────────────────
-    Route::get('purchases', [PurchaseController::class, 'index'])
-        ->name('purchases.index')
-        ->middleware('admin.permission:purchases.view');
-    Route::get('purchases/create', [PurchaseController::class, 'create'])
-        ->name('purchases.create')
-        ->middleware('admin.permission:purchases.create');
-    Route::post('purchases', [PurchaseController::class, 'store'])
-        ->name('purchases.store')
-        ->middleware('admin.permission:purchases.create');
-    Route::get('purchases/{purchase}', [PurchaseController::class, 'show'])
-        ->name('purchases.show')
-        ->middleware('admin.permission:purchases.view');
-    Route::get('purchases/{purchase}/edit', [PurchaseController::class, 'edit'])
-        ->name('purchases.edit')
-        ->middleware('admin.permission:purchases.edit');
-    Route::put('purchases/{purchase}', [PurchaseController::class, 'update'])
-        ->name('purchases.update')
-        ->middleware('admin.permission:purchases.edit');
-    Route::delete('purchases/{purchase}', [PurchaseController::class, 'destroy'])
-        ->name('purchases.destroy')
-        ->middleware('admin.permission:purchases.delete');
-    Route::post('purchases/{purchase}/complete', [PurchaseController::class, 'complete'])
-        ->name('purchases.complete')
-        ->middleware('admin.permission:purchases.edit');
-
-    // ─────────────────────────────────────────────────────────────
-    // Office Expense Manager Module
-    // ─────────────────────────────────────────────────────────────
-
-    // Reports (must be before resource route)
-    Route::get('expenses/report/monthly', [ExpenseController::class, 'monthlyReport'])
-        ->name('expenses.monthly-report')
-        ->middleware('admin.permission:expenses.reports');
-    Route::get('expenses/report/annual', [ExpenseController::class, 'annualReport'])
-        ->name('expenses.annual-report')
-        ->middleware('admin.permission:expenses.reports');
-
-    // Excel Exports
-    Route::get('expenses/export/monthly', [ExpenseController::class, 'exportMonthly'])
-        ->name('expenses.export-monthly')
-        ->middleware('admin.permission:expenses.reports');
-    Route::get('expenses/export/annual', [ExpenseController::class, 'exportAnnual'])
-        ->name('expenses.export-annual')
-        ->middleware('admin.permission:expenses.reports');
-
-    // Expense CRUD
-    Route::get('expenses', [ExpenseController::class, 'index'])
-        ->name('expenses.index')
-        ->middleware('admin.permission:expenses.view');
-    Route::get('expenses/create', [ExpenseController::class, 'create'])
-        ->name('expenses.create')
-        ->middleware('admin.permission:expenses.create');
-    Route::post('expenses', [ExpenseController::class, 'store'])
-        ->name('expenses.store')
-        ->middleware('admin.permission:expenses.create');
-    Route::get('expenses/{expense}', [ExpenseController::class, 'show'])
-        ->name('expenses.show')
-        ->middleware('admin.permission:expenses.view');
-    Route::get('expenses/{expense}/edit', [ExpenseController::class, 'edit'])
-        ->name('expenses.edit')
-        ->middleware('admin.permission:expenses.edit');
-    Route::put('expenses/{expense}', [ExpenseController::class, 'update'])
-        ->name('expenses.update')
-        ->middleware('admin.permission:expenses.edit');
-    Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])
-        ->name('expenses.destroy')
-        ->middleware('admin.permission:expenses.delete');
-
-    // ─────────────────────────────────────────────────────────────
-    // Factory Management
-    // ─────────────────────────────────────────────────────────────
-    Route::get('factories', [FactoryController::class, 'index'])
-        ->name('factories.index')
-        ->middleware('admin.permission:factories.view');
-    Route::get('factories/create', [FactoryController::class, 'create'])
-        ->name('factories.create')
-        ->middleware('admin.permission:factories.create');
-    Route::post('factories', [FactoryController::class, 'store'])
-        ->name('factories.store')
-        ->middleware('admin.permission:factories.create');
-    Route::get('factories/{factory}', [FactoryController::class, 'show'])
-        ->name('factories.show')
-        ->middleware('admin.permission:factories.view');
-    Route::get('factories/{factory}/edit', [FactoryController::class, 'edit'])
-        ->name('factories.edit')
-        ->middleware('admin.permission:factories.edit');
-    Route::put('factories/{factory}', [FactoryController::class, 'update'])
-        ->name('factories.update')
-        ->middleware('admin.permission:factories.edit');
-    Route::delete('factories/{factory}', [FactoryController::class, 'destroy'])
-        ->name('factories.destroy')
-        ->middleware('admin.permission:factories.delete');
-
-    // ─────────────────────────────────────────────────────────────
-    // Gold Tracking Module
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('gold-tracking')->name('gold-tracking.')->middleware('admin.permission:gold_tracking.view')->group(function () {
-        // Dashboard
-        Route::get('/', [GoldTrackingController::class, 'index'])->name('index');
-
-        // Gold Purchases CRUD
-        Route::get('/purchases/create', [GoldTrackingController::class, 'createPurchase'])->name('purchases.create');
-        Route::post('/purchases', [GoldTrackingController::class, 'storePurchase'])->name('purchases.store');
-        Route::get('/purchases/{purchase}', [GoldTrackingController::class, 'showPurchase'])->name('purchases.show');
-        Route::get('/purchases/{purchase}/edit', [GoldTrackingController::class, 'editPurchase'])->name('purchases.edit');
-        Route::put('/purchases/{purchase}', [GoldTrackingController::class, 'updatePurchase'])->name('purchases.update');
-        Route::delete('/purchases/{purchase}', [GoldTrackingController::class, 'destroyPurchase'])->name('purchases.destroy');
-        Route::post('/purchases/{purchase}/complete', [GoldTrackingController::class, 'completePurchase'])->name('purchases.complete');
-
-        // Gold Distribution
-        Route::get('/distribute', [GoldTrackingController::class, 'distribute'])->name('distribute');
-        Route::post('/distribute', [GoldTrackingController::class, 'storeDistribution'])->name('distribute.store');
-
-        // Gold Return
-        Route::get('/return', [GoldTrackingController::class, 'returnGold'])->name('return');
-        Route::post('/return', [GoldTrackingController::class, 'storeReturn'])->name('return.store');
-    });
-
-    // ─────────────────────────────────────────────────────────────
-    // Melee Diamond Inventory
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('melee')->name('melee.')->group(function () {
-        Route::get('/', [MeleeDiamondController::class, 'index'])->name('index'); // View
-        Route::get('/search', [MeleeDiamondController::class, 'search'])->name('search');
-        Route::get('/stock/{id}', [MeleeDiamondController::class, 'getStock'])->name('get-stock');
-        Route::get('/history/{id}', [MeleeDiamondController::class, 'getHistory'])->name('history');
-        Route::post('/transaction', [MeleeDiamondController::class, 'transaction'])->name('transaction'); // Stock IN/OUT
-        Route::post('/add-shape', [MeleeDiamondController::class, 'addShape'])->name('add-shape'); // Add new Shape+Size
-        Route::put('/{id}', [MeleeDiamondController::class, 'update'])->name('update');
-        Route::delete('/{id}', [MeleeDiamondController::class, 'destroy'])->name('destroy');
-        Route::put('/transaction/{id}', [MeleeDiamondController::class, 'updateTransaction'])->name('update-transaction');
-        Route::delete('/transaction/{id}', [MeleeDiamondController::class, 'destroyTransaction'])->name('destroy-transaction');
-
-        // Category Management
-        Route::post('/category', [\App\Http\Controllers\MeleeCategoryController::class, 'store'])->name('category.store');
-        Route::delete('/category/{id}', [\App\Http\Controllers\MeleeCategoryController::class, 'destroy'])->name('category.destroy');
-    });
-
-    // ─────────────────────────────────────────────────────────────
-    // Package Handover & Return Management System
-    // ─────────────────────────────────────────────────────────────
-    Route::prefix('packages')->name('packages.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\PackageController::class, 'index'])
-            ->name('index')
-            ->middleware('admin.permission:packages.view');
-
-        Route::get('/create', [\App\Http\Controllers\PackageController::class, 'create'])
-            ->name('create')
-            ->middleware('admin.permission:packages.create');
-
-        Route::post('/', [\App\Http\Controllers\PackageController::class, 'store'])
-            ->name('store')
-            ->middleware('admin.permission:packages.create');
-
-        Route::get('/lookup-stock', [\App\Http\Controllers\PackageController::class, 'lookupStock'])
-            ->name('lookup-stock')
-            ->middleware('admin.permission:packages.create');
-
-        Route::get('/{package}', [\App\Http\Controllers\PackageController::class, 'show'])
-            ->name('show')
-            ->middleware('admin.permission:packages.view');
-
-        Route::post('/{package}/return', [\App\Http\Controllers\PackageController::class, 'returnPackage'])
-            ->name('return')
-            ->middleware('admin.permission:packages.return');
-
-        Route::delete('/{package}', [\App\Http\Controllers\PackageController::class, 'destroy'])
-            ->name('destroy')
-            ->middleware('admin.permission:packages.delete');
-    });
-
-});
 
 // ─────────────────────────────────────────────────────────────
 // Meta Webhook Routes (Outside auth middleware)
@@ -967,10 +1008,10 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
 Route::prefix('webhook/meta')->group(function () {
     // Webhook verification (GET)
-    Route::get('/', [MetaWebhookController::class, 'verify']);
+    Route::get('/', [MetaWebhookController::class , 'verify']);
 
     // Webhook events (POST) - Must exclude from CSRF
-    Route::post('/', [MetaWebhookController::class, 'handle'])
+    Route::post('/', [MetaWebhookController::class , 'handle'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });
 
@@ -978,7 +1019,5 @@ Route::prefix('webhook/meta')->group(function () {
 // 17Track Webhook Routes (Outside auth middleware)
 // ─────────────────────────────────────────────────────────────
 
-Route::post('webhook/17track', [TrackingWebhookController::class, 'handle17Track'])
+Route::post('webhook/17track', [TrackingWebhookController::class , 'handle17Track'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-
-

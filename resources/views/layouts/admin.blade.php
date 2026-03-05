@@ -3051,6 +3051,54 @@
                     </li>
                 @endif
 
+                {{-- ── SHOPIFY ── --}}
+                @php
+                    $shopifyActive = request()->routeIs('shopify.*');
+                @endphp
+                <div class="nav-dropdown">
+                    <button class="dropdown-toggle-link {{ $shopifyActive ? 'active' : '' }}" id="shopifyDropdown"
+                        data-tooltip="Shopify" data-initial-open="{{ $shopifyActive ? '1' : '0' }}" type="button"
+                        aria-expanded="false" style="padding-left: 23px;">
+                        <div class="left-content">
+                            <i class="bi bi-shop main-icon"></i>
+                            <span style="padding-left: 15px">Shopify</span>
+                        </div>
+                        <i class="bi bi-chevron-down chevron-icon"></i>
+                    </button>
+                    <div class="dropdown-menu-custom {{ $shopifyActive ? 'show' : '' }}" id="shopifyMenu">
+                        <ul class="nav">
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('shopify.settings') ? 'active' : '' }}"
+                                    href="{{ route('shopify.settings') }}" data-tooltip="Shopify Settings">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('shopify.products*') ? 'active' : '' }}"
+                                    href="{{ route('shopify.products') }}" data-tooltip="Products">
+                                    <i class="bi bi-box-seam"></i>
+                                    <span>Products</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('shopify.collections') ? 'active' : '' }}"
+                                    href="{{ route('shopify.collections') }}" data-tooltip="Collections">
+                                    <i class="bi bi-collection"></i>
+                                    <span>Collections</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('shopify.logs') ? 'active' : '' }}"
+                                    href="{{ route('shopify.logs') }}" data-tooltip="Sync Logs">
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Sync Logs</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
                 {{-- Tools Dropdown --}}
                 @php
                     $toolsActive = request()->routeIs('tools.*');
@@ -3945,6 +3993,35 @@
                 this.classList.toggle('active');
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 localStorage.setItem('toolsDropdownOpen', isOpen);
+            });
+        }
+
+        // Shopify Dropdown Handler
+        const shopifyDropdown = document.getElementById('shopifyDropdown');
+        const shopifyMenu = document.getElementById('shopifyMenu');
+
+        if (shopifyDropdown && shopifyMenu) {
+            const savedState = localStorage.getItem('shopifyDropdownOpen');
+            const defaultOpen = (shopifyDropdown.getAttribute('data-initial-open') === '1');
+            const initialOpen = savedState === null ? defaultOpen : (savedState === 'true');
+
+            if (initialOpen) {
+                shopifyDropdown.classList.add('active');
+                shopifyMenu.classList.add('show');
+            } else {
+                shopifyDropdown.classList.remove('active');
+                shopifyMenu.classList.remove('show');
+            }
+
+            shopifyDropdown.addEventListener('click', function (e) {
+                try {
+                    e.preventDefault();
+                    e.stopPropagation();
+                } catch (err) { }
+                const isOpen = shopifyMenu.classList.toggle('show');
+                this.classList.toggle('active');
+                this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                localStorage.setItem('shopifyDropdownOpen', isOpen);
             });
         }
 
