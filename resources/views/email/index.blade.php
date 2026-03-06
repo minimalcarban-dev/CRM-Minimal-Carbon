@@ -29,10 +29,11 @@
                         @php
                             $searchRoute = route('email.inbox', $account->id);
                             if (isset($folder)) {
-                                if ($folder === 'sent')
+                                if ($folder === 'sent') {
                                     $searchRoute = route('email.sent', $account->id);
-                                elseif ($folder === 'starred')
+                                } elseif ($folder === 'starred') {
                                     $searchRoute = route('email.starred', $account->id);
+                                }
                             }
                         @endphp
                         <form action="{{ $searchRoute }}" method="GET" class="search-form">
@@ -41,7 +42,7 @@
                                 <input type="text" name="q" class="search-input"
                                     placeholder="Search in {{ strtolower($folderTitle ?? 'inbox') }}..."
                                     value="{{ request('q') }}">
-                                @if(request('q'))
+                                @if (request('q'))
                                     <a href="{{ $searchRoute }}" class="search-clear">
                                         <i class="bi bi-x-circle-fill"></i>
                                     </a>
@@ -70,7 +71,8 @@
                         <div class="email-item {{ $isRead ? 'read' : 'unread' }}"
                             onclick="window.location='{{ route('email.show', [$account->id, $email->id]) }}'">
                             <div class="email-star" onclick="event.stopPropagation()">
-                                <button class="star-btn {{ $isStarred ? 'starred' : '' }}" data-email-id="{{ $email->id }}">
+                                <button class="star-btn {{ $isStarred ? 'starred' : '' }}"
+                                    data-email-id="{{ $email->id }}">
                                     <i class="bi {{ $isStarred ? 'bi-star-fill' : 'bi-star' }}"></i>
                                 </button>
                             </div>
@@ -80,18 +82,26 @@
                                     @php
                                         $senderEmail = $email->from_email;
                                         if (isset($folder) && $folder === 'sent' && $email->to_recipients) {
-                                            preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $email->to_recipients, $matches);
+                                            preg_match(
+                                                '/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/',
+                                                $email->to_recipients,
+                                                $matches,
+                                            );
                                             $senderEmail = $matches[0] ?? $email->to_recipients;
                                         }
                                         $domain = Str::after($senderEmail, '@');
                                         $parts = explode('.', $domain);
-                                        $brandDomain = count($parts) > 2 ? $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1] : $domain;
+                                        $brandDomain =
+                                            count($parts) > 2
+                                                ? $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1]
+                                                : $domain;
                                         $logoUrl = "https://www.google.com/s2/favicons?domain={$brandDomain}&sz=128";
                                     @endphp
-                                    <img src="{{ $logoUrl }}" alt="{{ substr($brandDomain, 0, 1) }}" class="brand-logo"
+                                    <img src="{{ $logoUrl }}" alt="{{ substr($brandDomain, 0, 1) }}"
+                                        class="brand-logo"
                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <span class="avatar-initial" style="display: none;">
-                                        @if(isset($folder) && $folder === 'sent')
+                                        @if (isset($folder) && $folder === 'sent')
                                             {{ strtoupper(substr($email->to_recipients ?: '?', 0, 1)) }}
                                         @else
                                             {{ strtoupper(substr($email->from_name ?: $email->from_email, 0, 1)) }}
@@ -100,13 +110,13 @@
                                 </div>
                                 <div class="sender-info">
                                     <span class="sender-name">
-                                        @if(isset($folder) && $folder === 'sent')
+                                        @if (isset($folder) && $folder === 'sent')
                                             To: {{ $email->to_recipients }}
                                         @else
                                             {{ $email->from_name ?: $email->from_email }}
                                         @endif
                                     </span>
-                                    @if(isset($email->thread_count) && $email->thread_count > 1)
+                                    @if (isset($email->thread_count) && $email->thread_count > 1)
                                         <span class="thread-badge" title="{{ $email->thread_count }} messages">
                                             {{ $email->thread_count }}
                                         </span>
@@ -116,7 +126,7 @@
 
                             <div class="email-content">
                                 <div class="email-subject-line">
-                                    @if($email->has_attachments)
+                                    @if ($email->has_attachments)
                                         <i class="bi bi-paperclip attachment-icon"></i>
                                     @endif
                                     <span class="email-subject">{{ $email->subject }}</span>
@@ -130,7 +140,7 @@
                                 <span class="email-time">
                                     {{ $email->received_at->isToday() ? $email->received_at->format('H:i') : $email->received_at->format('M d') }}
                                 </span>
-                                @if(!$isRead)
+                                @if (!$isRead)
                                     <span class="unread-dot"></span>
                                 @endif
                             </div>
@@ -141,20 +151,20 @@
                                 <i class="bi bi-inbox"></i>
                             </div>
                             <h3 class="empty-title">
-                                @if(request('q'))
+                                @if (request('q'))
                                     No emails found
                                 @else
                                     Inbox is empty
                                 @endif
                             </h3>
                             <p class="empty-description">
-                                @if(request('q'))
+                                @if (request('q'))
                                     No messages match your search "{{ request('q') }}". Try a different search term.
                                 @else
                                     You don't have any messages in this folder yet.
                                 @endif
                             </p>
-                            @if(request('q'))
+                            @if (request('q'))
                                 <a href="{{ route('email.inbox', $account->id) }}" class="btn-primary-custom">
                                     <i class="bi bi-arrow-counterclockwise"></i>
                                     Clear Search
@@ -165,10 +175,11 @@
                 </div>
 
                 <!-- Pagination -->
-                @if($emails->hasPages())
+                @if ($emails->hasPages())
                     <div class="inbox-pagination">
                         <div class="pagination-info">
-                            <span class="result-count">Showing {{ $emails->firstItem() ?? 0 }} to {{ $emails->lastItem() ?? 0 }}
+                            <span class="result-count">Showing {{ $emails->firstItem() ?? 0 }} to
+                                {{ $emails->lastItem() ?? 0 }}
                                 of <strong>{{ $emails->total() }}</strong> results</span>
                         </div>
                         <div class="pagination-controls">
@@ -798,18 +809,18 @@
             }
 
             .email-item {
-                grid-template-columns: auto 1fr auto;
+                grid-template-columns: auto 150px 1fr auto;
                 gap: 0.75rem;
-            }
-
-            .email-sender {
-                display: none;
             }
         }
 
         @media (max-width: 768px) {
             .email-inbox-container {
-                padding: 1rem;
+                padding: 0.75rem;
+            }
+
+            .inbox-layout {
+                height: calc(100vh - 100px);
             }
 
             .inbox-header {
@@ -822,6 +833,15 @@
                 width: 100%;
             }
 
+            .search-input {
+                min-height: 48px;
+            }
+
+            .btn-icon,
+            .btn-compose-main {
+                min-height: 48px;
+            }
+
             .inbox-header-right {
                 width: 100%;
             }
@@ -830,8 +850,51 @@
                 flex: 1;
             }
 
+            .email-list-container {
+                padding-bottom: 60px;
+                /* Give breathing room */
+            }
+
             .email-item {
-                padding: 0.875rem 1rem;
+                display: flex;
+                flex-wrap: wrap;
+                padding: 1rem;
+                position: relative;
+                gap: 0;
+            }
+
+            .email-sender {
+                display: flex;
+                width: 100%;
+                margin-bottom: 0.25rem;
+                padding-right: 60px;
+                /* Provide space for time */
+            }
+
+            .sender-avatar {
+                margin-right: 0.75rem;
+            }
+
+            .email-content {
+                width: 100%;
+                padding-left: 52px;
+                /* avatar width 40px + 12px margin */
+            }
+
+            .email-subject {
+                font-size: 0.95rem;
+            }
+
+            .email-meta {
+                position: absolute;
+                top: 1.25rem;
+                right: 1rem;
+            }
+
+            .email-star {
+                position: absolute;
+                bottom: 0.75rem;
+                right: 1rem;
             }
 
             .inbox-pagination {
@@ -855,9 +918,9 @@
             }
 
             .pagination-controls .page-item .page-link {
-                min-width: 32px;
-                height: 32px;
-                font-size: 0.8rem;
+                min-width: 44px;
+                height: 44px;
+                font-size: 0.875rem;
             }
         }
 
@@ -1031,25 +1094,26 @@
 
     @push('scripts')
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // Handle Star Toggling
                 const starButtons = document.querySelectorAll('.star-btn');
                 starButtons.forEach(btn => {
-                    btn.addEventListener('click', async function (e) {
+                    btn.addEventListener('click', async function(e) {
                         e.stopPropagation();
                         const emailId = this.dataset.emailId;
                         const btnElement = this;
                         const icon = this.querySelector('i');
 
                         try {
-                            const response = await fetch(`/admin/email/{{ $account->id }}/email/${emailId}/star`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json'
-                                }
-                            });
+                            const response = await fetch(
+                                `/admin/email/{{ $account->id }}/email/${emailId}/star`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
 
                             const data = await response.json();
                             if (data.success) {
@@ -1080,7 +1144,7 @@
                 // --- Sync Loader Logic ---
                 const syncTriggers = document.querySelectorAll('.sync-trigger');
                 syncTriggers.forEach(trigger => {
-                    trigger.addEventListener('click', function (e) {
+                    trigger.addEventListener('click', function(e) {
                         Swal.fire({
                             title: 'Syncing Emails...',
                             text: 'Please wait while we connect to Gmail and update your inbox.',
@@ -1097,7 +1161,7 @@
                 // Mark as read indicator handling
                 const emailItems = document.querySelectorAll('.email-item.unread');
                 emailItems.forEach(item => {
-                    item.addEventListener('click', function () {
+                    item.addEventListener('click', function() {
                         this.classList.replace('unread', 'read');
                         const dot = this.querySelector('.unread-dot');
                         if (dot) dot.remove();
@@ -1140,7 +1204,7 @@
                 });
 
                 // Handle Sending
-                composeForm.addEventListener('submit', async function (e) {
+                composeForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
                     // Sync editor
@@ -1197,7 +1261,7 @@
 
                 // Handle Draft Saving
                 const btnSaveDraft = document.getElementById('btnSaveDraft');
-                btnSaveDraft.addEventListener('click', async function () {
+                btnSaveDraft.addEventListener('click', async function() {
 
                     // Sync editor
                     const editorBody = document.getElementById('editor-body');

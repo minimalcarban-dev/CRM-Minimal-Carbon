@@ -22,7 +22,8 @@
                     <p class="page-subtitle">Manage package issuance and returns</p>
                 </div>
                 <div class="header-right">
-                    @if(auth()->guard('admin')->check() && auth()->guard('admin')->user()->canAccessAny(['packages.create']))
+                    @if (auth()->guard('admin')->check() &&
+                            auth()->guard('admin')->user()->canAccessAny(['packages.create']))
                         <a href="{{ route('packages.create') }}" class="btn-primary-custom">
                             <i class="bi bi-plus-circle"></i>
                             <span>Issue New Package</span>
@@ -116,7 +117,7 @@
                     <span>Filter</span>
                 </button>
 
-                @if(request('search') || request('status'))
+                @if (request('search') || request('status'))
                     <a href="{{ route('packages.index') }}" class="btn-reset">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Reset</span>
@@ -172,12 +173,12 @@
                     <tbody>
                         @forelse($packages as $package)
                             <tr>
-                                <td class="td-id">
+                                <td class="td-id" data-label="Slip ID">
                                     <a href="{{ route('packages.show', $package->id) }}" class="order-id-badge">
                                         {{ $package->slip_id }}
                                     </a>
                                 </td>
-                                <td>
+                                <td data-label="Person Details">
                                     <div class="client-info">
                                         <div class="client-name fw-bold text-dark mb-1">{{ $package->person_name }}</div>
                                         <div class="client-meta text-muted small">
@@ -185,11 +186,11 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Package Description">
                                     <div class="text-muted" style="max-width: 300px; white-space: pre-wrap;">
                                         {{ Str::limit($package->package_description, 50) }}</div>
                                 </td>
-                                <td>
+                                <td data-label="Dates">
                                     <div class="d-flex flex-column gap-1">
                                         <div class="date-info">
                                             <small class="text-muted text-uppercase"
@@ -208,17 +209,20 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Status">
                                     {!! $package->status_badge !!}
                                 </td>
-                                <td class="td-actions">
+                                <td class="td-actions" data-label="Actions">
                                     <div class="action-buttons">
-                                        <a href="{{ route('packages.show', $package->id) }}" class="action-btn action-btn-view"
-                                            title="View Slip">
+                                        <a href="{{ route('packages.show', $package->id) }}"
+                                            class="action-btn action-btn-view" title="View Slip">
                                             <i class="bi bi-eye"></i>
                                         </a>
 
-                                        @if(($package->status == 'Issued' || $package->status == 'Overdue') && auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['packages.return']))
+                                        @if (
+                                            ($package->status == 'Issued' || $package->status == 'Overdue') &&
+                                                auth()->guard('admin')->user() &&
+                                                auth()->guard('admin')->user()->canAccessAny(['packages.return']))
                                             <form action="{{ route('packages.return', $package->id) }}" method="POST"
                                                 class="d-inline delete-form">
                                                 @csrf
@@ -230,12 +234,14 @@
                                             </form>
                                         @endif
 
-                                        @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['packages.delete']))
+                                        @if (auth()->guard('admin')->user() &&
+                                                auth()->guard('admin')->user()->canAccessAny(['packages.delete']))
                                             <form action="{{ route('packages.destroy', $package->id) }}" method="POST"
                                                 class="d-inline delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="action-btn action-btn-delete" title="Delete">
+                                                <button type="submit" class="action-btn action-btn-delete"
+                                                    title="Delete">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -262,7 +268,7 @@
                     </tbody>
                 </table>
             </div>
-            @if($packages->hasPages())
+            @if ($packages->hasPages())
                 <div class="card-footer bg-white border-top py-3">
                     {{ $packages->links() }}
                 </div>
@@ -786,21 +792,229 @@
                 color: var(--danger);
                 background: rgba(239, 68, 68, 0.05);
             }
+
+            /* ===== RESPONSIVE BREAKPOINTS ===== */
+
+            /* Table horizontal scroll wrapper */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Tablet (≤992px) */
+            @media (max-width: 992px) {
+                .packages-management-container {
+                    padding: 1.25rem;
+                }
+
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+
+                .filter-form {
+                    flex-wrap: wrap;
+                }
+
+                .search-box {
+                    min-width: 0;
+                    width: 100%;
+                }
+
+                .filter-select {
+                    min-width: 0;
+                    flex: 1;
+                }
+            }
+
+            /* Mobile (≤640px) — card layout for table */
+            @media (max-width: 640px) {
+                .packages-management-container {
+                    padding: 0.875rem;
+                }
+
+                .page-header {
+                    padding: 1.25rem;
+                }
+
+                .header-content {
+                    flex-direction: column;
+                    gap: 1rem;
+                    align-items: flex-start;
+                }
+
+                .header-right {
+                    width: 100%;
+                }
+
+                .header-right .btn-primary-custom {
+                    width: 100%;
+                    justify-content: center;
+                }
+
+                .page-title {
+                    font-size: clamp(1.1rem, 4vw, 1.5rem);
+                }
+
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
+                }
+
+                .stat-card {
+                    padding: 1rem;
+                    gap: 0.75rem;
+                }
+
+                .stat-icon {
+                    width: 44px;
+                    height: 44px;
+                    font-size: 1.35rem;
+                    flex-shrink: 0;
+                }
+
+                .stat-value {
+                    font-size: 1.25rem;
+                }
+
+                .filter-section {
+                    padding: 0.85rem;
+                }
+
+                .filter-form {
+                    flex-direction: column;
+                    gap: 0.65rem;
+                }
+
+                .search-box,
+                .filter-select,
+                .btn-filter,
+                .btn-reset {
+                    width: 100%;
+                }
+
+                .filter-select {
+                    min-width: 0;
+                }
+
+                .btn-filter,
+                .btn-reset {
+                    justify-content: center;
+                }
+
+                /* Mobile card table */
+                .orders-table thead {
+                    display: none;
+                }
+
+                .orders-table,
+                .orders-table tbody,
+                .orders-table tr,
+                .orders-table td {
+                    display: block;
+                    width: 100%;
+                }
+
+                .orders-table tr {
+                    border: 1.5px solid var(--border);
+                    border-radius: 12px;
+                    margin-bottom: 0.75rem;
+                    padding: 0.25rem 0;
+                    background: white;
+                }
+
+                .orders-table td {
+                    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+                    padding: 0.6rem 1rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 0.5rem;
+                    text-align: right;
+                }
+
+                .orders-table td:last-child {
+                    border-bottom: none;
+                }
+
+                .orders-table td::before {
+                    content: attr(data-label);
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.4px;
+                    color: var(--gray);
+                    flex-shrink: 0;
+                    text-align: left;
+                }
+
+                .orders-table td.td-id {
+                    background: rgba(99, 102, 241, 0.04);
+                    border-radius: 12px 12px 0 0;
+                    font-weight: 700;
+                }
+
+                .orders-table td.td-actions {
+                    border-radius: 0 0 12px 12px;
+                }
+
+                .action-buttons {
+                    justify-content: flex-end;
+                }
+
+                .client-info {
+                    text-align: right;
+                }
+
+                /* Dark mode card rows */
+                [data-theme="dark"] .orders-table tr {
+                    background: var(--bg-card, #1e293b);
+                    border-color: rgba(148, 163, 184, 0.22);
+                }
+
+                [data-theme="dark"] .orders-table td {
+                    border-bottom-color: rgba(148, 163, 184, 0.12);
+                }
+
+                [data-theme="dark"] .orders-table td.td-id {
+                    background: rgba(99, 102, 241, 0.08);
+                }
+            }
+
+            /* Extra small (≤380px) */
+            @media (max-width: 380px) {
+                .stats-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .stat-label {
+                    font-size: 0.75rem;
+                }
+
+                .stat-value {
+                    font-size: 1.1rem;
+                }
+
+                .stat-trend {
+                    display: none;
+                }
+            }
         </style>
     @endpush
-    
+
     @push('scripts')
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // Handle delete confirmations with SweetAlert2
                 document.querySelectorAll('.delete-form').forEach(form => {
-                    form.addEventListener('submit', async function (e) {
+                    form.addEventListener('submit', async function(e) {
                         e.preventDefault();
-                        
+
                         // Check if it's a return action or delete action
                         const isReturn = this.action.includes('/return');
-                        const title = isReturn ? 'Mark as Returned?' : 'Are you sure you want to delete this package?';
-                        const text = isReturn ? 'This will update the package status.' : 'This action cannot be undone.';
+                        const title = isReturn ? 'Mark as Returned?' :
+                            'Are you sure you want to delete this package?';
+                        const text = isReturn ? 'This will update the package status.' :
+                            'This action cannot be undone.';
                         const confirmBtnText = isReturn ? 'Yes, Return' : 'Yes, Delete';
                         const confirmBtnColor = isReturn ? '#10b981' : '#d33';
 

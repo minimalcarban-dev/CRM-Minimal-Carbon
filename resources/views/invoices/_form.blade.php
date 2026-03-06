@@ -1,37 +1,32 @@
 @csrf
-<div class="invoice-form-container">
-    <!-- Invoice Basic Info Card -->
-    <div class="form-card">
-        <div class="card-header">
-            <div class="header-icon">
-                <i class="bi bi-file-text"></i>
-            </div>
-            <div class="header-content">
-                <h3 class="card-title">Invoice Information</h3>
-                <p class="card-subtitle">Enter basic invoice details</p>
+<div class="form-section-card">
+    <div class="section-header">
+        <div class="section-info">
+            <div class="section-icon"><i class="bi bi-file-text"></i></div>
+            <div class="section-text">
+                <h5 class="section-title">Invoice Information</h5>
+                <p class="section-description">Enter basic invoice details</p>
             </div>
         </div>
-        <div class="card-body">
-            <div class="form-row">
+    </div>
+    <div class="section-body">
+            <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-hash"></i>
                         Invoice No
                     </label>
-                    <input type="text" name="invoice_no" class="form-input" required
+                    <input type="text" name="invoice_no" class="form-control" required
                         value="{{ old('invoice_no', $invoice->invoice_no ?? '') }}" placeholder="INV-001">
                 </div>
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-calendar-event"></i>
                         Date
                     </label>
-                    <input type="date" name="invoice_date" class="form-input" required
+                    <input type="date" name="invoice_date" class="form-control" required
                         value="{{ old('invoice_date', $invoice->invoice_date ?? date('Y-m-d')) }}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-tag"></i>
                         Invoice Type
                     </label>
                     <select name="invoice_type" class="form-select">
@@ -41,7 +36,6 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-copy"></i>
                         Copy Type
                     </label>
                     <select name="copy_type" class="form-select">
@@ -52,7 +46,6 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-globe"></i>
                         Invoice Region
                     </label>
                     <select name="invoice_region" class="form-select">
@@ -66,10 +59,9 @@
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-grid" style="margin-top: 1rem;">
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-building"></i>
                         Company
                     </label>
                     <select id="company_select" name="company_id" class="form-select" required>
@@ -81,10 +73,9 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-people"></i>
                         Billed To (Party)
                     </label>
-                    <div style="display:flex;gap:8px;align-items:center">
+                    <div class="input-group">
                         <select id="billed_select" name="billed_to_id" class="form-select">
                             <option value="">-- Select Party --</option>
                             @foreach($parties as $p)
@@ -96,10 +87,9 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-truck"></i>
                         Shipped To (Party)
                     </label>
-                    <div style="display:flex;gap:8px;align-items:center">
+                    <div class="input-group">
                         <select id="shipped_select" name="shipped_to_id" class="form-select">
                             <option value="">-- Select Party --</option>
                             @foreach($parties as $p)
@@ -111,10 +101,9 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-geo-alt"></i>
                         Place of Supply (State Code)
                     </label>
-                    <input type="text" name="place_of_supply" id="place_of_supply" class="form-input"
+                    <input type="text" name="place_of_supply" id="place_of_supply" class="form-control"
                         placeholder="e.g., 07" value="{{ old('place_of_supply', $invoice->place_of_supply ?? '') }}">
                 </div>
             </div>
@@ -122,17 +111,17 @@
     </div>
 
     <!-- Company Details Card -->
-    <div class="form-card">
-        <div class="card-header">
-            <div class="header-icon">
-                <i class="bi bi-info-circle"></i>
-            </div>
-            <div class="header-content">
-                <h3 class="card-title">Company Details</h3>
-                <p class="card-subtitle">Auto-filled from selected company</p>
+    <div class="form-section-card">
+        <div class="section-header">
+            <div class="section-info">
+                <div class="section-icon"><i class="bi bi-info-circle"></i></div>
+                <div class="section-text">
+                    <h5 class="section-title">Company Details</h5>
+                    <p class="section-description">Auto-filled from selected company</p>
+                </div>
             </div>
         </div>
-        <div class="card-body">
+        <div class="section-body">
             <div id="company_details" class="company-details-grid">
                 <div class="detail-item">
                     <div class="detail-label">
@@ -160,157 +149,158 @@
     </div>
 
     <!-- Items Card -->
-    <div class="form-card">
-        <div class="card-header">
-            <div class="header-icon">
-                <i class="bi bi-list-ul"></i>
+    <div class="form-section-card">
+        <div class="section-header">
+            <div class="section-info">
+                <div class="section-icon"><i class="bi bi-list-ul"></i></div>
+                <div class="section-text">
+                    <h5 class="section-title">Invoice Items</h5>
+                    <p class="section-description">Add items to the invoice</p>
+                </div>
             </div>
-            <div class="header-content">
-                <h3 class="card-title">Invoice Items</h3>
-                <p class="card-subtitle">Add items to the invoice</p>
-            </div>
-            <button type="button" id="add_row" class="btn-add-item">
+            <button type="button" id="add_row" class="btn-primary-custom" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                 <i class="bi bi-plus-circle"></i>
                 Add Item
             </button>
         </div>
-        <div class="card-body">
+        <div class="section-body">
             <div class="table-responsive">
-                <table class="items-table" id="items_table">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>HSN Code</th>
-                            <th>Quantity</th>
-                            <th>Unit</th>
-                            <th>Rate</th>
-                            <th>Amount</th>
-                            <th class="th-action">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if(old('items'))
-                            @foreach(old('items') as $i => $it)
-                                <tr class="item-row">
-                                    <td><input name="items[{{$i}}][description_of_goods]" class="input-cell"
-                                            value="{{ $it['description_of_goods'] ?? '' }}" placeholder="Enter description">
-                                    </td>
-                                    <td><input name="items[{{$i}}][hsn_code]" class="input-cell"
-                                            value="{{ $it['hsn_code'] ?? '' }}" placeholder="HSN"></td>
-                                    <td><input type="number" step="0.01" name="items[{{$i}}][quantity]" class="input-cell quantity"
-                                            value="{{ $it['quantity'] ?? '' }}" placeholder="0.00"></td>
-                                    <td>
-                                        <select name="items[{{$i}}][unit]" class="input-cell unit">
-                                            <option value="pieces" {{ ($it['unit'] ?? '') == 'pieces' ? 'selected' : '' }}>Pcs</option>
-                                            <option value="carats" {{ ($it['unit'] ?? '') == 'carats' ? 'selected' : '' }}>Cts</option>
-                                        </select>
-                                    </td>
-                                    <td><input type="number" step="0.01" name="items[{{$i}}][rate]" class="input-cell rate"
-                                            value="{{ $it['rate'] ?? '' }}" placeholder="0.00"></td>
-                                    <td><input type="number" step="0.01" name="items[{{$i}}][amount]" class="input-cell amount"
-                                            value="{{ $it['amount'] ?? '' }}" readonly></td>                                    <td class="td-action">
-                                        <button type="button" class="btn-remove remove-row" title="Remove Item">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @elseif(isset($invoice) && $invoice->items->count())
-                            @foreach($invoice->items as $i => $it)
-                                @php
-                                    $isPieces = !empty($it->pieces) && empty($it->carats);
-                                    $quantity = $isPieces ? $it->pieces : $it->carats;
-                                    $unit = $isPieces ? 'pieces' : 'carats';
-                                @endphp
-                                <tr class="item-row">
-                                    <td><input name="items[{{$i}}][description_of_goods]" class="input-cell"
-                                            value="{{ $it->description_of_goods }}" placeholder="Enter description"></td>
-                                    <td><input name="items[{{$i}}][hsn_code]" class="input-cell" value="{{ $it->hsn_code }}"
-                                            placeholder="HSN"></td>
-                                    <td><input type="number" step="0.01" name="items[{{$i}}][quantity]" class="input-cell quantity" value="{{ $quantity }}"
-                                            placeholder="0.00"></td>
-                                    <td>
-                                        <select name="items[{{$i}}][unit]" class="input-cell unit">
-                                            <option value="pieces" {{ $unit == 'pieces' ? 'selected' : '' }}>Pcs</option>
-                                            <option value="carats" {{ $unit == 'carats' ? 'selected' : '' }}>Cts</option>
-                                        </select>
-                                    </td>
-                                    <td><input type="number" step="0.01" name="items[{{$i}}][rate]" class="input-cell rate" value="{{ $it->rate }}"
-                                            placeholder="0.00"></td>
-                                    <td><input type="number" step="0.01" name="items[{{$i}}][amount]" class="input-cell amount" value="{{ $it->amount }}">
-                                    </td>
-                                    <td class="td-action">
-                                        <button type="button" class="btn-remove remove-row" title="Remove Item">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
-                            <tr class="item-row">
-                                <td><input name="items[0][description_of_goods]" class="input-cell"
-                                        placeholder="Enter description"></td>
-                                <td><input name="items[0][hsn_code]" class="input-cell" placeholder="HSN"></td>
-                                <td><input type="number" step="0.01" name="items[0][quantity]" class="input-cell quantity" placeholder="0.00"></td>
-                                <td>
-                                    <select name="items[0][unit]" class="input-cell unit">
-                                        <option value="pieces">Pcs</option>
-                                        <option value="carats">Cts</option>
-                                    </select>
-                                </td>
-                                <td><input type="number" step="0.01" name="items[0][rate]" class="input-cell rate" placeholder="0.00"></td>
-                                <td><input type="number" step="0.01" name="items[0][amount]" class="input-cell amount"></td>
-                                <td class="td-action">
-                                    <button type="button" class="btn-remove remove-row" title="Remove Item">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
+                    <table class="tracker-table" id="items_table" style="min-width: 900px; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>HSN Code</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                                <th style="width: 60px; text-align: center;">Action</th>
                             </tr>
-                        @endif
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @if(old('items'))
+                                @foreach(old('items') as $i => $it)
+                                    <tr class="table-row">
+                                        <td><input name="items[{{$i}}][description_of_goods]" class="form-control"
+                                                value="{{ $it['description_of_goods'] ?? '' }}" placeholder="Enter description">
+                                        </td>
+                                        <td><input name="items[{{$i}}][hsn_code]" class="form-control"
+                                                value="{{ $it['hsn_code'] ?? '' }}" placeholder="HSN"></td>
+                                        <td><input type="number" step="0.01" name="items[{{$i}}][quantity]" class="form-control quantity"
+                                                value="{{ $it['quantity'] ?? '' }}" placeholder="0.00"></td>
+                                        <td>
+                                            <select name="items[{{$i}}][unit]" class="form-select unit">
+                                                <option value="pieces" {{ ($it['unit'] ?? '') == 'pieces' ? 'selected' : '' }}>Pcs</option>
+                                                <option value="carats" {{ ($it['unit'] ?? '') == 'carats' ? 'selected' : '' }}>Cts</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="number" step="0.01" name="items[{{$i}}][rate]" class="form-control rate"
+                                                value="{{ $it['rate'] ?? '' }}" placeholder="0.00"></td>
+                                        <td><input type="number" step="0.01" name="items[{{$i}}][amount]" class="form-control amount"
+                                                value="{{ $it['amount'] ?? '' }}" readonly></td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="btn-tracker-reset btn-remove remove-row" title="Remove Item" style="padding: 0.5rem;">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @elseif(isset($invoice) && $invoice->items->count())
+                                @foreach($invoice->items as $i => $it)
+                                    @php
+                                        $isPieces = !empty($it->pieces) && empty($it->carats);
+                                        $quantity = $isPieces ? $it->pieces : $it->carats;
+                                        $unit = $isPieces ? 'pieces' : 'carats';
+                                    @endphp
+                                    <tr class="table-row">
+                                        <td><input name="items[{{$i}}][description_of_goods]" class="form-control"
+                                                value="{{ $it->description_of_goods }}" placeholder="Enter description"></td>
+                                        <td><input name="items[{{$i}}][hsn_code]" class="form-control" value="{{ $it->hsn_code }}"
+                                                placeholder="HSN"></td>
+                                        <td><input type="number" step="0.01" name="items[{{$i}}][quantity]" class="form-control quantity" value="{{ $quantity }}"
+                                                placeholder="0.00"></td>
+                                        <td>
+                                            <select name="items[{{$i}}][unit]" class="form-select unit">
+                                                <option value="pieces" {{ $unit == 'pieces' ? 'selected' : '' }}>Pcs</option>
+                                                <option value="carats" {{ $unit == 'carats' ? 'selected' : '' }}>Cts</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="number" step="0.01" name="items[{{$i}}][rate]" class="form-control rate" value="{{ $it->rate }}"
+                                                placeholder="0.00"></td>
+                                        <td><input type="number" step="0.01" name="items[{{$i}}][amount]" class="form-control amount" value="{{ $it->amount }}" readonly>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="btn-tracker-reset btn-remove remove-row" title="Remove Item" style="padding: 0.5rem;">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr class="table-row">
+                                    <td><input name="items[0][description_of_goods]" class="form-control"
+                                            placeholder="Enter description"></td>
+                                    <td><input name="items[0][hsn_code]" class="form-control" placeholder="HSN"></td>
+                                    <td><input type="number" step="0.01" name="items[0][quantity]" class="form-control quantity" placeholder="0.00"></td>
+                                    <td>
+                                        <select name="items[0][unit]" class="form-control unit">
+                                            <option value="pieces">Pcs</option>
+                                            <option value="carats">Cts</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" step="0.01" name="items[0][rate]" class="form-control rate" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.01" name="items[0][amount]" class="form-control amount" readonly></td>
+                                    <td style="text-align: center;">
+                                        <button type="button" class="btn-tracker-reset btn-remove remove-row" title="Remove Item" style="padding: 0.5rem;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
             </div>
         </div>
     </div>
 
     <!-- Tax Summary Card -->
-    <div class="form-card">
-        <div class="card-header">
-            <div class="header-icon">
-                <i class="bi bi-calculator"></i>
-            </div>
-            <div class="header-content">
-                <h3 class="card-title">Tax Summary</h3>
-                <p class="card-subtitle">Configure tax rates and view totals</p>
+    <div class="form-section-card">
+        <div class="section-header">
+            <div class="section-info">
+                <div class="section-icon"><i class="bi bi-calculator"></i></div>
+                <div class="section-text">
+                    <h5 class="section-title">Tax Summary</h5>
+                    <p class="section-description">Configure tax rates and view totals</p>
+                </div>
             </div>
         </div>
-        <div class="card-body">
+        <div class="section-body">
             <!-- Tax Info Alert -->
             <div id="tax_info_alert" class="tax-info-alert">
                 <i class="bi bi-info-circle"></i>
                 <span id="tax_info_text">Select a company to see which taxes will apply</span>
             </div>
 
-            <div class="tax-config-row">
-                <div class="tax-input-group" id="cgst_group">
-                    <label class="tax-label">CGST Rate (%)</label>
-                    <input type="number" step="0.01" min="0" name="cgst_rate" id="cgst_rate" class="tax-input"
+            <div class="form-grid" style="margin-bottom: 10px;">
+                <div class="form-group" id="cgst_group">
+                    <label class="form-label">CGST Rate (%)</label>
+                    <input type="number" step="0.01" min="0" name="cgst_rate" id="cgst_rate" class="form-control"
                         value="{{ old('cgst_rate', '') }}" placeholder="0">
                 </div>
-                <div class="tax-input-group" id="sgst_group">
-                    <label class="tax-label">SGST Rate (%)</label>
-                    <input type="number" step="0.01" min="0" name="sgst_rate" id="sgst_rate" class="tax-input"
+                <div class="form-group" id="sgst_group">
+                    <label class="form-label">SGST Rate (%)</label>
+                    <input type="number" step="0.01" min="0" name="sgst_rate" id="sgst_rate" class="form-control"
                         value="{{ old('sgst_rate', '') }}" placeholder="0">
                 </div>
-                <div class="tax-input-group" id="igst_group">
-                    <label class="tax-label">IGST Rate (%)</label>
-                    <input type="number" step="0.01" min="0" name="igst_rate" id="igst_rate" class="tax-input"
+                <div class="form-group" id="igst_group">
+                    <label class="form-label">IGST Rate (%)</label>
+                    <input type="number" step="0.01" min="0" name="igst_rate" id="igst_rate" class="form-control"
                         value="{{ old('igst_rate', '') }}" placeholder="0">
                 </div>
-                <div class="tax-input-group" id="shipping_group">
-                    <label class="tax-label">Express Shipping</label>
+                <div class="form-group" id="shipping_group">
+                    <label class="form-label">Express Shipping</label>
                     <input type="number" step="0.01" min="0" name="express_shipping" id="express_shipping"
-                        class="tax-input" value="{{ old('express_shipping', $invoice->express_shipping ?? '') }}"
+                        class="form-control" value="{{ old('express_shipping', $invoice->express_shipping ?? '') }}"
                         placeholder="0.00">
                 </div>
             </div>
@@ -345,8 +335,8 @@
     </div>
 
     <!-- Submit Button -->
-    <div class="form-actions">
-        <button type="submit" class="btn-submit">
+    <div class="tracker-form-actions" style="margin-top: 2rem;">
+        <button type="submit" class="btn-primary-custom">
             <i class="bi bi-check-circle"></i>
             Save Invoice
         </button>
@@ -355,12 +345,18 @@
 
 <!-- Party Add Modal (reused for billed/shipped) -->
 <div id="party_modal" class="modal" tabindex="-1"
-    style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
+    style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:1050;">
     <div style="background:#fff; padding:18px; border-radius:8px; width:720px; max-width:96%">
         <h5>Add Party</h5>
         <div id="party_form">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
                 <input name="name" class="form-input" placeholder="Name" required disabled>
+                <select name="category" class="form-input" disabled>
+                    <option value="">-- Select Category --</option>
+                    @foreach(\App\Models\Party::CATEGORIES as $key => $label)
+                        <option value="{{ $key }}">{{ $label }}</option>
+                    @endforeach
+                </select>
                 <input name="phone" class="form-input" placeholder="Phone" disabled>
                 <input name="email" class="form-input" placeholder="Email" disabled>
                 <input name="gst_no" class="form-input" placeholder="GST / Tax ID" disabled>
@@ -401,7 +397,9 @@
             currentTargetSelect = null;
             // clear fields and disable
             formWrap.querySelectorAll('input,textarea,select').forEach(i => {
-                i.value = (i.name === 'country' ? 'India' : '');
+                if (i.name === 'country') i.value = 'India';
+                else if (i.tagName === 'SELECT') i.selectedIndex = 0;
+                else i.value = '';
                 i.setAttribute('disabled', 'disabled');
             });
         }
@@ -424,6 +422,13 @@
                     return;
                 }
 
+                const categoryInput = formWrap.querySelector('[name="category"]');
+                if (!categoryInput || !categoryInput.value) {
+                    alert('Please select a category');
+                    if (categoryInput) categoryInput.focus();
+                    return;
+                }
+
                 // gather data
                 const payload = {};
                 formWrap.querySelectorAll('input,textarea,select').forEach(el => {
@@ -438,25 +443,41 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': token || ''
                     },
                     body: JSON.stringify(payload)
-                }).then(r => r.json())
+                }).then(r => {
+                    if (!r.ok) {
+                        return r.json().then(err => { throw err; });
+                    }
+                    return r.json();
+                })
                     .then(data => {
                         if (data && data.id) {
-                            const sel = document.getElementById(currentTargetSelect);
-                            if (sel) {
-                                const opt = new Option(data.name, data.id, true, true);
-                                sel.add(opt);
-                                sel.value = data.id;
-                            }
+                            // Add to BOTH dropdowns so no refresh needed
+                            ['billed_select', 'shipped_select'].forEach(selId => {
+                                const sel = document.getElementById(selId);
+                                if (sel) {
+                                    const isTarget = (selId === currentTargetSelect);
+                                    const opt = new Option(data.name, data.id, isTarget, isTarget);
+                                    sel.add(opt);
+                                }
+                            });
                             closePartyModal();
                         } else {
                             alert('Failed to create party');
                             console.error('party create response', data);
                         }
                     }).catch(err => {
-                        alert('Error creating party. See console.');
+                        if (err && err.errors) {
+                            const msgs = Object.values(err.errors).flat().join('\n');
+                            alert('Validation errors:\n' + msgs);
+                        } else if (err && err.message) {
+                            alert('Error: ' + err.message);
+                        } else {
+                            alert('Error creating party. See console.');
+                        }
                         console.error(err);
                     });
             });
@@ -1169,17 +1190,17 @@
             }
 
             if (companyState == placeOfSupply) {
-                // Same state - CGST + SGST applies
+                // Same state - CGST + SGST applies, hide IGST
                 taxInfoAlert.classList.add('same-state');
-                taxInfoText.innerHTML = '<strong>Intra-State Sale (Same State)</strong> — CGST + SGST will apply. IGST is disabled.';
-                igstGroup.classList.add('disabled');
+                taxInfoText.innerHTML = '<strong>Intra-State Sale (Same State)</strong> — CGST + SGST will apply.';
+                igstGroup.classList.add('hidden');
                 document.getElementById('igst_rate').value = '';
             } else {
-                // Different state - IGST applies
+                // Different state - IGST applies, hide CGST & SGST
                 taxInfoAlert.classList.add('different-state');
-                taxInfoText.innerHTML = '<strong>Inter-State Sale (Different State)</strong> — IGST will apply. CGST & SGST are disabled.';
-                cgstGroup.classList.add('disabled');
-                sgstGroup.classList.add('disabled');
+                taxInfoText.innerHTML = '<strong>Inter-State Sale (Different State)</strong> — IGST will apply.';
+                cgstGroup.classList.add('hidden');
+                sgstGroup.classList.add('hidden');
                 document.getElementById('cgst_rate').value = '';
                 document.getElementById('sgst_rate').value = '';
             }
@@ -1209,13 +1230,13 @@
             <td><input name="items[${index}][hsn_code]" class="input-cell" placeholder="HSN"></td>
             <td><input type="number" step="0.01" name="items[${index}][quantity]" class="input-cell quantity" placeholder="0.00"></td>
             <td>
-                <select name="items[${index}][unit]" class="input-cell unit">
+                <select name="items[${index}][unit]" class="form-control unit">
                     <option value="pieces">Pcs</option>
                     <option value="carats">Cts</option>
                 </select>
             </td>
             <td><input type="number" step="0.01" name="items[${index}][rate]" class="input-cell rate" placeholder="0.00"></td>
-            <td><input type="number" step="0.01" name="items[${index}][amount]" class="input-cell amount"></td>
+            <td><input type="number" step="0.01" name="items[${index}][amount]" class="input-cell amount" readonly></td>
             <td class="td-action">
                 <button type="button" class="btn-remove remove-row" title="Remove Item">
                     <i class="bi bi-trash"></i>
@@ -1249,7 +1270,6 @@
                 document.getElementById('company_bank').innerText = '—';
                 return;
             }
-            fetch('/admin/companies/' + id)
             fetch('/admin/companies/' + id)
                 .then(function (r) {
                     if (!r.ok) throw new Error('Failed to fetch company');

@@ -1019,6 +1019,7 @@
             .btn-primary-custom {
                 width: 100%;
                 justify-content: center;
+                min-height: 48px;
             }
 
             .stats-grid {
@@ -1037,8 +1038,17 @@
                 flex-direction: column;
             }
 
+            .account-actions .btn-action {
+                min-height: 48px;
+            }
+
             .stat-value {
                 font-size: 1.5rem;
+            }
+
+            .menu-btn {
+                min-width: 44px;
+                min-height: 44px;
             }
         }
 

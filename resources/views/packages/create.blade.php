@@ -53,10 +53,8 @@
                             <div class="mb-4">
                                 <label for="package_description" class="form-label-custom">Package Description <span
                                         class="text-danger">*</span></label>
-                                <textarea name="package_description" id="package_description" rows="4"
-                                    class="form-control form-control-custom"
-                                    placeholder="Describe the contents of the package..."
-                                    required>{{ old('package_description') }}</textarea>
+                                <textarea name="package_description" id="package_description" rows="4" class="form-control form-control-custom"
+                                    placeholder="Describe the contents of the package..." required>{{ old('package_description') }}</textarea>
                                 <div class="form-text text-muted"><i class="bi bi-info-circle me-1"></i> Provide a detailed
                                     description of items.</div>
                             </div>
@@ -65,12 +63,19 @@
                                 <div class="col-md-6">
                                     <label for="party_type" class="form-label-custom">Party Type <span
                                             class="text-danger">*</span></label>
-                                    <select name="party_type" id="party_type" class="form-control form-control-custom" required>
+                                    <select name="party_type" id="party_type" class="form-control form-control-custom"
+                                        required>
                                         <option value="">Select party type</option>
-                                        <option value="Broker" {{ old('party_type') == 'Broker' ? 'selected' : '' }}>Broker</option>
-                                        <option value="Retailer" {{ old('party_type') == 'Retailer' ? 'selected' : '' }}>Retailer</option>
-                                        <option value="Manufacturer" {{ old('party_type') == 'Manufacturer' ? 'selected' : '' }}>Manufacturer</option>
-                                        <option value="Internal Staff" {{ old('party_type') == 'Internal Staff' ? 'selected' : '' }}>Internal Staff</option>
+                                        <option value="Broker" {{ old('party_type') == 'Broker' ? 'selected' : '' }}>Broker
+                                        </option>
+                                        <option value="Retailer" {{ old('party_type') == 'Retailer' ? 'selected' : '' }}>
+                                            Retailer</option>
+                                        <option value="Manufacturer"
+                                            {{ old('party_type') == 'Manufacturer' ? 'selected' : '' }}>Manufacturer
+                                        </option>
+                                        <option value="Internal Staff"
+                                            {{ old('party_type') == 'Internal Staff' ? 'selected' : '' }}>Internal Staff
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -98,8 +103,8 @@
                                     <div class="input-icon-field">
                                         <i class="bi bi-hash"></i>
                                         <input type="text" name="slip_id" id="slip_id"
-                                            class="form-control form-control-custom"
-                                            placeholder="e.g. SLIP-2024-001" value="{{ old('slip_id') }}" required>
+                                            class="form-control form-control-custom" placeholder="e.g. SLIP-2024-001"
+                                            value="{{ old('slip_id') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -120,31 +125,38 @@
                                     <label for="return_date" class="form-label-custom">Expected Return Date <span
                                             class="text-danger">*</span></label>
                                     <input type="date" name="return_date" id="return_date"
-                                        class="form-control form-control-custom" value="{{ old('return_date') }}" required>
+                                        class="form-control form-control-custom" value="{{ old('return_date') }}"
+                                        required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="handover_location" class="form-label-custom">Handover Location <span
                                             class="text-danger">*</span></label>
                                     <input type="text" name="handover_location" id="handover_location"
-                                        class="form-control form-control-custom" placeholder="Office / Surat / Mumbai etc."
-                                        value="{{ old('handover_location') }}" required>
+                                        class="form-control form-control-custom"
+                                        placeholder="Office / Surat / Mumbai etc." value="{{ old('handover_location') }}"
+                                        required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="handover_mode" class="form-label-custom">Handover Mode <span
                                             class="text-danger">*</span></label>
-                                    <select name="handover_mode" id="handover_mode" class="form-control form-control-custom" required>
+                                    <select name="handover_mode" id="handover_mode"
+                                        class="form-control form-control-custom" required>
                                         <option value="">Select mode</option>
-                                        <option value="Hand Delivery" {{ old('handover_mode') == 'Hand Delivery' ? 'selected' : '' }}>Hand Delivery</option>
-                                        <option value="Courier" {{ old('handover_mode') == 'Courier' ? 'selected' : '' }}>Courier</option>
-                                        <option value="Office Pickup" {{ old('handover_mode') == 'Office Pickup' ? 'selected' : '' }}>Office Pickup</option>
+                                        <option value="Hand Delivery"
+                                            {{ old('handover_mode') == 'Hand Delivery' ? 'selected' : '' }}>Hand Delivery
+                                        </option>
+                                        <option value="Courier" {{ old('handover_mode') == 'Courier' ? 'selected' : '' }}>
+                                            Courier</option>
+                                        <option value="Office Pickup"
+                                            {{ old('handover_mode') == 'Office Pickup' ? 'selected' : '' }}>Office Pickup
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="col-12">
                                     <label for="purpose_of_handover" class="form-label-custom">Purpose of Handover <span
                                             class="text-danger">*</span></label>
                                     <textarea name="purpose_of_handover" id="purpose_of_handover" rows="2"
-                                        class="form-control form-control-custom" placeholder="Approval / Memo / Repair / Recut etc."
-                                        required>{{ old('purpose_of_handover') }}</textarea>
+                                        class="form-control form-control-custom" placeholder="Approval / Memo / Repair / Recut etc." required>{{ old('purpose_of_handover') }}</textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="stock_id" class="form-label-custom">Diamond Stock ID (SKU)</label>
@@ -161,27 +173,32 @@
                                 <div class="col-md-4">
                                     <label class="form-label-custom">Shape</label>
                                     <input type="text" name="diamond_shape" id="diamond_shape"
-                                        class="form-control form-control-custom" value="{{ old('diamond_shape') }}" readonly>
+                                        class="form-control form-control-custom" value="{{ old('diamond_shape') }}"
+                                        readonly>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label-custom">Size</label>
                                     <input type="text" name="diamond_size" id="diamond_size"
-                                        class="form-control form-control-custom" value="{{ old('diamond_size') }}" readonly>
+                                        class="form-control form-control-custom" value="{{ old('diamond_size') }}"
+                                        readonly>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label-custom">Color</label>
                                     <input type="text" name="diamond_color" id="diamond_color"
-                                        class="form-control form-control-custom" value="{{ old('diamond_color') }}" readonly>
+                                        class="form-control form-control-custom" value="{{ old('diamond_color') }}"
+                                        readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label-custom">Clarity</label>
                                     <input type="text" name="diamond_clarity" id="diamond_clarity"
-                                        class="form-control form-control-custom" value="{{ old('diamond_clarity') }}" readonly>
+                                        class="form-control form-control-custom" value="{{ old('diamond_clarity') }}"
+                                        readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label-custom">Carat</label>
                                     <input type="text" name="diamond_carat" id="diamond_carat"
-                                        class="form-control form-control-custom" value="{{ old('diamond_carat') }}" readonly>
+                                        class="form-control form-control-custom" value="{{ old('diamond_carat') }}"
+                                        readonly>
                                 </div>
 
                             </div>
@@ -220,8 +237,8 @@
                             <div class="mb-3">
                                 <label for="package_image" class="form-label-custom">Recipient Photo / ID Proof</label>
                                 <div class="file-upload-wrapper">
-                                    <input type="file" name="package_image" id="package_image" class="file-upload-input"
-                                        accept="image/*" onchange="previewImage(this)">
+                                    <input type="file" name="package_image" id="package_image"
+                                        class="file-upload-input" accept="image/*" onchange="previewImage(this)">
                                     <div class="file-upload-placeholder" id="uploadPlaceholder">
                                         <div class="upload-icon">
                                             <i class="bi bi-cloud-arrow-up"></i>
@@ -229,7 +246,8 @@
                                         <p class="upload-text">Click or drag to upload image</p>
                                         <p class="upload-hint">Supports JPG, PNG, JPEG (Max 2MB)</p>
                                     </div>
-                                    <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                                    <div class="image-preview-container" id="imagePreviewContainer"
+                                        style="display: none;">
                                         <img id="imagePreview" src="" alt="Preview">
                                         <button type="button" class="remove-image-btn" onclick="removeImage()">
                                             <i class="bi bi-trash"></i>
@@ -677,6 +695,101 @@
                 justify-content: center;
                 white-space: nowrap;
             }
+
+            /* ===== RESPONSIVE BREAKPOINTS ===== */
+
+            /* Tablet (≤992px) */
+            @media (max-width: 992px) {
+                .packages-management-container {
+                    padding: 1.25rem;
+                }
+
+                .page-header {
+                    padding: 1.5rem;
+                }
+            }
+
+            /* Mobile (≤640px) */
+            @media (max-width: 640px) {
+                .packages-management-container {
+                    padding: 0.875rem;
+                }
+
+                .page-header {
+                    padding: 1.1rem;
+                }
+
+                .header-content {
+                    flex-direction: column;
+                    gap: 0.875rem;
+                    align-items: flex-start;
+                }
+
+                .header-right {
+                    width: 100%;
+                }
+
+                .header-right .btn-secondary-custom {
+                    width: 100%;
+                    justify-content: center;
+                }
+
+                .page-title {
+                    font-size: clamp(1.1rem, 4vw, 1.5rem);
+                }
+
+                .section-header {
+                    padding: 1rem 1.1rem;
+                }
+
+                .section-body {
+                    padding: 1.1rem;
+                }
+
+                .section-icon {
+                    width: 40px;
+                    height: 40px;
+                    font-size: 1.2rem;
+                }
+
+                /* Sticky summary card — unstick on mobile so it flows naturally */
+                .form-section-card.sticky-top {
+                    position: static !important;
+                }
+
+                .btn-primary-custom,
+                .btn-secondary-custom {
+                    width: 100%;
+                    justify-content: center;
+                }
+
+                /* Stock fetch row — keep inline on mobile */
+                .d-flex.gap-2 {
+                    display: flex !important;
+                    flex-wrap: nowrap !important;
+                }
+
+                .btn-fetch-stock {
+                    min-width: 64px;
+                    padding: 0.65rem 0.75rem;
+                    font-size: 0.85rem;
+                }
+
+                .file-upload-wrapper {
+                    min-height: 150px;
+                }
+            }
+
+            /* Extra small (≤380px) */
+            @media (max-width: 380px) {
+                .page-title {
+                    font-size: 1rem;
+                }
+
+                .section-title {
+                    font-size: 0.95rem;
+                }
+            }
         </style>
     @endpush
 
@@ -690,7 +803,7 @@
                 if (input.files && input.files[0]) {
                     const reader = new FileReader();
 
-                    reader.onload = function (e) {
+                    reader.onload = function(e) {
                         previewImage.src = e.target.result;
                         placeholder.style.display = 'none';
                         previewContainer.style.display = 'flex';
@@ -733,12 +846,13 @@
                 messageEl.textContent = 'Fetching stock details...';
 
                 try {
-                    const response = await fetch(`{{ route('packages.lookup-stock') }}?stock_id=${encodeURIComponent(stockId)}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    });
+                    const response = await fetch(
+                        `{{ route('packages.lookup-stock') }}?stock_id=${encodeURIComponent(stockId)}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
 
                     const result = await response.json();
 
@@ -762,18 +876,18 @@
                 }
             }
 
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 const stockIdInput = document.getElementById('stock_id');
                 const lookupBtn = document.getElementById('btnLookupStock');
 
                 lookupBtn.addEventListener('click', lookupStock);
-                stockIdInput.addEventListener('keydown', function (event) {
+                stockIdInput.addEventListener('keydown', function(event) {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         lookupStock();
                     }
                 });
-                stockIdInput.addEventListener('blur', function () {
+                stockIdInput.addEventListener('blur', function() {
                     if (stockIdInput.value.trim()) {
                         lookupStock();
                     }

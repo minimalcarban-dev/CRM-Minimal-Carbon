@@ -4,17 +4,19 @@
     @php
         $currentSort = $sortColumn ?? 'orders_count';
         $currentDir = $sortDir ?? 'desc';
-        
-        function sortUrl($column, $currentSort, $currentDir) {
-            $newDir = ($currentSort === $column && $currentDir === 'asc') ? 'desc' : 'asc';
+
+        function sortUrl($column, $currentSort, $currentDir)
+        {
+            $newDir = $currentSort === $column && $currentDir === 'asc' ? 'desc' : 'asc';
             return request()->fullUrlWithQuery(['sort' => $column, 'dir' => $newDir]);
         }
-        
-        function sortIcon($column, $currentSort, $currentDir) {
-            if ($currentSort !== $column) return '<i class="bi bi-arrow-down-up text-muted opacity-50"></i>';
-            return $currentDir === 'asc' 
-                ? '<i class="bi bi-arrow-up"></i>' 
-                : '<i class="bi bi-arrow-down"></i>';
+
+        function sortIcon($column, $currentSort, $currentDir)
+        {
+            if ($currentSort !== $column) {
+                return '<i class="bi bi-arrow-down-up text-muted opacity-50"></i>';
+            }
+            return $currentDir === 'asc' ? '<i class="bi bi-arrow-up"></i>' : '<i class="bi bi-arrow-down"></i>';
         }
     @endphp
 
@@ -38,7 +40,7 @@
                     <p class="page-description">View and manage all your clients from orders</p>
                 </div>
                 <div class="header-right">
-                    @if(auth()->guard('admin')->user()->canAccessAny(['clients.export']))
+                    @if (auth()->guard('admin')->user()->canAccessAny(['clients.export']))
                         <a href="{{ route('clients.export') }}" class="export-btn">
                             <i class="bi bi-download"></i>
                             <span>Export Excel</span>
@@ -53,17 +55,18 @@
             <form method="GET" action="{{ route('clients.index') }}" class="search-form">
                 <div class="search-input-wrapper">
                     <i class="bi bi-search"></i>
-                    <input type="text" name="search" class="search-input" placeholder="Search clients by name, email, mobile..." value="{{ request('search') }}">
+                    <input type="text" name="search" class="search-input"
+                        placeholder="Search clients by name, email, mobile..." value="{{ request('search') }}">
                 </div>
                 <button type="submit" class="search-btn">Search</button>
-                @if(request('search'))
+                @if (request('search'))
                     <a href="{{ route('clients.index') }}" class="clear-btn">Clear</a>
                 @endif
             </form>
         </div>
 
         <!-- Success Alert -->
-        @if(session('success'))
+        @if (session('success'))
             <div class="success-alert">
                 <i class="bi bi-check-circle-fill"></i>
                 <span>{{ session('success') }}</span>
@@ -106,7 +109,8 @@
                             <tr>
                                 <td>
                                     <div class="client-name-cell">
-                                        <div class="client-avatar">{{ strtoupper(substr($client->name ?? 'NA', 0, 2)) }}</div>
+                                        <div class="client-avatar">{{ strtoupper(substr($client->name ?? 'NA', 0, 2)) }}
+                                        </div>
                                         <span>{{ $client->name ?? '-' }}</span>
                                     </div>
                                 </td>
@@ -134,7 +138,7 @@
                     </tbody>
                 </table>
             </div>
-            @if($clients->hasPages())
+            @if ($clients->hasPages())
                 <div class="pagination-wrapper">
                     {{ $clients->links('pagination::bootstrap-5') }}
                 </div>
@@ -584,11 +588,13 @@
             .header-content {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 1rem;
             }
 
             .export-btn {
                 width: 100%;
                 justify-content: center;
+                min-height: 48px;
             }
 
             .search-form {
@@ -598,6 +604,162 @@
 
             .search-input-wrapper {
                 min-width: 100%;
+            }
+
+            .search-input,
+            .search-btn,
+            .clear-btn {
+                min-height: 48px;
+            }
+
+            .search-btn,
+            .clear-btn {
+                width: 100%;
+                justify-content: center;
+                display: flex;
+            }
+
+            /* Card view for table */
+            .table-wrapper {
+                background: transparent;
+                border: none;
+                overflow-x: visible;
+            }
+
+            .table-card {
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .clients-table {
+                display: block;
+                min-width: 0 !important;
+            }
+
+            .clients-table thead {
+                display: none !important;
+            }
+
+            .clients-table tbody,
+            .clients-table tr,
+            .clients-table td {
+                display: block !important;
+            }
+
+            .clients-table tbody tr {
+                background: var(--bg-white);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-sm);
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+                display: grid !important;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto auto auto auto;
+                gap: 0.5rem;
+            }
+
+            .clients-table td {
+                padding: 0 !important;
+                border: none !important;
+            }
+
+            /* 1) Name */
+            .clients-table td:nth-child(1) {
+                grid-column: 1;
+                grid-row: 1;
+                font-size: 1.1rem;
+            }
+
+            /* 2) Action (View Button) */
+            .clients-table td:nth-child(7) {
+                grid-column: 2;
+                grid-row: 1;
+                justify-self: end;
+                align-self: start;
+            }
+
+            /* 3) Orders Badge - next to name */
+            .clients-table td:nth-child(6) {
+                grid-column: 1;
+                grid-row: 2;
+                padding-bottom: 0.5rem !important;
+            }
+
+            .clients-table td:nth-child(6)::before {
+                content: "Orders: ";
+                color: var(--text-gray);
+                font-size: 0.85rem;
+                margin-right: 0.5rem;
+            }
+
+            /* 4) Email */
+            .clients-table td:nth-child(2) {
+                grid-column: 1 / span 2;
+                grid-row: 3;
+            }
+
+            .clients-table td:nth-child(2)::before {
+                content: "Email: ";
+                color: var(--text-gray);
+                font-size: 0.85rem;
+                margin-right: 0.5rem;
+                font-weight: 500;
+            }
+
+            /* 5) Mobile */
+            .clients-table td:nth-child(3) {
+                grid-column: 1 / span 2;
+                grid-row: 4;
+            }
+
+            .clients-table td:nth-child(3)::before {
+                content: "Mobile: ";
+                color: var(--text-gray);
+                font-size: 0.85rem;
+                margin-right: 0.5rem;
+                font-weight: 500;
+            }
+
+            /* 6) Tax ID */
+            .clients-table td:nth-child(5) {
+                grid-column: 1 / span 2;
+                grid-row: 5;
+            }
+
+            .clients-table td:nth-child(5)::before {
+                content: "Tax ID: ";
+                color: var(--text-gray);
+                font-size: 0.85rem;
+                margin-right: 0.5rem;
+                font-weight: 500;
+            }
+
+            /* 7) Address */
+            .clients-table td:nth-child(4) {
+                grid-column: 1 / span 2;
+                grid-row: 6;
+                margin-top: 0.5rem;
+                padding-top: 0.5rem !important;
+                border-top: 1px solid var(--border-color) !important;
+                font-size: 0.9rem;
+            }
+
+            .clients-table td:nth-child(2),
+            .clients-table td:nth-child(3),
+            .clients-table td:nth-child(5) {
+                font-size: 0.9rem;
+                background: var(--bg-light);
+                padding: 0.6rem 0.75rem !important;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+            }
+
+            .view-btn {
+                min-height: 44px;
+                min-width: 44px;
+                justify-content: center;
             }
         }
 

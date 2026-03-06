@@ -1140,58 +1140,69 @@
 
 /* ---------------- Purchases: Mobile Responsive ---------------- */
 .purchase-page .table-responsive,
-.expense-page .table-responsive {
+.expense-page, 
+.invoice-page .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
 .purchase-page .tracker-table,
-.expense-page .tracker-table {
+.expense-page, 
+.invoice-page .tracker-table {
     min-width: 980px;
 }
 
 .purchase-page .header-right,
-.expense-page .header-right {
+.expense-page, 
+.invoice-page .header-right {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
 .purchase-page .form-actions,
-.expense-page .form-actions {
+.expense-page, 
+.invoice-page .form-actions {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
 .purchase-page .custom-searchable-dropdown,
-.expense-page .custom-searchable-dropdown,
+.expense-page, 
+.invoice-page .custom-searchable-dropdown,
 .purchase-page .dropdown-input-wrapper,
-.expense-page .dropdown-input-wrapper,
+.expense-page, 
+.invoice-page .dropdown-input-wrapper,
 .purchase-page .dropdown-search-input,
-.expense-page .dropdown-search-input {
+.expense-page, 
+.invoice-page .dropdown-search-input {
     width: 100%;
 }
 
 .purchase-page .tracker-action-btn,
-.expense-page .tracker-action-btn {
+.expense-page, 
+.invoice-page .tracker-action-btn {
     min-width: 36px;
     min-height: 36px;
 }
 
 .purchase-page .stat-card,
-.expense-page .stat-card {
+.expense-page, 
+.invoice-page .stat-card {
     border-left-width: 3px;
 }
 
 @media (max-width: 992px) {
     .purchase-page .stats-grid,
-    .expense-page .stats-grid {
+    .expense-page, 
+.invoice-page .stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .purchase-page .tracker-filter-form,
-    .expense-page .tracker-filter-form {
+    .expense-page, 
+.invoice-page .tracker-filter-form {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         align-items: end;
@@ -1199,14 +1210,16 @@
     }
 
     .purchase-page .tracker-filter-field.date-range-field,
-    .expense-page .tracker-filter-field.date-range-field {
+    .expense-page, 
+.invoice-page .tracker-filter-field.date-range-field {
         min-width: 0;
         max-width: 100%;
         flex: initial;
     }
 
     .purchase-page .tracker-filter-actions,
-    .expense-page .tracker-filter-actions {
+    .expense-page, 
+.invoice-page .tracker-filter-actions {
         margin-left: 0;
         justify-content: flex-start;
         grid-column: 1 / -1;
@@ -1216,46 +1229,56 @@
 
 @media (max-width: 768px) {
     .purchase-page .header-content,
-    .expense-page .header-content {
+    .expense-page, 
+.invoice-page .header-content {
         gap: 1rem;
     }
 
     .purchase-page .header-right,
-    .expense-page .header-right {
+    .expense-page, 
+.invoice-page .header-right {
         width: 100%;
     }
 
     .purchase-page .header-right .btn-primary-custom,
-    .expense-page .header-right .btn-primary-custom,
+    .expense-page, 
+.invoice-page .header-right .btn-primary-custom,
     .purchase-page .header-right .btn-secondary-custom,
-    .expense-page .header-right .btn-secondary-custom,
+    .expense-page, 
+.invoice-page .header-right .btn-secondary-custom,
     .purchase-page .form-actions .btn-primary-custom,
-    .expense-page .form-actions .btn-primary-custom,
+    .expense-page, 
+.invoice-page .form-actions .btn-primary-custom,
     .purchase-page .form-actions .btn-secondary-custom,
-    .expense-page .form-actions .btn-secondary-custom {
+    .expense-page, 
+.invoice-page .form-actions .btn-secondary-custom {
         width: 100%;
         justify-content: center;
     }
 
     .purchase-page .tracker-filter,
-    .expense-page .tracker-filter {
+    .expense-page, 
+.invoice-page .tracker-filter {
         padding: 5px;
         margin-bottom: 15px;
     }
 
     .purchase-page .tracker-filter-form,
-    .expense-page .tracker-filter-form {
+    .expense-page, 
+.invoice-page .tracker-filter-form {
         grid-template-columns: 1fr;
     }
 
     .purchase-page .tracker-filter-actions,
-    .expense-page .tracker-filter-actions {
+    .expense-page, 
+.invoice-page .tracker-filter-actions {
         flex-direction: column;
         align-items: stretch;
     }
 
     .purchase-page .tracker-result-count,
-    .expense-page .tracker-result-count {
+    .expense-page, 
+.invoice-page .tracker-result-count {
         border-right: 0;
         margin-right: 0;
         padding-right: 0;
@@ -1264,9 +1287,11 @@
     }
 
     .purchase-page .btn-tracker-reset,
-    .expense-page .btn-tracker-reset,
+    .expense-page, 
+.invoice-page .btn-tracker-reset,
     .purchase-page .btn-tracker-apply,
-    .expense-page .btn-tracker-apply {
+    .expense-page, 
+.invoice-page .btn-tracker-apply {
         width: 100%;
         justify-content: center;
         min-height: 36px;
@@ -1275,14 +1300,16 @@
     }
 
     .purchase-page .stats-grid,
-    .expense-page .stats-grid {
+    .expense-page, 
+.invoice-page .stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.5rem;
         margin-bottom: 15px;
     }
 
     .purchase-page .stat-card,
-    .expense-page .stat-card {
+    .expense-page, 
+.invoice-page .stat-card {
         padding: 5px 12px;
         border-left-width: 2px;
         border-radius: 12px;
@@ -1291,52 +1318,64 @@
     }
 
     .purchase-page .stat-icon,
-    .expense-page .stat-icon {
+    .expense-page, 
+.invoice-page .stat-icon {
         display: none;
     }
 
     .purchase-page .stat-label,
-    .expense-page .stat-label {
+    .expense-page, 
+.invoice-page .stat-label {
         font-size: 10px;
         margin-bottom: 0;
         letter-spacing: 0.3px;
     }
 
     .purchase-page .stat-value,
-    .expense-page .stat-value {
+    .expense-page, 
+.invoice-page .stat-value {
         font-size: 0.95rem;
         line-height: 1.2;
     }
 
     .purchase-page .tracker-filter-input,
-    .expense-page .tracker-filter-input,
+    .expense-page, 
+.invoice-page .tracker-filter-input,
     .purchase-page .tracker-filter-select,
-    .expense-page .tracker-filter-select,
+    .expense-page, 
+.invoice-page .tracker-filter-select,
     .purchase-page .date-range-wrapper .date-range-input,
-    .expense-page .date-range-wrapper .date-range-input {
+    .expense-page, 
+.invoice-page .date-range-wrapper .date-range-input {
         padding: 5px 10px;
         font-size: 12px;
         height: 36px;
     }
 
     .purchase-page .section-body,
-    .expense-page .section-body {
+    .expense-page, 
+.invoice-page .section-body {
         padding: 1rem;
     }
 
     .purchase-page .form-grid,
-    .expense-page .form-grid,
+    .expense-page, 
+.invoice-page .form-grid,
     .purchase-page .detail-grid,
-    .expense-page .detail-grid,
+    .expense-page, 
+.invoice-page .detail-grid,
     .purchase-page .tracker-charts-row,
-    .expense-page .tracker-charts-row,
+    .expense-page, 
+.invoice-page .tracker-charts-row,
     .purchase-page .tracker-tables-row,
-    .expense-page .tracker-tables-row {
+    .expense-page, 
+.invoice-page .tracker-tables-row {
         grid-template-columns: 1fr !important;
         gap: 1rem;
     }
     /* Pie chart rows stay 2-col on mobile even in expense-page context */
-    .expense-page .tracker-pie-charts-row {
+    .expense-page, 
+.invoice-page .tracker-pie-charts-row {
         grid-template-columns: 1fr 1fr !important;
         gap: 0.75rem;
     }
@@ -1356,14 +1395,16 @@
     }
 
     .purchase-page .payment-toggle,
-    .expense-page .payment-toggle {
+    .expense-page, 
+.invoice-page .payment-toggle {
         display: grid;
         grid-template-columns: 1fr;
         gap: 0.5rem;
     }
 
     .purchase-page .payment-toggle .toggle-btn,
-    .expense-page .payment-toggle .toggle-btn {
+    .expense-page, 
+.invoice-page .payment-toggle .toggle-btn {
         width: 100%;
         min-height: 44px;
         justify-content: center;
@@ -1371,13 +1412,15 @@
     }
 
     .purchase-page .tracker-action-btn,
-    .expense-page .tracker-action-btn {
+    .expense-page, 
+.invoice-page .tracker-action-btn {
         min-width: 40px;
         min-height: 40px;
     }
 
     .purchase-page #completeModal .modal-content,
-    .expense-page #completeModal .modal-content {
+    .expense-page, 
+.invoice-page #completeModal .modal-content {
         width: calc(100% - 1rem) !important;
         margin: 0.5rem !important;
         max-height: calc(100vh - 1rem);
@@ -1385,98 +1428,119 @@
     }
 
     .purchase-page .tracker-filter,
-    .expense-page .tracker-filter,
+    .expense-page, 
+.invoice-page .tracker-filter,
     .purchase-page .tracker-table-card,
-    .expense-page .tracker-table-card,
+    .expense-page, 
+.invoice-page .tracker-table-card,
     .purchase-page .form-section-card,
-    .expense-page .form-section-card {
+    .expense-page, 
+.invoice-page .form-section-card {
         border-radius: 12px;
     }
 
     .purchase-page .stat-card:hover,
-    .expense-page .stat-card:hover {
+    .expense-page, 
+.invoice-page .stat-card:hover {
         transform: none;
     }
 }
 
 @media (max-width: 576px) {
     .purchase-page,
-    .expense-page {
+    .expense-page, 
+.invoice-page {
         padding-left: 0.5rem;
         padding-right: 0.5rem;
     }
 
     .purchase-page .page-header,
-    .expense-page .page-header {
+    .expense-page, 
+.invoice-page .page-header {
         padding: 15px;
         margin-bottom: 15px;
     }
 
     .purchase-page .page-title,
-    .expense-page .page-title {
+    .expense-page, 
+.invoice-page .page-title {
         font-size: 17px;
     }
 
     .purchase-page .stats-grid,
-    .expense-page .stats-grid {
+    .expense-page, 
+.invoice-page .stats-grid {
         gap: 0.5rem;
         margin-bottom: 15px;
         grid-template-columns: 1fr;
     }
     /* Keep compact stats grid 2-col on report pages */
-    .expense-page .stats-grid.stats-grid-compact {
+    .expense-page, 
+.invoice-page .stats-grid.stats-grid-compact {
         grid-template-columns: 1fr 1fr;
     }
     /* Pie chart row: even smaller canvas on very small screens */
-    .expense-page .tracker-pie-charts-row {
+    .expense-page, 
+.invoice-page .tracker-pie-charts-row {
         grid-template-columns: 1fr 1fr !important;
         gap: 0.5rem;
     }
-    .expense-page .tracker-pie-charts-row .tracker-chart-card {
+    .expense-page, 
+.invoice-page .tracker-pie-charts-row .tracker-chart-card {
         padding: 0.75rem 0.5rem;
     }
-    .expense-page .tracker-pie-charts-row .tracker-chart-title {
+    .expense-page, 
+.invoice-page .tracker-pie-charts-row .tracker-chart-title {
         font-size: 0.72rem;
     }
-    .expense-page .tracker-pie-charts-row .tracker-report-chart-canvas {
+    .expense-page, 
+.invoice-page .tracker-pie-charts-row .tracker-report-chart-canvas {
         height: 110px;
     }
-    .expense-page .tracker-pie-charts-row .tracker-report-legend > div > div {
+    .expense-page, 
+.invoice-page .tracker-pie-charts-row .tracker-report-legend > div > div {
         font-size: 0.75rem;
     }
 
     .purchase-page .stat-card,
-    .expense-page .stat-card {
+    .expense-page, 
+.invoice-page .stat-card {
         padding: 5px 12px;
         gap: 5px;
         border-left-width: 2px;
     }
 
     .purchase-page .stat-icon,
-    .expense-page .stat-icon {
+    .expense-page, 
+.invoice-page .stat-icon {
         display: none;
     }
 
     .purchase-page .stat-label,
-    .expense-page .stat-label {
+    .expense-page, 
+.invoice-page .stat-label {
         font-size: 10px;
     }
 
     .purchase-page .stat-value,
-    .expense-page .stat-value {
+    .expense-page, 
+.invoice-page .stat-value {
         font-size: 0.95rem;
         font-weight: 600;
     }
 
     .purchase-page .tracker-table,
-    .expense-page .tracker-table {
+    .expense-page, 
+.invoice-page .tracker-table {
         min-width: 860px;
     }
 
     .purchase-page .tracker-table th,
-    .expense-page .tracker-table th,
+    .expense-page, 
+.invoice-page .tracker-table th,
     .purchase-page .tracker-table td,
-    .expense-page .tracker-table td {
+    .expense-page, 
+.invoice-page .tracker-table td {
         padding: 0.75rem 0.7rem;
         font-size: 0.82rem;
     }
@@ -1484,7 +1548,8 @@
 
 @media (max-width: 768px) {
     [data-theme="dark"] .purchase-page .stat-card,
-    .expense-page .stat-card {
+    .expense-page, 
+.invoice-page .stat-card {
         border-color: rgba(148, 163, 184, 0.2);
         box-shadow: none;
     }

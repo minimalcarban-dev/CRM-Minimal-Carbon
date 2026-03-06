@@ -741,89 +741,727 @@
             min-width: 300px;
         }
 
-        @media (max-width: 575px) {
+        /* ==========================================
+                   RESPONSIVE STYLES - ALL DEVICES
+                   ========================================== */
+
+        /* Tablet and below (1024px) */
+        @media (max-width: 1024px) {
             .inventory-management-container {
-                padding: 0;
+                padding: 1rem;
             }
 
             .page-header {
-                padding: 8px;
-                border-radius: 7px;
-                display: block;
-                margin-bottom: 15px;
-            }
-
-            .page-header div:first-child {
-                margin-bottom: 0.75rem;
-            }
-
-            .page-header div:last-child {
-                flex-flow: column;
-                gap: 5px !important;
-            }
-
-            .page-header div:last-child div {
-                display: none;
-            }
-
-            .inventory-card {
-                flex-direction: column;
+                padding: 1.5rem;
             }
 
             .sidebar-panel {
-                padding: 7px;
+                width: 260px;
             }
 
-            #cat-view-1 .table-header {
-                padding: 10px;
+            .table-custom thead th,
+            .table-custom tbody td {
+                padding: 0.65rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Tablet Portrait (768px) */
+        @media (max-width: 768px) {
+            .inventory-management-container {
+                padding: 0.75rem;
+            }
+
+            /* Page header: keep tab pills inline, stack action buttons below */
+            .page-header {
+                padding: 1rem 1.25rem;
                 flex-direction: column;
-                text-align: left;
-                justify-content: left;
+                gap: 0.85rem;
+            }
+
+            /* Title row: keep compact */
+            .page-header>div:first-child h2 {
+                font-size: 1.3rem;
+            }
+
+            .page-header>div:first-child .text-secondary.small {
+                font-size: 0.78rem;
+            }
+
+            /* Button group: tabs side-by-side, action buttons fill remaining */
+            .page-header>div.d-flex {
                 width: 100%;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 0.5rem;
             }
 
-            #cat-view-1 .table-header div:last-child {
-                margin-top: 5px;
-            }
-
-            #cat-view-1 .table-header div {
-                width: 100%;
-            }
-
-            #shapes-container-1 .table-custom thead th,
-            #shapes-container-1 .table-custom tbody td {
-                padding: 3px;
-                font-size: 12px;
-                white-space: nowrap;
-            }
-
-            #shapes-container-1 .rounded-pill {
-                white-space: nowrap;
-                font-size: 12px;
-                padding: 4px !important;
-                border-radius: 8px !important;
-            }
-
-            #shapes-container-1 td.text-end {
+            /* Tab pills go in top row (2 cols) */
+            #btn-tab-lab {
+                grid-column: 1;
+                grid-row: 1;
+                font-size: 0.85rem;
+                padding: 0.5rem 0.75rem;
+                min-height: 40px;
+                justify-content: center;
                 display: flex;
+                align-items: center;
             }
 
-            .shape-group.open .shape-group-body {
-                overflow-y: auto;
+            #btn-tab-natural {
+                grid-column: 2;
+                grid-row: 1;
+                font-size: 0.85rem;
+                padding: 0.5rem 0.75rem;
+                min-height: 40px;
+                justify-content: center;
+                display: flex;
+                align-items: center;
             }
 
-            #history-table.table-custom thead th,
-            #history-table.table-custom tbody td {
-                padding: 10px;
+            /* Hide the vertical rule */
+            .page-header .vr {
+                display: none;
+            }
+
+            /* Add Stock & Use Stock go in bottom row (2 cols) */
+            .page-header .btn-theme-primary {
+                grid-column: 1;
+                grid-row: 2;
+                min-height: 42px;
+                justify-content: center;
+                display: flex;
+                align-items: center;
+                font-size: 0.88rem;
+            }
+
+            .page-header .btn-theme-danger-outline {
+                grid-column: 2;
+                grid-row: 2;
+                min-height: 42px;
+                justify-content: center;
+                display: flex;
+                align-items: center;
+                font-size: 0.88rem;
+            }
+
+            /* Inventory card: sidebar on top */
+            .inventory-card {
+                flex-direction: column;
+                min-height: auto;
+            }
+
+            /* Sidebar: becomes horizontal scrollable chip row */
+            .sidebar-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                max-height: none;
+                overflow: hidden;
+                padding: 0.75rem 1rem;
+            }
+
+            .sidebar-panel>h6 {
+                font-size: 0.68rem;
+                margin-bottom: 0.6rem;
+            }
+
+            /* Turn category list into horizontal scroll */
+            #sidebar-lab-grown,
+            #sidebar-natural {
+                display: flex;
+                flex-direction: row;
+                gap: 0.4rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.5rem;
+                scrollbar-width: none;
+            }
+
+            #sidebar-lab-grown::-webkit-scrollbar,
+            #sidebar-natural::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Each category item becomes a chip */
+            .category-item-container {
+                flex-shrink: 0;
+                margin-bottom: 0;
+            }
+
+            .category-nav-item {
+                padding: 0.45rem 0.9rem;
+                font-size: 0.82rem;
+                min-height: 36px;
+                border-radius: 20px;
+                white-space: nowrap;
+                width: auto;
+                margin-bottom: 0;
+            }
+
+            .category-nav-item span:first-child i {
+                display: none;
+                /* hide gem icon on chips */
+            }
+
+            /* Delete button overlays chip */
+            .category-item-container .category-delete-btn {
+                opacity: 0.75;
+                visibility: visible;
+                font-size: 0.65rem;
+                padding: 0.15rem 0.3rem;
+            }
+
+            /* Add Category button as chip */
+            #sidebar-lab-grown>.mt-3,
+            #sidebar-natural>.mt-3 {
+                flex-shrink: 0;
+                margin-top: 0 !important;
+                align-self: center;
+            }
+
+            #sidebar-lab-grown .btn-theme-outline,
+            #sidebar-natural .btn-theme-outline {
+                white-space: nowrap;
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+                border-radius: 20px;
+            }
+
+            /* Main panel */
+            .main-panel {
+                min-height: 0;
+            }
+
+            /* Table-header toolbar */
+            .table-header {
+                padding: 0.85rem 1rem;
+                flex-direction: column;
+                gap: 0.6rem;
+                align-items: stretch !important;
+            }
+
+            .table-header>div:last-child {
+                width: 100%;
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .table-header input[type="text"] {
+                flex: 1;
+                width: auto !important;
+                min-height: 38px;
+            }
+
+            .table-header .btn-theme-outline {
+                min-height: 38px;
                 white-space: nowrap;
             }
 
+            /* Shape accordion header */
+            .shape-group-header {
+                padding: 0.9rem 1rem;
+                min-height: 48px;
+            }
+
+            .shape-group-header .shape-name {
+                font-size: 0.9rem;
+            }
+
+            /* ── CARD LAYOUT for shape-group table on mobile ── */
+            /* Switch table to card list */
+            .shape-group-body {
+                overflow-x: visible;
+                padding: 0.6rem 0.75rem;
+                background: transparent;
+            }
+
+            .table-custom,
+            .table-custom thead,
+            .table-custom tbody,
+            .table-custom tr,
+            .table-custom th,
+            .table-custom td {
+                display: block !important;
+            }
+
+            .table-custom {
+                min-width: 0 !important;
+                font-size: 0.88rem;
+            }
+
+            /* Hide desktop thead */
+            .table-custom thead {
+                display: none !important;
+            }
+
+            /* Each row = one card */
+            .table-custom tbody tr.searchable-row {
+                display: grid !important;
+                grid-template-columns: auto 1fr auto;
+                grid-template-rows: auto auto;
+                column-gap: 0.6rem;
+                row-gap: 0.35rem;
+                padding: 0.85rem 0.9rem;
+                margin-bottom: 0.55rem;
+                border-radius: 12px;
+                border: 1px solid var(--border, #e5e7eb);
+                background: #fff;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+                overflow: hidden;
+                position: relative;
+            }
+
+            [data-theme="dark"] .table-custom tbody tr.searchable-row {
+                background: var(--bg-card, #1e293b);
+                border-color: rgba(148, 163, 184, 0.2);
+                box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+            }
+
+            /* Column 1: Size (big, bold) — grid col 1, rows 1-2 */
+            .table-custom tbody td:nth-child(1) {
+                grid-column: 1;
+                grid-row: 1;
+                font-size: 1.35rem;
+                font-weight: 800;
+                color: var(--primary, #6366f1);
+                line-height: 1;
+                align-self: center;
+                padding: 0;
+                border: none;
+            }
+
+            /* Column 2: Size label — grid col 2, row 1 */
+            .table-custom tbody td:nth-child(2) {
+                grid-column: 2;
+                grid-row: 1;
+                font-size: 0.78rem;
+                color: var(--text-secondary, #64748b);
+                padding: 0;
+                border: none;
+                align-self: end;
+            }
+
+            [data-theme="dark"] .table-custom tbody td:nth-child(2) {
+                color: var(--text-secondary, #94a3b8) !important;
+            }
+
+            /* Column 3: Stock badge — grid col 2, row 2 */
+            .table-custom tbody td:nth-child(3) {
+                grid-column: 2;
+                grid-row: 2;
+                padding: 0;
+                border: none;
+                align-self: start;
+            }
+
+            .table-custom tbody td:nth-child(3) .badge {
+                font-size: 0.75rem;
+                padding: 0.3em 0.75em;
+            }
+
+            /* Column 4: Avg $/ct — grid col 2-3, row 1 — right side */
+            .table-custom tbody td:nth-child(4) {
+                grid-column: 3;
+                grid-row: 1;
+                font-weight: 600;
+                font-size: 0.88rem;
+                color: var(--text-primary, #0f172a);
+                text-align: right;
+                padding: 0;
+                border: none;
+                align-self: end;
+                white-space: nowrap;
+            }
+
+            [data-theme="dark"] .table-custom tbody td:nth-child(4) {
+                color: var(--text-primary, #f1f5f9) !important;
+            }
+
+            /* Column 5: Total Carats — hidden on mobile */
+            .table-custom tbody td:nth-child(5) {
+                display: none !important;
+            }
+
+            /* Column 6: Total Price — hidden on mobile (can show $/ct instead) */
+            .table-custom tbody td:nth-child(6) {
+                display: none !important;
+            }
+
+            /* Column 7: Actions — grid col 3, row 2 — right aligned */
+            .table-custom tbody td:nth-child(7) {
+                grid-column: 3;
+                grid-row: 2;
+                text-align: right;
+                padding: 0;
+                border: none;
+                align-self: start;
+                white-space: nowrap;
+                display: flex;
+                gap: 0.35rem;
+                justify-content: flex-end;
+            }
+
+            /* Touch-friendly action buttons */
+            .table-custom .btn-theme-icon {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 0.9rem !important;
+                border-radius: 10px !important;
+                margin: 0 !important;
+            }
+
+            /* Add size row: stacked */
             .add-size-row {
-                padding: 9px;
+                padding: 0.65rem 0.75rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: 0.25rem;
             }
 
             .add-size-row input {
-                padding: 5px;
+                flex: 1;
+                max-width: none;
+                min-height: 38px;
+            }
+
+            .add-size-row button {
+                min-height: 38px;
+            }
+
+            /* Add shape bar */
+            .add-shape-bar {
+                padding: 0.65rem 0.75rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .add-shape-bar input,
+            .add-shape-bar select {
+                flex: 1;
+                max-width: none;
+                min-height: 38px;
+            }
+
+            .add-shape-bar button {
+                min-height: 38px;
+            }
+        }
+
+        /* Small phones (≤480px): tighten card layout */
+        @media (max-width: 480px) {
+            .inventory-management-container {
+                padding: 0.4rem;
+            }
+
+            .page-header {
+                padding: 0.85rem;
+                border-radius: 12px;
+                margin-bottom: 0.85rem;
+            }
+
+            .page-header>div.d-flex {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.4rem;
+            }
+
+            #btn-tab-lab,
+            #btn-tab-natural,
+            .page-header .btn-theme-primary,
+            .page-header .btn-theme-danger-outline {
+                font-size: 0.8rem;
+                padding: 0.45rem 0.5rem;
+                min-height: 38px;
+            }
+
+            /* Shape header tighter */
+            .shape-group-header {
+                padding: 0.75rem 0.85rem;
+            }
+
+            .shape-group-header .shape-name {
+                font-size: 0.82rem;
+            }
+
+            /* Card body tighter */
+            .shape-group-body {
+                padding: 0.5rem 0.6rem;
+            }
+
+            .table-custom tbody tr.searchable-row {
+                padding: 0.7rem 0.75rem;
+                margin-bottom: 0.45rem;
+                border-radius: 10px;
+            }
+
+            .table-custom tbody td:nth-child(1) {
+                font-size: 1.1rem;
+            }
+
+            .table-custom .btn-theme-icon {
+                width: 34px !important;
+                height: 34px !important;
+                font-size: 0.82rem !important;
+            }
+
+            /* Category chip size */
+            .category-nav-item {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.78rem;
+                min-height: 34px;
+            }
+
+            /* Toast positioning */
+            .melee-toast {
+                bottom: 1rem;
+                right: 0.75rem;
+                left: 0.75rem;
+                min-width: auto;
+            }
+
+            /* Modal */
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .modal-content {
+                border-radius: 12px;
+            }
+
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 1rem;
+            }
+
+            .modal-title {
+                font-size: 1rem;
+            }
+
+            .category-item-container .category-delete-btn {
+                opacity: 0.7;
+                visibility: visible;
+            }
+        }
+
+        /* History Modal Responsive */
+        @media (max-width: 768px) {
+            #historyModal .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+
+            #history-diamond-info {
+                flex-direction: column;
+                gap: 0.75rem;
+                align-items: flex-start !important;
+            }
+
+            #history-table {
+                font-size: 0.75rem;
+            }
+
+            #history-table thead th,
+            #history-table tbody td {
+                padding: 0.5rem 0.4rem;
+                font-size: 0.7rem;
+            }
+
+            /* Make history table scrollable */
+            #historyModal .modal-body {
+                overflow-x: auto;
+            }
+
+            #history-table {
+                min-width: 900px;
+            }
+        }
+
+        /* Edit Modals Responsive */
+        @media (max-width: 640px) {
+
+            #editMeleeModal .modal-dialog,
+            #editTransactionModal .modal-dialog {
+                margin: 1rem;
+            }
+
+            #editMeleeModal .modal-body,
+            #editTransactionModal .modal-body {
+                padding: 1.5rem 1rem;
+            }
+
+            #editMeleeModal .form-label,
+            #editTransactionModal .form-label {
+                font-size: 0.75rem;
+            }
+
+            #editMeleeModal .form-control,
+            #editTransactionModal .form-control {
+                font-size: 0.88rem;
+                padding: 0.55rem 0.75rem;
+                min-height: 42px;
+            }
+
+            #editMeleeModal button[type="submit"],
+            #editTransactionModal button[type="submit"] {
+                min-height: 44px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Transaction Modal Responsive */
+        @media (max-width: 768px) {
+            #transactionModal .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+
+            #transactionModal .modal-body {
+                padding: 1rem;
+            }
+
+            #transactionModal .form-label {
+                font-size: 0.82rem;
+            }
+
+            #transactionModal .form-control,
+            #transactionModal select,
+            #transactionModal textarea {
+                font-size: 0.88rem;
+                padding: 0.6rem 0.8rem;
+                min-height: 44px;
+            }
+
+            #transactionModal .btn {
+                padding: 0.65rem 1rem;
+                font-size: 0.88rem;
+                min-height: 44px;
+            }
+
+            #selection_context {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start !important;
+            }
+        }
+
+        /* Quick Order Modal Responsive */
+        @media (max-width: 640px) {
+            #quickOrderModal .modal-dialog {
+                margin: 1rem;
+            }
+
+            #quickOrderModal .order-quick-details .row {
+                flex-direction: column;
+            }
+
+            #quickOrderModal .order-quick-details .col-4,
+            #quickOrderModal .order-quick-details .col-6,
+            #quickOrderModal .order-quick-details .col-8 {
+                width: 100%;
+                text-align: left !important;
+                margin-bottom: 0.75rem;
+            }
+        }
+
+        /* Landscape orientation optimizations */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .sidebar-panel {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .page-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .modal-dialog-scrollable .modal-body {
+                max-height: 250px;
+            }
+        }
+
+        /* Dark theme adjustments for card mode */
+        @media (max-width: 768px) {
+            [data-theme="dark"] .shape-group-header {
+                border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            }
+
+            [data-theme="dark"] .add-size-row,
+            [data-theme="dark"] .add-shape-bar {
+                background: rgba(15, 23, 42, 0.4);
+            }
+        }
+
+        /* Always-on touch target sizes for touch devices */
+        @media (hover: none) and (pointer: coarse) {
+
+            button,
+            .btn,
+            .shape-group-header {
+                min-height: 44px;
+            }
+
+            .category-nav-item {
+                min-height: 36px;
+            }
+
+            .btn-theme-icon {
+                min-width: 36px;
+                min-height: 36px;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+
+            .page-header>div:last-child,
+            .sidebar-panel,
+            .table-header>div:last-child,
+            .btn-theme-icon,
+            .add-size-row,
+            .add-shape-bar,
+            .category-delete-btn {
+                display: none !important;
+            }
+
+            .inventory-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .main-panel {
+                width: 100%;
+            }
+
+            .table-custom {
+                min-width: auto !important;
+            }
+
+            .table-custom,
+            .table-custom thead,
+            .table-custom tbody,
+            .table-custom tr,
+            .table-custom th,
+            .table-custom td {
+                display: table !important;
+            }
+
+            .table-custom thead {
+                display: table-header-group !important;
+            }
+
+            .table-custom tbody {
+                display: table-row-group !important;
+            }
+
+            .table-custom tr {
+                display: table-row !important;
+            }
+
+            .table-custom th,
+            .table-custom td {
+                display: table-cell !important;
             }
         }
     </style>
@@ -939,7 +1577,7 @@
                     $allCategories = $labGrownCategories->concat($naturalCategories);
                 @endphp
 
-                @foreach($allCategories as $category)
+                @foreach ($allCategories as $category)
                     @php
                         // Group diamonds by shape
                         $shapeGroups = $category->diamonds->groupBy('shape');
@@ -959,7 +1597,8 @@
                             <div class="d-flex align-items-center gap-2">
                                 <input type="text" class="form-control form-control-sm" placeholder="Search..."
                                     aria-label="Search diamonds"
-                                    onkeyup="filterCategoryTable('{{ $category->id }}', this.value)" style="width: 180px;">
+                                    onkeyup="filterCategoryTable('{{ $category->id }}', this.value)"
+                                    style="width: 180px;">
                                 <button class="btn btn-sm btn-theme-outline" type="button"
                                     onclick="focusAddShape('{{ $category->id }}')">
                                     Add Shape
@@ -979,7 +1618,7 @@
                                             @php
                                                 $totalPcs = $diamonds->sum('available_pieces');
                                             @endphp
-                                            @if($totalPcs != 0)
+                                            @if ($totalPcs != 0)
                                                 <span
                                                     class="stock-total-pill {{ $totalPcs < 0 ? 'bg-danger text-white' : '' }}">{{ $totalPcs }}
                                                     pcs</span>
@@ -1003,7 +1642,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($diamonds as $diamond)
+                                                @foreach ($diamonds as $diamond)
                                                     @php
                                                         // Extract size number from size_label (format: "shape-size")
                                                         $sizeParts = explode('-', $diamond->size_label);
@@ -1012,44 +1651,52 @@
                                                     <tr class="searchable-row"
                                                         data-search="{{ strtolower($diamond->size_label . ' ' . $diamond->shape) }}">
                                                         <td class="fw-bold">{{ $sizeNum }}</td>
-                                                        <td class="text-muted small">{{ str_replace('-', ' ', $diamond->size_label) }}
+                                                        <td class="text-muted small">
+                                                            {{ str_replace('-', ' ', $diamond->size_label) }}
                                                         </td>
                                                         <td>
-                                                            @if($diamond->available_pieces != 0)
+                                                            @if ($diamond->available_pieces != 0)
                                                                 <span
                                                                     class="badge {{ $diamond->available_pieces > 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' }} border px-3 py-2 rounded-pill"
-                                                                    style="cursor:pointer" onclick="openHistoryModal({{ $diamond->id }})"
+                                                                    style="cursor:pointer"
+                                                                    onclick="openHistoryModal({{ $diamond->id }})"
                                                                     title="Click to view history">
                                                                     {{ $diamond->available_pieces }} pcs
                                                                 </span>
                                                             @else
                                                                 <span
                                                                     class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill"
-                                                                    style="cursor:pointer" onclick="openHistoryModal({{ $diamond->id }})"
+                                                                    style="cursor:pointer"
+                                                                    onclick="openHistoryModal({{ $diamond->id }})"
                                                                     title="Click to view history">
                                                                     Out of Stock
                                                                 </span>
                                                             @endif
                                                         </td>
                                                         <td class="fw-medium">
-                                                            ${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}</td>
+                                                            ${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}
+                                                        </td>
                                                         <td class="fw-medium">
-                                                            {{ number_format($diamond->available_carat_weight ?? 0, 3) }} ct
+                                                            {{ number_format($diamond->available_carat_weight ?? 0, 3) }}
+                                                            ct
                                                         </td>
                                                         <td class="fw-bold">
                                                             ${{ number_format($diamond->total_price ?? 0, 2) }}</td>
                                                         <td class="text-end">
-                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-in" data-action="in"
-                                                                data-diamond-id="{{ $diamond->id }}"
+                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-in"
+                                                                data-action="in" data-diamond-id="{{ $diamond->id }}"
                                                                 data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
-                                                                data-category-name="{{ $category->name }}" title="Add Stock"
+                                                                data-category-name="{{ $category->name }}"
+                                                                title="Add Stock"
                                                                 onclick="openTransactionModal(this.dataset.action, this.dataset.diamondId, this.dataset.diamondName, this.dataset.categoryName)">
                                                                 <i class="bi bi-plus-lg"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-out ms-1"
+                                                            <button
+                                                                class="btn btn-sm btn-theme-icon btn-theme-icon-out ms-1"
                                                                 data-action="out" data-diamond-id="{{ $diamond->id }}"
                                                                 data-diamond-name="{{ $diamond->shape }} {{ $diamond->size_label }}"
-                                                                data-category-name="{{ $category->name }}" title="Use Stock"
+                                                                data-category-name="{{ $category->name }}"
+                                                                title="Use Stock"
                                                                 onclick="openTransactionModal(this.dataset.action, this.dataset.diamondId, this.dataset.diamondName, this.dataset.categoryName)">
                                                                 <i class="bi bi-dash-lg"></i>
                                                             </button>
@@ -1058,12 +1705,14 @@
                                                                 $lastTxPieces = $lastTx ? $lastTx->pieces : '';
                                                                 $lastTxCarats = $lastTx ? $lastTx->carat_weight : '';
                                                             @endphp
-                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-edit ms-1"
+                                                            <button
+                                                                class="btn btn-sm btn-theme-icon btn-theme-icon-edit ms-1"
                                                                 title="Edit Melee"
                                                                 onclick="openEditModal({{ $diamond->id }}, '{{ $diamond->shape }}', '{{ explode('-', $diamond->size_label)[1] ?? str_replace(strtolower($diamond->shape) . '-', '', $diamond->size_label) }}', '{{ $lastTxPieces }}', '{{ $lastTxCarats }}')">
                                                                 <i class="bi bi-pencil-square"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-theme-icon btn-theme-icon-delete ms-1"
+                                                            <button
+                                                                class="btn btn-sm btn-theme-icon btn-theme-icon-delete ms-1"
                                                                 title="Delete Melee"
                                                                 onclick="deleteMeleeDiamond({{ $diamond->id }}, '{{ $diamond->shape }} {{ $diamond->size_label }}')">
                                                                 <i class="bi bi-trash"></i>
@@ -1090,9 +1739,9 @@
                             @endforelse
 
                             {{-- Show empty shapes (from allowed_shapes with no diamonds yet) --}}
-                            @if($category->allowed_shapes)
-                                @foreach($category->allowed_shapes as $allowedShape)
-                                    @if(!$shapeGroups->has($allowedShape))
+                            @if ($category->allowed_shapes)
+                                @foreach ($category->allowed_shapes as $allowedShape)
+                                    @if (!$shapeGroups->has($allowedShape))
                                         <div class="shape-group" data-shape="{{ strtolower($allowedShape) }}">
                                             <button class="shape-group-header" onclick="toggleShapeGroup(this)">
                                                 <div class="shape-name">
@@ -1112,8 +1761,10 @@
 
                                                 <!-- Add Size Row -->
                                                 <div class="add-size-row">
-                                                    <input type="text" class="form-control form-control-sm add-size-input"
-                                                        placeholder="e.g. 1.5 or 4*2" data-category-id="{{ $category->id }}"
+                                                    <input type="text"
+                                                        class="form-control form-control-sm add-size-input"
+                                                        placeholder="e.g. 1.5 or 4*2"
+                                                        data-category-id="{{ $category->id }}"
                                                         data-shape="{{ $allowedShape }}">
                                                     <button class="btn btn-sm btn-primary" onclick="addSizeToShape(this)">
                                                         Add Size
@@ -1227,7 +1878,8 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-top-0">
-                    <a href="#" id="quick-order-full-link" class="btn btn-primary w-100 py-2 fw-bold">View Full Order
+                    <a href="#" id="quick-order-full-link" class="btn btn-primary w-100 py-2 fw-bold">View Full
+                        Order
                         Details</a>
                 </div>
             </div>
@@ -1266,7 +1918,8 @@
                         <div class="row g-3 mb-4">
                             <div class="col-6">
                                 <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Pieces</label>
-                                <input type="number" id="edit_last_pieces" class="form-control" placeholder="0" min="1">
+                                <input type="number" id="edit_last_pieces" class="form-control" placeholder="0"
+                                    min="1">
                             </div>
                             <div class="col-6">
                                 <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Carats</label>
@@ -1307,7 +1960,8 @@
 
                         <div class="mb-4">
                             <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Carats</label>
-                            <input type="number" step="0.001" id="edit_tx_carats" class="form-control" min="0">
+                            <input type="number" step="0.001" id="edit_tx_carats" class="form-control"
+                                min="0">
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2" id="btnUpdateTransaction">
@@ -1324,7 +1978,7 @@
     <script>
         let activeCategoryId = null;
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Check localStorage for previous tab, otherwise default to lab-grown
             const savedTab = localStorage.getItem('meleeActiveTab') || 'lab-grown';
 
@@ -1339,18 +1993,26 @@
                     placeholder: 'Search Melee Diamond (Shape, Size, etc.)',
                     allowClear: true,
                     ajax: {
-                        url: '{{ route("melee.search") }}',
+                        url: '{{ route('melee.search') }}',
                         dataType: 'json',
                         delay: 250,
-                        data: function (params) { return { term: params.term }; },
-                        processResults: function (data) { return { results: data }; },
+                        data: function(params) {
+                            return {
+                                term: params.term
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data
+                            };
+                        },
                         cache: true
                     },
                     minimumInputLength: 0
                 });
 
                 // When a diamond is selected from dropdown, populate the selection context
-                $('#modal_diamond_select').on('select2:select', function (e) {
+                $('#modal_diamond_select').on('select2:select', function(e) {
                     var data = e.params.data;
                     setModalSelection(data.id, data.text.split(' (Stock')[0], data.category_name);
                 });
@@ -1374,7 +2036,7 @@
         }
 
         // Handle Edit Form Submission
-        document.getElementById('editMeleeForm').addEventListener('submit', function (e) {
+        document.getElementById('editMeleeForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const id = document.getElementById('edit_melee_id').value;
             const shape = document.getElementById('edit_shape').value;
@@ -1389,21 +2051,32 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
 
             fetch(`{{ url('admin/melee') }}/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ shape, size, last_pieces, last_carats })
-            })
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        shape,
+                        size,
+                        last_pieces,
+                        last_carats
+                    })
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         if (window.Swal) {
-                            Swal.fire({ title: 'Success!', text: data.message, icon: 'success' }).then(() => location.reload());
+                            Swal.fire({
+                                title: 'Success!',
+                                text: data.message,
+                                icon: 'success'
+                            }).then(() => location.reload());
                         } else {
-                            alert(data.message); location.reload();
+                            alert(data.message);
+                            location.reload();
                         }
                     } else {
                         if (window.Swal) Swal.fire('Error', data.message || 'Validation failed.', 'error');
@@ -1423,7 +2096,9 @@
 
         function deleteMeleeDiamond(id, name) {
             if (!window.Swal) {
-                if (confirm(`Are you sure you want to completely delete ${name}? All transaction history for this size will also be deleted.`)) {
+                if (confirm(
+                        `Are you sure you want to completely delete ${name}? All transaction history for this size will also be deleted.`
+                    )) {
                     executeDelete(id);
                 }
                 return;
@@ -1446,19 +2121,20 @@
 
         function executeDelete(id) {
             fetch(`{{ url('admin/melee') }}/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         if (window.Swal) {
                             Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
                         } else {
-                            alert(data.message); location.reload();
+                            alert(data.message);
+                            location.reload();
                         }
                     } else {
                         if (window.Swal) Swal.fire('Error', data.message || 'Could not delete.', 'error');
@@ -1575,7 +2251,10 @@
         function focusAddShape(categoryId) {
             const bar = document.getElementById(`add-shape-bar-${categoryId}`);
             if (!bar) return;
-            bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            bar.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
             const nameInput = bar.querySelector('.new-shape-name');
             if (nameInput) nameInput.focus();
         }
@@ -1598,18 +2277,18 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
             fetch("{{ route('melee.add-shape') }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    category_id: categoryId,
-                    shape: shape,
-                    size: size
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        category_id: categoryId,
+                        shape: shape,
+                        size: size
+                    })
                 })
-            })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
@@ -1652,18 +2331,18 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
             fetch("{{ route('melee.add-shape') }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    category_id: categoryId,
-                    shape: shape,
-                    size: size
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        category_id: categoryId,
+                        shape: shape,
+                        size: size
+                    })
                 })
-            })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
@@ -1686,8 +2365,10 @@
         // Simple toast helper
         function showMeleeToast(msg, type = 'info') {
             const container = document.getElementById('meleeToastContainer');
-            const bgClass = type === 'success' ? 'bg-success' : type === 'danger' ? 'bg-danger' : type === 'warning' ? 'bg-warning text-dark' : 'bg-primary';
-            const iconClass = type === 'success' ? 'bi-check-circle' : type === 'danger' ? 'bi-exclamation-triangle' : type === 'warning' ? 'bi-exclamation-circle' : 'bi-info-circle';
+            const bgClass = type === 'success' ? 'bg-success' : type === 'danger' ? 'bg-danger' : type === 'warning' ?
+                'bg-warning text-dark' : 'bg-primary';
+            const iconClass = type === 'success' ? 'bi-check-circle' : type === 'danger' ? 'bi-exclamation-triangle' :
+                type === 'warning' ? 'bi-exclamation-circle' : 'bi-info-circle';
 
             const toastEl = document.createElement('div');
             toastEl.className = `toast show align-items-center text-white ${bgClass} border-0 mb-2`;
@@ -1731,17 +2412,23 @@
 
         function setModalSelection(id, name, cat) {
             if (document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = id;
-            if (document.getElementById('modal_item_name')) document.getElementById('modal_item_name').textContent = name || 'Unknown Item';
-            if (document.getElementById('modal_item_cat')) document.getElementById('modal_item_cat').textContent = cat || 'Category';
+            if (document.getElementById('modal_item_name')) document.getElementById('modal_item_name').textContent = name ||
+                'Unknown Item';
+            if (document.getElementById('modal_item_cat')) document.getElementById('modal_item_cat').textContent = cat ||
+                'Category';
 
-            if (document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'flex';
-            if (document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'none';
+            if (document.getElementById('selection_context')) document.getElementById('selection_context').style.display =
+                'flex';
+            if (document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container')
+                .style.display = 'none';
         }
 
         function resetModalSelection() {
             if (document.getElementById('modal_diamond_id')) document.getElementById('modal_diamond_id').value = '';
-            if (document.getElementById('selection_context')) document.getElementById('selection_context').style.display = 'none';
-            if (document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container').style.display = 'block';
+            if (document.getElementById('selection_context')) document.getElementById('selection_context').style.display =
+                'none';
+            if (document.getElementById('diamond_selector_container')) document.getElementById('diamond_selector_container')
+                .style.display = 'block';
         }
 
         // ── Stock History Modal ──
@@ -1763,8 +2450,10 @@
 
             // Fetch history
             fetch(`/admin/melee/history/${diamondId}`, {
-                headers: { 'Accept': 'application/json' }
-            })
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('history-loading').classList.add('hidden');
@@ -1772,7 +2461,8 @@
                     // Populate diamond info header
                     const d = data.diamond;
                     document.getElementById('history-diamond-name').textContent = `${d.category_name} — ${d.shape}`;
-                    document.getElementById('history-diamond-detail').textContent = `Size: ${d.size_label.replace('-', ' ')}`;
+                    document.getElementById('history-diamond-detail').textContent =
+                        `Size: ${d.size_label.replace('-', ' ')}`;
                     document.getElementById('history-stock-badge').textContent = `${d.available_pieces} pcs available`;
 
                     // Populate transactions
@@ -1788,15 +2478,15 @@
                     document.getElementById('history-table').style.display = '';
 
                     txns.forEach(t => {
-                        const typeBadge = t.type === 'in'
-                            ? '<span class="badge bg-success-subtle text-success rounded-pill px-3 py-1"><i class="bi bi-arrow-down-circle me-1"></i>Stock IN</span>'
-                            : t.type === 'out'
-                                ? '<span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1"><i class="bi bi-arrow-up-circle me-1"></i>Stock OUT</span>'
-                                : '<span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1"><i class="bi bi-arrow-repeat me-1"></i>Adjust</span>';
+                        const typeBadge = t.type === 'in' ?
+                            '<span class="badge bg-success-subtle text-success rounded-pill px-3 py-1"><i class="bi bi-arrow-down-circle me-1"></i>Stock IN</span>' :
+                            t.type === 'out' ?
+                            '<span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1"><i class="bi bi-arrow-up-circle me-1"></i>Stock OUT</span>' :
+                            '<span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1"><i class="bi bi-arrow-repeat me-1"></i>Adjust</span>';
 
-                        const refText = t.reference_type === 'order' && t.reference_id
-                            ? `<a href="javascript:void(0)" onclick="viewOrderQuick(${t.reference_id})" class="text-primary text-decoration-none fw-bold"><i class="bi bi-link-45deg"></i>Order #${t.reference_id}</a>`
-                            : (t.reference_type || 'Manual');
+                        const refText = t.reference_type === 'order' && t.reference_id ?
+                            `<a href="javascript:void(0)" onclick="viewOrderQuick(${t.reference_id})" class="text-primary text-decoration-none fw-bold"><i class="bi bi-link-45deg"></i>Order #${t.reference_id}</a>` :
+                            (t.reference_type || 'Manual');
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -1853,8 +2543,10 @@
             link.classList.add('disabled');
 
             fetch(`/admin/orders/${orderId}/quick-view`, {
-                headers: { 'Accept': 'application/json' }
-            })
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
                 .then(r => r.json())
                 .then(data => {
                     loading.style.display = 'none';
@@ -1882,19 +2574,19 @@
                             </div>
 
                             ${data.diamond_sku ? `
-                            <div class="mb-3">
-                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
-                                <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
-                            </div>` : ''}
+                                    <div class="mb-3">
+                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
+                                        <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
+                                    </div>` : ''}
 
                             ${data.melee_details ? `
-                            <div class="p-3 border rounded bg-light mb-3">
-                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span>${data.melee_details.name}</span>
-                                    <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
-                                </div>
-                            </div>` : ''}
+                                    <div class="p-3 border rounded bg-light mb-3">
+                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>${data.melee_details.name}</span>
+                                            <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
+                                        </div>
+                                    </div>` : ''}
 
                             <div class="row pt-3 border-top">
                                 <div class="col-6">
@@ -1927,7 +2619,7 @@
             new bootstrap.Modal(document.getElementById('editTransactionModal')).show();
         }
 
-        document.getElementById('editTransactionForm').addEventListener('submit', function (e) {
+        document.getElementById('editTransactionForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const id = document.getElementById('edit_tx_id').value;
             const pieces = document.getElementById('edit_tx_pieces').value;
@@ -1939,14 +2631,18 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
 
             fetch(`{{ url('admin/melee/transaction') }}/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ pieces, carat_weight })
-            })
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pieces,
+                        carat_weight
+                    })
+                })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1958,7 +2654,9 @@
                                 text: data.message,
                                 icon: 'success',
                                 confirmButtonText: 'OK',
-                                customClass: { confirmButton: 'btn btn-primary' },
+                                customClass: {
+                                    confirmButton: 'btn btn-primary'
+                                },
                                 buttonsStyling: false
                             }).then(() => {
                                 if (activeHistoryDiamondId) openHistoryModal(activeHistoryDiamondId);
@@ -1976,7 +2674,9 @@
                                 text: data.message || 'Error updating transaction',
                                 icon: 'error',
                                 confirmButtonText: 'OK',
-                                customClass: { confirmButton: 'btn btn-danger' },
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
                                 buttonsStyling: false
                             });
                         } else {
@@ -1995,7 +2695,8 @@
         });
 
         function deleteTransaction(id, type) {
-            const confirmMsg = `Are you sure you want to completely delete this ${type.toUpperCase()} transaction? This will reverse its effect on the total stock balance.`;
+            const confirmMsg =
+                `Are you sure you want to completely delete this ${type.toUpperCase()} transaction? This will reverse its effect on the total stock balance.`;
 
             if (window.Swal) {
                 Swal.fire({
@@ -2016,12 +2717,12 @@
 
         function executeTransactionDelete(id) {
             fetch(`{{ url('admin/melee/transaction') }}/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -2031,7 +2732,9 @@
                                 text: data.message,
                                 icon: 'success',
                                 confirmButtonText: 'OK',
-                                customClass: { confirmButton: 'btn btn-primary' },
+                                customClass: {
+                                    confirmButton: 'btn btn-primary'
+                                },
                                 buttonsStyling: false
                             }).then(() => {
                                 if (activeHistoryDiamondId) openHistoryModal(activeHistoryDiamondId);
@@ -2049,7 +2752,9 @@
                                 text: data.message || 'Error deleting transaction',
                                 icon: 'error',
                                 confirmButtonText: 'OK',
-                                customClass: { confirmButton: 'btn btn-danger' },
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
                                 buttonsStyling: false
                             });
                         } else {
@@ -2094,14 +2799,17 @@
 
         function submitNewCategory(name, type) {
             fetch(`{{ route('melee.category.store') }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ name, type })
-            })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        name,
+                        type
+                    })
+                })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
@@ -2132,7 +2840,9 @@
                     if (result.isConfirmed) executeCategoryDelete(id);
                 });
             } else {
-                if (confirm(`Are you sure you want to completely delete ${name}? ALL diamonds inside this category will be deleted!`)) {
+                if (confirm(
+                        `Are you sure you want to completely delete ${name}? ALL diamonds inside this category will be deleted!`
+                    )) {
                     executeCategoryDelete(id);
                 }
             }
@@ -2140,19 +2850,20 @@
 
         function executeCategoryDelete(id) {
             fetch(`{{ url('admin/melee/category') }}/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         if (window.Swal) {
                             Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
                         } else {
-                            alert(data.message); location.reload();
+                            alert(data.message);
+                            location.reload();
                         }
                     } else {
                         if (window.Swal) Swal.fire('Error', data.message || 'Could not delete.', 'error');
@@ -2164,6 +2875,5 @@
                     showMeleeToast('An unexpected error occurred.', 'danger');
                 });
         }
-
     </script>
 @endsection

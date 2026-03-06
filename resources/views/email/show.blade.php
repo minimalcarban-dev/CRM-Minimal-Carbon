@@ -38,12 +38,16 @@
                     <div class="card-body p-4">
                         <div class="mb-4">
                             <h3 class="fw-bold mb-3">{{ $email->subject }}</h3>
-                            <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
+                            <div
+                                class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4 email-info-wrapper">
                                 <div class="d-flex align-items-center">
                                     @php
                                         $domain = Str::after($email->from_email, '@');
                                         $parts = explode('.', $domain);
-                                        $brandDomain = count($parts) > 2 ? $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1] : $domain;
+                                        $brandDomain =
+                                            count($parts) > 2
+                                                ? $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1]
+                                                : $domain;
                                         $logoUrl = "https://www.google.com/s2/favicons?domain={$brandDomain}&sz=128";
                                     @endphp
                                     <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm border"
@@ -96,7 +100,8 @@
                                                             <div class="fw-bold small text-truncate">
                                                                 {{ $attachment->filename }}
                                                             </div>
-                                                            <small class="text-muted">{{ round($attachment->size_bytes / 1024, 1) }}
+                                                            <small
+                                                                class="text-muted">{{ round($attachment->size_bytes / 1024, 1) }}
                                                                 KB</small>
                                                         </div>
                                                     </div>
@@ -359,6 +364,62 @@
             background: var(--light-gray);
         }
 
+        @media (max-width: 768px) {
+            .card-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+
+            .card-header>div:first-child {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .card-header>div.gap-2 {
+                width: 100%;
+                display: flex !important;
+            }
+
+            .card-header .btn,
+            .card-header form {
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 44px;
+            }
+
+            .card-header form button {
+                width: 100%;
+                height: 100%;
+            }
+
+            .email-info-wrapper {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .email-info-wrapper>.text-end {
+                text-align: left !important;
+                margin-left: 64px;
+                /* 48px avatar + 16px margin */
+            }
+
+            .card-footer .d-flex {
+                flex-direction: column;
+                gap: 0.75rem !important;
+            }
+
+            .card-footer .btn {
+                width: 100%;
+                min-height: 48px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+
         @media print {
 
             .col-md-3,
@@ -387,11 +448,11 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // --- Direct Professional Print ---
                 const btnPrint = document.getElementById('btnPrintEmail');
                 if (btnPrint) {
-                    btnPrint.addEventListener('click', function () {
+                    btnPrint.addEventListener('click', function() {
                         window.print();
                     });
                 }
@@ -401,7 +462,7 @@
                 const deleteForm = document.getElementById('deleteEmailForm');
 
                 if (btnDelete) {
-                    btnDelete.addEventListener('click', function () {
+                    btnDelete.addEventListener('click', function() {
                         Swal.fire({
                             title: 'Move to Trash?',
                             text: "You can recover this from the Trash folder later.",
@@ -475,10 +536,12 @@
                     let originalBodyContent = @json($email->body_html);
                     if (!originalBodyContent) {
                         const plainText = @json(trim(strip_tags($email->body_plain)));
-                        originalBodyContent = `<pre style="white-space: pre-wrap; font-family: inherit;">${plainText}</pre>`;
+                        originalBodyContent =
+                            `<pre style="white-space: pre-wrap; font-family: inherit;">${plainText}</pre>`;
                     }
 
-                    const quotedBodyHeader = `<br><br><div class="gmail_quote"><div dir="ltr" class="gmail_attr">On ${originalDate} ${originalFrom} wrote:<br></div><blockquote class="gmail_quote" style="margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">`;
+                    const quotedBodyHeader =
+                        `<br><br><div class="gmail_quote"><div dir="ltr" class="gmail_attr">On ${originalDate} ${originalFrom} wrote:<br></div><blockquote class="gmail_quote" style="margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">`;
                     const quotedBodyFooter = `</blockquote></div>`;
 
                     const fullQuotedBody = quotedBodyHeader + originalBodyContent + quotedBodyFooter;
@@ -517,7 +580,7 @@
                 });
 
                 // Handle Sending
-                composeForm.addEventListener('submit', async function (e) {
+                composeForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
                     // Sync editor content to hidden input
@@ -572,7 +635,7 @@
                 // Handle Draft Saving
                 const btnSaveDraft = document.getElementById('btnSaveDraft');
                 if (btnSaveDraft) {
-                    btnSaveDraft.addEventListener('click', async function () {
+                    btnSaveDraft.addEventListener('click', async function() {
 
                         // Sync editor content to hidden input
                         const editorBody = document.getElementById('editor-body');
@@ -588,7 +651,8 @@
                         const formData = new FormData(composeForm);
 
                         try {
-                            const response = await fetch(`/admin/email/{{ $account->id }}/compose/draft`, {
+                            const response = await fetch(
+                            `/admin/email/{{ $account->id }}/compose/draft`, {
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',

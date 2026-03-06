@@ -54,7 +54,7 @@
                 <div class="status-value">
                     {{ $package->return_date->format('d M Y') }}
                 </div>
-                @if($package->status === 'Issued' && $package->return_date->isPast())
+                @if ($package->status === 'Issued' && $package->return_date->isPast())
                     <span class="text-danger small fw-bold"><i class="bi bi-exclamation-circle"></i> Overdue</span>
                 @else
                     <span class="text-muted small">{{ $package->return_date->diffForHumans() }}</span>
@@ -120,7 +120,13 @@
                     </div>
                 </div>
 
-                @if($package->stock_id || $package->diamond_shape || $package->diamond_size || $package->diamond_color || $package->diamond_clarity || $package->diamond_carat)
+                @if (
+                    $package->stock_id ||
+                        $package->diamond_shape ||
+                        $package->diamond_size ||
+                        $package->diamond_color ||
+                        $package->diamond_clarity ||
+                        $package->diamond_carat)
                     <div class="info-section">
                         <div class="section-header-simple">
                             <h3 class="section-title">
@@ -180,13 +186,12 @@
                                 </div>
                             </div>
 
-                            @if($package->package_image_url)
+                            @if ($package->package_image_url)
                                 <div class="recipient-photo-block">
                                     <label class="detail-label mb-2">ID Proof / Photo</label>
                                     <div class="id-proof-wrapper">
                                         <img src="{{ $package->package_image_url }}" onerror="this.style.display='none';"
-                                            alt="Recipient ID" class="id-proof-img"
-                                            onclick="viewImage(this.src)">
+                                            alt="Recipient ID" class="id-proof-img" onclick="viewImage(this.src)">
                                         <div class="zoom-hint"><i class="bi bi-zoom-in"></i> Click to enlarge</div>
                                     </div>
                                 </div>
@@ -199,11 +204,11 @@
             <!-- Right Column -->
             <div class="content-column no-print">
                 <!-- Actions -->
-                @if($package->status === 'Issued' || $package->status === 'Overdue')
+                @if ($package->status === 'Issued' || $package->status === 'Overdue')
                     <div class="info-section bg-light-primary border-primary-light">
                         <div class="section-content text-center p-4">
                             <h4 class="text-primary fw-bold mb-3">Actions</h4>
-                            @if(auth()->guard('admin')->user()->can('packages.return'))
+                            @if (auth()->guard('admin')->user()->can('packages.return'))
                                 <form action="{{ route('packages.return', $package->id) }}" method="POST"
                                     onsubmit="return confirm('Mark this package as returned?');">
                                     @csrf
@@ -220,7 +225,7 @@
                     </div>
                 @endif
 
-                @if($package->status === 'Returned')
+                @if ($package->status === 'Returned')
                     <div class="info-section bg-light-success border-success-light">
                         <div class="section-content text-center p-4">
                             <div class="success-icon mb-3">
@@ -299,7 +304,8 @@
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <div class="pdf-modal-body" style="background: #000; display:flex; justify-content:center; align-items:center;">
+            <div class="pdf-modal-body"
+                style="background: #000; display:flex; justify-content:center; align-items:center;">
                 <img id="imageViewer" src="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
             </div>
         </div>
@@ -803,6 +809,127 @@
                 position: relative;
             }
 
+            /* ===== RESPONSIVE BREAKPOINTS (Screen only) ===== */
+
+            /* Tablet (≤992px) */
+            @media screen and (max-width: 992px) {
+                .package-details-wrapper {
+                    padding: 1.25rem;
+                }
+
+                .page-header {
+                    padding: 1.5rem;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 1rem;
+                }
+
+                .header-actions {
+                    width: 100%;
+                    display: flex;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                }
+
+                .header-actions .btn-primary-custom,
+                .header-actions .btn-secondary-custom {
+                    flex: 1;
+                    justify-content: center;
+                    min-width: 120px;
+                }
+
+                .status-cards {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+            /* Mobile (≤640px) */
+            @media screen and (max-width: 640px) {
+                .package-details-wrapper {
+                    padding: 0.875rem;
+                }
+
+                .page-header {
+                    padding: 1.1rem;
+                    gap: 0.875rem;
+                }
+
+                .page-title {
+                    font-size: clamp(1.1rem, 4vw, 1.5rem);
+                }
+
+                .status-cards {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
+                }
+
+                .status-card {
+                    padding: 1rem;
+                }
+
+                .status-value {
+                    font-size: 0.95rem;
+                }
+
+                .section-header-simple {
+                    padding: 1rem 1.1rem;
+                }
+
+                .section-content {
+                    padding: 1.1rem;
+                }
+
+                .section-title {
+                    font-size: 0.95rem;
+                }
+
+                /* Stack info-row label above value on small screens */
+                .client-info-table .info-row {
+                    flex-direction: column;
+                    gap: 0.2rem;
+                    align-items: flex-start;
+                    padding: 0.65rem 0;
+                }
+
+                .info-row .info-value {
+                    text-align: left;
+                    font-weight: 600;
+                    color: var(--dark);
+                }
+
+                /* Modal adapts on mobile */
+                .pdf-modal-content {
+                    width: 95%;
+                    height: 92%;
+                    margin: 1% auto;
+                }
+
+                .pdf-modal-header {
+                    padding: 0.75rem 1rem;
+                }
+            }
+
+            /* Extra small (≤380px) */
+            @media screen and (max-width: 380px) {
+                .status-cards {
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.5rem;
+                }
+
+                .status-card {
+                    padding: 0.75rem;
+                }
+
+                .status-label {
+                    font-size: 0.65rem;
+                }
+
+                .header-actions .btn-primary-custom,
+                .header-actions .btn-secondary-custom {
+                    font-size: 0.85rem;
+                    padding: 0.55rem 0.75rem;
+                }
+            }
 
             @media print {
                 body {
@@ -932,7 +1059,7 @@
             }
 
             // Close modal when clicking outside
-            window.onclick = function (event) {
+            window.onclick = function(event) {
                 var modal = document.getElementById('imageModal');
                 if (event.target == modal) {
                     modal.style.display = "none";
