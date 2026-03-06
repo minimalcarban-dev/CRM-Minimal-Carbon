@@ -69,7 +69,7 @@
         </div>
 
         <!-- Address Card -->
-        @if($client->address)
+        @if ($client->address)
             <div class="address-card">
                 <div class="card-header">
                     <i class="bi bi-geo-alt"></i>
@@ -87,7 +87,7 @@
                 <h2><i class="bi bi-clock-history"></i> Order History</h2>
             </div>
             <div class="table-card">
-                @if($orders->count())
+                @if ($orders->count())
                     <div class="table-wrapper">
                         <table class="orders-table">
                             <thead>
@@ -102,7 +102,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($orders as $order)
+                                @foreach ($orders as $order)
                                     <tr>
                                         <td><span class="id-badge">#{{ $order->id }}</span></td>
                                         <td>{{ ucfirst(str_replace('_', ' ', $order->order_type)) }}</td>
@@ -424,13 +424,165 @@
             display: block;
         }
 
-        [data-theme="dark"] .client-detail-wrapper {
-            --text-dark: #e2e8f0;
-            --text-gray: #94a3b8;
-            --bg-light: #0f172a;
-            --bg-white: #1e293b;
-            --border-color: rgba(148, 163, 184, 0.28);
-            --shadow-sm: 0 1px 3px rgba(2, 6, 23, 0.45);
+        @media (max-width: 768px) {
+            .client-detail-wrapper {
+                padding: 1rem;
+            }
+
+            .detail-header {
+                padding: 1.25rem;
+                flex-direction: column;
+                gap: 1.25rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1.25rem;
+                align-items: stretch;
+            }
+
+            .page-heading {
+                font-size: 1.5rem;
+                word-break: break-word;
+            }
+
+            .header-right,
+            .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .back-btn {
+                min-height: 48px;
+            }
+
+            .info-cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-header {
+                padding: 1.25rem;
+            }
+
+            .card-body {
+                padding: 1.25rem;
+            }
+
+            /* Order Table to Mobile Card View */
+            .table-wrapper {
+                background: transparent;
+                border: none;
+                overflow-x: visible;
+            }
+
+            .table-card {
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .orders-table {
+                display: block;
+            }
+
+            .orders-table thead {
+                display: none !important;
+            }
+
+            .orders-table tbody,
+            .orders-table tr,
+            .orders-table td {
+                display: block !important;
+            }
+
+            .orders-table tbody tr {
+                background: var(--bg-white);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-sm);
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+                display: grid !important;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto auto auto;
+                gap: 0.5rem;
+            }
+
+            .orders-table td {
+                padding: 0 !important;
+                border: none !important;
+                display: flex;
+                align-items: center;
+                background: var(--bg-light);
+                padding: 0.5rem 0.75rem !important;
+                border-radius: 6px;
+                font-size: 0.85rem;
+            }
+
+            /* 1) Order ID */
+            .orders-table td:nth-child(1) {
+                grid-column: 1;
+                grid-row: 1;
+                background: transparent !important;
+                padding: 0 !important;
+                font-size: 1.1rem;
+            }
+
+            /* 2) Actions */
+            .orders-table td:nth-child(7) {
+                grid-column: 2;
+                grid-row: 1;
+                background: transparent !important;
+                padding: 0 !important;
+                justify-self: end;
+            }
+
+            /* 3) Status Badge */
+            .orders-table td:nth-child(5) {
+                grid-column: 1 / span 2;
+                grid-row: 2;
+                background: transparent !important;
+                padding: 0 !important;
+                margin-bottom: 0.5rem;
+            }
+
+            .orders-table td:nth-child(2)::before {
+                content: "Type: ";
+                color: var(--text-gray);
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            .orders-table td:nth-child(3)::before {
+                content: "Company: ";
+                color: var(--text-gray);
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            .orders-table td:nth-child(4)::before {
+                content: "Gross Sell: ";
+                color: var(--text-gray);
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            .orders-table td:nth-child(6)::before {
+                content: "Date: ";
+                color: var(--text-gray);
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            .view-btn {
+                min-height: 44px;
+                min-width: 44px;
+                justify-content: center;
+            }
+        }
+
+        --bg-white: #1e293b;
+        --border-color: rgba(148, 163, 184, 0.28);
+        --shadow-sm: 0 1px 3px rgba(2, 6, 23, 0.45);
         }
 
         [data-theme="dark"] .card-header,

@@ -3,18 +3,32 @@
 @section('title', 'Create Invoice')
 
 @section('content')
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="mb-1">
-                    <i class="bi bi-file-earmark-plus text-primary"></i>
-                    Create Invoice
-                </h2>
-                <p class="text-muted mb-0">Fill in the required details to create a new invoice</p>
+    <div class="diamond-management-container tracker-page invoice-page">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="breadcrumb-nav">
+                        <a href="{{ url('/admin/dashboard') }}" class="breadcrumb-link">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                        <i class="bi bi-chevron-right breadcrumb-separator"></i>
+                        <a href="{{ route('invoices.index') }}" class="breadcrumb-link">Invoices</a>
+                        <i class="bi bi-chevron-right breadcrumb-separator"></i>
+                        <span class="breadcrumb-current">Create Invoice</span>
+                    </div>
+                    <h1 class="page-title">
+                        <i class="bi bi-file-earmark-plus"></i>
+                        Create Invoice
+                    </h1>
+                    <p class="page-subtitle">Fill in the required details to create a new invoice</p>
+                </div>
+                <div class="header-right">
+                    <a href="{{ route('invoices.index') }}" class="btn-secondary-custom">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                </div>
             </div>
-            <a href="{{ route('invoices.index') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Invoices
-            </a>
         </div>
 
         @if ($errors->any())
@@ -33,50 +47,4 @@
         </form>
     </div>
 
-    <style>
-        .container {
-            max-width: 1500px;
-        }
-
-        [data-theme="dark"] .container {
-            background: var(--bg-body, #0f172a);
-        }
-
-        [data-theme="dark"] h2,
-        [data-theme="dark"] h6 {
-            color: var(--text-primary, #f1f5f9);
-        }
-
-        [data-theme="dark"] .text-muted,
-        [data-theme="dark"] p {
-            color: var(--text-secondary, #94a3b8) !important;
-        }
-
-        [data-theme="dark"] .alert-danger {
-            background: rgba(239, 68, 68, 0.12);
-            border-color: rgba(239, 68, 68, 0.35);
-            color: #fecaca;
-        }
-
-        .btn-outline-secondary {
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-        [data-theme="dark"] .btn-outline-secondary {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(148, 163, 184, 0.35);
-            color: var(--text-secondary, #94a3b8);
-        }
-
-        .btn-outline-secondary:hover {
-            background: #f1f5f9;
-        }
-
-        [data-theme="dark"] .btn-outline-secondary:hover {
-            background: rgba(99, 102, 241, 0.12);
-            border-color: rgba(129, 140, 248, 0.55);
-            color: #c7d2fe;
-        }
-    </style>
 @endsection

@@ -21,7 +21,7 @@
                     </div>
                     <div class="title-info">
                         <span class="title-text">{{ $party->name }}</span>
-                        @if($party->is_foreign)
+                        @if ($party->is_foreign)
                             <span class="foreign-badge">
                                 <i class="bi bi-globe"></i>
                                 Foreign Party
@@ -183,9 +183,9 @@
                         <h3 class="card-title">Recent Invoices</h3>
                     </div>
                     <div class="card-body">
-                        @if(isset($recentInvoices) && $recentInvoices->count())
+                        @if (isset($recentInvoices) && $recentInvoices->count())
                             <div class="invoices-list">
-                                @foreach($recentInvoices as $inv)
+                                @foreach ($recentInvoices as $inv)
                                     <div class="invoice-item">
                                         <div class="invoice-info">
                                             <div class="invoice-number">{{ $inv->invoice_no }}</div>
@@ -240,9 +240,9 @@
             --bg-light: #f8fafc;
             --bg-white: #ffffff;
             --border: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
             --radius: 12px;
         }
 
@@ -655,21 +655,27 @@
             }
 
             .details-header {
-                padding: 1.5rem;
+                padding: 1.25rem;
+                flex-direction: column;
+                gap: 1.25rem;
             }
 
             .page-title {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 1rem;
             }
 
             .title-text {
                 font-size: 1.5rem;
+                word-break: break-word;
             }
 
             .header-actions {
                 width: 100%;
-                flex-direction: column;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
             }
 
             .action-btn {
@@ -679,27 +685,51 @@
 
             .stats-bar {
                 grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .card-header {
+                padding: 1.25rem;
+            }
+
+            .card-body {
+                padding: 1.25rem;
             }
 
             .info-row {
                 flex-direction: column;
                 gap: 0.5rem;
+                align-items: flex-start;
             }
 
             .info-value,
             .address-text {
                 text-align: left;
                 max-width: 100%;
+                font-size: 0.95rem;
             }
 
             .invoice-item {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 1rem;
+                padding: 1rem;
             }
 
             .invoice-details {
                 width: 100%;
-                align-items: flex-start;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        /* Large touch targets */
+        @media (hover: none) and (pointer: coarse) {
+
+            .action-btn,
+            .invoice-view-btn {
+                min-height: 48px;
             }
         }
 

@@ -30,7 +30,7 @@
         </div>
 
         <!-- Success Alert -->
-        @if(session('success'))
+        @if (session('success'))
             <div class="success-alert">
                 <i class="bi bi-check-circle-fill"></i>
                 <span>{{ session('success') }}</span>
@@ -42,19 +42,14 @@
             <form method="GET" action="{{ route('parties.index') }}" class="search-form">
                 <div class="search-group">
                     <i class="bi bi-search search-icon"></i>
-                    <input 
-                        type="text" 
-                        name="search" 
-                        class="search-field" 
-                        placeholder="Search by name, GST, phone, email..." 
-                        value="{{ request('search') }}"
-                    >
+                    <input type="text" name="search" class="search-field"
+                        placeholder="Search by name, GST, phone, email..." value="{{ request('search') }}">
                 </div>
                 <button type="submit" class="search-btn">
                     <i class="bi bi-filter"></i>
                     Search
                 </button>
-                @if(request('search'))
+                @if (request('search'))
                     <a href="{{ route('parties.index') }}" class="reset-btn">
                         <i class="bi bi-x-circle"></i>
                         Clear
@@ -65,7 +60,7 @@
 
         <!-- Parties Table Card -->
         <div class="table-card">
-            @if($parties->count())
+            @if ($parties->count())
                 <div class="table-wrapper">
                     <table class="parties-table">
                         <thead>
@@ -101,7 +96,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($parties as $p)
+                            @foreach ($parties as $p)
                                 <tr class="table-row">
                                     <td class="td-id">
                                         <span class="id-badge">#{{ $p->id }}</span>
@@ -128,13 +123,16 @@
                                     </td>
                                     <td class="td-actions">
                                         <div class="action-group">
-                                            <a href="{{ route('parties.show', $p->id) }}" class="action-btn view-btn" title="View Details">
+                                            <a href="{{ route('parties.show', $p->id) }}" class="action-btn view-btn"
+                                                title="View Details">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ route('parties.edit', $p->id) }}" class="action-btn edit-btn" title="Edit Party">
+                                            <a href="{{ route('parties.edit', $p->id) }}" class="action-btn edit-btn"
+                                                title="Edit Party">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
-                                            <form action="{{ route('parties.destroy', $p->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('parties.destroy', $p->id) }}" method="POST"
+                                                class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="action-btn delete-btn" title="Delete Party">
@@ -148,11 +146,12 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 <div class="pagination-wrapper">
                     <div class="pagination-info">
-                        Showing {{ $parties->firstItem() }} to {{ $parties->lastItem() }} of {{ $parties->total() }} parties
+                        Showing {{ $parties->firstItem() }} to {{ $parties->lastItem() }} of {{ $parties->total() }}
+                        parties
                     </div>
                     <div class="pagination-links">
                         {{ $parties->links('pagination::bootstrap-5') }}
@@ -165,13 +164,13 @@
                     </div>
                     <h3 class="empty-title">No Parties Found</h3>
                     <p class="empty-text">
-                        @if(request('search'))
+                        @if (request('search'))
                             No parties match your search criteria. Try a different search term.
                         @else
                             You haven't added any parties yet. Get started by creating your first party.
                         @endif
                     </p>
-                    @if(request('search'))
+                    @if (request('search'))
                         <a href="{{ route('parties.index') }}" class="empty-action">
                             <i class="bi bi-arrow-counterclockwise"></i>
                             Clear Search
@@ -438,7 +437,8 @@
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
 
-        .search-btn, .reset-btn {
+        .search-btn,
+        .reset-btn {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -567,7 +567,9 @@
             color: var(--primary-color);
         }
 
-        .gst-number, .phone-number, .email-text {
+        .gst-number,
+        .phone-number,
+        .email-text {
             color: var(--text-gray);
         }
 
@@ -712,11 +714,13 @@
             .header-content {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 1rem;
             }
 
             .create-btn {
                 width: 100%;
                 justify-content: center;
+                min-height: 48px;
             }
 
             .stats-overview {
@@ -731,13 +735,173 @@
                 flex-direction: column;
             }
 
+            .search-btn,
+            .reset-btn {
+                width: 100%;
+                justify-content: center;
+                min-height: 48px;
+            }
+
+            /* Convert Table to Card View */
+            .table-wrapper {
+                background: transparent;
+                border: none;
+                overflow-x: visible;
+            }
+
+            .table-card {
+                background: transparent;
+                box-shadow: none;
+            }
+
             .parties-table {
-                min-width: 900px;
+                min-width: 0 !important;
+                display: block;
+            }
+
+            .parties-table thead {
+                display: none !important;
+            }
+
+            .parties-table tbody {
+                display: block !important;
+            }
+
+            .table-row {
+                display: grid !important;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto auto auto auto;
+                gap: 0.5rem;
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+                background: var(--bg-white);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .parties-table td {
+                display: block !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+
+            /* 1) Party Name */
+            .parties-table td.td-name {
+                grid-column: 1;
+                grid-row: 1;
+                font-size: 1.1rem;
+            }
+
+            /* State Badge */
+            .parties-table td:nth-child(6) {
+                grid-column: 2;
+                grid-row: 1;
+                justify-self: end;
+                align-self: start;
+            }
+
+            /* 2) ID Badge */
+            .parties-table td.td-id {
+                grid-column: 1 / span 2;
+                grid-row: 2;
+                padding-bottom: 0.25rem !important;
+            }
+
+            /* Helper styles for missing labels */
+            .parties-table td:nth-child(3)::before {
+                content: "GST: ";
+                color: var(--text-gray);
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            .parties-table td:nth-child(4)::before {
+                content: "Phone: ";
+                color: var(--text-gray);
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            .parties-table td:nth-child(5)::before {
+                content: "Email: ";
+                color: var(--text-gray);
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            /* 3) GST */
+            .parties-table td:nth-child(3) {
+                grid-column: 1 / span 2;
+                grid-row: 3;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                background: var(--bg-light);
+                padding: 0.5rem 0.75rem !important;
+                border-radius: 6px;
+            }
+
+            /* 4) Phone */
+            .parties-table td:nth-child(4) {
+                grid-column: 1 / span 2;
+                grid-row: 4;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                background: var(--bg-light);
+                padding: 0.5rem 0.75rem !important;
+                border-radius: 6px;
+            }
+
+            /* 5) Email */
+            .parties-table td:nth-child(5) {
+                grid-column: 1 / span 2;
+                grid-row: 5;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                background: var(--bg-light);
+                padding: 0.5rem 0.75rem !important;
+                border-radius: 6px;
+            }
+
+            /* 6) Actions */
+            .parties-table td.td-actions {
+                grid-column: 1 / span 2;
+                grid-row: 6;
+                margin-top: 0.75rem;
+                padding-top: 1rem !important;
+                border-top: 1px solid var(--border-color) !important;
+            }
+
+            .action-group {
+                justify-content: space-around;
+                width: 100%;
             }
 
             .pagination-wrapper {
                 flex-direction: column;
                 text-align: center;
+                gap: 1rem;
+            }
+        }
+
+        /* Large touch targets */
+        @media (hover: none) and (pointer: coarse) {
+
+            .search-field,
+            .search-btn,
+            .reset-btn,
+            .create-btn,
+            .action-btn {
+                min-height: 48px;
+            }
+
+            .action-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.1rem;
             }
         }
 
@@ -789,9 +953,9 @@
 
     @push('scripts')
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.delete-form').forEach(form => {
-                    form.addEventListener('submit', async function (e) {
+                    form.addEventListener('submit', async function(e) {
                         e.preventDefault();
 
                         let confirmed = false;
@@ -803,7 +967,8 @@
                                 'Cancel'
                             );
                         } else {
-                            confirmed = window.confirm('Are you sure you want to delete this party?');
+                            confirmed = window.confirm(
+                                'Are you sure you want to delete this party?');
                         }
 
                         if (confirmed) {
