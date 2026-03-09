@@ -177,6 +177,22 @@ class Expense extends Model
     }
 
     /**
+     * Scope for cash transactions only
+     */
+    public function scopeCash($query)
+    {
+        return $query->where('payment_method', 'cash');
+    }
+
+    /**
+     * Scope for non-cash transactions (Bank, UPI, Cheque)
+     */
+    public function scopeNonCash($query)
+    {
+        return $query->where('payment_method', '!=', 'cash');
+    }
+
+    /**
      * Scope for specific month
      */
     public function scopeForMonth($query, int $year, int $month)

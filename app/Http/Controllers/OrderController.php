@@ -389,8 +389,26 @@ class OrderController extends Controller
                 }
             }
 
-            // --- Melee Stock Deduction Logic ---
-            if (!empty($order->melee_diamond_id) && $order->melee_pieces > 0) {
+            // --- Melee Stock Deduction Logic (multi-melee) ---
+            $meleeEntriesForStock = $order->melee_entries ?? [];
+            if (!empty($meleeEntriesForStock)) {
+                foreach ($meleeEntriesForStock as $meleeEntry) {
+                    if (!empty($meleeEntry['melee_diamond_id']) && ($meleeEntry['pieces'] ?? 0) > 0) {
+                        $meleeCarat = ($meleeEntry['pieces'] ?? 0) * ($meleeEntry['avg_carat_per_piece'] ?? 0);
+                        MeleeTransaction::create([
+                            'melee_diamond_id' => $meleeEntry['melee_diamond_id'],
+                            'transaction_type' => 'out',
+                            'pieces' => abs($meleeEntry['pieces']),
+                            'carat_weight' => abs(round($meleeCarat, 3)),
+                            'reference_type' => 'order',
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::guard('admin')->id(),
+                            'notes' => 'Stock used in Order #' . $order->id,
+                        ]);
+                    }
+                }
+            } elseif (!empty($order->melee_diamond_id) && $order->melee_pieces > 0) {
+                // Backward compat: single melee entry
                 MeleeTransaction::create([
                     'melee_diamond_id' => $order->melee_diamond_id,
                     'transaction_type' => 'out',
@@ -628,6 +646,7 @@ class OrderController extends Controller
                 'melee_pieces' => 'Melee Pieces',
                 'melee_carat' => 'Melee Carat',
                 'melee_price_per_ct' => 'Melee Price/CT',
+                'melee_entries' => 'Melee Entries',
             ];
             $oldSnapshot = [];
             foreach (array_keys($auditFields) as $field) {
@@ -655,8 +674,10 @@ class OrderController extends Controller
             foreach ($auditFields as $field => $label) {
                 $oldVal = $oldSnapshot[$field];
                 $newVal = $order->$field;
-                // Normalise for comparison
-                if ((string) $oldVal !== (string) $newVal) {
+                // Normalise for comparison — use json_encode for array fields
+                $oldCmp = is_array($oldVal) ? json_encode($oldVal) : (string) $oldVal;
+                $newCmp = is_array($newVal) ? json_encode($newVal) : (string) $newVal;
+                if ($oldCmp !== $newCmp) {
                     // Resolve FK values to readable names
                     if (isset($fkResolvers[$field])) {
                         $oldVal = $fkResolvers[$field]($oldVal);
@@ -668,45 +689,85 @@ class OrderController extends Controller
             }
             $order->save();
 
-            // --- Melee Stock Change Detection ---
-            $oldMeleeId = $oldSnapshot['melee_diamond_id'] ?? null;
-            $oldMeleePieces = $oldSnapshot['melee_pieces'] ?? 0;
-            $oldMeleeCarat = $oldSnapshot['melee_carat'] ?? 0;
-            $newMeleeId = $order->melee_diamond_id;
-            $newMeleePieces = $order->melee_pieces ?? 0;
-            $newMeleeCarat = $order->melee_carat ?? 0;
+            // --- Melee Stock Change Detection (multi-melee) ---
+            $oldMeleeEntries = $oldSnapshot['melee_entries'] ?? [];
+            if (is_string($oldMeleeEntries)) {
+                $oldMeleeEntries = json_decode($oldMeleeEntries, true) ?? [];
+            }
+            $newMeleeEntries = $order->melee_entries ?? [];
 
-            $meleeChanged = ($oldMeleeId != $newMeleeId)
-                || ($oldMeleePieces != $newMeleePieces)
-                || ($oldMeleeCarat != $newMeleeCarat);
+            $meleeChanged = json_encode($oldMeleeEntries) !== json_encode($newMeleeEntries);
 
             if ($meleeChanged) {
-                // Reverse old melee stock (if there was one)
-                if (!empty($oldMeleeId) && $oldMeleePieces > 0) {
-                    MeleeTransaction::create([
-                        'melee_diamond_id' => $oldMeleeId,
-                        'transaction_type' => 'in',
-                        'pieces' => abs($oldMeleePieces),
-                        'carat_weight' => abs($oldMeleeCarat),
-                        'reference_type' => 'order',
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::guard('admin')->id(),
-                        'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
-                    ]);
+                // Reverse ALL old melee stock entries
+                foreach ($oldMeleeEntries as $oldEntry) {
+                    if (!empty($oldEntry['melee_diamond_id']) && ($oldEntry['pieces'] ?? 0) > 0) {
+                        $oldCarat = ($oldEntry['pieces'] ?? 0) * ($oldEntry['avg_carat_per_piece'] ?? 0);
+                        MeleeTransaction::create([
+                            'melee_diamond_id' => $oldEntry['melee_diamond_id'],
+                            'transaction_type' => 'in',
+                            'pieces' => abs($oldEntry['pieces']),
+                            'carat_weight' => abs(round($oldCarat, 3)),
+                            'reference_type' => 'order',
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::guard('admin')->id(),
+                            'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
+                        ]);
+                    }
                 }
 
-                // Deduct new melee stock (if new one selected)
-                if (!empty($newMeleeId) && $newMeleePieces > 0) {
-                    MeleeTransaction::create([
-                        'melee_diamond_id' => $newMeleeId,
-                        'transaction_type' => 'out',
-                        'pieces' => abs($newMeleePieces),
-                        'carat_weight' => abs($newMeleeCarat),
-                        'reference_type' => 'order',
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::guard('admin')->id(),
-                        'notes' => 'Stock used in Order #' . $order->id,
-                    ]);
+                // Deduct ALL new melee stock entries
+                foreach ($newMeleeEntries as $newEntry) {
+                    if (!empty($newEntry['melee_diamond_id']) && ($newEntry['pieces'] ?? 0) > 0) {
+                        $newCarat = ($newEntry['pieces'] ?? 0) * ($newEntry['avg_carat_per_piece'] ?? 0);
+                        MeleeTransaction::create([
+                            'melee_diamond_id' => $newEntry['melee_diamond_id'],
+                            'transaction_type' => 'out',
+                            'pieces' => abs($newEntry['pieces']),
+                            'carat_weight' => abs(round($newCarat, 3)),
+                            'reference_type' => 'order',
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::guard('admin')->id(),
+                            'notes' => 'Stock used in Order #' . $order->id,
+                        ]);
+                    }
+                }
+
+                // Backward compat: if no multi-entries but single fields changed
+                if (empty($oldMeleeEntries) && empty($newMeleeEntries)) {
+                    $oldMeleeId = $oldSnapshot['melee_diamond_id'] ?? null;
+                    $oldMeleePieces = $oldSnapshot['melee_pieces'] ?? 0;
+                    $oldMeleeCarat = $oldSnapshot['melee_carat'] ?? 0;
+                    $newMeleeId = $order->melee_diamond_id;
+                    $newMeleePieces = $order->melee_pieces ?? 0;
+                    $newMeleeCarat = $order->melee_carat ?? 0;
+
+                    if ($oldMeleeId != $newMeleeId || $oldMeleePieces != $newMeleePieces || $oldMeleeCarat != $newMeleeCarat) {
+                        if (!empty($oldMeleeId) && $oldMeleePieces > 0) {
+                            MeleeTransaction::create([
+                                'melee_diamond_id' => $oldMeleeId,
+                                'transaction_type' => 'in',
+                                'pieces' => abs($oldMeleePieces),
+                                'carat_weight' => abs($oldMeleeCarat),
+                                'reference_type' => 'order',
+                                'reference_id' => $order->id,
+                                'created_by' => Auth::guard('admin')->id(),
+                                'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
+                            ]);
+                        }
+                        if (!empty($newMeleeId) && $newMeleePieces > 0) {
+                            MeleeTransaction::create([
+                                'melee_diamond_id' => $newMeleeId,
+                                'transaction_type' => 'out',
+                                'pieces' => abs($newMeleePieces),
+                                'carat_weight' => abs($newMeleeCarat),
+                                'reference_type' => 'order',
+                                'reference_id' => $order->id,
+                                'created_by' => Auth::guard('admin')->id(),
+                                'notes' => 'Stock used in Order #' . $order->id,
+                            ]);
+                        }
+                    }
                 }
             }
 
@@ -1229,7 +1290,14 @@ class OrderController extends Controller
             'diamond_prices' => 'nullable|array', // Individual prices for each diamond SKU
             'diamond_prices.*' => 'nullable|numeric|min:0', // Each price must be numeric
 
-            // Melee Fields
+            // Melee Fields (multi-melee entries)
+            'melee_entries_json' => 'nullable|string',
+            'melee_entries' => 'nullable|array',
+            'melee_entries.*.melee_diamond_id' => 'required|exists:melee_diamonds,id',
+            'melee_entries.*.pieces' => 'required|integer|min:1',
+            'melee_entries.*.avg_carat_per_piece' => 'nullable|numeric|min:0',
+            'melee_entries.*.price_per_ct' => 'nullable|numeric|min:0',
+            // Backward compat single melee fields (populated by JS from first entry)
             'melee_diamond_id' => 'nullable|exists:melee_diamonds,id',
             'melee_pieces' => 'nullable|integer|min:1',
             'melee_carat' => 'nullable|numeric|min:0',
@@ -1328,18 +1396,43 @@ class OrderController extends Controller
         $order->setting_type_id = !empty($validated['setting_type_id']) ? $validated['setting_type_id'] : null;
         $order->earring_type_id = !empty($validated['earring_type_id']) ? $validated['earring_type_id'] : null;
 
-        // Melee Fields
-        $order->melee_diamond_id = !empty($validated['melee_diamond_id']) ? $validated['melee_diamond_id'] : null;
-        $order->melee_pieces = !empty($validated['melee_pieces']) ? $validated['melee_pieces'] : null;
-        $order->melee_carat = !empty($validated['melee_carat']) ? $validated['melee_carat'] : null;
-        $order->melee_price_per_ct = !empty($validated['melee_price_per_ct']) ? $validated['melee_price_per_ct'] : null;
+        // Melee Fields (multi-melee entries)
+        $meleeEntries = [];
+        if (!empty($validated['melee_entries'])) {
+            $meleeEntries = $validated['melee_entries'];
+        } elseif (!empty($validated['melee_entries_json'])) {
+            $decoded = json_decode($validated['melee_entries_json'], true);
+            if (is_array($decoded)) {
+                $meleeEntries = $decoded;
+            }
+        }
 
-        // Calculate Melee Total Value if context exists
+        // Store multi-melee JSON
+        $order->melee_entries = !empty($meleeEntries) ? $meleeEntries : null;
+
+        // Backward compat: populate old single-melee columns from first entry
+        if (!empty($meleeEntries)) {
+            $first = $meleeEntries[0];
+            $totalPieces = array_sum(array_column($meleeEntries, 'pieces'));
+            $totalCarat = 0;
+            foreach ($meleeEntries as $entry) {
+                $totalCarat += ($entry['pieces'] ?? 0) * ($entry['avg_carat_per_piece'] ?? 0);
+            }
+            $order->melee_diamond_id = $first['melee_diamond_id'] ?? null;
+            $order->melee_pieces = $totalPieces;
+            $order->melee_carat = round($totalCarat, 3);
+            $order->melee_price_per_ct = $first['price_per_ct'] ?? null;
+        } else {
+            $order->melee_diamond_id = !empty($validated['melee_diamond_id']) ? $validated['melee_diamond_id'] : null;
+            $order->melee_pieces = !empty($validated['melee_pieces']) ? $validated['melee_pieces'] : null;
+            $order->melee_carat = !empty($validated['melee_carat']) ? $validated['melee_carat'] : null;
+            $order->melee_price_per_ct = !empty($validated['melee_price_per_ct']) ? $validated['melee_price_per_ct'] : null;
+        }
+
+        // Calculate Melee Total Value
         if ($order->melee_carat && $order->melee_price_per_ct) {
             $order->melee_total_value = $order->melee_carat * $order->melee_price_per_ct;
-        } elseif ($order->melee_pieces && $order->melee_price_per_ct) {
-            // Fallback if priced per piece (rare but possible logic) - usually per carat
-            // For now assuming Price Per Ct as per schema.
+        } else {
             $order->melee_total_value = 0;
         }
 
