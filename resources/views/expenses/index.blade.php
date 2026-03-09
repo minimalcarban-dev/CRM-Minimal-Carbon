@@ -45,35 +45,35 @@
             <div class="stat-card stat-card-success">
                 <div class="stat-icon"><i class="bi bi-arrow-down-circle"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">This Month In</div>
+                    <div class="stat-label">Cash In (Monthly)</div>
                     <div class="stat-value" style="color: #10b981;">₹{{ number_format($monthlyIncome, 0) }}</div>
                 </div>
             </div>
             <div class="stat-card stat-card-danger">
                 <div class="stat-icon"><i class="bi bi-arrow-up-circle"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">This Month Out</div>
+                    <div class="stat-label">Cash Out (Monthly)</div>
                     <div class="stat-value" style="color: #ef4444;">₹{{ number_format($monthlyExpense, 0) }}</div>
                 </div>
             </div>
             <div class="stat-card stat-card-primary">
                 <div class="stat-icon"><i class="bi bi-wallet"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">This Month Balance</div>
+                    <div class="stat-label">Cash Balance (Monthly)</div>
                     <div class="stat-value" style="color: {{ $monthlyBalance >= 0 ? '#10b981' : '#ef4444' }};">
                         ₹{{ number_format($monthlyBalance, 0) }}
                     </div>
                 </div>
             </div>
             <!-- <div class="stat-card stat-card-info">
-                    <div class="stat-icon"><i class="bi bi-bank"></i></div>
-                    <div class="stat-content">
-                        <div class="stat-label">All Time Balance</div>
-                        <div class="stat-value" style="color: {{ $totalBalance >= 0 ? '#10b981' : '#ef4444' }};">
-                            ₹{{ number_format($totalBalance, 0) }}
+                        <div class="stat-icon"><i class="bi bi-bank"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">All Time Balance</div>
+                            <div class="stat-value" style="color: {{ $totalBalance >= 0 ? '#10b981' : '#ef4444' }};">
+                                ₹{{ number_format($totalBalance, 0) }}
+                            </div>
                         </div>
-                    </div>
-                </div> -->
+                    </div> -->
         </div>
 
         <!-- Filter Section -->
@@ -92,8 +92,10 @@
                     <label class="tracker-filter-label"><i class="bi bi-arrow-down-up"></i> Type</label>
                     <select name="transaction_type" class="tracker-filter-select">
                         <option value="">All</option>
-                        <option value="in" {{ request('transaction_type') == 'in' ? 'selected' : '' }}>Money In</option>
-                        <option value="out" {{ request('transaction_type') == 'out' ? 'selected' : '' }}>Money Out</option>
+                        <option value="in" {{ request('transaction_type') == 'in' ? 'selected' : '' }}>Money In
+                        </option>
+                        <option value="out" {{ request('transaction_type') == 'out' ? 'selected' : '' }}>Money Out
+                        </option>
                     </select>
                 </div>
                 <div class="tracker-filter-field">
@@ -106,7 +108,7 @@
                         <span class="tracker-result-count" style="margin-right: auto;">
                             <i class="bi bi-info-circle"></i>
                             <strong>{{ $expenses->total() }}</strong> items
-                        </span> 
+                        </span>
                         <a href="{{ route('expenses.index') }}" class="btn-tracker-reset">
                             <i class="bi bi-arrow-counterclockwise"></i> Clear
                         </a>
@@ -135,29 +137,31 @@
                     </thead>
                     <tbody>
                         @forelse($expenses as $expense)
-                            <tr class="{{ $expense->transaction_type == 'in' ? 'tracker-income-row' : 'tracker-expense-row' }}">
+                            <tr
+                                class="{{ $expense->transaction_type == 'in' ? 'tracker-income-row' : 'tracker-expense-row' }}">
                                 <td>{{ $expense->date->format('d-M-Y') }}</td>
                                 <td>
                                     <strong>{{ $expense->title }}</strong>
-                                    @if($expense->paid_to_received_from)
+                                    @if ($expense->paid_to_received_from)
                                         <br><small style="color: #64748b;">{{ $expense->paid_to_received_from }}</small>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($expense->transaction_type == 'in')
+                                    @if ($expense->transaction_type == 'in')
                                         <span class="tracker-amount-in">₹{{ number_format($expense->amount, 0) }}</span>
                                     @else
                                         —
                                     @endif
                                 </td>
                                 <td>
-                                    @if($expense->transaction_type == 'out')
+                                    @if ($expense->transaction_type == 'out')
                                         <span class="tracker-amount-out">₹{{ number_format($expense->amount, 0) }}</span>
                                     @else
                                         —
                                     @endif
                                 </td>
-                                <td><span class="tracker-badge tracker-badge-secondary">{{ $expense->category_name }}</span>
+                                <td><span
+                                        class="tracker-badge tracker-badge-secondary">{{ $expense->category_name }}</span>
                                 </td>
                                 <td><span
                                         class="tracker-badge tracker-badge-info">{{ \App\Models\Expense::PAYMENT_METHODS[$expense->payment_method] ?? $expense->payment_method }}</span>
@@ -203,7 +207,7 @@
             </div>
         </div>
 
-        @if($expenses->hasPages())
+        @if ($expenses->hasPages())
             <div class="pagination-container">
                 {{ $expenses->links('pagination::bootstrap-5') }}
             </div>
@@ -215,7 +219,7 @@
 
     @push('scripts')
         <script>
-            $(document).ready(function () {
+            $(document).ready(function() {
                 var startDate = $('#expenseDateFrom').val() ? moment($('#expenseDateFrom').val()) : null;
                 var endDate = $('#expenseDateTo').val() ? moment($('#expenseDateTo').val()) : null;
 
@@ -230,14 +234,15 @@
                         'Last 7 Days': [moment().subtract(6, 'days'), moment()],
                         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
                         'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
+                            'month').endOf('month')]
                     },
                     locale: {
                         cancelLabel: 'Clear',
                         applyLabel: 'Apply',
                         format: 'MMM D, YYYY'
                     }
-                }, function (start, end, label) {
+                }, function(start, end, label) {
                     $('#expenseDateFrom').val(start.format('YYYY-MM-DD'));
                     $('#expenseDateTo').val(end.format('YYYY-MM-DD'));
                     $('#expenseDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
@@ -251,7 +256,7 @@
                 }
 
                 // Clear dates on cancel and auto-submit
-                $('#expenseDateRange').on('cancel.daterangepicker', function (ev, picker) {
+                $('#expenseDateRange').on('cancel.daterangepicker', function(ev, picker) {
                     $(this).val('');
                     $('#expenseDateFrom').val('');
                     $('#expenseDateTo').val('');
@@ -260,7 +265,7 @@
                 });
 
                 // Auto-submit on transaction type change
-                $('select[name="transaction_type"]').on('change', function () {
+                $('select[name="transaction_type"]').on('change', function() {
                     $('#expenseFilterForm').submit();
                 });
             });

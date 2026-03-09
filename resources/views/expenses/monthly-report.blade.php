@@ -24,15 +24,16 @@
                     <form method="GET" action="{{ route('expenses.monthly-report') }}" class="tracker-report-filter-form"
                         style="flex-wrap:nowrap; align-items:center;">
                         <select name="month" class="tracker-filter-select" style="padding:0.5rem 0.75rem;">
-                            @for($m = 1; $m <= 12; $m++)
+                            @for ($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                     {{ date('F', mktime(0, 0, 0, $m, 1)) }}
                                 </option>
                             @endfor
                         </select>
                         <select name="year" class="tracker-filter-select" style="padding:0.5rem 0.75rem;">
-                            @for($y = date('Y'); $y >= date('Y') - 5; $y--)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
+                                </option>
                             @endfor
                         </select>
                         <button type="submit" class="btn-primary-custom" style="padding:0.5rem 0.75rem; flex-shrink:0;"><i
@@ -55,21 +56,21 @@
             <div class="stat-card stat-card-success">
                 <div class="stat-icon"><i class="bi bi-arrow-down-circle"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Total Income</div>
+                    <div class="stat-label">Cash In</div>
                     <div class="stat-value" style="color:#10b981;">₹{{ number_format($totalIncome, 0) }}</div>
                 </div>
             </div>
             <div class="stat-card stat-card-danger">
                 <div class="stat-icon"><i class="bi bi-arrow-up-circle"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Total Expense</div>
+                    <div class="stat-label">Cash Out</div>
                     <div class="stat-value" style="color:#ef4444;">₹{{ number_format($totalExpense, 0) }}</div>
                 </div>
             </div>
             <div class="stat-card stat-card-primary">
                 <div class="stat-icon"><i class="bi bi-wallet"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Balance</div>
+                    <div class="stat-label">Cash Balance</div>
                     <div class="stat-value" style="color:{{ $balance >= 0 ? '#10b981' : '#ef4444' }};">
                         ₹{{ number_format($balance, 0) }}</div>
                 </div>
@@ -112,7 +113,7 @@
                             style="background: linear-gradient(135deg, #10b981, #059669); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink:0;">
                             <i class="bi bi-arrow-down"></i>
                         </div>
-                        Income Breakdown
+                        Cash In Breakdown
                     </h3>
                     <div class="table-responsive" style="padding: 0; margin-bottom: 0;">
                         <table class="tracker-table" style="margin-bottom: 0; min-width: 0;">
@@ -131,7 +132,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="2" style="text-align:center; padding:1.5rem; color:#64748b;">No income
+                                        <td colspan="2" style="text-align:center; padding:1.5rem; color:#64748b;">No
+                                            income
                                             this month
                                         </td>
                                     </tr>
@@ -147,7 +149,7 @@
                             style="background: linear-gradient(135deg, #ef4444, #dc2626); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink:0;">
                             <i class="bi bi-arrow-up"></i>
                         </div>
-                        Expense Breakdown
+                        Cash Out Breakdown
                     </h3>
                     <div class="table-responsive" style="padding: 0;">
                         <table class="tracker-table" style="min-width: 0;">
@@ -166,7 +168,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="2" style="text-align:center; padding:1.5rem; color:#64748b;">No expenses
+                                        <td colspan="2" style="text-align:center; padding:1.5rem; color:#64748b;">No
+                                            expenses
                                             this month</td>
                                     </tr>
                                 @endforelse
@@ -181,14 +184,18 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-..."
             crossorigin="anonymous"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 const incomeData = @json($incomeByCategory);
                 const expenseData = @json($expenseByCategory);
                 const incomeLabels = @json(\App\Models\Expense::INCOME_CATEGORIES);
                 const expenseLabels = @json(\App\Models\Expense::EXPENSE_CATEGORIES);
 
-                const incomeColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1'];
-                const expenseColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#0ea5e9', '#8b5cf6', '#ec4899', '#f43f5e', '#64748b', '#6366f1', '#a855f7', '#d946ef', '#f472b6'];
+                const incomeColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+                    '#6366f1'
+                ];
+                const expenseColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#0ea5e9',
+                    '#8b5cf6', '#ec4899', '#f43f5e', '#64748b', '#6366f1', '#a855f7', '#d946ef', '#f472b6'
+                ];
 
                 // Generate custom HTML legend
                 function generateLegend(data, labels, colors, containerId) {
@@ -203,7 +210,8 @@
                         const row = document.createElement('div');
                         row.style.cssText = 'display:flex; align-items:center; gap:0.5rem;';
                         const colorBox = document.createElement('span');
-                        colorBox.style.cssText = `width:12px; height:12px; border-radius:3px; background:${color}; flex-shrink:0;`;
+                        colorBox.style.cssText =
+                            `width:12px; height:12px; border-radius:3px; background:${color}; flex-shrink:0;`;
                         const labelSpan = document.createElement('span');
                         labelSpan.style.cssText = 'color:#1e293b; font-weight:500;';
                         labelSpan.textContent = label;
@@ -222,18 +230,28 @@
                         type: 'doughnut',
                         data: {
                             labels: Object.keys(incomeData).map(k => incomeLabels[k] || k),
-                            datasets: [{ data: Object.values(incomeData), backgroundColor: incomeColors, borderWidth: 3, borderColor: '#fff' }]
+                            datasets: [{
+                                data: Object.values(incomeData),
+                                backgroundColor: incomeColors,
+                                borderWidth: 3,
+                                borderColor: '#fff'
+                            }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
                             cutout: '65%'
                         }
                     });
                     generateLegend(incomeData, incomeLabels, incomeColors, 'incomeLegend');
                 } else {
-                    document.getElementById('incomeLegend').innerHTML = '<span style="color:#64748b;">No income this month</span>';
+                    document.getElementById('incomeLegend').innerHTML =
+                        '<span style="color:#64748b;">No income this month</span>';
                 }
 
                 if (Object.keys(expenseData).length > 0) {
@@ -241,18 +259,28 @@
                         type: 'doughnut',
                         data: {
                             labels: Object.keys(expenseData).map(k => expenseLabels[k] || k),
-                            datasets: [{ data: Object.values(expenseData), backgroundColor: expenseColors, borderWidth: 3, borderColor: '#fff' }]
+                            datasets: [{
+                                data: Object.values(expenseData),
+                                backgroundColor: expenseColors,
+                                borderWidth: 3,
+                                borderColor: '#fff'
+                            }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
                             cutout: '65%'
                         }
                     });
                     generateLegend(expenseData, expenseLabels, expenseColors, 'expenseLegend');
                 } else {
-                    document.getElementById('expenseLegend').innerHTML = '<span style="color:#64748b;">No expenses this month</span>';
+                    document.getElementById('expenseLegend').innerHTML =
+                        '<span style="color:#64748b;">No expenses this month</span>';
                 }
 
                 new Chart(document.getElementById('comparisonChart'), {
@@ -270,10 +298,26 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         indexAxis: 'y',
-                        plugins: { legend: { display: false } },
-                        scales: { x: { beginAtZero: true, grid: { display: false } }, y: { grid: { display: false } } }
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
                     }
                 });
             });
         </script>
-@endsection
+    @endsection

@@ -1804,40 +1804,67 @@
                             </div>
                         @endif
 
-                        @if($order->melee_diamond_id)
-                            <div class="od-melee-box">
-                                <div class="od-melee-title"><i class="bi bi-stars"></i> Melee Diamond Details</div>
-                                <div class="od-melee-grid">
-                                    <div class="od-melee-item" style="grid-column: span 2;">
-                                        <small>Melee Item</small>
-                                        <span>{{ $order->meleeDiamond->category->name ?? 'Melee' }} —
-                                            {{ str_replace('-', ' ', $order->meleeDiamond->size_label ?? 'N/A') }}</span>
+                        @php
+                            $meleeEntries = $order->melee_entries ?? [];
+                            // Fallback: if no melee_entries but old single-melee fields exist
+                            if (empty($meleeEntries) && $order->melee_diamond_id) {
+                                $meleeEntries = [[
+                                    'melee_diamond_id' => $order->melee_diamond_id,
+                                    'pieces' => $order->melee_pieces,
+                                    'avg_carat_per_piece' => $order->melee_carat && $order->melee_pieces ? $order->melee_carat / $order->melee_pieces : 0,
+                                    'price_per_ct' => $order->melee_price_per_ct,
+                                ]];
+                            }
+                        @endphp
+
+                        @if(!empty($meleeEntries))
+                            @foreach($meleeEntries as $mIdx => $entry)
+                                @php
+                                    $melee = \App\Models\MeleeDiamond::with('category')->find($entry['melee_diamond_id'] ?? null);
+                                    $mPieces = $entry['pieces'] ?? 0;
+                                    $mAvgCarat = $entry['avg_carat_per_piece'] ?? 0;
+                                    $mPriceCt = $entry['price_per_ct'] ?? 0;
+                                    $mTotalCarat = $mPieces * $mAvgCarat;
+                                    $mTotalValue = $mTotalCarat * $mPriceCt;
+                                @endphp
+                                <div class="od-melee-box" style="margin-bottom: 10px;">
+                                    <div class="od-melee-title">
+                                        <i class="bi bi-stars"></i> Melee Diamond Details
+                                        @if(count($meleeEntries) > 1)
+                                            <span style="font-size: 0.8rem; color: #6c757d;">#{{ $mIdx + 1 }}</span>
+                                        @endif
                                     </div>
-                                    @if($order->melee_pieces)
-                                        <div class="od-melee-item">
-                                            <small>Pieces</small>
-                                            <span>{{ $order->melee_pieces }} pcs</span>
+                                    <div class="od-melee-grid">
+                                        <div class="od-melee-item" style="grid-column: span 2;">
+                                            <small>Melee Item</small>
+                                            <span>{{ $melee->category->name ?? 'Melee' }} —
+                                                {{ str_replace('-', ' ', $melee->size_label ?? 'N/A') }}</span>
                                         </div>
-                                    @endif
-                                    @if($order->melee_carat)
-                                        <div class="od-melee-item">
-                                            <small>Carat</small>
-                                            <span>{{ number_format($order->melee_carat, 3) }} ct</span>
-                                        </div>
-                                    @endif
-                                    @if($order->melee_price_per_ct)
-                                        <div class="od-melee-item">
-                                            <small>Price / ct</small>
-                                            <span>$ {{ number_format($order->melee_price_per_ct, 2) }}</span>
-                                        </div>
-                                        <div class="od-melee-item">
-                                            <small>Total Value</small>
-                                            <span>$
-                                                {{ number_format($order->melee_total_value ?? ($order->melee_carat * $order->melee_price_per_ct), 2) }}</span>
-                                        </div>
-                                    @endif
+                                        @if($mPieces)
+                                            <div class="od-melee-item">
+                                                <small>Pieces</small>
+                                                <span>{{ $mPieces }} pcs</span>
+                                            </div>
+                                        @endif
+                                        @if($mTotalCarat)
+                                            <div class="od-melee-item">
+                                                <small>Carat</small>
+                                                <span>{{ number_format($mTotalCarat, 3) }} ct</span>
+                                            </div>
+                                        @endif
+                                        @if($mPriceCt)
+                                            <div class="od-melee-item">
+                                                <small>Price / ct</small>
+                                                <span>$ {{ number_format($mPriceCt, 2) }}</span>
+                                            </div>
+                                            <div class="od-melee-item">
+                                                <small>Total Value</small>
+                                                <span>$ {{ number_format($mTotalValue, 2) }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
+                            @endforeach
                         @endif
 
                     </div>
@@ -2251,13 +2278,19 @@
                                                         </thead>
                                                         <tbody>
                                                             @foreach(($log->new_values ?? []) as $field => $newVal)
+                                                                @php
+                                                                    $oldDisplay = $log->old_values[$field] ?? '—';
+                                                                    $newDisplay = $newVal ?? '—';
+                                                                    $oldDisplay = is_array($oldDisplay) ? json_encode($oldDisplay) : $oldDisplay;
+                                                                    $newDisplay = is_array($newDisplay) ? json_encode($newDisplay) : $newDisplay;
+                                                                @endphp
                                                                 <tr>
                                                                     <td class="field-name">{{ $field }}</td>
                                                                     <td><span
-                                                                            class="val-badge val-old">{{ Str::limit($log->old_values[$field] ?? '—', 80) }}</span>
+                                                                            class="val-badge val-old">{{ Str::limit($oldDisplay, 80) }}</span>
                                                                     </td>
                                                                     <td><span
-                                                                            class="val-badge val-new">{{ Str::limit($newVal ?? '—', 80) }}</span>
+                                                                            class="val-badge val-new">{{ Str::limit($newDisplay, 80) }}</span>
                                                                     </td>
                                                                 </tr>
                                                             @endforeach

@@ -40,14 +40,6 @@ Route::get('/', function () {
 // return view('welcome');
 });
 
-// Public IP check (no auth needed - for Cloudflare tunnel testing)
-Route::get('check-ip', function () {
-    return response()->json([
-    'your_ip' => request()->ip(),
-    'message' => 'This is the IP address the server sees for you. Add this IP to the whitelist.',
-    ]);
-});
-
 // Public access request (from 403 page — no auth needed)
 Route::post('ip/request-access', [SettingsController::class , 'submitAccessRequest'])
     ->middleware('throttle:3,10') // Max 3 requests per 10 minutes
@@ -67,15 +59,6 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class , 'index'])
         ->name('admin.dashboard');
-
-    // DIAGNOSTIC ROUTE
-    Route::get('test-blade', function () {
-            return view('admin.dashboard');
-        }
-        );
-
-        // DIAGNOSTIC ROUTE
-        Route::any('test-broadcast', [ChatController::class , 'testBroadcast'])->name('admin.test-broadcast');
 
         // Chat routes with middleware
         Route::get('chat', [ChatController::class , 'index'])

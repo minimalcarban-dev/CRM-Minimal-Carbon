@@ -48,6 +48,10 @@ class OrderUpdatedNotification extends Notification implements ShouldBroadcastNo
         foreach ($this->newValues as $field => $newVal) {
             $oldVal = $this->oldValues[$field] ?? 'N/A';
 
+            // Convert arrays to JSON strings before truncation
+            $oldVal = is_array($oldVal) ? json_encode($oldVal) : $oldVal;
+            $newVal = is_array($newVal) ? json_encode($newVal) : $newVal;
+
             // Limit string length for long text fields
             $oldValStr = is_string($oldVal) && strlen($oldVal) > 20 ? substr($oldVal, 0, 17) . '...' : (string) $oldVal;
             $newValStr = is_string($newVal) && strlen($newVal) > 20 ? substr($newVal, 0, 17) . '...' : (string) $newVal;

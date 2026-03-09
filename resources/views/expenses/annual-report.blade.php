@@ -24,8 +24,9 @@
                     <form method="GET" action="{{ route('expenses.annual-report') }}" class="tracker-report-filter-form"
                         style="flex-wrap:nowrap; align-items:center;">
                         <select name="year" class="tracker-filter-select" style="padding:0.5rem 0.75rem;">
-                            @for($y = date('Y'); $y >= date('Y') - 5; $y--)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
+                                </option>
                             @endfor
                         </select>
                         <button type="submit" class="btn-primary-custom" style="padding:0.5rem 0.75rem; flex-shrink:0;"><i
@@ -48,21 +49,21 @@
             <div class="stat-card stat-card-success">
                 <div class="stat-icon"><i class="bi bi-arrow-down-circle"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Total Income</div>
+                    <div class="stat-label">Cash In</div>
                     <div class="stat-value" style="color:#10b981;">₹{{ number_format($totals['income'], 0) }}</div>
                 </div>
             </div>
             <div class="stat-card stat-card-danger">
                 <div class="stat-icon"><i class="bi bi-arrow-up-circle"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Total Expense</div>
+                    <div class="stat-label">Cash Out</div>
                     <div class="stat-value" style="color:#ef4444;">₹{{ number_format($totals['expense'], 0) }}</div>
                 </div>
             </div>
             <div class="stat-card stat-card-primary">
                 <div class="stat-icon"><i class="bi bi-wallet"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Net Cash Flow</div>
+                    <div class="stat-label">Cash Balance</div>
                     <div class="stat-value" style="color:{{ $totals['cashflow'] >= 0 ? '#10b981' : '#ef4444' }};">
                         ₹{{ number_format($totals['cashflow'], 0) }}</div>
                 </div>
@@ -70,7 +71,7 @@
             <div class="stat-card stat-card-info">
                 <div class="stat-icon"><i class="bi bi-calculator"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Monthly Average</div>
+                    <div class="stat-label">Cash Avg (Monthly)</div>
                     <div class="stat-value">₹{{ number_format($averages['cashflow'], 0) }}</div>
                 </div>
             </div>
@@ -107,7 +108,7 @@
                         <thead>
                             <tr>
                                 <th>Category</th>
-                                @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
+                                @foreach (['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
                                     <th style="text-align: center;">{{ $m }}</th>
                                 @endforeach
                                 <th style="text-align: right;">Total</th>
@@ -117,7 +118,7 @@
                         <tbody>
                             <tr>
                                 <td><strong style="color:#10b981;">Income</strong></td>
-                                @for($m = 1; $m <= 12; $m++)
+                                @for ($m = 1; $m <= 12; $m++)
                                     <td style="text-align: center;">
                                         ₹{{ number_format(($monthlyData[$m]['income'] ?? 0) / 1000, 0) }}k
                                     </td>
@@ -128,8 +129,9 @@
                             </tr>
                             <tr>
                                 <td><strong style="color:#ef4444;">Expense</strong></td>
-                                @for($m = 1; $m <= 12; $m++)
-                                    <td style="text-align: center;">₹{{ number_format($monthlyData[$m]['expense'] / 1000, 0) }}k
+                                @for ($m = 1; $m <= 12; $m++)
+                                    <td style="text-align: center;">
+                                        ₹{{ number_format($monthlyData[$m]['expense'] / 1000, 0) }}k
                                     </td>
                                 @endfor
                                 <td style="text-align: right;"><strong
@@ -138,7 +140,7 @@
                             </tr>
                             <tr class="tracker-cashflow-row">
                                 <td><strong>Cash Flow</strong></td>
-                                @for($m = 1; $m <= 12; $m++)
+                                @for ($m = 1; $m <= 12; $m++)
                                     @php $cf = $monthlyData[$m]['cashflow']; @endphp
                                     <td style="text-align: center; color:{{ $cf >= 0 ? '#10b981' : '#ef4444' }};">
                                         ₹{{ number_format($cf / 1000, 0) }}k</td>
@@ -158,7 +160,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const monthlyData = @json($monthlyData);
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -177,8 +179,7 @@
                 type: 'bar',
                 data: {
                     labels: months,
-                    datasets: [
-                        {
+                    datasets: [{
                             type: 'bar',
                             label: 'Income',
                             data: incomeData,
@@ -229,19 +230,35 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: 'rgba(236, 72, 153, 0.08)', drawBorder: false },
-                            ticks: { callback: value => '₹' + (value / 1000) + 'k' }
+                            grid: {
+                                color: 'rgba(236, 72, 153, 0.08)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: value => '₹' + (value / 1000) + 'k'
+                            }
                         },
-                        x: { grid: { display: false } }
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
                     },
                     plugins: {
                         legend: {
                             position: 'top',
-                            labels: { usePointStyle: true, boxWidth: 8, padding: 20 }
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 8,
+                                padding: 20
+                            }
                         }
                     }
                 }
@@ -277,15 +294,28 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-                            ticks: { callback: value => '₹' + (value / 1000) + 'k' }
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: value => '₹' + (value / 1000) + 'k'
+                            }
                         },
-                        x: { grid: { display: false } }
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
                     },
                     plugins: {
                         legend: {
                             position: 'top',
-                            labels: { usePointStyle: true, boxWidth: 8, padding: 20 }
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 8,
+                                padding: 20
+                            }
                         }
                     }
                 }

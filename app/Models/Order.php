@@ -68,6 +68,7 @@ class Order extends Model
         'order_pdfs' => 'array',
         'diamond_skus' => 'array', // New: cast to array for multi-SKU support
         'diamond_prices' => 'array', // Cast JSON to array for diamond prices
+        'melee_entries' => 'array', // Multi-melee entries JSON
         'tracking_history' => 'array',
         'last_tracker_sync' => 'datetime',
         'dispatch_date' => 'date',

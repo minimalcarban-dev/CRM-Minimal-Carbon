@@ -25,6 +25,7 @@ This CRM powers the day-to-day operations of a diamond trading business, replaci
 
 📦 Inventory & Products
 
+- **Shopify Connected** — Bi-directional sync for products, collections, and orders with automated metafield extraction.
 - **Diamond Inventory** — Full lifecycle: create, import/export (Excel), bulk edit, SKU-based availability, restock sold stones, admin assignment
 - **Melee Diamonds** — Category-based melee tracking with weighted average cost per carat
 - **Gold Tracking** — Gold stock management with factory distribution, returns, and purchase logging
@@ -35,7 +36,7 @@ This CRM powers the day-to-day operations of a diamond trading business, replaci
 - **Orders** — Multi-type pipeline (rough, polished, jewelry) with status tracking, draft auto-save, and overdue detection
 - **Order Cancellation** — Robust cancellation workflow with read-only views and reason tracking
 - **Invoices** — Multi-region PDF invoicing with dynamic tax calculations, amount-in-words, and per-region currency formatting
-- **Sales Dashboards** — Company-level analytics with monthly targets, progress tracking, projections, and PDF/CSV export
+- **Sales Dashboards** — Consolidated analytics across all companies with monthly targets, projections, and PDF/CSV export
 - **Shipping Tracker** — Automated API integration (17Track) for live package status, timeline tracking, and syncing
 - **Packages** — Manage and track received / returned packages with permission-based flows
 
@@ -75,9 +76,10 @@ Centralized currency system supporting **7 currencies** out of the box — exten
 
 ### 🔐 Security & Access
 
+- **Adaptive UI** — Full Dark Mode support with responsive design for mobile and tablet devices.
 - **Role-based Permissions** — Granular per-module control (view/create/edit/delete) with super admin override
+- **IP Security** — Whitelist-based access with GeoIP logging and quick-access shield in navbar.
 - **Admin-only Auth** — No public registration; admin panel with throttled login
-- **Permission Middleware** — Applied per-route for fine-grained access control
 
 ---
 
@@ -96,6 +98,7 @@ Centralized currency system supporting **7 currencies** out of the box — exten
 | **Image Storage**       | Cloudinary                      |
 | **Email**               | Google API (Gmail OAuth2)       |
 | **Messaging**           | Meta/WhatsApp Business API      |
+| **Integrations**        | Shopify Admin API, 17Track      |
 | **Queue**               | Laravel Queue (database driver) |
 
 ---
@@ -104,10 +107,10 @@ Centralized currency system supporting **7 currencies** out of the box — exten
 
 | Metric               | Count |
 | -------------------- | ----- |
-| Controllers          | 35+   |
-| Eloquent Models      | 45+   |
-| View Directories     | 33+   |
-| Route Definitions    | ~200+ |
+| Controllers          | 37+   |
+| Eloquent Models      | 50+   |
+| View Directories     | 35+   |
+| Route Definitions    | ~250+ |
 | Currencies Supported | 7     |
 | Invoice Regions      | 7     |
 | Permission Types     | 50+   |
@@ -116,8 +119,10 @@ Centralized currency system supporting **7 currencies** out of the box — exten
 
 ## 📸 Highlights
 
+- 🛍️ **Shopify Connected** — Centralized management of Shopify listings and draft order automation.
+- 🌙 **Modern Adaptive UI** — High-contrast dark mode and mobile-responsive layout for global access.
 - 🎯 **Kanban Lead Board** — Drag-and-drop pipeline for leads with WhatsApp messaging
-- 📊 **Sales Ring Charts** — Visual monthly target tracking with projected vs actual
+- 📊 **Consolidated Analytics** — Visual target tracking across multiple business entities.
 - 📄 **PDF Invoices** — Auto-generated with amount in words, tax breakdowns, and multi-currency
 - 💬 **Threaded Chat** — Slack-like messaging with channels, threads, and file attachments
 - 📧 **Gmail Inbox** — Read, compose, reply, and forward directly from the CRM

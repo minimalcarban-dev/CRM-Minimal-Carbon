@@ -14,6 +14,7 @@ use App\Models\JobTrack;
 use App\Notifications\DiamondAssignedNotification;
 use App\Notifications\DiamondReassignedNotification;
 use App\Notifications\DiamondSoldNotification;
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
@@ -62,10 +63,15 @@ class DiamondController extends Controller
             return DiamondClarity::orderBy('name')->get();
         });
 
+        $adminauth = [];
+        if (Auth::guard('admin')->user()?->hasPermission('diamonds.assign')) {
+            $admins = Admin::orderBy('name')->get();
+        }
+
         // Get countries list for location dropdown
         $countries = config('countries', []);
 
-        return view('diamonds.create', compact('admins', 'stoneTypes', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities', 'countries'));
+        return view('diamonds.create', compact('admins', 'stoneTypes', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities', 'countries', 'adminauth'));
     }
 
     /**
