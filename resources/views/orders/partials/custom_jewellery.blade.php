@@ -132,6 +132,10 @@
         <div class="mt-3">
             @include('orders.partials.multi_sku_selector')
         </div>
+
+        <div class="mt-4">
+            @include('orders.partials.multi_melee_selector')
+        </div>
     </div>
 </div>
 
@@ -240,81 +244,6 @@
                     <input type="text" name="product_other" class="form-control-modern"
                         placeholder="If Other, specify (e.g., Bracelet)"
                         value="{{ old('product_other', $order->product_other ?? '') }}">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-</div>
-
-<!-- Side Stones / Melee Details Section -->
-<div class="form-section-card mb-4">
-    <div class="section-header">
-        <div class="section-icon">
-            <i class="bi bi-gem"></i>
-        </div>
-        <div class="section-header-text">
-            <h5 class="section-title">Side Stones / Melee</h5>
-            <p class="section-description">Select from melee inventory</p>
-        </div>
-    </div>
-    <div class="section-body">
-        <div class="row g-3">
-            <div class="col-12">
-                <div class="form-group-modern">
-                    <label class="form-label-modern">
-                        <span class="label-icon"><i class="bi bi-search"></i></span>
-                        <span class="label-text">Select Melee Lot</span>
-                        <span class="optional-badge">Optional</span>
-                    </label>
-                    <select name="melee_diamond_id" id="melee_diamond_select" class="form-control-modern"
-                        style="width: 100%;">
-                        <option value="">Search by Category, Shape, or Size...</option>
-                        @if(isset($order) && $order->meleeDiamond)
-                            <option value="{{ $order->melee_diamond_id }}" selected>
-                                {{ $order->meleeDiamond->category->name ?? '' }} - {{ $order->meleeDiamond->shape }}
-                                {{ $order->meleeDiamond->size_label }}
-                            </option>
-                        @endif
-                    </select>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="form-group-modern">
-                    <label class="form-label-modern">
-                        <span class="label-icon"><i class="bi bi-123"></i></span>
-                        <span class="label-text">Pieces</span>
-                        <span class="optional-badge">Optional</span>
-                    </label>
-                    <input type="number" name="melee_pieces" class="form-control-modern" placeholder="0" min="1"
-                        value="{{ old('melee_pieces', $order->melee_pieces ?? '') }}">
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="form-group-modern">
-                    <label class="form-label-modern">
-                        <span class="label-icon"><i class="bi bi-speedometer2"></i></span>
-                        <span class="label-text">Carat Weight</span>
-                        <span class="optional-badge">Optional</span>
-                    </label>
-                    <input type="number" step="0.001" name="melee_carat" class="form-control-modern" placeholder="0.000"
-                        min="0" value="{{ old('melee_carat', $order->melee_carat ?? '') }}">
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="form-group-modern">
-                    <label class="form-label-modern">
-                        <span class="label-icon"><i class="bi bi-currency-dollar"></i></span>
-                        <span class="label-text">Price / Ct ($)</span>
-                        <span class="optional-badge">Autofill</span>
-                    </label>
-                    <input type="number" step="0.01" name="melee_price_per_ct" id="melee_price"
-                        class="form-control-modern" placeholder="0.00" min="0"
-                        value="{{ old('melee_price_per_ct', $order->melee_price_per_ct ?? '') }}">
                 </div>
             </div>
         </div>
@@ -1261,46 +1190,6 @@
         }
     }
 </style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initialize Select2 for Melee Search
-        // Check if jQuery is available (Select2 needs it)
-        if (typeof $ !== 'undefined' && $.fn.select2) {
-            $('#melee_diamond_select').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Search for Melee Stock...',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: '{{ route("melee.search") }}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            term: params.term
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: data
-                        };
-                    },
-                    cache: true
-                }
-            });
-
-            // On Select, autofill price if available
-            $('#melee_diamond_select').on('select2:select', function (e) {
-                var data = e.params.data;
-                // We need to pass price in the search result from Controller
-                if (data.price) {
-                    $('#melee_price').val(data.price);
-                }
-            });
-        }
-    });
-</script>
 
 <!-- JavaScript -->
 <script>

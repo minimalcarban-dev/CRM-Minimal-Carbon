@@ -4,7 +4,7 @@ use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
-uses(Tests\CreatesApplication::class);
+
 
 it('allows admin to login with valid credentials', function () {
     // create admin

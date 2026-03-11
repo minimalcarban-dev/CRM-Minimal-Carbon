@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Services\CurrencyService;
 use App\Models\OrderDraft;
+use App\Models\JewelleryStock;
 use App\Notifications\DiamondSoldNotification;
 use App\Models\MeleeTransaction;
 use App\Models\MeleeDiamond;
@@ -30,6 +31,7 @@ use App\Services\ShippingTrackingService;
 use App\Notifications\OrderCreatedNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Services\AuditLogger;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -262,37 +264,27 @@ class OrderController extends Controller
     {
         try {
             $validated = $this->validateOrder($request);
+            $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
+            $this->validateMeleeStockAvailability($incomingMeleeEntries);
 
-            // Collect all diamond SKUs to process (from both old single field and new array field)
-            $allSkus = [];
-            if (!empty($validated['diamond_skus']) && is_array($validated['diamond_skus'])) {
-                $allSkus = array_filter(array_unique($validated['diamond_skus']));
-            } elseif (!empty($validated['diamond_sku'])) {
-                $allSkus = [$validated['diamond_sku']];
-            }
+            // Collect all submitted SKUs to process (diamond/jewellery)
+            $allSkus = $this->extractValidatedSkus($validated);
 
             // Validate all diamond SKUs first (before creating order)
             $validatedDiamonds = [];
             foreach ($allSkus as $sku) {
-                $diamond = Diamond::where('sku', $sku)->first();
-
-                if (!$diamond) {
-                    $errorMsg = 'Diamond with SKU "' . $sku . '" not found.';
+                $skuCheck = $this->checkOrderSkuAvailability($sku);
+                if (!$skuCheck['available']) {
+                    $errorMsg = $skuCheck['message'];
                     if ($request->expectsJson()) {
                         return response()->json(['success' => false, 'message' => $errorMsg], 422);
                     }
                     return back()->withInput()->with('error', $errorMsg);
                 }
 
-                if ($diamond->is_sold_out === 'Sold') {
-                    $errorMsg = 'Diamond with SKU "' . $sku . '" is already sold. Please remove it and select a different diamond.';
-                    if ($request->expectsJson()) {
-                        return response()->json(['success' => false, 'message' => $errorMsg], 422);
-                    }
-                    return back()->withInput()->with('error', $errorMsg);
+                if ($skuCheck['type'] === 'diamond' && isset($skuCheck['item'])) {
+                    $validatedDiamonds[] = $skuCheck['item'];
                 }
-
-                $validatedDiamonds[] = $diamond;
             }
 
             DB::beginTransaction();
@@ -561,6 +553,25 @@ class OrderController extends Controller
         }
         try {
             $validated = $this->validateOrder($request);
+            $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
+            $this->validateMeleeStockAvailability($incomingMeleeEntries, $order);
+
+            // Validate only newly added SKUs on edit (keep existing reserved SKUs allowed)
+            $submittedSkus = $this->extractValidatedSkus($validated);
+            $existingOrderSkus = $this->extractOrderSkus($order);
+            $newlyAddedSkus = array_values(array_diff($submittedSkus, $existingOrderSkus));
+            $newlyAddedDiamonds = [];
+
+            foreach ($newlyAddedSkus as $sku) {
+                $skuCheck = $this->checkOrderSkuAvailability($sku);
+                if (!$skuCheck['available']) {
+                    return back()->withInput()->with('error', $skuCheck['message']);
+                }
+
+                if (($skuCheck['type'] ?? null) === 'diamond' && isset($skuCheck['item'])) {
+                    $newlyAddedDiamonds[] = $skuCheck['item'];
+                }
+            }
 
             DB::beginTransaction();
 
@@ -596,24 +607,9 @@ class OrderController extends Controller
             $order->images = array_merge($existingImages, $newImages);
             $order->order_pdfs = array_merge($existingPdfs, $newPdfs);
 
-            // Track if diamond SKU changed
+            // Track primary SKU change for logs only
             $oldDiamondSku = $order->diamond_sku;
             $newDiamondSku = $validated['diamond_sku'] ?? '';
-
-            // Validate new diamond SKU is not already sold (if changed)
-            if (!empty($newDiamondSku) && $newDiamondSku !== $oldDiamondSku) {
-                $diamond = Diamond::where('sku', $newDiamondSku)->first();
-
-                if (!$diamond) {
-                    DB::rollBack();
-                    return back()->withInput()->with('error', 'Diamond with SKU "' . $newDiamondSku . '" not found.');
-                }
-
-                if ($diamond->is_sold_out === 'Sold') {
-                    DB::rollBack();
-                    return back()->withInput()->with('error', 'Diamond with SKU "' . $newDiamondSku . '" is already sold. Please select a different diamond.');
-                }
-            }
 
             // --- Snapshot old values BEFORE assigning new fields (for audit log) ---
             $auditFields = [
@@ -775,13 +771,16 @@ class OrderController extends Controller
             if (!empty($oldValues) || !empty($newValues)) {
                 AuditLogger::log('updated', $order, Auth::guard('admin')->id(), $oldValues, $newValues);
             }
-            // If diamond SKU changed or was newly added, mark the new one as sold
-            if (!empty($newDiamondSku) && $newDiamondSku !== $oldDiamondSku) {
+
+            // Mark all newly added diamond SKUs as sold
+            if (!empty($newlyAddedDiamonds)) {
                 $diamondController = new DiamondController();
-                // Get specific price for this diamond from diamond_prices (already in USD)
                 $diamondPrices = $validated['diamond_prices'] ?? [];
-                $soldPriceUsd = (float) ($diamondPrices[$newDiamondSku] ?? 0);
-                $diamondController->markSoldOutBySku($newDiamondSku, $soldPriceUsd);
+
+                foreach ($newlyAddedDiamonds as $diamond) {
+                    $soldPriceUsd = (float) ($diamondPrices[$diamond->sku] ?? 0);
+                    $diamondController->markSoldOutBySku($diamond->sku, $soldPriceUsd);
+                }
             }
 
             DB::commit();
@@ -825,8 +824,15 @@ class OrderController extends Controller
             return redirect()->route('orders.index')
                 ->with('success', 'Order updated successfully! Added ' . count($newImages) . ' new images and ' . count($newPdfs) . ' new PDFs.');
 
+        } catch (ValidationException $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            throw $e;
         } catch (\Exception $e) {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             Log::error('Order update failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
@@ -1260,6 +1266,137 @@ class OrderController extends Controller
     }
 
     /**
+     * Combined SKU checker for order forms (supports diamond + jewellery).
+     */
+    public function checkStockSku(Request $request)
+    {
+        $sku = strtoupper(trim($request->input('sku', '')));
+
+        if (empty($sku)) {
+            return response()->json([
+                'available' => false,
+                'message' => 'SKU is required'
+            ], 400);
+        }
+
+        $result = $this->checkOrderSkuAvailability($sku);
+        $itemPayload = $result['details'] ?? $result['item'] ?? null;
+        $payload = [
+            'available' => $result['available'],
+            'message' => $result['message'],
+            'type' => $result['type'] ?? null,
+            'item' => $itemPayload,
+        ];
+
+        // Backward compatibility for code paths that still expect `diamond`
+        if (($result['type'] ?? null) === 'diamond') {
+            $payload['diamond'] = $itemPayload;
+        }
+
+        return response()->json($payload, $result['available'] ? 200 : 422);
+    }
+
+    /**
+     * Check order SKU availability across diamonds and jewellery stock.
+     */
+    private function checkOrderSkuAvailability(string $sku): array
+    {
+        $sku = strtoupper(trim($sku));
+
+        if ($sku === '') {
+            return [
+                'available' => false,
+                'type' => null,
+                'item' => null,
+                'details' => null,
+                'message' => 'SKU is required',
+            ];
+        }
+
+        $diamond = Diamond::where('sku', $sku)->first();
+        if ($diamond) {
+            if ($diamond->is_sold_out === 'Sold') {
+                return [
+                    'available' => false,
+                    'type' => 'diamond',
+                    'item' => $diamond,
+                    'details' => [
+                        'sku' => $diamond->sku,
+                        'display_details' => trim(($diamond->weight ?? '?') . 'ct ' . ($diamond->shape ?? '')),
+                        'carat' => $diamond->weight,
+                        'shape' => $diamond->shape,
+                        'clarity' => $diamond->clarity,
+                        'color' => $diamond->color,
+                        'listing_price' => $diamond->listing_price,
+                        'stock_status' => 'sold',
+                    ],
+                    'message' => 'Diamond "' . $sku . '" is already sold. Please remove it and select a different SKU.',
+                ];
+            }
+
+            return [
+                'available' => true,
+                'type' => 'diamond',
+                'item' => $diamond,
+                'message' => 'Diamond SKU available',
+                'details' => [
+                    'sku' => $diamond->sku,
+                    'display_details' => trim(($diamond->weight ?? '?') . 'ct ' . ($diamond->shape ?? '')),
+                    'carat' => $diamond->weight,
+                    'shape' => $diamond->shape,
+                    'clarity' => $diamond->clarity,
+                    'color' => $diamond->color,
+                    'listing_price' => $diamond->listing_price,
+                ],
+            ];
+        }
+
+        $jewellery = JewelleryStock::where('sku', $sku)->first();
+        if ($jewellery) {
+            if ((int) $jewellery->quantity <= 0 || $jewellery->status === 'out_of_stock') {
+                return [
+                    'available' => false,
+                    'type' => 'jewellery',
+                    'item' => $jewellery,
+                    'details' => [
+                        'sku' => $jewellery->sku,
+                        'display_details' => trim(($jewellery->name ?? 'Jewellery') . ' ' . (!empty($jewellery->type) ? '(' . $jewellery->type . ')' : '')),
+                        'name' => $jewellery->name,
+                        'type' => $jewellery->type,
+                        'quantity' => (int) $jewellery->quantity,
+                        'selling_price' => $jewellery->selling_price,
+                        'stock_status' => 'out_of_stock',
+                    ],
+                    'message' => 'Jewellery SKU "' . $sku . '" is out of stock.',
+                ];
+            }
+
+            return [
+                'available' => true,
+                'type' => 'jewellery',
+                'item' => $jewellery,
+                'message' => 'Jewellery SKU available',
+                'details' => [
+                    'sku' => $jewellery->sku,
+                    'display_details' => trim(($jewellery->name ?? 'Jewellery') . ' ' . (!empty($jewellery->type) ? '(' . $jewellery->type . ')' : '')),
+                    'name' => $jewellery->name,
+                    'type' => $jewellery->type,
+                    'quantity' => (int) $jewellery->quantity,
+                    'selling_price' => $jewellery->selling_price,
+                ],
+            ];
+        }
+
+        return [
+            'available' => false,
+            'type' => null,
+            'item' => null,
+            'details' => null,
+            'message' => 'SKU "' . $sku . '" not found in diamond or jewellery stock.',
+        ];
+    }
+
+    /**
      * Validate form input for all order types.
      */
     private function validateOrder(Request $request): array
@@ -1297,6 +1434,7 @@ class OrderController extends Controller
             'melee_entries.*.pieces' => 'required|integer|min:1',
             'melee_entries.*.avg_carat_per_piece' => 'nullable|numeric|min:0',
             'melee_entries.*.price_per_ct' => 'nullable|numeric|min:0',
+            
             // Backward compat single melee fields (populated by JS from first entry)
             'melee_diamond_id' => 'nullable|exists:melee_diamonds,id',
             'melee_pieces' => 'nullable|integer|min:1',
@@ -1337,6 +1475,196 @@ class OrderController extends Controller
         }
 
         return $request->validate($rules);
+    }
+
+    /**
+     * Extract normalized SKU list from validated payload (supports both legacy and multi-SKU fields).
+     */
+    private function extractValidatedSkus(array $validated): array
+    {
+        $rawSkus = [];
+
+        if (!empty($validated['diamond_skus']) && is_array($validated['diamond_skus'])) {
+            $rawSkus = array_merge($rawSkus, $validated['diamond_skus']);
+        }
+
+        if (!empty($validated['diamond_sku'])) {
+            $rawSkus[] = $validated['diamond_sku'];
+        }
+
+        $normalized = array_map(
+            static fn($sku) => strtoupper(trim((string) $sku)),
+            $rawSkus
+        );
+
+        return array_values(array_unique(array_filter($normalized)));
+    }
+
+    /**
+     * Extract normalized SKU list from existing order (supports legacy + multi-SKU fields).
+     */
+    private function extractOrderSkus(Order $order): array
+    {
+        $rawSkus = [];
+
+        if (!empty($order->diamond_skus) && is_array($order->diamond_skus)) {
+            $rawSkus = array_merge($rawSkus, $order->diamond_skus);
+        }
+
+        if (!empty($order->diamond_sku)) {
+            $rawSkus[] = $order->diamond_sku;
+        }
+
+        $normalized = array_map(
+            static fn($sku) => strtoupper(trim((string) $sku)),
+            $rawSkus
+        );
+
+        return array_values(array_unique(array_filter($normalized)));
+    }
+
+    /**
+     * Normalize incoming melee payload (multi-entry + backward-compatible single entry).
+     */
+    private function extractValidatedMeleeEntries(array $validated): array
+    {
+        $entries = [];
+
+        if (!empty($validated['melee_entries']) && is_array($validated['melee_entries'])) {
+            $entries = $validated['melee_entries'];
+        } elseif (!empty($validated['melee_entries_json'])) {
+            $decoded = json_decode($validated['melee_entries_json'], true);
+            if (is_array($decoded)) {
+                $entries = $decoded;
+            }
+        } elseif (!empty($validated['melee_diamond_id']) && !empty($validated['melee_pieces'])) {
+            $entries = [
+                [
+                    'melee_diamond_id' => $validated['melee_diamond_id'],
+                    'pieces' => $validated['melee_pieces'],
+                ]
+            ];
+        }
+
+        return array_values(array_filter($entries, function ($entry) {
+            return !empty($entry['melee_diamond_id']) && (int) ($entry['pieces'] ?? 0) > 0;
+        }));
+    }
+
+    /**
+     * Validate requested melee pieces against live stock.
+     * During edit, add current order reservation to allowed stock for fair validation.
+     */
+    private function validateMeleeStockAvailability(array $incomingEntries, ?Order $existingOrder = null): void
+    {
+        if (empty($incomingEntries)) {
+            return;
+        }
+
+        $requestedByMeleeId = [];
+        $entryIndexesByMeleeId = [];
+
+        foreach ($incomingEntries as $index => $entry) {
+            $meleeId = (int) ($entry['melee_diamond_id'] ?? 0);
+            $pieces = (int) ($entry['pieces'] ?? 0);
+
+            if ($meleeId <= 0 || $pieces <= 0) {
+                continue;
+            }
+
+            $requestedByMeleeId[$meleeId] = ($requestedByMeleeId[$meleeId] ?? 0) + $pieces;
+            $entryIndexesByMeleeId[$meleeId][] = $index;
+        }
+
+        if (empty($requestedByMeleeId)) {
+            return;
+        }
+
+        $reservedByMeleeId = $this->getReservedMeleePiecesFromOrder($existingOrder);
+        $diamonds = MeleeDiamond::with('category')
+            ->whereIn('id', array_keys($requestedByMeleeId))
+            ->get()
+            ->keyBy('id');
+
+        $errors = [];
+
+        foreach ($requestedByMeleeId as $meleeId => $requestedPieces) {
+            /** @var MeleeDiamond|null $diamond */
+            $diamond = $diamonds->get($meleeId);
+            $affectedIndexes = $entryIndexesByMeleeId[$meleeId] ?? [];
+
+            if (!$diamond) {
+                foreach ($affectedIndexes as $index) {
+                    $errors["melee_entries.$index.melee_diamond_id"] = 'Selected melee stock lot was not found.';
+                }
+                continue;
+            }
+
+            $allowedPieces = (int) $diamond->available_pieces + (int) ($reservedByMeleeId[$meleeId] ?? 0);
+
+            if ($requestedPieces > $allowedPieces) {
+                $label = $this->buildMeleeStockLabel($diamond);
+                $message = "{$label} has only {$allowedPieces} pieces available in stock.";
+
+                foreach ($affectedIndexes as $index) {
+                    $errors["melee_entries.$index.pieces"] = $message;
+                }
+
+                // Create/edited form compatibility: mapped directly to an existing hidden field name.
+                $errors['melee_entries_json'] = $message;
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * Existing order reservation that should be added back during edit validation.
+     */
+    private function getReservedMeleePiecesFromOrder(?Order $order): array
+    {
+        if (!$order) {
+            return [];
+        }
+
+        $entries = $order->melee_entries ?? [];
+        if (is_string($entries)) {
+            $entries = json_decode($entries, true) ?? [];
+        }
+
+        if (empty($entries) && !empty($order->melee_diamond_id) && (int) ($order->melee_pieces ?? 0) > 0) {
+            $entries = [
+                [
+                    'melee_diamond_id' => $order->melee_diamond_id,
+                    'pieces' => (int) $order->melee_pieces,
+                ]
+            ];
+        }
+
+        $reserved = [];
+        foreach ((array) $entries as $entry) {
+            $meleeId = (int) ($entry['melee_diamond_id'] ?? 0);
+            $pieces = (int) ($entry['pieces'] ?? 0);
+
+            if ($meleeId <= 0 || $pieces <= 0) {
+                continue;
+            }
+
+            $reserved[$meleeId] = ($reserved[$meleeId] ?? 0) + $pieces;
+        }
+
+        return $reserved;
+    }
+
+    private function buildMeleeStockLabel(MeleeDiamond $diamond): string
+    {
+        $category = optional($diamond->category)->name ?? 'Melee';
+        $shape = trim((string) $diamond->shape);
+        $size = trim((string) $diamond->size_label);
+
+        return trim("{$category} - {$shape} {$size}");
     }
 
     /**

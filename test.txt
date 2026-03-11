@@ -1,0 +1,343 @@
+﻿
+   PASS  Tests\Unit\ExampleTest
+  Γ£ô that true is true                                 0.01s  
+
+   FAIL  Tests\Feature\AdminAuthTest
+  Γ¿» it allows admin to login with valid credentials   0.04s  
+  Γ¿» it rejects invalid credentials
+
+   FAIL  Tests\Feature\AdminPermissionTest
+  Γ¿» it allows super admin to view and update permissions for another admin
+  Γ¿» it prevents normal admin without assign permission from editing permissions
+
+   FAIL  Tests\Feature\AdminUploadTest
+  Γ¿» it allows admin to upload documents when creatinΓÇª 0.01s  
+
+   FAIL  Tests\Feature\ChatFeatureTest
+  Γ¿» it denies chat channels without auth
+  Γ¿» it denies chat channels without permission
+  Γ¿» it allows chat channels with permission
+  Γ¿» it can fetch messages for a channel the admin belongs to
+  Γ¿» it can send a text message
+  Γ¿» it can send an attachment and mark messages as read
+  Γ¿» it broadcast auth rejects unauthenticated
+  Γ¿» it broadcast auth allows member of channel
+
+   FAIL  Tests\Feature\ExampleTest
+  Γ¿» the application returns a successful response     0.01s  
+
+   FAIL  Tests\Feature\InvoiceManagementTest
+  Γ¿» admin with invoices.create can create invoice with items
+
+   FAIL  Tests\Feature\OrderManagementTest
+  Γ¿» admin with permissions.create can create and see order in index search
+
+   FAIL  Tests\Feature\PermissionManagementTest
+  Γ¿» admin granted permissions.create can create permission
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AdminAuthTestΓÇª   RuntimeException   
+  A facade root has not been set.
+
+  at vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:360
+    356Γûò     {
+    357Γûò         $instance = static::getFacadeRoot();
+    358Γûò 
+    359Γûò         if (! $instance) {
+  Γ₧£ 360Γûò             throw new RuntimeException('A facade root has not been set.');
+    361Γûò         }
+    362Γûò 
+    363Γûò         return $instance->$method(...$args);
+    364Γûò     }
+
+  1   vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:360
+  2   tests\Feature\AdminAuthTest.php:14
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AdminAuthTest > it rejectΓÇª  Error   
+  Call to undefined method Tests\Feature\AdminAuthTest::post(). Did you forget to use the [pest()->extend()] function? Read more at: https://pestphp.com/docs/configuring-tests
+
+  at tests\Feature\AdminAuthTest.php:29
+     25Γûò     $this->assertTrue(Auth::guard('admin')->check());
+     26Γûò });
+     27Γûò 
+     28Γûò it('rejects invalid credentials', function () {
+  Γ₧£  29Γûò     $response = $this->post(route('admin.login.post'), [
+     30Γûò         'email' => 'nonexistent@example.com',
+     31Γûò         'password' => 'nope',
+     32Γûò     ]);
+     33Γûò
+
+  1   tests\Feature\AdminAuthTest.php:29
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AdminPermissioΓÇª  RuntimeException   
+  A facade root has not been set.
+
+  at vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:360
+    356Γûò     {
+    357Γûò         $instance = static::getFacadeRoot();
+    358Γûò 
+    359Γûò         if (! $instance) {
+  Γ₧£ 360Γûò             throw new RuntimeException('A facade root has not been set.');
+    361Γûò         }
+    362Γûò 
+    363Γûò         return $instance->$method(...$args);
+    364Γûò     }
+
+  1   vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:360
+  2   tests\Feature\AdminPermissionTest.php:15
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AdminPermissioΓÇª  RuntimeException   
+  A facade root has not been set.
+
+  at vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:360
+    356Γûò     {
+    357Γûò         $instance = static::getFacadeRoot();
+    358Γûò 
+    359Γûò         if (! $instance) {
+  Γ₧£ 360Γûò             throw new RuntimeException('A facade root has not been set.');
+    361Γûò         }
+    362Γûò 
+    363Γûò         return $instance->$method(...$args);
+    364Γûò     }
+
+  1   vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:360
+  2   tests\Feature\AdminPermissionTest.php:56
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AdminUploadTest > it alloΓÇª  Error   
+  Call to undefined method Illuminate\Container\Container::storagePath()
+
+  at vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:932
+    928Γûò      * @param  string  $path
+    929Γûò      */
+    930Γûò     function storage_path($path = ''): string
+    931Γûò     {
+  Γ₧£ 932Γûò         return app()->storagePath($path);
+    933Γûò     }
+    934Γûò }
+    935Γûò 
+    936Γûò if (! function_exists('to_action')) {
+
+  1   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:932
+  2   vendor\laravel\framework\src\Illuminate\Support\Facades\Storage.php:152
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ChatFeatureTestΓÇª   QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\ExampleTest > the applicaΓÇª  Error   
+  Call to undefined method Tests\Feature\ExampleTest::get(). Did you forget to use the [pest()->extend()] function? Read more at: https://pestphp.com/docs/configuring-tests
+
+  at tests\Feature\ExampleTest.php:4
+      1Γûò <?php
+      2Γûò 
+      3Γûò test('the application returns a successful response', function () {
+  Γ₧£   4Γûò     $response = $this->get('/');
+      5Γûò 
+      6Γûò     $response->assertStatus(200);
+      7Γûò });
+      8Γûò
+
+  1   tests\Feature\ExampleTest.php:4
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\InvoiceManagemenΓÇª  QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\OrderManagementTΓÇª  QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\PermissionManageΓÇª  QueryException   
+  SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, Database: :memory:, SQL: ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft')
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+    574Γûò             if ($this->pretending()) {
+    575Γûò                 return true;
+    576Γûò             }
+    577Γûò 
+  Γ₧£ 578Γûò             $statement = $this->getPdo()->prepare($query);
+    579Γûò 
+    580Γûò             $this->bindValues($statement, $this->prepareBindings($bindings));
+    581Γûò 
+    582Γûò             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+
+
+  Tests:    17 failed, 1 passed (1 assertions)
+  Duration: 3.84s
+

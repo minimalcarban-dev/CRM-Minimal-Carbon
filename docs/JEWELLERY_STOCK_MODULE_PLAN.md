@@ -139,7 +139,7 @@ Add these permissions to the seeder(s):
 - Manual stock movement modal (like `meele_transactions`)
 - Maintain transaction log table (optional)
 
-### 5.4 Order integration (later)
+### 5.4 Order integration
 
 - Provide endpoint for order forms to validate SKU + available quantity
 - Deduct stock when order is created (like meele stock integration)

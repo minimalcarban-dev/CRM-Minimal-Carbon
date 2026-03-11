@@ -5,7 +5,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 
-uses(Tests\CreatesApplication::class);
+
 
 it('allows admin to upload documents when creating an admin', function () {
     Storage::fake('public');

@@ -1788,17 +1788,64 @@
                         @php
                             $skus = is_array($order->diamond_skus) ? $order->diamond_skus : (!empty($order->diamond_sku) ? [$order->diamond_sku] : []);
                             $prices = is_array($order->diamond_prices) ? $order->diamond_prices : [];
+
+                            $skuMeta = [];
+                            $diamondSkuCount = 0;
+                            $jewellerySkuCount = 0;
+
+                            foreach ($skus as $rawSku) {
+                                $sku = trim((string) $rawSku);
+                                if ($sku === '') {
+                                    continue;
+                                }
+
+                                $typeLabel = 'SKU';
+                                $typeClass = 'bg-secondary';
+
+                                $isDiamond = \App\Models\Diamond::where('sku', $sku)->exists();
+                                if ($isDiamond) {
+                                    $typeLabel = 'Diamond';
+                                    $typeClass = 'bg-primary';
+                                    $diamondSkuCount++;
+                                } else {
+                                    $isJewellery = \App\Models\JewelleryStock::where('sku', $sku)->exists();
+                                    if ($isJewellery) {
+                                        $typeLabel = 'Jewellery';
+                                        $typeClass = 'bg-info';
+                                        $jewellerySkuCount++;
+                                    }
+                                }
+
+                                $skuMeta[] = [
+                                    'sku' => $sku,
+                                    'type_label' => $typeLabel,
+                                    'type_class' => $typeClass,
+                                ];
+                            }
+
+                            if ($diamondSkuCount > 0 && $jewellerySkuCount === 0) {
+                                $skuSectionLabel = 'Diamond SKUs';
+                            } elseif ($jewellerySkuCount > 0 && $diamondSkuCount === 0) {
+                                $skuSectionLabel = 'Jewellery SKUs';
+                            } else {
+                                $skuSectionLabel = 'Diamond / Jewellery SKUs';
+                            }
                         @endphp
 
-                        @if(!empty($skus))
+                        @if(!empty($skuMeta))
                             <div class="od-detail-group">
-                                <div class="od-detail-label"><i class="bi bi-upc-scan"></i> Diamond SKUs</div>
-                                @foreach($skus as $sku)
+                                <div class="od-detail-label"><i class="bi bi-upc-scan"></i> {{ $skuSectionLabel }}</div>
+                                @foreach($skuMeta as $skuInfo)
                                     <div class="sku-row">
-                                        <span class="sku-code">{{ $sku }}</span>
-                                        @if(isset($prices[$sku]))
-                                            <span class="sku-price">$ {{ number_format($prices[$sku], 2) }}</span>
-                                        @endif
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="sku-code">{{ $skuInfo['sku'] }}</span>
+                                            <span class="badge {{ $skuInfo['type_class'] }} rounded-pill">{{ $skuInfo['type_label'] }}</span>
+                                        </div>
+                                        <div>
+                                            @if(isset($prices[$skuInfo['sku']]))
+                                                <span class="sku-price">$ {{ number_format($prices[$skuInfo['sku']], 2) }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>

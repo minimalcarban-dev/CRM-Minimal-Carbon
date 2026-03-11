@@ -1,12 +1,12 @@
-{{-- Multi-Diamond SKU Selector Component --}}
-{{-- This component allows selecting multiple diamond SKUs with real-time validation --}}
-{{-- Each SKU is displayed as a removable pill with diamond details --}}
+{{-- Multi-SKU Selector Component --}}
+{{-- This component allows selecting multiple diamond/jewellery SKUs with real-time validation --}}
+{{-- Each SKU is displayed as a removable pill with item details --}}
 
 <div class="form-group-modern">
     <label class="form-label-modern">
         <span class="label-content">
             <span class="label-icon"><i class="bi bi-tag"></i></span>
-            <span class="label-text">Diamond SKU</span>
+            <span class="label-text">Diamond / Jewellery SKU</span>
         </span>
         <span class="optional-badge">Optional</span>
     </label>
@@ -28,7 +28,7 @@
     {{-- SKU Input with Validation --}}
     <div class="sku-input-wrapper">
         <input type="text" id="diamond_sku_input" class="form-control-modern"
-            placeholder="Enter diamond SKU (e.g., D-12345)" autocomplete="off">
+            placeholder="Enter diamond or jewellery SKU (e.g., D-12345, J-1001)" autocomplete="off">
         <span class="sku-validation-icon" id="sku_validation_icon"></span>
     </div>
     <div class="sku-validation-message" id="sku_validation_message"></div>
@@ -312,9 +312,11 @@
     (function () {
         'use strict';
 
+        const stockSkuCheckUrl = "{{ route('orders.check-stock-sku') }}";
+
         // Multi-SKU Manager
         const MultiSkuManager = {
-            skus: [], // Array of {sku, diamond} objects
+            skus: [], // Array of {sku, stockItem, itemType} objects
             container: null,
             input: null,
             validationIcon: null,
@@ -388,14 +390,16 @@
             },
 
             checkSkuAvailability: function (sku) {
-                fetch(`/admin/diamonds/check-sku?sku=${encodeURIComponent(sku)}`)
+                fetch(`${stockSkuCheckUrl}?sku=${encodeURIComponent(sku)}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.available) {
                             this.input.classList.add('sku-valid');
                             this.validationIcon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
-                            const d = data.diamond;
-                            this.validationMessage.innerHTML = `<span class="text-success">✓ ${data.message} - ${d.carat || '?'}ct ${d.shape || ''} - Press Enter to add</span>`;
+                            const item = data.item || data.diamond || {};
+                            const details = item.display_details ? ` - ${item.display_details}` : '';
+                            const kind = data.type ? ` (${data.type})` : '';
+                            this.validationMessage.innerHTML = `<span class="text-success">✓ ${data.message}${kind}${details} - Press Enter to add</span>`;
                         } else {
                             this.input.classList.add('sku-invalid');
                             this.validationIcon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
@@ -425,26 +429,26 @@
                 }
 
                 // Validate SKU via API
-                fetch(`/admin/diamonds/check-sku?sku=${encodeURIComponent(sku)}`)
+                fetch(`${stockSkuCheckUrl}?sku=${encodeURIComponent(sku)}`)
                     .then(res => res.json())
                     .then(data => {
                         // Remove temp pill
                         this.removePillByTempId(tempId);
 
                         if (data.available) {
-                            const diamond = data.diamond;
-                            this.skus.push({ sku: sku, diamond: diamond });
-                            this.addPill({ sku: sku, diamond: diamond });
+                            const item = data.item || data.diamond || {};
+                            this.skus.push({ sku: sku, stockItem: item, itemType: data.type || null });
+                            this.addPill({ sku: sku, stockItem: item, itemType: data.type || null });
                             this.updateHiddenInput();
 
                             if (!isInitialLoad) {
                                 this.input.value = '';
                                 this.clearValidation();
-                                this.showNotification(`Added ${sku}`, 'success');
+                                this.showNotification(`Added ${sku}${data.type ? ' (' + data.type + ')' : ''}`, 'success');
                             }
                         } else {
                             if (!isInitialLoad) {
-                                this.showNotification(data.message || 'Diamond not available', 'error');
+                                this.showNotification(data.message || 'SKU not available', 'error');
                             }
                         }
                     })
@@ -466,9 +470,10 @@
                 let detailsHtml = '';
                 let priceInputHtml = '';
 
-                if (data.diamond) {
-                    const d = data.diamond;
-                    detailsHtml = `<span class="sku-pill-details">${d.carat || '?'}ct ${d.shape || ''}</span>`;
+                if (data.stockItem) {
+                    const item = data.stockItem;
+                    const details = item.display_details || `${item.carat || '?'}ct ${item.shape || ''}`;
+                    detailsHtml = `<span class="sku-pill-details">${details}</span>`;
                     // Add price input with wrapper for better styling
                     priceInputHtml = `
                         <div class="diamond-price-wrapper">

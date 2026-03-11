@@ -192,6 +192,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::post('orders', [OrderController::class , 'store'])
             ->name('orders.store')
             ->middleware('admin.permission:orders.create');
+        Route::get('orders/check-stock-sku', [OrderController::class , 'checkStockSku'])
+            ->name('orders.check-stock-sku')
+            ->middleware('admin.permission:orders.create');
         Route::post('orders/sync-all-tracking', [OrderController::class , 'syncAllTracking'])
             ->name('orders.sync-all-tracking')
             ->middleware('admin.permission:orders.edit');
@@ -917,6 +920,43 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             Route::delete('/category/{id}', [\App\Http\Controllers\MeleeCategoryController::class , 'destroy'])->name('category.destroy');
         }
         );
+
+        // ─────────────────────────────────────────────────────────────
+        // Jewellery Stock Management
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('jewellery-stock')->name('jewellery-stock.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\JewelleryStockController::class, 'index'])
+                ->name('index')
+                ->middleware('admin.permission:jewellery_stock.view');
+
+            Route::get('/create', [\App\Http\Controllers\JewelleryStockController::class, 'create'])
+                ->name('create')
+                ->middleware('admin.permission:jewellery_stock.create');
+
+            Route::post('/', [\App\Http\Controllers\JewelleryStockController::class, 'store'])
+                ->name('store')
+                ->middleware('admin.permission:jewellery_stock.create');
+
+            Route::get('/check-sku', [\App\Http\Controllers\JewelleryStockController::class, 'checkSku'])
+                ->name('check-sku')
+                ->middleware('admin.permission:jewellery_stock.view');
+
+            Route::get('/{jewellery_stock}', [\App\Http\Controllers\JewelleryStockController::class, 'show'])
+                ->name('show')
+                ->middleware('admin.permission:jewellery_stock.view');
+
+            Route::get('/{jewellery_stock}/edit', [\App\Http\Controllers\JewelleryStockController::class, 'edit'])
+                ->name('edit')
+                ->middleware('admin.permission:jewellery_stock.edit');
+
+            Route::put('/{jewellery_stock}', [\App\Http\Controllers\JewelleryStockController::class, 'update'])
+                ->name('update')
+                ->middleware('admin.permission:jewellery_stock.edit');
+
+            Route::delete('/{jewellery_stock}', [\App\Http\Controllers\JewelleryStockController::class, 'destroy'])
+                ->name('destroy')
+                ->middleware('admin.permission:jewellery_stock.delete');
+        });
 
         // ─────────────────────────────────────────────────────────────
         // Package Handover & Return Management System
