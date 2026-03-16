@@ -2937,7 +2937,7 @@
                 @endif
 
                 {{-- ── INVENTORY ── --}}
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create', 'melee_diamonds.view', 'melee_diamonds.create', 'packages.view', 'packages.create', 'diamond_jobs.view']))
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create', 'melee_diamonds.view', 'melee_diamonds.create', 'packages.view', 'packages.create', 'diamond_jobs.view', 'jewellery_stock.view', 'jewellery_stock.create']))
                     <div class="nav-section-label">Inventory</div>
                 @endif
 
@@ -2957,6 +2957,16 @@
                             href="{{ route('melee.index') }}" data-tooltip="Melee Inventory">
                             <i class="bi bi-grid-3x3-gap"></i>
                             <span>Melee Inventory</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.view', 'jewellery_stock.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('jewellery-stock.*') ? 'active cat-inventory' : '' }}"
+                            href="{{ route('jewellery-stock.index') }}" data-tooltip="Jewellery Stock">
+                            <i class="bi bi-gem"></i>
+                            <span>Jewellery Stock</span>
                         </a>
                     </li>
                 @endif

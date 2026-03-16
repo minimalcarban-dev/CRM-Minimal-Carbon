@@ -4,7 +4,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Admin;
 use App\Models\Permission;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+
 
 test('admin granted permissions.create can create permission', function () {
     // create the permission that represents ability to create permissions

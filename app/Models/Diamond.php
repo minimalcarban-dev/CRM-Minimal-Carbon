@@ -97,11 +97,31 @@ class Diamond extends Model
      * This is the SINGLE SOURCE OF TRUTH for all calculations.
      * Called automatically on save via boot event.
      * 
-     * Derived fields: is_sold_out, sold_out_month, duration_days, duration_price, profit
-     * Source fields: sold_out_date, purchase_date, purchase_price, sold_out_price, shipping_price
+     * Derived fields: listing_price, actual_listing_price, is_sold_out, sold_out_month, duration_days, duration_price, profit
+     * Source fields: purchase_price, margin, offer_calculation, sold_out_date, purchase_date, sold_out_price, shipping_price
      */
     public function recalculateDerivedFields(): void
     {
+        // 0. PRICING: listing and actual listing
+        $base = (float) ($this->purchase_price ?? 0);
+        $margin = (float) ($this->margin ?? 0);
+        $offer = (float) ($this->offer_calculation ?? 0);
+
+        // listing_price = purchase_price * (1 + margin/100)
+        if ($base > 0) {
+            $this->listing_price = round($base * (1 + ($margin / 100)), 2);
+        } else {
+            $this->listing_price = null;
+        }
+
+        // actual_listing_price = listing_price + (listing_price * offer/100)
+        $listing = (float) ($this->listing_price ?? 0);
+        if ($listing > 0) {
+            $this->actual_listing_price = round($listing * (1 + ($offer / 100)), 2);
+        } else {
+            $this->actual_listing_price = null;
+        }
+
         // 1. STATUS: Derived from sold_out_date presence
         $this->is_sold_out = !empty($this->sold_out_date) ? 'Sold' : 'IN Stock';
 
@@ -114,8 +134,6 @@ class Diamond extends Model
         }
 
         // 3. DURATION DAYS: From purchase_date to sold_out_date (or today if in stock)
-        $base = (float) ($this->purchase_price ?? 0);
-
         if (!empty($this->purchase_date)) {
             $purchaseDate = \Carbon\Carbon::parse($this->purchase_date);
             $endDate = !empty($this->sold_out_date)
@@ -127,7 +145,7 @@ class Diamond extends Model
         }
 
         // 4. DURATION PRICE: Compound interest formula
-        // Formula: purchase_price × (1 + 0.0005)^days where 0.0005 = 0.05% daily rate
+        // Formula: purchase_price x (1 + 0.0005)^days where 0.0005 = 0.05% daily rate
         $days = (int) ($this->duration_days ?? 0);
         $dailyRate = 0.0005;
         $this->duration_price = round($base * pow(1 + $dailyRate, $days), 2);
@@ -218,7 +236,7 @@ class Diamond extends Model
         }
 
         // Calculate duration price using daily compound interest formula:
-        // Final Cost = purchase_price × (1 + 0.0005)^days
+        // Final Cost = purchase_price x (1 + 0.0005)^days
         // where 0.0005 = 0.05% daily rate
         $base = (float) ($this->purchase_price ?? 0);
         $days = (int) ($this->duration_days ?? 0);

@@ -8,8 +8,8 @@
             <div class="attr-header-content">
                 <div class="attr-header-left">
                     <div class="attr-breadcrumb-nav">
-                        <a href="{{ route('admin.dashboard') }}" class="attr-breadcrumb-link"><i
-                                class="bi bi-house-door"></i> Dashboard</a>
+                        <a href="{{ route('admin.dashboard') }}" class="attr-breadcrumb-link"><i class="bi bi-house-door"></i>
+                            Dashboard</a>
                         <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
                         <a href="{{ route('metal_types.index') }}" class="attr-breadcrumb-link">Metal Types</a>
                         <i class="bi bi-chevron-right attr-breadcrumb-separator"></i>
@@ -42,16 +42,20 @@
                                 class="attr-required">*</span></label>
                         <input type="text" name="name" class="attr-form-input @error('name') is-invalid @enderror"
                             value="{{ old('name', $item->name) }}" required>
-                        @error('name')<div class="attr-error-message"><i class="bi bi-exclamation-circle"></i>
-                        {{ $message }}</div>@enderror
+                        @error('name')
+                            <div class="attr-error-message"><i class="bi bi-exclamation-circle"></i>
+                                {{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="attr-form-group">
                         <label class="attr-form-label"><i class="bi bi-toggle-on"></i> Status</label>
                         <div class="attr-status-toggle-group">
-                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="1" {{ old('is_active', $item->is_active) == '1' ? 'checked' : '' }}>
+                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="1"
+                                    {{ old('is_active', $item->is_active) == '1' ? 'checked' : '' }}>
                                 <div class="attr-toggle-indicator active"><i class="bi bi-check-circle"></i> Active</div>
                             </label>
-                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="0" {{ old('is_active', $item->is_active) == '0' ? 'checked' : '' }}>
+                            <label class="attr-status-toggle"><input type="radio" name="is_active" value="0"
+                                    {{ old('is_active', $item->is_active) == '0' ? 'checked' : '' }}>
                                 <div class="attr-toggle-indicator inactive"><i class="bi bi-x-circle"></i> Inactive</div>
                             </label>
                         </div>

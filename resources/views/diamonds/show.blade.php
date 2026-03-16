@@ -153,6 +153,18 @@
                         <p class="form-value">${{ number_format($diamond->listing_price ?? 0, 2) }}</p>
                     </div>
 
+                    @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
+                        <div class="form-group">
+                            <label class="form-label">Offer Calculation</label>
+                            <p class="form-value">{{ number_format($diamond->offer_calculation ?? 0, 2) }}%</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Actual Listing Price</label>
+                            <p class="form-value">${{ number_format($diamond->actual_listing_price ?? 0, 2) }}</p>
+                        </div>
+                    @endif
+
                     <div class="form-group">
                         <label class="form-label">Shipping Price</label>
                         <p class="form-value">${{ number_format($diamond->shipping_price ?? 0, 2) }}</p>
