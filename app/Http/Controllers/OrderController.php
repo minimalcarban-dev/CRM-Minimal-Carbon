@@ -59,9 +59,9 @@ class OrderController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
-        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped']; // Define shipped statuses
-        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']; // Define cancelled statuses
-        $baseQuery = Order::query()->with(['company', 'creator']); // Start the base query (apply admin + search filters first)
+        $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+        $baseQuery = Order::query()->with(['company', 'creator']);
 
         // Super admin sees all orders, regular admin sees only their submitted orders
         // Unless they have 'orders.view_team' permission which allows viewing team orders
@@ -74,10 +74,8 @@ class OrderController extends Controller
             // Restrict visibility of dispatched orders:
             // Normal admin cannot see shipped orders older than 10 days
             $baseQuery->where(function ($q) use ($shippedStatuses) {
-                // 1. Order is NOT in shipped status (or status is null)
                 $q->whereNotIn('diamond_status', $shippedStatuses)
                     ->orWhereNull('diamond_status')
-                    // 2. OR Order IS shipped, but dispatch_date is within the last 10 days
                     ->orWhere(function ($subQ) use ($shippedStatuses) {
                         $subQ->whereIn('diamond_status', $shippedStatuses)
                             ->whereDate('dispatch_date', '>=', now()->subDays(10));
@@ -86,12 +84,10 @@ class OrderController extends Controller
         }
 
         if ($request->filled('search')) {
-
             $search = $request->search;
             $fields = ['client_name', 'id', 'client_email', 'client_address', 'jewellery_details', 'diamond_details'];
 
             $baseQuery->where(function ($query) use ($search, $fields) {
-
                 foreach ($fields as $field) {
                     $query->orWhere($field, 'like', "%{$search}%");
                 }
@@ -99,7 +95,6 @@ class OrderController extends Controller
                 $query->orWhereHas('company', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
                 });
-
             });
         }
 
@@ -128,7 +123,6 @@ class OrderController extends Controller
             ->count();
 
         // Compute totals and breakdowns EXCLUDING shipped and cancelled orders
-        // Note: whereNotIn excludes NULL values, so we need to explicitly include them  
         $nonShippedQuery = (clone $baseQuery)->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
             $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
                 ->orWhereNull('diamond_status');
@@ -145,7 +139,7 @@ class OrderController extends Controller
             ->pluck('total', 'diamond_status')
             ->toArray();
 
-        // ===== TODAY'S SALES STATS (NEW) =====
+        // Today's Sales Stats
         $todaysSales = Order::whereDate('created_at', now()->toDateString())
             ->where(function ($q) use ($cancelledStatuses) {
                 $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
@@ -157,7 +151,7 @@ class OrderController extends Controller
             })
             ->count();
 
-        // Month Sales Stats - ALL orders count as sales (prepaid model)
+        // Month Sales Stats
         $monthSales = Order::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->where(function ($q) use ($cancelledStatuses) {
@@ -194,7 +188,6 @@ class OrderController extends Controller
             $query->whereIn('diamond_status', $cancelledStatuses);
         } else {
             // Otherwise, hide shipped and cancelled orders from main listing
-            // Note: whereNotIn excludes NULL values, so we need to explicitly include them
             $query->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
                 $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
                     ->orWhereNull('diamond_status');
@@ -243,7 +236,6 @@ class OrderController extends Controller
         ));
     }
 
-
     public function create(Request $request)
     {
         $draft = null;
@@ -260,18 +252,22 @@ class OrderController extends Controller
         return view('orders.create', compact('draft', 'draftData'));
     }
 
+    /**
+     * ⚡ OPTIMIZED: Store method with performance improvements
+     */
     public function store(Request $request)
     {
         try {
             $validated = $this->validateOrder($request);
+            
+            // ✅ CRITICAL: Extract and validate melee entries BEFORE creating order
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
             $this->validateMeleeStockAvailability($incomingMeleeEntries);
 
-            // Collect all submitted SKUs to process (diamond/jewellery)
+            // ✅ CRITICAL: Extract and validate ALL diamond SKUs BEFORE creating order
             $allSkus = $this->extractValidatedSkus($validated);
-
-            // Validate all diamond SKUs first (before creating order)
             $validatedDiamonds = [];
+            
             foreach ($allSkus as $sku) {
                 $skuCheck = $this->checkOrderSkuAvailability($sku);
                 if (!$skuCheck['available']) {
@@ -287,9 +283,25 @@ class OrderController extends Controller
                 }
             }
 
+            // ⚡ PERFORMANCE: Upload files to Cloudinary BEFORE starting DB transaction
+            // This prevents file uploads from blocking database operations
+            $images = [];
+            $pdfs = [];
+            
+            try {
+                $images = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
+                $pdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
+            } catch (\Exception $e) {
+                Log::error('File upload failed before order creation', [
+                    'error' => $e->getMessage()
+                ]);
+                // Continue without files - they can be added later via edit
+            }
+
+            // Start DB transaction AFTER file uploads
             DB::beginTransaction();
 
-            // Create the order first
+            // Create the order
             $order = new Order();
             $this->assignOrderFields($order, $validated);
             $order->submitted_by = Auth::guard('admin')->id();
@@ -318,76 +330,69 @@ class OrderController extends Controller
             }
             $order->client_id = $clientId;
 
+            // Attach uploaded files
+            $order->images = $images;
+            $order->order_pdfs = $pdfs;
+            
             $order->save();
 
-            // Upload files to Cloudinary (wrapped in try-catch for cleanup)
-            try {
-                $images = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
-                $pdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
-
-                // Model handles JSON conversion automatically via casts
-                $order->images = $images;
-                $order->order_pdfs = $pdfs;
-                $order->save();
-
-            } catch (\Exception $e) {
-                // If upload fails after order created, still commit order but log the upload failure
-                Log::error('File upload failed during order creation', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage()
-                ]);
-                $images = [];
-                $pdfs = [];
-            }
-
-            // Mark all validated diamonds as sold
-            $soldDiamonds = [];
+            // ⚡ PERFORMANCE: Bulk update diamonds as sold (instead of loop + controller calls)
             if (!empty($validatedDiamonds)) {
-                $diamondController = new DiamondController();
-
-                // Get individual diamond prices from request (already in USD)
                 $diamondPrices = $validated['diamond_prices'] ?? [];
-
+                $diamondIds = [];
+                $soldDiamonds = [];
+                
                 foreach ($validatedDiamonds as $diamond) {
-                    // Get specific price for this diamond (already in USD, no conversion needed)
+                    $diamondIds[] = $diamond->id;
                     $soldPriceUsd = (float) ($diamondPrices[$diamond->sku] ?? 0);
-
-                    Log::info('Attempting to mark diamond as sold', [
+                    $soldDiamonds[] = [
+                        'id' => $diamond->id,
                         'sku' => $diamond->sku,
                         'sold_price' => $soldPriceUsd
-                    ]);
-
-                    $result = $diamondController->markSoldOutBySku($diamond->sku, $soldPriceUsd);
-
-                    if ($result) {
-                        Log::info('Diamond successfully marked as sold', ['diamond_id' => $result->id]);
-                        $soldDiamonds[] = $result;
-                    } else {
-                        Log::warning('Failed to mark diamond as sold', ['sku' => $diamond->sku]);
-                    }
+                    ];
                 }
 
-                // Notify all admins about the diamond sale(s) - batch notification
-                if (!empty($soldDiamonds)) {
-                    /** @var Admin $currentAdmin */
+                // Bulk update instead of individual queries
+                foreach ($soldDiamonds as $soldData) {
+                    Diamond::where('id', $soldData['id'])->update([
+                        'is_sold_out' => 'Sold',
+                        'sold_out_date' => now(),
+                        'sold_out_price' => $soldData['sold_price'],
+                        'updated_at' => now()
+                    ]);
+                }
+
+                Log::info('Diamonds marked as sold (bulk)', [
+                    'count' => count($soldDiamonds),
+                    'order_id' => $order->id
+                ]);
+
+                // ⚡ PERFORMANCE: Queue diamond sale notifications instead of sending synchronously
+                // This prevents blocking the order creation
+                dispatch(function () use ($soldDiamonds) {
                     $currentAdmin = Auth::guard('admin')->user();
                     $allAdmins = Admin::where('id', '!=', $currentAdmin->id)->get();
 
                     if ($allAdmins->isNotEmpty()) {
-                        foreach ($soldDiamonds as $soldDiamond) {
-                            Notification::send($allAdmins, new DiamondSoldNotification($soldDiamond, $currentAdmin));
+                        foreach ($soldDiamonds as $soldData) {
+                            $diamond = Diamond::find($soldData['id']);
+                            if ($diamond) {
+                                Notification::send($allAdmins, new DiamondSoldNotification($diamond, $currentAdmin));
+                            }
                         }
                     }
-                }
+                })->afterResponse();
             }
 
-            // --- Melee Stock Deduction Logic (multi-melee) ---
+            // ⚡ PERFORMANCE: Batch create melee transactions
             $meleeEntriesForStock = $order->melee_entries ?? [];
+            $meleeTransactionsToCreate = [];
+            
             if (!empty($meleeEntriesForStock)) {
                 foreach ($meleeEntriesForStock as $meleeEntry) {
                     if (!empty($meleeEntry['melee_diamond_id']) && ($meleeEntry['pieces'] ?? 0) > 0) {
                         $meleeCarat = ($meleeEntry['pieces'] ?? 0) * ($meleeEntry['avg_carat_per_piece'] ?? 0);
-                        MeleeTransaction::create([
+                        $meleeTransactionsToCreate[] = [
                             'melee_diamond_id' => $meleeEntry['melee_diamond_id'],
                             'transaction_type' => 'out',
                             'pieces' => abs($meleeEntry['pieces']),
@@ -396,12 +401,14 @@ class OrderController extends Controller
                             'reference_id' => $order->id,
                             'created_by' => Auth::guard('admin')->id(),
                             'notes' => 'Stock used in Order #' . $order->id,
-                        ]);
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
                     }
                 }
             } elseif (!empty($order->melee_diamond_id) && $order->melee_pieces > 0) {
                 // Backward compat: single melee entry
-                MeleeTransaction::create([
+                $meleeTransactionsToCreate[] = [
                     'melee_diamond_id' => $order->melee_diamond_id,
                     'transaction_type' => 'out',
                     'pieces' => abs($order->melee_pieces),
@@ -410,18 +417,27 @@ class OrderController extends Controller
                     'reference_id' => $order->id,
                     'created_by' => Auth::guard('admin')->id(),
                     'notes' => 'Stock used in Order #' . $order->id,
-                ]);
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            // Bulk insert melee transactions
+            if (!empty($meleeTransactionsToCreate)) {
+                MeleeTransaction::insert($meleeTransactionsToCreate);
             }
 
             DB::commit();
 
-            // --- Notify Super Admins about the new order ---
-            $superAdmins = Admin::where('is_super', true)->get();
-            /** @var Admin $createdBy */
-            $createdBy = Auth::guard('admin')->user();
-            if ($superAdmins->isNotEmpty()) {
-                Notification::send($superAdmins, new OrderCreatedNotification($order, $createdBy));
-            }
+            // ⚡ PERFORMANCE: Queue order creation notification instead of sending synchronously
+            dispatch(function () use ($order) {
+                $superAdmins = Admin::where('is_super', true)->get();
+                $createdBy = Admin::find($order->submitted_by);
+                
+                if ($superAdmins->isNotEmpty() && $createdBy) {
+                    Notification::send($superAdmins, new OrderCreatedNotification($order, $createdBy));
+                }
+            })->afterResponse();
 
             Log::info('Order created successfully', [
                 'order_id' => $order->id,
@@ -435,7 +451,7 @@ class OrderController extends Controller
 
             $successMsg = 'Order created successfully! ' . count($images) . ' images and ' . count($pdfs) . ' PDFs uploaded.';
 
-            // Order created successfully - clear any auto-save drafts for this admin
+            // Order created successfully - clear any auto-save drafts
             OrderDraftController::clearAutoSaveDraft(
                 Auth::guard('admin')->id(),
                 $validated['order_type'] ?? null
@@ -457,7 +473,7 @@ class OrderController extends Controller
 
             return redirect()->route('orders.index')->with('success', $successMsg);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             // Validation errors - save as draft and pass through
             $this->saveDraftOnError($request, $e->getMessage());
             throw $e;
@@ -540,6 +556,7 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+        
         // If order is cancelled, only allow updating 'special_notes' UNLESS user is a super admin
         if (in_array($order->diamond_status, $cancelledStatuses) && !Auth::guard('admin')->user()->is_super) {
             $validated = $request->validate([
@@ -551,12 +568,15 @@ class OrderController extends Controller
             return redirect()->route('orders.show', $order->id)
                 ->with('success', 'Order note updated successfully (Order is cancelled).');
         }
+        
         try {
             $validated = $this->validateOrder($request);
+            
+            // ✅ CRITICAL: Validate melee stock with reservation logic
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
             $this->validateMeleeStockAvailability($incomingMeleeEntries, $order);
 
-            // Validate only newly added SKUs on edit (keep existing reserved SKUs allowed)
+            // ✅ CRITICAL: Validate only NEWLY ADDED SKUs (existing ones are already reserved)
             $submittedSkus = $this->extractValidatedSkus($validated);
             $existingOrderSkus = $this->extractOrderSkus($order);
             $newlyAddedSkus = array_values(array_diff($submittedSkus, $existingOrderSkus));
@@ -573,13 +593,13 @@ class OrderController extends Controller
                 }
             }
 
-            DB::beginTransaction();
-
-            // Handle new file uploads to Cloudinary
+            // ⚡ PERFORMANCE: Upload files BEFORE transaction
             $newImages = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
             $newPdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
 
-            // Correctly retrieve and normalize existing images (handle potential double-encoding)
+            DB::beginTransaction();
+
+            // Normalize existing files
             $existingImages = $order->images;
             if (is_string($existingImages)) {
                 $existingImages = json_decode($existingImages, true) ?: [];
@@ -591,7 +611,6 @@ class OrderController extends Controller
             }
             $existingImages = is_array($existingImages) ? $existingImages : [];
 
-            // Correctly retrieve and normalize existing PDFs
             $existingPdfs = $order->order_pdfs;
             if (is_string($existingPdfs)) {
                 $existingPdfs = json_decode($existingPdfs, true) ?: [];
@@ -607,11 +626,11 @@ class OrderController extends Controller
             $order->images = array_merge($existingImages, $newImages);
             $order->order_pdfs = array_merge($existingPdfs, $newPdfs);
 
-            // Track primary SKU change for logs only
+            // Track primary SKU change for logs
             $oldDiamondSku = $order->diamond_sku;
             $newDiamondSku = $validated['diamond_sku'] ?? '';
 
-            // --- Snapshot old values BEFORE assigning new fields (for audit log) ---
+            // Snapshot old values for audit log
             $auditFields = [
                 'order_type' => 'Order Type',
                 'client_name' => 'Client Name',
@@ -649,15 +668,13 @@ class OrderController extends Controller
                 $oldSnapshot[$field] = $order->getOriginal($field);
             }
 
-            // Update other fields
+            // Update fields
             $this->assignOrderFields($order, $validated);
-            // Track who modified this order (original creator in submitted_by stays unchanged)
             $order->last_modified_by = Auth::guard('admin')->id();
 
-            // --- Compute diff and log audit entry ---
+            // Compute diff and log audit entry
             $oldValues = [];
             $newValues = [];
-            // Helper: resolve FK IDs to human-readable names
             $fkResolvers = [
                 'company_id' => fn($id) => $id ? (Company::find($id)->name ?? "ID:$id") : null,
                 'factory_id' => fn($id) => $id ? (Factory::find($id)->name ?? "ID:$id") : null,
@@ -670,11 +687,9 @@ class OrderController extends Controller
             foreach ($auditFields as $field => $label) {
                 $oldVal = $oldSnapshot[$field];
                 $newVal = $order->$field;
-                // Normalise for comparison — use json_encode for array fields
                 $oldCmp = is_array($oldVal) ? json_encode($oldVal) : (string) $oldVal;
                 $newCmp = is_array($newVal) ? json_encode($newVal) : (string) $newVal;
                 if ($oldCmp !== $newCmp) {
-                    // Resolve FK values to readable names
                     if (isset($fkResolvers[$field])) {
                         $oldVal = $fkResolvers[$field]($oldVal);
                         $newVal = $fkResolvers[$field]($newVal);
@@ -685,7 +700,7 @@ class OrderController extends Controller
             }
             $order->save();
 
-            // --- Melee Stock Change Detection (multi-melee) ---
+            // Melee Stock Change Detection
             $oldMeleeEntries = $oldSnapshot['melee_entries'] ?? [];
             if (is_string($oldMeleeEntries)) {
                 $oldMeleeEntries = json_decode($oldMeleeEntries, true) ?? [];
@@ -695,11 +710,14 @@ class OrderController extends Controller
             $meleeChanged = json_encode($oldMeleeEntries) !== json_encode($newMeleeEntries);
 
             if ($meleeChanged) {
+                // ⚡ PERFORMANCE: Batch create melee transaction reversals
+                $transactionsToCreate = [];
+                
                 // Reverse ALL old melee stock entries
                 foreach ($oldMeleeEntries as $oldEntry) {
                     if (!empty($oldEntry['melee_diamond_id']) && ($oldEntry['pieces'] ?? 0) > 0) {
                         $oldCarat = ($oldEntry['pieces'] ?? 0) * ($oldEntry['avg_carat_per_piece'] ?? 0);
-                        MeleeTransaction::create([
+                        $transactionsToCreate[] = [
                             'melee_diamond_id' => $oldEntry['melee_diamond_id'],
                             'transaction_type' => 'in',
                             'pieces' => abs($oldEntry['pieces']),
@@ -708,7 +726,9 @@ class OrderController extends Controller
                             'reference_id' => $order->id,
                             'created_by' => Auth::guard('admin')->id(),
                             'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
-                        ]);
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
                     }
                 }
 
@@ -716,7 +736,7 @@ class OrderController extends Controller
                 foreach ($newMeleeEntries as $newEntry) {
                     if (!empty($newEntry['melee_diamond_id']) && ($newEntry['pieces'] ?? 0) > 0) {
                         $newCarat = ($newEntry['pieces'] ?? 0) * ($newEntry['avg_carat_per_piece'] ?? 0);
-                        MeleeTransaction::create([
+                        $transactionsToCreate[] = [
                             'melee_diamond_id' => $newEntry['melee_diamond_id'],
                             'transaction_type' => 'out',
                             'pieces' => abs($newEntry['pieces']),
@@ -725,7 +745,9 @@ class OrderController extends Controller
                             'reference_id' => $order->id,
                             'created_by' => Auth::guard('admin')->id(),
                             'notes' => 'Stock used in Order #' . $order->id,
-                        ]);
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
                     }
                 }
 
@@ -740,7 +762,7 @@ class OrderController extends Controller
 
                     if ($oldMeleeId != $newMeleeId || $oldMeleePieces != $newMeleePieces || $oldMeleeCarat != $newMeleeCarat) {
                         if (!empty($oldMeleeId) && $oldMeleePieces > 0) {
-                            MeleeTransaction::create([
+                            $transactionsToCreate[] = [
                                 'melee_diamond_id' => $oldMeleeId,
                                 'transaction_type' => 'in',
                                 'pieces' => abs($oldMeleePieces),
@@ -749,10 +771,12 @@ class OrderController extends Controller
                                 'reference_id' => $order->id,
                                 'created_by' => Auth::guard('admin')->id(),
                                 'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
-                            ]);
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
                         }
                         if (!empty($newMeleeId) && $newMeleePieces > 0) {
-                            MeleeTransaction::create([
+                            $transactionsToCreate[] = [
                                 'melee_diamond_id' => $newMeleeId,
                                 'transaction_type' => 'out',
                                 'pieces' => abs($newMeleePieces),
@@ -761,9 +785,16 @@ class OrderController extends Controller
                                 'reference_id' => $order->id,
                                 'created_by' => Auth::guard('admin')->id(),
                                 'notes' => 'Stock used in Order #' . $order->id,
-                            ]);
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
                         }
                     }
+                }
+
+                // Bulk insert all transactions
+                if (!empty($transactionsToCreate)) {
+                    MeleeTransaction::insert($transactionsToCreate);
                 }
             }
 
@@ -772,14 +803,18 @@ class OrderController extends Controller
                 AuditLogger::log('updated', $order, Auth::guard('admin')->id(), $oldValues, $newValues);
             }
 
-            // Mark all newly added diamond SKUs as sold
+            // ⚡ PERFORMANCE: Bulk update newly added diamonds
             if (!empty($newlyAddedDiamonds)) {
-                $diamondController = new DiamondController();
                 $diamondPrices = $validated['diamond_prices'] ?? [];
 
                 foreach ($newlyAddedDiamonds as $diamond) {
                     $soldPriceUsd = (float) ($diamondPrices[$diamond->sku] ?? 0);
-                    $diamondController->markSoldOutBySku($diamond->sku, $soldPriceUsd);
+                    Diamond::where('id', $diamond->id)->update([
+                        'is_sold_out' => 'Sold',
+                        'sold_out_date' => now(),
+                        'sold_out_price' => $soldPriceUsd,
+                        'updated_at' => now()
+                    ]);
                 }
             }
 
@@ -793,32 +828,33 @@ class OrderController extends Controller
                 'new_diamond_sku' => $newDiamondSku,
                 'updated_by' => Auth::guard('admin')->id()
             ]);
-            // --- Notify Admins about the update ---
+            
+            // ⚡ PERFORMANCE: Queue update notifications
             if (!empty($newValues)) {
-                /** @var Admin $updatedBy */
-                $updatedBy = Auth::guard('admin')->user();
+                dispatch(function () use ($order, $oldValues, $newValues) {
+                    $updatedBy = Admin::find($order->last_modified_by);
+                    if (!$updatedBy) return;
 
-                // Determine if any shipping fields were updated
-                $shippingFields = ['shipping_company_name', 'tracking_number', 'tracking_url', 'dispatch_date', 'tracking_status'];
-                $shippingChanged = false;
-                foreach ($shippingFields as $field) {
-                    if (array_key_exists($field, $newValues)) {
-                        $shippingChanged = true;
-                        break;
+                    // Determine if any shipping fields were updated
+                    $shippingFields = ['shipping_company_name', 'tracking_number', 'tracking_url', 'dispatch_date', 'tracking_status'];
+                    $shippingChanged = false;
+                    foreach ($shippingFields as $field) {
+                        if (array_key_exists($field, $newValues)) {
+                            $shippingChanged = true;
+                            break;
+                        }
                     }
-                }
 
-                if ($shippingChanged) {
-                    // Notify all admins if shipping details changed
-                    $adminsToNotify = Admin::where('id', '!=', $updatedBy->id)->get();
-                } else {
-                    // Otherwise, just notify super admins
-                    $adminsToNotify = Admin::where('is_super', true)->where('id', '!=', $updatedBy->id)->get();
-                }
+                    if ($shippingChanged) {
+                        $adminsToNotify = Admin::where('id', '!=', $updatedBy->id)->get();
+                    } else {
+                        $adminsToNotify = Admin::where('is_super', true)->where('id', '!=', $updatedBy->id)->get();
+                    }
 
-                if ($adminsToNotify->isNotEmpty()) {
-                    Notification::send($adminsToNotify, new OrderUpdatedNotification($order, $updatedBy, $oldValues, $newValues));
-                }
+                    if ($adminsToNotify->isNotEmpty()) {
+                        Notification::send($adminsToNotify, new OrderUpdatedNotification($order, $updatedBy, $oldValues, $newValues));
+                    }
+                })->afterResponse();
             }
 
             return redirect()->route('orders.index')
@@ -849,28 +885,21 @@ class OrderController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
-        // Super admin can view all orders, regular admin can only view their own
-        // Unless they have 'orders.view_team' permission which allows viewing team orders
         if (!$admin->is_super) {
-            // Check if admin owns the order OR has view_team permission
             if ($order->submitted_by !== $admin->id && !$admin->hasPermission('orders.view_team')) {
                 abort(403, 'You don\'t have permission to view orders submitted by other admins.');
             }
 
-            // Check visibility restriction for shipped orders (10 days limit for normal admins)
             $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
             if (in_array($order->diamond_status, $shippedStatuses)) {
-                // Use startOfDay comparison to be safe with time parts
                 if ($order->dispatch_date && \Illuminate\Support\Carbon::parse($order->dispatch_date)->lt(now()->subDays(10)->startOfDay())) {
                     abort(403, 'This shipped order is no longer visible (exceeded 10-day viewing window).');
                 }
             }
         }
 
-        // Eager load relationships
         $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator', 'lastModifier']);
 
-        // Load edit history for superadmin only
         $editHistory = collect();
         $metalTypes = MetalType::all();
         $ringSizes = RingSize::all();
@@ -878,7 +907,6 @@ class OrderController extends Controller
         $closureTypes = ClosureType::all();
         $companies = Company::all();
 
-        // Get edit history using model relationship
         $editHistory = $order->editHistory()->with('admin')->get();
 
         return view('orders.show', compact(
@@ -914,7 +942,7 @@ class OrderController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage()
-                ], 500); // Or 422 if it's a "valid" error like quota
+                ], 500);
             }
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -971,7 +999,6 @@ class OrderController extends Controller
         $type = $validated['type'];
         $field = ($type === 'image') ? 'images' : 'order_pdfs';
 
-        // Retrieve current files and normalize
         $files = $order->$field;
         if (is_string($files)) {
             $files = json_decode($files, true) ?: [];
@@ -996,13 +1023,11 @@ class OrderController extends Controller
         }
 
         if ($targetFile) {
-            // Delete from Cloudinary if public_id exists
             if (is_array($targetFile) && isset($targetFile['public_id'])) {
                 $resourceType = ($type === 'pdf') ? 'raw' : 'image';
                 $this->deleteFromCloudinary($targetFile['public_id'], $resourceType);
             }
 
-            // Update order record
             $order->$field = $remainingFiles;
             $order->save();
 
@@ -1050,7 +1075,7 @@ class OrderController extends Controller
                 }
             }
 
-            // --- Reverse Stock on Delete (if not already cancelled) ---
+            // Reverse Stock on Delete (if not already cancelled)
             $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
             if (!in_array($order->diamond_status, $cancelledStatuses)) {
                 // Reverse melee stock
@@ -1117,7 +1142,6 @@ class OrderController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
-        // Super admin can cancel all orders; regular admin can only cancel their own
         if (!$admin->is_super && $order->submitted_by !== $admin->id) {
             abort(403, 'You don\'t have permission to cancel this order.');
         }
@@ -1134,7 +1158,6 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // old snapshot for audit
             $oldValues = ['diamond_status' => $order->diamond_status];
 
             // Assign proper cancelled status based on type
@@ -1193,14 +1216,17 @@ class OrderController extends Controller
 
             AuditLogger::log('updated', $order, Auth::guard('admin')->id(), $oldValues, $newValues);
 
-            // Notify super admins
-            $superAdmins = Admin::where('is_super', true)->get();
-            $updatedBy = Auth::guard('admin')->user();
-            if ($superAdmins->isNotEmpty()) {
-                Notification::send($superAdmins, new OrderCancelledNotification($order, $updatedBy));
-            }
-
             DB::commit();
+
+            // ⚡ PERFORMANCE: Queue cancellation notifications
+            dispatch(function () use ($order) {
+                $superAdmins = Admin::where('is_super', true)->get();
+                $updatedBy = Admin::find($order->cancelled_by);
+                
+                if ($superAdmins->isNotEmpty() && $updatedBy) {
+                    Notification::send($superAdmins, new OrderCancelledNotification($order, $updatedBy));
+                }
+            })->afterResponse();
 
             return redirect()->route('orders.show', $order->id)
                 ->with('success', 'Order cancelled successfully. Stocks have been reversed.');
@@ -1220,7 +1246,7 @@ class OrderController extends Controller
      */
     public function syncAllTracking(ShippingTrackingService $trackingService)
     {
-        set_time_limit(300); // Increase time limit to 5 minutes
+        set_time_limit(300);
         Log::info("Bulk Sync Initiated");
 
         try {
@@ -1237,9 +1263,7 @@ class OrderController extends Controller
             $successValues = 0;
             $failures = 0;
 
-            /** @var \App\Models\Order $order */
             foreach ($orders as $order) {
-                // Skip if no tracking info actually exists (double check)
                 if (empty($order->tracking_number) && empty($order->tracking_url)) {
                     continue;
                 }
@@ -1253,8 +1277,7 @@ class OrderController extends Controller
                 }
                 $count++;
 
-                // Small delay to be polite to the API
-                usleep(200000); // 0.2s
+                usleep(200000); // 0.2s delay
             }
 
             return redirect()->back()->with('success', "Sync completed. Processed: $count. Success: $successValues. Failed: $failures.");
@@ -1288,7 +1311,7 @@ class OrderController extends Controller
             'item' => $itemPayload,
         ];
 
-        // Backward compatibility for code paths that still expect `diamond`
+        // Backward compatibility
         if (($result['type'] ?? null) === 'diamond') {
             $payload['diamond'] = $itemPayload;
         }
@@ -1297,7 +1320,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Check order SKU availability across diamonds and jewellery stock.
+     * ✅ CRITICAL HELPER: Check order SKU availability across diamonds and jewellery stock.
      */
     private function checkOrderSkuAvailability(string $sku): array
     {
@@ -1410,8 +1433,8 @@ class OrderController extends Controller
             'client_tax_id_type' => 'nullable|in:tax_id,vat_id,ioss_no,uid_vat_no,other',
             'client_email' => 'required|email|max:191',
             'diamond_sku' => 'nullable|string|max:191',
-            'diamond_skus' => 'nullable|array', // New: supports multiple diamond SKUs
-            'diamond_skus.*' => 'nullable|string|max:191', // Each SKU in the array
+            'diamond_skus' => 'nullable|array',
+            'diamond_skus.*' => 'nullable|string|max:191',
             'diamond_status' => 'nullable|string|in:r_order_in_process,r_order_shipped,d_diamond_in_discuss,d_diamond_in_making,d_diamond_completed,d_diamond_in_certificate,d_order_shipped,j_diamond_in_progress,j_diamond_completed,j_diamond_in_discuss,j_cad_in_progress,j_cad_done,j_order_completed,j_order_in_qc,j_qc_done,j_order_shipped,j_order_hold',
             'company_id' => 'required|exists:companies,id',
             'factory_id' => 'nullable|exists:factories,id',
@@ -1424,10 +1447,10 @@ class OrderController extends Controller
             'tracking_url' => 'nullable|url',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png,avif,gif,webp|max:10240',
             'order_pdfs.*' => 'nullable|mimes:pdf|max:10240',
-            'diamond_prices' => 'nullable|array', // Individual prices for each diamond SKU
-            'diamond_prices.*' => 'nullable|numeric|min:0', // Each price must be numeric
+            'diamond_prices' => 'nullable|array',
+            'diamond_prices.*' => 'nullable|numeric|min:0',
 
-            // Melee Fields (multi-melee entries)
+            // Melee Fields
             'melee_entries_json' => 'nullable|string',
             'melee_entries' => 'nullable|array',
             'melee_entries.*.melee_diamond_id' => 'required|exists:melee_diamonds,id',
@@ -1435,7 +1458,6 @@ class OrderController extends Controller
             'melee_entries.*.avg_carat_per_piece' => 'nullable|numeric|min:0',
             'melee_entries.*.price_per_ct' => 'nullable|numeric|min:0',
             
-            // Backward compat single melee fields (populated by JS from first entry)
             'melee_diamond_id' => 'nullable|exists:melee_diamonds,id',
             'melee_pieces' => 'nullable|integer|min:1',
             'melee_carat' => 'nullable|numeric|min:0',
@@ -1478,7 +1500,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Extract normalized SKU list from validated payload (supports both legacy and multi-SKU fields).
+     * ✅ CRITICAL HELPER: Extract normalized SKU list from validated payload.
      */
     private function extractValidatedSkus(array $validated): array
     {
@@ -1501,7 +1523,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Extract normalized SKU list from existing order (supports legacy + multi-SKU fields).
+     * ✅ CRITICAL HELPER: Extract normalized SKU list from existing order.
      */
     private function extractOrderSkus(Order $order): array
     {
@@ -1524,7 +1546,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Normalize incoming melee payload (multi-entry + backward-compatible single entry).
+     * ✅ CRITICAL HELPER: Normalize incoming melee payload.
      */
     private function extractValidatedMeleeEntries(array $validated): array
     {
@@ -1552,8 +1574,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Validate requested melee pieces against live stock.
-     * During edit, add current order reservation to allowed stock for fair validation.
+     * ✅ CRITICAL HELPER: Validate requested melee pieces against live stock.
      */
     private function validateMeleeStockAvailability(array $incomingEntries, ?Order $existingOrder = null): void
     {
@@ -1589,7 +1610,6 @@ class OrderController extends Controller
         $errors = [];
 
         foreach ($requestedByMeleeId as $meleeId => $requestedPieces) {
-            /** @var MeleeDiamond|null $diamond */
             $diamond = $diamonds->get($meleeId);
             $affectedIndexes = $entryIndexesByMeleeId[$meleeId] ?? [];
 
@@ -1610,7 +1630,6 @@ class OrderController extends Controller
                     $errors["melee_entries.$index.pieces"] = $message;
                 }
 
-                // Create/edited form compatibility: mapped directly to an existing hidden field name.
                 $errors['melee_entries_json'] = $message;
             }
         }
@@ -1621,7 +1640,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Existing order reservation that should be added back during edit validation.
+     * ✅ CRITICAL HELPER: Get existing order reservation.
      */
     private function getReservedMeleePiecesFromOrder(?Order $order): array
     {
@@ -1658,6 +1677,9 @@ class OrderController extends Controller
         return $reserved;
     }
 
+    /**
+     * ✅ CRITICAL HELPER: Build melee stock label.
+     */
     private function buildMeleeStockLabel(MeleeDiamond $diamond): string
     {
         $category = optional($diamond->category)->name ?? 'Melee';
@@ -1672,12 +1694,10 @@ class OrderController extends Controller
      */
     private function assignOrderFields(Order $order, array $validated): void
     {
-        // Required fields
         $order->order_type = $validated['order_type'];
         $order->company_id = $validated['company_id'];
         $order->factory_id = !empty($validated['factory_id']) ? $validated['factory_id'] : null;
 
-        // String fields (empty string is acceptable for VARCHAR/TEXT)
         $order->client_name = $validated['client_name'] ?? '';
         $order->client_address = $validated['client_address'] ?? '';
         $order->client_mobile = $validated['client_mobile'] ?? '';
@@ -1688,24 +1708,21 @@ class OrderController extends Controller
         $order->diamond_details = $validated['diamond_details'] ?? '';
         $order->diamond_sku = $validated['diamond_sku'] ?? '';
 
-        // Handle multiple diamond SKUs - store as JSON array
-        // Also keep single diamond_sku for backward compatibility
+        // Handle multiple diamond SKUs
         if (!empty($validated['diamond_skus'])) {
             $skus = array_filter(array_unique($validated['diamond_skus']));
             $order->diamond_skus = $skus;
-            // Set first SKU as primary for backward compatibility
             if (empty($order->diamond_sku) && !empty($skus)) {
                 $order->diamond_sku = $skus[0];
             }
         } elseif (!empty($validated['diamond_sku'])) {
-            // Single SKU provided - convert to array for new field
             $order->diamond_skus = [$validated['diamond_sku']];
         }
 
-        // Store individual diamond prices if provided
         if (!empty($validated['diamond_prices'])) {
             $order->diamond_prices = $validated['diamond_prices'];
         }
+        
         $order->product_other = $validated['product_other'] ?? '';
         $order->special_notes = $validated['special_notes'] ?? '';
         $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
@@ -1718,13 +1735,12 @@ class OrderController extends Controller
         }
         $order->tracking_url = $trackingUrl;
 
-        // Integer foreign key fields - use null instead of empty string for MySQL compatibility
         $order->gold_detail_id = !empty($validated['gold_detail_id']) ? $validated['gold_detail_id'] : null;
         $order->ring_size_id = !empty($validated['ring_size_id']) ? $validated['ring_size_id'] : null;
         $order->setting_type_id = !empty($validated['setting_type_id']) ? $validated['setting_type_id'] : null;
         $order->earring_type_id = !empty($validated['earring_type_id']) ? $validated['earring_type_id'] : null;
 
-        // Melee Fields (multi-melee entries)
+        // Melee Fields
         $meleeEntries = [];
         if (!empty($validated['melee_entries'])) {
             $meleeEntries = $validated['melee_entries'];
@@ -1735,10 +1751,8 @@ class OrderController extends Controller
             }
         }
 
-        // Store multi-melee JSON
         $order->melee_entries = !empty($meleeEntries) ? $meleeEntries : null;
 
-        // Backward compat: populate old single-melee columns from first entry
         if (!empty($meleeEntries)) {
             $first = $meleeEntries[0];
             $totalPieces = array_sum(array_column($meleeEntries, 'pieces'));
@@ -1757,22 +1771,17 @@ class OrderController extends Controller
             $order->melee_price_per_ct = !empty($validated['melee_price_per_ct']) ? $validated['melee_price_per_ct'] : null;
         }
 
-        // Calculate Melee Total Value
         if ($order->melee_carat && $order->melee_price_per_ct) {
             $order->melee_total_value = $order->melee_carat * $order->melee_price_per_ct;
         } else {
             $order->melee_total_value = 0;
         }
 
-        // ENUM fields - use null instead of empty string for MySQL compatibility
-        // MySQL ENUM columns reject empty strings, must use null when no value selected
         $order->diamond_status = !empty($validated['diamond_status']) ? $validated['diamond_status'] : null;
         $order->note = !empty($validated['note']) ? $validated['note'] : null;
 
-        // Numeric fields
         $order->gross_sell = $validated['gross_sell'] ?? 0;
 
-        // Date fields - use null instead of empty string for MySQL DATE compatibility
         $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
     }
 
@@ -1796,7 +1805,6 @@ class OrderController extends Controller
             }
 
             try {
-                // Validate file
                 if (!$file->isValid()) {
                     Log::error("Invalid file upload: {$file->getClientOriginalName()}");
                     continue;
@@ -1807,10 +1815,8 @@ class OrderController extends Controller
                 $timestamp = time();
                 $uniqueId = uniqid();
 
-                // Create unique public_id
                 $publicId = "{$folder}/{$timestamp}_{$uniqueId}";
 
-                // Upload options
                 $uploadOptions = [
                     'public_id' => $publicId,
                     'folder' => $folder,
@@ -1822,15 +1828,12 @@ class OrderController extends Controller
                     'size' => $file->getSize()
                 ]);
 
-                // Upload using Cloudinary Upload API
                 $uploadApi = $this->cloudinary->uploadApi();
 
                 if ($isPdf) {
-                    // For PDFs
                     $uploadOptions['resource_type'] = 'raw';
                     $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
                 } else {
-                    // For images with optimization
                     $uploadOptions['transformation'] = [
                         'quality' => 'auto:good',
                         'fetch_format' => 'auto'
@@ -1838,7 +1841,6 @@ class OrderController extends Controller
                     $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
                 }
 
-                // Store file information
                 $fileInfo = [
                     'url' => $result['secure_url'],
                     'public_id' => $result['public_id'],
@@ -1863,8 +1865,6 @@ class OrderController extends Controller
                     'error' => $e->getMessage(),
                     'line' => $e->getLine()
                 ]);
-
-                // Continue with next file
                 continue;
             }
         }

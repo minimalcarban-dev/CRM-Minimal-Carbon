@@ -598,7 +598,7 @@
             color: #f1f5f9;
         }
     </style>
-
+ 
     <div class="diamond-management-container">
         <!-- Page Header -->
         <div class="page-header">
@@ -1008,10 +1008,13 @@
                                         <h3 class="empty-title">No jewellery items found</h3>
                                         <p class="empty-description">Start by adding your first jewellery item to the
                                             inventory</p>
-                                        <a href="{{ route('jewellery-stock.create') }}" class="btn-primary-custom">
-                                            <i class="bi bi-plus-circle"></i>
-                                            <span>Add First Item</span>
-                                        </a>
+                                        @if (auth()->guard('admin')->user() &&
+                                                auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.create']))
+                                            <a href="{{ route('jewellery-stock.create') }}" class="btn-primary-custom">
+                                                <i class="bi bi-plus-circle"></i>
+                                                <span>Add First Item</span>
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -1024,7 +1027,7 @@
         <!-- Pagination -->
         @if ($items->hasPages())
             <div class="pagination-container">
-                {{ $items->links('pagination::bootstrap-5') }}
+                {{ $items->withQueryString()->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>

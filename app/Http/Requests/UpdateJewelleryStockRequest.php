@@ -13,7 +13,10 @@ class UpdateJewelleryStockRequest extends FormRequest
 
     public function rules(): array
     {
-        $jewelleryStockId = $this->route('jewellery_stock')?->id ?? null;
+        $jewelleryStock = $this->route('jewellery_stock');
+        $jewelleryStockId = $jewelleryStock instanceof \App\Models\JewelleryStock
+            ? $jewelleryStock->id
+            : $jewelleryStock;
 
         return [
             'sku' => ['required', 'string', "unique:jewellery_stocks,sku,{$jewelleryStockId}", 'max:255'],

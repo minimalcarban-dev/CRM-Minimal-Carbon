@@ -13,12 +13,12 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CY2B2T5w.js",
+    "file": "assets/app-2cV3g4tX.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app-OiV2eTC2.css"
+      "assets/app-Cm4zG313.css"
     ],
     "assets": [
       "assets/pdf.worker-CSHkrWs3.mjs"

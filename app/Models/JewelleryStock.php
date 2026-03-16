@@ -59,17 +59,30 @@ class JewelleryStock extends Model
      */
     public function addStock(int $qty): void
     {
-        $this->quantity += $qty;
-        $this->save();
-    }
+        if ($qty <= 0) {
+            throw new \InvalidArgumentException('Quantity must be positive');
+        }
 
+        static::where('id', $this->id)->increment('quantity', $qty);
+        $this->refresh();
+    }
     /**
      * Deduct stock quantity.
      */
-    public function deductStock(int $qty): void
+    public function deductStock(int $qty): bool
     {
-        $this->quantity = max(0, $this->quantity - $qty);
-        $this->save();
+        if ($qty <= 0) {
+            throw new \InvalidArgumentException('Quantity must be positive');
+        }
+
+        if ($this->quantity < $qty) {
+            return false; // Not enough stock
+        }
+
+        static::where('id', $this->id)->decrement('quantity', $qty);
+        $this->refresh();
+
+        return true;
     }
 
     // ── Relationships ────────────────────────────────────────

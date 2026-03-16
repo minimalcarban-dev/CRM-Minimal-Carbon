@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -16,7 +15,7 @@ return new class extends Migration
             $table->string('sku')->unique();
             $table->enum('type', ['ring', 'earrings', 'tennis_bracelet', 'other'])->default('other');
             $table->string('name');
-            $table->foreignId('metal_type_id')->constrained('metal_types')->onDelete('cascade');
+            $table->foreignId('metal_type_id')->constrained('metal_types')->restrictOnDelete();
             $table->foreignId('ring_size_id')->nullable()->constrained('ring_sizes')->nullOnDelete();
             $table->decimal('weight', 10, 3)->default(0);
             $table->integer('quantity')->default(0);

@@ -1099,7 +1099,7 @@
                         </button>
                         <div
                             v-show="openPanel === 'members'"
-                            class="section-content"
+                            class="section-content members-section-content"
                         >
                             <div
                                 v-for="member in channelInfo.members"
@@ -5046,7 +5046,8 @@ export default {
     background: white;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    min-height: 0;
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
 }
@@ -5057,6 +5058,7 @@ export default {
     border-bottom: 2px solid var(--gray-200);
     background: linear-gradient(180deg, var(--primary-light) 0%, white 100%);
     position: relative;
+    flex-shrink: 0;
 }
 
 .profile-avatar-large {
@@ -5115,6 +5117,7 @@ export default {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    overflow: hidden;
 }
 
 .info-resize-handle {
@@ -5151,11 +5154,9 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overflow: hidden;
 }
 
 .info-section {
@@ -5170,6 +5171,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 52px;
     padding: 1rem;
     background: transparent;
     border: none;
@@ -5187,13 +5189,33 @@ export default {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.section-header-content span {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.section-toggle > i {
+    flex-shrink: 0;
 }
 
 .section-content {
     padding: 1rem;
     border-top: 2px solid var(--gray-200);
     background: var(--gray-50);
-    overflow: visible;
+    overflow: hidden;
+}
+
+.members-section-content {
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .info-item {
@@ -5271,6 +5293,10 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.member-item .btn-icon-secondary {
+    flex-shrink: 0;
 }
 
 .media-grid {
@@ -5933,13 +5959,17 @@ export default {
     }
 
     .info-sidebar.is-mobile .info-sections {
-        flex: 1;
+        flex: 1 1 auto;
         min-height: 0;
+        overflow: hidden;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    .info-sidebar.is-mobile .members-section-content {
+        max-height: min(50vh, 380px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        touch-action: pan-y;
-        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     }
 
     .info-sidebar.is-mobile .thread-panel {

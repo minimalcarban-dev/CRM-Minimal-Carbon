@@ -133,6 +133,7 @@ class JewelleryStockController extends Controller
                     }
                 } catch (\Exception $e) {
                     Log::error('Cloudinary upload failed for jewellery stock (store): ' . $e->getMessage());
+                    session()->flash('warning', 'Item created but image upload failed. Please try re-uploading the image.');
                 }
             }
 
@@ -251,7 +252,7 @@ class JewelleryStockController extends Controller
                 'error' => $e->getMessage(),
                 'admin_id' => auth('admin')->id(),
             ]);
-            return back()->with('error', 'Failed to delete jewellery stock item: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete jewellery stock item. Please try again or contact support.');
         }
     }
 
@@ -300,7 +301,7 @@ class JewelleryStockController extends Controller
         $timestamp = time();
         $uniqueId = uniqid();
 
-        $publicId = "{$folder}/{$timestamp}_{$uniqueId}";
+        $publicId = "{$timestamp}_{$uniqueId}";
         $uploadOptions = [
             'public_id' => $publicId,
             'folder' => $folder,
@@ -309,7 +310,6 @@ class JewelleryStockController extends Controller
                 'fetch_format' => 'auto'
             ]
         ];
-
         $uploadApi = $this->cloudinary->uploadApi();
         $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
 
