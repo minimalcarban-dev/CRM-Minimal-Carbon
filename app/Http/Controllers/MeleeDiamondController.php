@@ -152,6 +152,27 @@ class MeleeDiamondController extends Controller
                 'reference_type' => 'manual',
             ]);
 
+            // Update diamond stock
+            if ($request->transaction_type === 'in' || $request->transaction_type === 'adjustment') {
+                $diamond->total_pieces += $request->pieces;
+                $diamond->available_pieces += $request->pieces;
+                $diamond->total_carat_weight += $request->carat_weight;
+                $diamond->available_carat_weight += $request->carat_weight;
+            } elseif ($request->transaction_type === 'out') {
+                $diamond->available_pieces -= $request->pieces;
+                $diamond->available_carat_weight -= $request->carat_weight;
+            }
+
+            // Recalculate status
+            if ($diamond->available_pieces <= 0) {
+                $diamond->status = 'out_of_stock';
+            } elseif ($diamond->available_pieces <= $diamond->low_stock_threshold) {
+                $diamond->status = 'low_stock';
+            } else {
+                $diamond->status = 'in_stock';
+            }
+            $diamond->save();
+
             DB::commit();
 
             return response()->json([
