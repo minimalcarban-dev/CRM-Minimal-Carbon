@@ -997,30 +997,41 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         // ─────────────────────────────────────────────────────────────
         Route::prefix('shopify')->name('shopify.')->group(function () {
             Route::get('settings', [\App\Http\Controllers\ShopifyController::class , 'settings'])
-                ->name('settings');
+                ->name('settings')
+                ->middleware('admin.permission:shopify.settings');
             Route::post('settings', [\App\Http\Controllers\ShopifyController::class , 'saveSettings'])
-                ->name('settings.save');
+                ->name('settings.save')
+                ->middleware('admin.permission:shopify.settings');
             Route::post('test-connection', [\App\Http\Controllers\ShopifyController::class , 'testConnection'])
-                ->name('test-connection');
+                ->name('test-connection')
+                ->middleware('admin.permission:shopify.settings');
 
             Route::get('products', [\App\Http\Controllers\ShopifyController::class , 'products'])
-                ->name('products');
+                ->name('products')
+                ->middleware('admin.permission:shopify.products.view');
             Route::post('products/import', [\App\Http\Controllers\ShopifyController::class , 'importProducts'])
-                ->name('products.import');
+                ->name('products.import')
+                ->middleware('admin.permission:shopify.products.import');
             Route::get('products/{id}', [\App\Http\Controllers\ShopifyController::class , 'showProduct'])
-                ->name('products.show');
+                ->name('products.show')
+                ->middleware('admin.permission:shopify.products.view');
             Route::post('products/{id}/export', [\App\Http\Controllers\ShopifyController::class , 'exportProduct'])
-                ->name('products.export');
+                ->name('products.export')
+                ->middleware('admin.permission:shopify.products.export');
             Route::post('products/{id}/sync', [\App\Http\Controllers\ShopifyController::class , 'syncProduct'])
-                ->name('products.sync');
+                ->name('products.sync')
+                ->middleware('admin.permission:shopify.products.export');
 
             Route::get('collections', [\App\Http\Controllers\ShopifyController::class , 'collections'])
-                ->name('collections');
+                ->name('collections')
+                ->middleware('admin.permission:shopify.collections');
             Route::post('collections/import', [\App\Http\Controllers\ShopifyController::class , 'importCollections'])
-                ->name('collections.import');
+                ->name('collections.import')
+                ->middleware('admin.permission:shopify.collections');
 
             Route::get('logs', [\App\Http\Controllers\ShopifyController::class , 'syncLogs'])
-                ->name('logs');
+                ->name('logs')
+                ->middleware('admin.permission:shopify.logs');
         }
         );
     });
