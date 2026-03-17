@@ -542,12 +542,12 @@
                     <table class="orders-table">
                         <thead>
                             <tr>
-                                <th class="th-id">
+                                <!-- <th class="th-id">
                                     <div class="th-content">
                                         <i class="bi bi-hash"></i>
                                         <span>ID</span>
                                     </div>
-                                </th>
+                                </th> -->
                                 <th>
                                     <div class="th-content">
                                         <i class="bi bi-image"></i>
@@ -611,10 +611,20 @@
                                         !$isShipped;
                                 @endphp
                                 <tr class="table-row {{ $isOverdue ? 'overdue-row' : '' }}">
-                                    <td class="td-id">
-                                        <span class="order-id-badge">#{{ $order->id }}</span>
-                                    </td>
                                     <td>
+                                        <div class="custom-row">
+                                            <span class="order-id-badge mb-2">#{{ $order->id }}</span>
+                                            {{-- Diamond Status --}}
+                                            @php
+                                                $statusKey = $order->diamond_status ?? 'processed';
+                                                $color = $statusColors[$statusKey] ?? 'secondary';
+                                                $icon = $statusIcons[$statusKey] ?? 'bi-circle';
+                                            @endphp
+                                            <span class="badge-item badge-status status-{{ $color }}">
+                                                <i class="bi {{ $icon }}"></i>
+                                                {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}
+                                            </span>
+                                        </div>
                                         <div class="d-flex align-items-center gap-2">
                                             @php
                                                 $firstImage = null;
@@ -626,7 +636,7 @@
                                                 $skus = is_array($order->diamond_skus) ? $order->diamond_skus : (!empty($order->diamond_sku) ? [$order->diamond_sku] : []);
                                                 $skuText = !empty($skus) ? implode(', ', $skus) : '—';
                                             @endphp
-
+                                            
                                             <div class="thumbnail-container">
                                                 @if($firstImage)
                                                     <img src="{{ $firstImage['url'] }}" alt="Product">
@@ -661,16 +671,7 @@
                                                     </span>
                                                 @endif
 
-                                                {{-- Diamond Status --}}
-                                                @php
-                                                    $statusKey = $order->diamond_status ?? 'processed';
-                                                    $color = $statusColors[$statusKey] ?? 'secondary';
-                                                    $icon = $statusIcons[$statusKey] ?? 'bi-circle';
-                                                @endphp
-                                                <span class="badge-item badge-status status-{{ $color }}">
-                                                    <i class="bi {{ $icon }}"></i>
-                                                    {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}
-                                                </span>
+                                                
 
                                                 {{-- SKU --}}
                                                 @if($skuText !== '—')
@@ -2147,7 +2148,7 @@
             padding: 15px;
             color: var(--dark);
             font-size: 0.95rem;
-            vertical-align: middle;
+            vertical-align: top;
         }
 
         .td-id {
@@ -2859,7 +2860,7 @@
             position: relative;
             border-radius: 8px;
             /* overflow: hidden; Removed to allow pop-out */
-            margin: 0 auto;
+            /* margin: 0 auto; */
             border: 1px solid var(--border);
             background: #fff;
             transition: transform 0.2s ease, z-index 0s;
@@ -3427,6 +3428,10 @@
 
         [data-theme="dark"] .table-row:hover {
             background: #17243a !important;
+        }
+        .custom-row span.badge-item {
+            padding: 7.8px 12px;
+            font-size: 14px;
         }
     </style>
 
