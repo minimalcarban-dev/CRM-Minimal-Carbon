@@ -192,6 +192,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::post('orders', [OrderController::class , 'store'])
             ->name('orders.store')
             ->middleware('admin.permission:orders.create');
+        Route::get('orders/check-stock-sku', [OrderController::class , 'checkStockSku'])
+            ->name('orders.check-stock-sku')
+            ->middleware('admin.permission:orders.create');
         Route::post('orders/sync-all-tracking', [OrderController::class , 'syncAllTracking'])
             ->name('orders.sync-all-tracking')
             ->middleware('admin.permission:orders.edit');
@@ -919,6 +922,43 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         );
 
         // ─────────────────────────────────────────────────────────────
+        // Jewellery Stock Management
+        // ─────────────────────────────────────────────────────────────
+        Route::prefix('jewellery-stock')->name('jewellery-stock.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\JewelleryStockController::class, 'index'])
+                ->name('index')
+                ->middleware('admin.permission:jewellery_stock.view');
+
+            Route::get('/create', [\App\Http\Controllers\JewelleryStockController::class, 'create'])
+                ->name('create')
+                ->middleware('admin.permission:jewellery_stock.create');
+
+            Route::post('/', [\App\Http\Controllers\JewelleryStockController::class, 'store'])
+                ->name('store')
+                ->middleware('admin.permission:jewellery_stock.create');
+
+            Route::get('/check-sku', [\App\Http\Controllers\JewelleryStockController::class, 'checkSku'])
+                ->name('check-sku')
+                ->middleware('admin.permission:jewellery_stock.view');
+
+            Route::get('/{jewellery_stock}', [\App\Http\Controllers\JewelleryStockController::class, 'show'])
+                ->name('show')
+                ->middleware('admin.permission:jewellery_stock.view');
+
+            Route::get('/{jewellery_stock}/edit', [\App\Http\Controllers\JewelleryStockController::class, 'edit'])
+                ->name('edit')
+                ->middleware('admin.permission:jewellery_stock.edit');
+
+            Route::put('/{jewellery_stock}', [\App\Http\Controllers\JewelleryStockController::class, 'update'])
+                ->name('update')
+                ->middleware('admin.permission:jewellery_stock.edit');
+
+            Route::delete('/{jewellery_stock}', [\App\Http\Controllers\JewelleryStockController::class, 'destroy'])
+                ->name('destroy')
+                ->middleware('admin.permission:jewellery_stock.delete');
+        });
+
+        // ─────────────────────────────────────────────────────────────
         // Package Handover & Return Management System
         // ─────────────────────────────────────────────────────────────
         Route::prefix('packages')->name('packages.')->group(function () {
@@ -957,30 +997,41 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         // ─────────────────────────────────────────────────────────────
         Route::prefix('shopify')->name('shopify.')->group(function () {
             Route::get('settings', [\App\Http\Controllers\ShopifyController::class , 'settings'])
-                ->name('settings');
+                ->name('settings')
+                ->middleware('admin.permission:shopify.settings');
             Route::post('settings', [\App\Http\Controllers\ShopifyController::class , 'saveSettings'])
-                ->name('settings.save');
+                ->name('settings.save')
+                ->middleware('admin.permission:shopify.settings');
             Route::post('test-connection', [\App\Http\Controllers\ShopifyController::class , 'testConnection'])
-                ->name('test-connection');
+                ->name('test-connection')
+                ->middleware('admin.permission:shopify.settings');
 
             Route::get('products', [\App\Http\Controllers\ShopifyController::class , 'products'])
-                ->name('products');
+                ->name('products')
+                ->middleware('admin.permission:shopify.products.view');
             Route::post('products/import', [\App\Http\Controllers\ShopifyController::class , 'importProducts'])
-                ->name('products.import');
+                ->name('products.import')
+                ->middleware('admin.permission:shopify.products.import');
             Route::get('products/{id}', [\App\Http\Controllers\ShopifyController::class , 'showProduct'])
-                ->name('products.show');
+                ->name('products.show')
+                ->middleware('admin.permission:shopify.products.view');
             Route::post('products/{id}/export', [\App\Http\Controllers\ShopifyController::class , 'exportProduct'])
-                ->name('products.export');
+                ->name('products.export')
+                ->middleware('admin.permission:shopify.products.export');
             Route::post('products/{id}/sync', [\App\Http\Controllers\ShopifyController::class , 'syncProduct'])
-                ->name('products.sync');
+                ->name('products.sync')
+                ->middleware('admin.permission:shopify.products.export');
 
             Route::get('collections', [\App\Http\Controllers\ShopifyController::class , 'collections'])
-                ->name('collections');
+                ->name('collections')
+                ->middleware('admin.permission:shopify.collections');
             Route::post('collections/import', [\App\Http\Controllers\ShopifyController::class , 'importCollections'])
-                ->name('collections.import');
+                ->name('collections.import')
+                ->middleware('admin.permission:shopify.collections');
 
             Route::get('logs', [\App\Http\Controllers\ShopifyController::class , 'syncLogs'])
-                ->name('logs');
+                ->name('logs')
+                ->middleware('admin.permission:shopify.logs');
         }
         );
     });

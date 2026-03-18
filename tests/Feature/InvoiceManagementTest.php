@@ -5,7 +5,7 @@ use App\Models\Admin;
 use App\Models\Permission;
 use App\Models\Invoice;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+
 
 test('admin with invoices.create can create invoice with items', function () {
     $createPerm = Permission::create([

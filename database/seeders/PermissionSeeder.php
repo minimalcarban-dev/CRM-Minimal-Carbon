@@ -176,6 +176,15 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Mail Logs', 'slug' => 'mail.view_logs', 'description' => 'View email logs', 'category' => 'mail'],
             ['name' => 'Mail Settings', 'slug' => 'mail.settings', 'description' => 'Configure mail settings', 'category' => 'mail'],
 
+            // Shopify
+            ['name' => 'View Shopify', 'slug' => 'shopify.view', 'description' => 'Access Shopify module', 'category' => 'shopify'],
+            ['name' => 'Shopify Settings', 'slug' => 'shopify.settings', 'description' => 'Manage Shopify settings and connection', 'category' => 'shopify'],
+            ['name' => 'View Shopify Products', 'slug' => 'shopify.products.view', 'description' => 'View Shopify products', 'category' => 'shopify'],
+            ['name' => 'Import Shopify Products', 'slug' => 'shopify.products.import', 'description' => 'Import products from Shopify', 'category' => 'shopify'],
+            ['name' => 'Export Shopify Products', 'slug' => 'shopify.products.export', 'description' => 'Export products to Shopify', 'category' => 'shopify'],
+            ['name' => 'Shopify Collections', 'slug' => 'shopify.collections', 'description' => 'Manage Shopify collections', 'category' => 'shopify'],
+            ['name' => 'View Shopify Logs', 'slug' => 'shopify.logs', 'description' => 'View Shopify sync logs', 'category' => 'shopify'],
+
         ];
 
         foreach ($perms as $p) {

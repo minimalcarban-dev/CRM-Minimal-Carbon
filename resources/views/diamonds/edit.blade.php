@@ -296,11 +296,11 @@
                                 <input type="number" step="0.01" min="0" max="100" class="form-control"
                                     id="offer_calculation" name="offer_calculation"
                                     value="{{ old('offer_calculation', $diamond->offer_calculation) }}"
-                                    placeholder="Discount %">
+                                    placeholder="Offer %">
                             </div>
                             <div class="form-hint">
                                 <i class="bi bi-info-circle"></i>
-                                Discount percentage (0-100%)
+                                Markup (0-100%)
                             </div>
                         </div>
 
@@ -314,7 +314,7 @@
                             </div>
                             <div class="form-hint">
                                 <i class="bi bi-info-circle"></i>
-                                Auto-calculated: Listing Price - (Listing Price × Offer %)
+                                Auto-calculated: Listing Price + (Listing Price × Offer %)
                             </div>
                         </div>
 
@@ -601,6 +601,8 @@
                 const profitEl = document.getElementById('profit');
                 const perCtEl = document.getElementById('per_ct');
                 const weightEl = document.getElementById('weight');
+                const marginEl = document.getElementById('margin');
+                const listingPriceEl = document.getElementById('listing_price');
 
                 const DAILY_RATE = 0.0005; // 0.05% per day
 
@@ -612,8 +614,23 @@
                     if (perCt > 0 && weight > 0) {
                         purchasePriceEl.value = (perCt * weight).toFixed(2);
                     }
+                    computeListingPrice();
                     // After updating purchase price, recalculate all dependent values
                     computeDerived();
+                }
+
+                // Formula: listing_price = purchase_price * (1 + margin/100)
+                function computeListingPrice() {
+                    const purchasePrice = parseFloat(purchasePriceEl?.value || '0');
+                    const margin = parseFloat(marginEl?.value || '0');
+
+                    if (purchasePrice > 0 && margin >= 0) {
+                        listingPriceEl.value = (purchasePrice * (1 + (margin / 100))).toFixed(2);
+                    } else if (purchasePrice > 0 && (marginEl?.value === '' || marginEl?.value === null)) {
+                        listingPriceEl.value = purchasePrice.toFixed(2);
+                    } else {
+                        listingPriceEl.value = '';
+                    }
                 }
 
                 function computeDerived() {
@@ -658,7 +675,7 @@
                 }
 
                 // --- ACTUAL LISTING PRICE CALCULATION ---
-                // Formula: listing_price - (listing_price × offer_calculation / 100)
+                // Formula: listing_price + (listing_price × offer_calculation / 100)
                 function computeActualListingPrice() {
                     const listingPriceEl = document.getElementById('listing_price');
                     const offerCalculationEl = document.getElementById('offer_calculation');
@@ -668,8 +685,8 @@
                     const offerCalculation = parseFloat(offerCalculationEl?.value || '0');
 
                     if (listingPrice > 0) {
-                        const discount = listingPrice * (offerCalculation / 100);
-                        actualListingPriceEl.value = (listingPrice - discount).toFixed(2);
+                        const offerAmount = listingPrice * (offerCalculation / 100);
+                        actualListingPriceEl.value = (listingPrice + offerAmount).toFixed(2);
                     } else {
                         actualListingPriceEl.value = '';
                     }
@@ -678,6 +695,13 @@
                 // Listen for per_ct and weight changes to auto-calculate purchase_price
                 ['input', 'change'].forEach(evt => {
                     [perCtEl, weightEl].forEach(el => el && el.addEventListener(evt, computePurchasePrice));
+                });
+
+                ['input', 'change'].forEach(evt => {
+                    [purchasePriceEl, marginEl].forEach(el => el && el.addEventListener(evt, () => {
+                        computeListingPrice();
+                        computeActualListingPrice();
+                    }));
                 });
 
                 // Listen for other fields that affect derived calculations
@@ -693,6 +717,7 @@
                 });
 
                 computeDerived();
+                computeListingPrice();
                 computeActualListingPrice();
             });
         </script>

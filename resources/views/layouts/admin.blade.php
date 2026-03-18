@@ -39,10 +39,10 @@
             $requestHost = request()->getHost();
             $localHosts = ['localhost', '127.0.0.1', '::1'];
 
-            $useViteDevServer = (bool) $hotHost && (
-                $hotHost === $requestHost ||
-                (in_array($hotHost, $localHosts, true) && in_array($requestHost, $localHosts, true))
-            );
+            $useViteDevServer =
+                (bool) $hotHost &&
+                ($hotHost === $requestHost ||
+                    (in_array($hotHost, $localHosts, true) && in_array($requestHost, $localHosts, true)));
         }
 
         if (!$useViteDevServer) {
@@ -53,7 +53,7 @@
         }
     @endphp
 
-    @if($useViteDevServer)
+    @if ($useViteDevServer)
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @elseif(is_array($viteManifest))
         @php
@@ -72,10 +72,10 @@
             }
         @endphp
 
-        @foreach($cssFiles as $cssFile)
+        @foreach ($cssFiles as $cssFile)
             <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
         @endforeach
-        @if($mainJs)
+        @if ($mainJs)
             <script type="module" src="{{ asset('build/' . $mainJs) }}"></script>
         @endif
     @else
@@ -2832,7 +2832,8 @@
                     </a>
                 </li>
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['chat.access']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['chat.access']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('chat.*') ? 'active cat-system' : '' }}"
                             href="{{ route('chat.index') }}" data-tooltip="Chat" id="chatSidebarLink">
@@ -2844,11 +2845,27 @@
                 @endif
 
                 {{-- ── ORDERS & SALES ── --}}
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create', 'sales.view_all', 'invoices.view', 'invoices.create', 'purchases.view', 'purchases.create', 'expenses.view', 'expenses.create', 'gold-tracking.view', 'gold-tracking.create', 'factories.view', 'factories.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny([
+                                'orders.view',
+                                'orders.create',
+                                'sales.view_all',
+                                'invoices.view',
+                                'invoices.create',
+                                'purchases.view',
+                                'purchases.create',
+                                'expenses.view',
+                                'expenses.create',
+                                'gold-tracking.view',
+                                'gold-tracking.create',
+                                'factories.view',
+                                'factories.create',
+                            ]))
                     <div class="nav-section-label">Orders & Sales</div>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['orders.view', 'orders.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('orders.*') && !request()->routeIs('orders.drafts.*') ? 'active cat-orders' : '' }}"
                             href="{{ route('orders.index') }}" data-tooltip="Orders">
@@ -2858,7 +2875,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['sales.view_all']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['sales.view_all']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('companies.all-sales-dashboard') ? 'active cat-orders' : '' }}"
                             href="{{ route('companies.all-sales-dashboard') }}" data-tooltip="All Sales">
@@ -2868,7 +2886,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['invoices.view', 'invoices.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['invoices.view', 'invoices.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('invoices.*') ? 'active cat-finance' : '' }}"
                             href="{{ route('invoices.index') }}" data-tooltip="Invoices">
@@ -2880,12 +2899,28 @@
 
                 {{-- ── EXPENSES (moved under Orders & Sales) ── --}}
                 @php
-                    $expensesActive = request()->routeIs(['purchases.*', 'expenses.*', 'gold-tracking.*', 'factories.*']);
+                    $expensesActive = request()->routeIs([
+                        'purchases.*',
+                        'expenses.*',
+                        'gold-tracking.*',
+                        'factories.*',
+                    ]);
                 @endphp
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['purchases.view', 'purchases.create', 'expenses.view', 'expenses.create', 'gold-tracking.view', 'gold-tracking.create', 'factories.view', 'factories.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny([
+                                'purchases.view',
+                                'purchases.create',
+                                'expenses.view',
+                                'expenses.create',
+                                'gold-tracking.view',
+                                'gold-tracking.create',
+                                'factories.view',
+                                'factories.create',
+                            ]))
                     <div class="nav-dropdown">
-                        <button class="dropdown-toggle-link {{ $expensesActive ? 'active' : '' }}" id="expensesDropdown"
-                            data-tooltip="Expenses" data-initial-open="{{ $expensesActive ? '1' : '0' }}" type="button"
+                        <button class="dropdown-toggle-link {{ $expensesActive ? 'active' : '' }}"
+                            id="expensesDropdown" data-tooltip="Expenses"
+                            data-initial-open="{{ $expensesActive ? '1' : '0' }}" type="button"
                             aria-expanded="false" style="padding-left: 23px;">
                             <div class="left-content">
                                 <i class="bi bi-cash-stack main-icon"></i>
@@ -2937,11 +2972,23 @@
                 @endif
 
                 {{-- ── INVENTORY ── --}}
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create', 'melee_diamonds.view', 'melee_diamonds.create', 'packages.view', 'packages.create', 'diamond_jobs.view']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny([
+                                'diamonds.view',
+                                'diamonds.create',
+                                'melee_diamonds.view',
+                                'melee_diamonds.create',
+                                'packages.view',
+                                'packages.create',
+                                'diamond_jobs.view',
+                                'jewellery_stock.view',
+                                'jewellery_stock.create',
+                            ]))
                     <div class="nav-section-label">Inventory</div>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['diamonds.view', 'diamonds.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('diamond.index') || (request()->routeIs('diamond.*') && !request()->routeIs('diamond.job.*')) ? 'active cat-inventory' : '' }}"
                             href="{{ route('diamond.index') }}" data-tooltip="Diamonds">
@@ -2951,7 +2998,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['melee_diamonds.view', 'melee_diamonds.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['melee_diamonds.view', 'melee_diamonds.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('melee.*') ? 'active cat-inventory' : '' }}"
                             href="{{ route('melee.index') }}" data-tooltip="Melee Inventory">
@@ -2961,7 +3009,19 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['packages.view', 'packages.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.view', 'jewellery_stock.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('jewellery-stock.*') ? 'active cat-inventory' : '' }}"
+                            href="{{ route('jewellery-stock.index') }}" data-tooltip="Jewellery Stock">
+                            <i class="bi bi-gem"></i>
+                            <span>Jewellery Stock</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['packages.view', 'packages.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('packages.*') ? 'active cat-inventory' : '' }}"
                             href="{{ route('packages.index') }}" data-tooltip="Packages">
@@ -2971,7 +3031,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_jobs.view']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['diamond_jobs.view']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('diamond.job.*') ? 'active cat-inventory' : '' }}"
                             href="{{ route('diamond.job.history') }}" data-tooltip="Job History">
@@ -2982,11 +3043,13 @@
                 @endif
 
                 {{-- ── CLIENTS ── --}}
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['parties.view', 'parties.create', 'clients.view', 'leads.view', 'leads.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['parties.view', 'parties.create', 'clients.view', 'leads.view', 'leads.create']))
                     <div class="nav-section-label">Clients</div>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['parties.view', 'parties.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['parties.view', 'parties.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('parties.*') ? 'active cat-clients' : '' }}"
                             href="{{ route('parties.index') }}" data-tooltip="Parties">
@@ -2996,7 +3059,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['clients.view']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('clients.*') ? 'active cat-clients' : '' }}"
                             href="{{ route('clients.index') }}" data-tooltip="Clients">
@@ -3006,7 +3070,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['leads.view', 'leads.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['leads.view', 'leads.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('leads.*') ? 'active cat-clients' : '' }}"
                             href="{{ route('leads.index') }}" data-tooltip="Leads Inbox">
@@ -3017,11 +3082,20 @@
                 @endif
 
                 {{-- ── SYSTEM ── --}}
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create', 'permissions.view', 'permissions.create', 'meta_leads.settings', 'settings.manage']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny([
+                                'admins.view',
+                                'admins.create',
+                                'permissions.view',
+                                'permissions.create',
+                                'meta_leads.settings',
+                                'settings.manage',
+                            ]))
                     <div class="nav-section-label">System</div>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('admins.*') ? 'active cat-system' : '' }}"
                             href="{{ route('admins.index') }}" data-tooltip="Admins">
@@ -3031,7 +3105,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['permissions.view', 'permissions.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['permissions.view', 'permissions.create']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active cat-system' : '' }}"
                             href="{{ route('permissions.index') }}" data-tooltip="Permissions">
@@ -3041,7 +3116,8 @@
                     </li>
                 @endif
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['meta_leads.settings']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['meta_leads.settings']))
                     <li>
                         <a class="nav-link {{ request()->routeIs('settings.meta.*') ? 'active cat-system' : '' }}"
                             href="{{ route('settings.meta.index') }}" data-tooltip="Meta Settings">
@@ -3052,52 +3128,68 @@
                 @endif
 
                 {{-- ── SHOPIFY ── --}}
-                @php
-                    $shopifyActive = request()->routeIs('shopify.*');
-                @endphp
-                <div class="nav-dropdown">
-                    <button class="dropdown-toggle-link {{ $shopifyActive ? 'active' : '' }}" id="shopifyDropdown"
-                        data-tooltip="Shopify" data-initial-open="{{ $shopifyActive ? '1' : '0' }}" type="button"
-                        aria-expanded="false" style="padding-left: 23px;">
-                        <div class="left-content">
-                            <i class="bi bi-shop main-icon"></i>
-                            <span style="padding-left: 15px">Shopify</span>
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['shopify.view']))
+                    @php
+                        $shopifyActive = request()->routeIs('shopify.*');
+                    @endphp
+                    <div class="nav-dropdown">
+                        <button class="dropdown-toggle-link {{ $shopifyActive ? 'active' : '' }}"
+                            id="shopifyDropdown" data-tooltip="Shopify"
+                            data-initial-open="{{ $shopifyActive ? '1' : '0' }}" type="button"
+                            aria-expanded="false" style="padding-left: 23px;">
+                            <div class="left-content">
+                                <i class="bi bi-shop main-icon"></i>
+                                <span style="padding-left: 15px">Shopify</span>
+                            </div>
+                            <i class="bi bi-chevron-down chevron-icon"></i>
+                        </button>
+                        <div class="dropdown-menu-custom {{ $shopifyActive ? 'show' : '' }}" id="shopifyMenu">
+                            <ul class="nav">
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['shopify.settings']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('shopify.settings') ? 'active' : '' }}"
+                                            href="{{ route('shopify.settings') }}" data-tooltip="Shopify Settings">
+                                            <i class="bi bi-gear"></i>
+                                            <span>Settings</span>
+                                        </a>
+                                    </li>
+                                @endif
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['shopify.products.view']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('shopify.products*') ? 'active' : '' }}"
+                                            href="{{ route('shopify.products') }}" data-tooltip="Products">
+                                            <i class="bi bi-box-seam"></i>
+                                            <span>Products</span>
+                                        </a>
+                                    </li>
+                                @endif
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['shopify.collections']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('shopify.collections') ? 'active' : '' }}"
+                                            href="{{ route('shopify.collections') }}" data-tooltip="Collections">
+                                            <i class="bi bi-collection"></i>
+                                            <span>Collections</span>
+                                        </a>
+                                    </li>
+                                @endif
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['shopify.logs']))
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('shopify.logs') ? 'active' : '' }}"
+                                            href="{{ route('shopify.logs') }}" data-tooltip="Sync Logs">
+                                            <i class="bi bi-journal-text"></i>
+                                            <span>Sync Logs</span>
+                                        </a>
+                                    </li>
+                                @endif
+                            </ul>
                         </div>
-                        <i class="bi bi-chevron-down chevron-icon"></i>
-                    </button>
-                    <div class="dropdown-menu-custom {{ $shopifyActive ? 'show' : '' }}" id="shopifyMenu">
-                        <ul class="nav">
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('shopify.settings') ? 'active' : '' }}"
-                                    href="{{ route('shopify.settings') }}" data-tooltip="Shopify Settings">
-                                    <i class="bi bi-gear"></i>
-                                    <span>Settings</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('shopify.products*') ? 'active' : '' }}"
-                                    href="{{ route('shopify.products') }}" data-tooltip="Products">
-                                    <i class="bi bi-box-seam"></i>
-                                    <span>Products</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('shopify.collections') ? 'active' : '' }}"
-                                    href="{{ route('shopify.collections') }}" data-tooltip="Collections">
-                                    <i class="bi bi-collection"></i>
-                                    <span>Collections</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('shopify.logs') ? 'active' : '' }}"
-                                    href="{{ route('shopify.logs') }}" data-tooltip="Sync Logs">
-                                    <i class="bi bi-journal-text"></i>
-                                    <span>Sync Logs</span>
-                                </a>
-                            </li>
-                        </ul>
                     </div>
-                </div>
+                @endif
 
                 {{-- Tools Dropdown --}}
                 @php
@@ -3128,14 +3220,15 @@
                 </div>
 
 
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['mail.access']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['mail.access']))
                     @php
                         $emailActive = request()->routeIs('email.*');
                     @endphp
                     <div class="nav-dropdown">
                         <button class="dropdown-toggle-link {{ $emailActive ? 'active' : '' }}" id="emailDropdown"
-                            data-tooltip="Email System" data-initial-open="{{ $emailActive ? '1' : '0' }}" type="button"
-                            aria-expanded="false" style="padding-left: 23px;">
+                            data-tooltip="Email System" data-initial-open="{{ $emailActive ? '1' : '0' }}"
+                            type="button" aria-expanded="false" style="padding-left: 23px;">
                             <div class="left-content">
                                 <i class="bi bi-envelope-check main-icon"></i>
                                 <span style="padding-left: 15px">Email System</span>
@@ -3152,12 +3245,16 @@
                                     </a>
                                 </li>
                                 @php
-                                    $recentAccount = \App\Modules\Email\Models\EmailAccount::where('is_active', true)->first();
+                                    $recentAccount = \App\Modules\Email\Models\EmailAccount::where(
+                                        'is_active',
+                                        true,
+                                    )->first();
                                 @endphp
-                                @if($recentAccount)
+                                @if ($recentAccount)
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('email.inbox') ? 'active' : '' }}"
-                                            href="{{ route('email.inbox', $recentAccount->id) }}" data-tooltip="Inbox">
+                                            href="{{ route('email.inbox', $recentAccount->id) }}"
+                                            data-tooltip="Inbox">
                                             <i class="bi bi-inbox-fill"></i>
                                             <span>Inbox</span>
                                         </a>
@@ -3172,12 +3269,46 @@
 
 
                 @php
-                    $attributesActive = request()->routeIs(['companies.*', 'metal_types.*', 'setting_types.*', 'closure_types.*', 'ring_sizes.*', 'stone_types.*', 'stone_shapes.*', 'stone_colors.*', 'diamond_clarities.*', 'diamond_cuts.*']);
+                    $attributesActive = request()->routeIs([
+                        'companies.*',
+                        'metal_types.*',
+                        'setting_types.*',
+                        'closure_types.*',
+                        'ring_sizes.*',
+                        'stone_types.*',
+                        'stone_shapes.*',
+                        'stone_colors.*',
+                        'diamond_clarities.*',
+                        'diamond_cuts.*',
+                    ]);
                 @endphp
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['companies.view', 'companies.create', 'metal_types.view', 'metal_types.create', 'setting_types.view', 'setting_types.create', 'closure_types.view', 'closure_types.create', 'ring_sizes.view', 'ring_sizes.create', 'stone_types.view', 'stone_types.create', 'stone_shapes.view', 'stone_shapes.create', 'stone_colors.view', 'stone_colors.create', 'diamond_clarities.view', 'diamond_clarities.create', 'diamond_cuts.view', 'diamond_cuts.create']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny([
+                                'companies.view',
+                                'companies.create',
+                                'metal_types.view',
+                                'metal_types.create',
+                                'setting_types.view',
+                                'setting_types.create',
+                                'closure_types.view',
+                                'closure_types.create',
+                                'ring_sizes.view',
+                                'ring_sizes.create',
+                                'stone_types.view',
+                                'stone_types.create',
+                                'stone_shapes.view',
+                                'stone_shapes.create',
+                                'stone_colors.view',
+                                'stone_colors.create',
+                                'diamond_clarities.view',
+                                'diamond_clarities.create',
+                                'diamond_cuts.view',
+                                'diamond_cuts.create',
+                            ]))
                     <div class="nav-dropdown">
-                        <button class="dropdown-toggle-link {{ $attributesActive ? 'active' : '' }}" id="attributesDropdown"
-                            data-tooltip="Attributes" data-initial-open="{{ $attributesActive ? '1' : '0' }}" type="button"
+                        <button class="dropdown-toggle-link {{ $attributesActive ? 'active' : '' }}"
+                            id="attributesDropdown" data-tooltip="Attributes"
+                            data-initial-open="{{ $attributesActive ? '1' : '0' }}" type="button"
                             aria-expanded="false" style="padding-left: 23px;">
                             <div class="left-content">
                                 <i class="bi bi-grid main-icon"></i>
@@ -3187,7 +3318,8 @@
                         </button>
                         <div class="dropdown-menu-custom {{ $attributesActive ? 'show' : '' }}" id="attributesMenu">
                             <ul class="nav">
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['companies.view', 'companies.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['companies.view', 'companies.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}"
                                             href="{{ route('companies.index') }}" data-tooltip="Companies">
@@ -3197,7 +3329,8 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['metal_types.view', 'metal_types.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['metal_types.view', 'metal_types.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('metal_types.*') ? 'active' : '' }}"
                                             href="{{ route('metal_types.index') }}" data-tooltip="Metal Types">
@@ -3207,7 +3340,8 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['setting_types.view', 'setting_types.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['setting_types.view', 'setting_types.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('setting_types.*') ? 'active' : '' }}"
                                             href="{{ route('setting_types.index') }}" data-tooltip="Setting Types">
@@ -3217,7 +3351,8 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['closure_types.view', 'closure_types.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['closure_types.view', 'closure_types.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('closure_types.*') ? 'active' : '' }}"
                                             href="{{ route('closure_types.index') }}" data-tooltip="Closure Types">
@@ -3227,7 +3362,8 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['ring_sizes.view', 'ring_sizes.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['ring_sizes.view', 'ring_sizes.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('ring_sizes.*') ? 'active' : '' }}"
                                             href="{{ route('ring_sizes.index') }}" data-tooltip="Ring Sizes">
@@ -3237,7 +3373,8 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_types.view', 'stone_types.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['stone_types.view', 'stone_types.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('stone_types.*') ? 'active' : '' }}"
                                             href="{{ route('stone_types.index') }}" data-tooltip="Stone Types">
@@ -3247,7 +3384,8 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_shapes.view', 'stone_shapes.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['stone_shapes.view', 'stone_shapes.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('stone_shapes.*') ? 'active' : '' }}"
                                             href="{{ route('stone_shapes.index') }}" data-tooltip="Stone Shapes">
@@ -3257,7 +3395,8 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['stone_colors.view', 'stone_colors.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['stone_colors.view', 'stone_colors.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('stone_colors.*') ? 'active' : '' }}"
                                             href="{{ route('stone_colors.index') }}" data-tooltip="Stone Colors">
@@ -3267,17 +3406,20 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_clarities.view', 'diamond_clarities.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['diamond_clarities.view', 'diamond_clarities.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('diamond_clarities.*') ? 'active' : '' }}"
-                                            href="{{ route('diamond_clarities.index') }}" data-tooltip="Diamond Clarities">
+                                            href="{{ route('diamond_clarities.index') }}"
+                                            data-tooltip="Diamond Clarities">
                                             <i class="bi bi-card-list"></i>
                                             <span>Diamond Clarities</span>
                                         </a>
                                     </li>
                                 @endif
 
-                                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamond_cuts.view', 'diamond_cuts.create']))
+                                @if (auth()->guard('admin')->user() &&
+                                        auth()->guard('admin')->user()->canAccessAny(['diamond_cuts.view', 'diamond_cuts.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('diamond_cuts.*') ? 'active' : '' }}"
                                             href="{{ route('diamond_cuts.index') }}" data-tooltip="Diamond Cuts">
@@ -3302,8 +3444,9 @@
 
             <div class="navbar-left">
                 <button class="top-sidebar-toggle" id="topSidebarToggle" title="Toggle sidebar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <rect width="18" height="18" x="3" y="3" rx="2"></rect>
                         <path d="M9 3v18"></path>
                     </svg>
@@ -3332,7 +3475,8 @@
                 </button>
 
                 {{-- IP Security --}}
-                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
                     <a href="{{ route('settings.security.index') }}"
                         class="dark-mode-btn {{ request()->routeIs('settings.security.*') ? 'active' : '' }}"
                         title="IP Security"
@@ -3345,7 +3489,7 @@
                 <div class="notification-dropdown">
                     <button class="notification-btn" id="notificationBtn">
                         <i class="bi bi-bell"></i>
-                        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->unreadNotifications->count() > 0)
+                        @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->unreadNotifications->count() > 0)
                             <span
                                 class="notification-badge">{{ auth()->guard('admin')->user()->unreadNotifications->count() }}</span>
                         @endif
@@ -3355,7 +3499,7 @@
                         {{-- Header --}}
                         <div class="notification-header">
                             <h6><i class="bi bi-bell-fill"></i> Notifications</h6>
-                            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->unreadNotifications->count() > 0)
+                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->unreadNotifications->count() > 0)
                                 <a href="#" class="mark-all-read" id="markAllReadDropdown">
                                     <i class="bi bi-check2-all"></i> Mark all read
                                 </a>
@@ -3364,11 +3508,11 @@
 
                         {{-- List --}}
                         <div class="notification-list">
-                            @if(auth()->guard('admin')->user())
+                            @if (auth()->guard('admin')->user())
 
                                 {{-- UNREAD --}}
-                                @if(auth()->guard('admin')->user()->unreadNotifications->count() > 0)
-                                    @foreach(auth()->guard('admin')->user()->unreadNotifications as $notification)
+                                @if (auth()->guard('admin')->user()->unreadNotifications->count() > 0)
+                                    @foreach (auth()->guard('admin')->user()->unreadNotifications as $notification)
                                         @php
                                             $t = strtolower($notification->data['title'] ?? '');
                                             $nType = $notification->type;
@@ -3376,11 +3520,21 @@
                                                 $ic = 'bi-x-circle-fill';
                                                 $cl = 'red';
                                                 $tag = 'Cancelled';
-                                            } elseif ($nType === 'App\Notifications\DiamondSoldNotification' || (str_contains($t, 'diamond') && str_contains($t, 'sold'))) {
+                                            } elseif (
+                                                $nType === 'App\Notifications\DiamondSoldNotification' ||
+                                                (str_contains($t, 'diamond') && str_contains($t, 'sold'))
+                                            ) {
                                                 $ic = 'bi-gem';
                                                 $cl = 'green';
                                                 $tag = 'Sold Out';
-                                            } elseif (in_array($nType, ['App\Notifications\DiamondAssignedNotification', 'App\Notifications\DiamondReassignedNotification']) || str_contains($t, 'diamond') || str_contains($t, 'melee')) {
+                                            } elseif (
+                                                in_array($nType, [
+                                                    'App\Notifications\DiamondAssignedNotification',
+                                                    'App\Notifications\DiamondReassignedNotification',
+                                                ]) ||
+                                                str_contains($t, 'diamond') ||
+                                                str_contains($t, 'melee')
+                                            ) {
                                                 $ic = 'bi-gem';
                                                 $cl = 'purple';
                                                 $tag = 'Diamond';
@@ -3414,7 +3568,8 @@
                                                 $tag = 'Alert';
                                             }
                                         @endphp
-                                        <div class="notification-item unread" data-notification-id="{{ $notification->id }}"
+                                        <div class="notification-item unread"
+                                            data-notification-id="{{ $notification->id }}"
                                             data-url="{{ $notification->data['url'] ?? '#' }}">
 
                                             <div class="notification-icon notif-icon-{{ $cl }}">
@@ -3423,22 +3578,25 @@
 
                                             <div class="notification-content">
                                                 <div class="notification-title-row">
-                                                    <span class="notif-type-tag tag-{{ $cl }}">{{ $tag }}</span>
+                                                    <span
+                                                        class="notif-type-tag tag-{{ $cl }}">{{ $tag }}</span>
                                                     <strong
                                                         style="font-size:0.8rem;color:var(--dark);">{{ $notification->data['title'] ?? 'Notification' }}</strong>
                                                 </div>
                                                 <p class="notification-message">{!! $notification->data['message'] ?? '' !!}</p>
-                                                @if(isset($notification->data['message_preview']) && $nType === 'App\Notifications\ChatMentionNotification')
+                                                @if (isset($notification->data['message_preview']) && $nType === 'App\Notifications\ChatMentionNotification')
                                                     <p class="notification-preview">{!! $notification->data['message_preview'] !!}</p>
                                                 @endif
-                                                @if($nType === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
-                                                    <a href="{{ $notification->data['action_url'] }}" class="notif-download-link"
+                                                @if ($nType === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
+                                                    <a href="{{ $notification->data['action_url'] }}"
+                                                        class="notif-download-link"
                                                         onclick="event.stopPropagation();">
                                                         <i class="bi bi-download"></i> Download File
                                                     </a>
                                                 @endif
                                                 <div class="notification-time">
-                                                    <i class="bi bi-clock"></i> {{ $notification->created_at->diffForHumans() }}
+                                                    <i class="bi bi-clock"></i>
+                                                    {{ $notification->created_at->diffForHumans() }}
                                                 </div>
                                             </div>
 
@@ -3448,7 +3606,6 @@
                                             </button>
                                         </div>
                                     @endforeach
-
                                 @else
                                     <div class="notification-empty">
                                         <div class="empty-icon-wrap"><i class="bi bi-bell-slash"></i></div>
@@ -3457,9 +3614,9 @@
                                 @endif
 
                                 {{-- READ (Earlier) --}}
-                                @if(auth()->guard('admin')->user()->readNotifications->count() > 0)
+                                @if (auth()->guard('admin')->user()->readNotifications->count() > 0)
                                     <div class="notification-divider">Earlier</div>
-                                    @foreach(auth()->guard('admin')->user()->readNotifications->take(5) as $notification)
+                                    @foreach (auth()->guard('admin')->user()->readNotifications->take(5) as $notification)
                                         @php
                                             $t = strtolower($notification->data['title'] ?? '');
                                             $nType = $notification->type;
@@ -3467,11 +3624,21 @@
                                                 $ic = 'bi-x-circle-fill';
                                                 $cl = 'red';
                                                 $tag = 'Cancelled';
-                                            } elseif ($nType === 'App\Notifications\DiamondSoldNotification' || (str_contains($t, 'diamond') && str_contains($t, 'sold'))) {
+                                            } elseif (
+                                                $nType === 'App\Notifications\DiamondSoldNotification' ||
+                                                (str_contains($t, 'diamond') && str_contains($t, 'sold'))
+                                            ) {
                                                 $ic = 'bi-gem';
                                                 $cl = 'green';
                                                 $tag = 'Sold Out';
-                                            } elseif (in_array($nType, ['App\Notifications\DiamondAssignedNotification', 'App\Notifications\DiamondReassignedNotification']) || str_contains($t, 'diamond') || str_contains($t, 'melee')) {
+                                            } elseif (
+                                                in_array($nType, [
+                                                    'App\Notifications\DiamondAssignedNotification',
+                                                    'App\Notifications\DiamondReassignedNotification',
+                                                ]) ||
+                                                str_contains($t, 'diamond') ||
+                                                str_contains($t, 'melee')
+                                            ) {
                                                 $ic = 'bi-gem';
                                                 $cl = 'purple';
                                                 $tag = 'Diamond';
@@ -3505,34 +3672,37 @@
                                                 $tag = 'Alert';
                                             }
                                         @endphp
-                                        <div class="notification-item read" data-url="{{ $notification->data['url'] ?? '#' }}">
+                                        <div class="notification-item read"
+                                            data-url="{{ $notification->data['url'] ?? '#' }}">
                                             <div class="notification-icon notif-icon-{{ $cl }}">
                                                 <i class="bi {{ $ic }}"></i>
                                             </div>
                                             <div class="notification-content">
                                                 <div class="notification-title-row">
-                                                    <span class="notif-type-tag tag-{{ $cl }}">{{ $tag }}</span>
+                                                    <span
+                                                        class="notif-type-tag tag-{{ $cl }}">{{ $tag }}</span>
                                                     <strong
                                                         style="font-size:0.8rem;color:var(--dark);">{{ $notification->data['title'] ?? 'Notification' }}</strong>
                                                 </div>
                                                 <p class="notification-message">{!! $notification->data['message'] ?? '' !!}</p>
-                                                @if(isset($notification->data['message_preview']) && $nType === 'App\Notifications\ChatMentionNotification')
+                                                @if (isset($notification->data['message_preview']) && $nType === 'App\Notifications\ChatMentionNotification')
                                                     <p class="notification-preview">{!! $notification->data['message_preview'] !!}</p>
                                                 @endif
-                                                @if($nType === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
-                                                    <a href="{{ $notification->data['action_url'] }}" class="notif-download-link"
+                                                @if ($nType === 'App\Notifications\ExportCompleted' && isset($notification->data['action_url']))
+                                                    <a href="{{ $notification->data['action_url'] }}"
+                                                        class="notif-download-link"
                                                         onclick="event.stopPropagation();">
                                                         <i class="bi bi-download"></i> Download File
                                                     </a>
                                                 @endif
                                                 <div class="notification-time">
-                                                    <i class="bi bi-clock"></i> {{ $notification->created_at->diffForHumans() }}
+                                                    <i class="bi bi-clock"></i>
+                                                    {{ $notification->created_at->diffForHumans() }}
                                                 </div>
                                             </div>
                                         </div>
                                     @endforeach
                                 @endif
-
                             @else
                                 <div class="notification-empty">
                                     <div class="empty-icon-wrap"><i class="bi bi-lock"></i></div>
@@ -3618,30 +3788,33 @@
             <i class="bi bi-plus-lg"></i>
         </button>
         <div class="speed-dial-items" id="speedDialItems">
-            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.create']))
-                <div class="sd-item">
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['orders.create']))
+<div class="sd-item">
                     <span class="sd-label">New Order</span>
                     <a href="{{ route('orders.create') }}" class="sd-btn order" title="New Order">
                         <i class="bi bi-basket-fill"></i>
                     </a>
                 </div>
-            @endif
-            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.create']))
-                <div class="sd-item">
+@endif
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['diamonds.create']))
+<div class="sd-item">
                     <span class="sd-label">Add Diamond</span>
                     <a href="{{ route('diamond.create') }}" class="sd-btn diamond" title="Add Diamond">
                         <i class="bi bi-gem"></i>
                     </a>
                 </div>
-            @endif
-            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
-                <div class="sd-item">
+@endif
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+<div class="sd-item">
                     <span class="sd-label">View Clients</span>
                     <a href="{{ route('clients.index') }}" class="sd-btn client" title="Clients">
                         <i class="bi bi-people-fill"></i>
                     </a>
                 </div>
-            @endif
+@endif
         </div>
     </div> -->
 
@@ -3656,27 +3829,32 @@
             <i class="bi bi-house-fill"></i>
             <span>Home</span>
         </a>
-        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view']))
-            <a href="{{ route('orders.index') }}" class="mob-nav-item {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+        @if (auth()->guard('admin')->user() &&
+                auth()->guard('admin')->user()->canAccessAny(['orders.view']))
+            <a href="{{ route('orders.index') }}"
+                class="mob-nav-item {{ request()->routeIs('orders.*') ? 'active' : '' }}">
                 <i class="bi bi-basket2-fill"></i>
                 <span>Orders</span>
             </a>
         @endif
-        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
+        @if (auth()->guard('admin')->user() &&
+                auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
             <a href="{{ route('diamond.index') }}"
                 class="mob-nav-item {{ request()->routeIs('diamond.*') ? 'active' : '' }}">
                 <i class="bi bi-gem"></i>
                 <span>Diamonds</span>
             </a>
         @endif
-        @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+        @if (auth()->guard('admin')->user() &&
+                auth()->guard('admin')->user()->canAccessAny(['clients.view']))
             <a href="{{ route('clients.index') }}"
                 class="mob-nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}">
                 <i class="bi bi-people-fill"></i>
                 <span>Clients</span>
             </a>
         @endif
-        <button class="mob-nav-item" onclick="openCommandPalette()" style="border:none;background:none;cursor:pointer;">
+        <button class="mob-nav-item" onclick="openCommandPalette()"
+            style="border:none;background:none;cursor:pointer;">
             <i class="bi bi-search"></i>
             <span>Search</span>
         </button>
@@ -3700,10 +3878,10 @@
 
     <script>
         // Initialize Select2 for multi and single selects
-        jQuery(function ($) {
+        jQuery(function($) {
             try {
                 // Multi-selects
-                $('.select2-multiple').each(function () {
+                $('.select2-multiple').each(function() {
                     const $el = $(this);
                     const placeholder = $el.data('placeholder') || 'Select options';
                     $el.select2({
@@ -3716,7 +3894,7 @@
                 });
 
                 // Single-selects
-                $('.select2-single').each(function () {
+                $('.select2-single').each(function() {
                     const $el = $(this);
                     const placeholder = $el.data('placeholder') || 'Select an option';
                     $el.select2({
@@ -3733,37 +3911,38 @@
         });
 
         // Auto-hide unified flash alerts after ~4.5s
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const alerts = document.querySelectorAll('.alert-card');
-            alerts.forEach(function (el) {
-                setTimeout(function () {
+            alerts.forEach(function(el) {
+                setTimeout(function() {
                     el.classList.add('alert-hide');
-                    setTimeout(function () {
+                    setTimeout(function() {
                         try {
                             el.remove();
-                        } catch (e) { }
+                        } catch (e) {}
                     }, 600);
                 }, 4500);
             });
 
             // Show draft reminder toast on login (from session flash)
-            @if(session('draft_reminder'))
-                setTimeout(function () {
+            @if (session('draft_reminder'))
+                setTimeout(function() {
                     if (typeof showToast === 'function') {
-                        showToast('📋 {{ session("draft_reminder.message") }}', 8000);
+                        showToast('📋 {{ session('draft_reminder.message') }}', 8000);
                     }
                 }, 1000);
             @endif
         });
 
         // ── LIVE CLOCK (ticks every second, no page refresh needed) ──
-        (function () {
+        (function() {
             const clockEl = document.getElementById('liveClock');
             const greetingEl = document.getElementById('greetingChip');
 
             const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            ];
 
             function tick() {
                 const now = new Date();
@@ -3777,13 +3956,16 @@
                 const date = now.getDate();
 
                 // e.g. "Thu, Feb 26 · 1:48:34 PM"
-                if (clockEl) { clockEl.textContent = dayName + ', ' + monthStr + ' ' + date + ' \u00b7 ' + h12 + ':' + min + ':' + sec + ' ' + ampm; }
+                if (clockEl) {
+                    clockEl.textContent = dayName + ', ' + monthStr + ' ' + date + ' \u00b7 ' + h12 + ':' + min + ':' +
+                        sec + ' ' + ampm;
+                }
 
                 if (greetingEl) {
                     const greeting = h24 < 12 ? '\u2600\ufe0f Good Morning' :
                         h24 < 17 ? '\ud83c\udf24\ufe0f Good Afternoon' :
-                            '\ud83c\udf19 Good Evening';
-                    const name = '{{ auth()->guard("admin")->user()->name ?? "" }}'.split(' ')[0];
+                        '\ud83c\udf19 Good Evening';
+                    const name = '{{ auth()->guard('admin')->user()->name ?? '' }}'.split(' ')[0];
                     greetingEl.textContent = greeting + (name ? ', ' + name : '') + '!';
                 }
             }
@@ -3793,19 +3975,23 @@
         })();
 
         // ── MOBILE SEARCH HINT (show once per session on mobile) ──
-        (function () {
+        (function() {
             if (window.innerWidth <= 768 && !sessionStorage.getItem('mob_search_hint_shown')) {
                 sessionStorage.setItem('mob_search_hint_shown', '1');
                 var hint = document.getElementById('mobSearchHint');
                 if (hint) {
-                    setTimeout(function () { hint.classList.add('show'); }, 1200);
-                    setTimeout(function () { hint.classList.remove('show'); }, 5200);
+                    setTimeout(function() {
+                        hint.classList.add('show');
+                    }, 1200);
+                    setTimeout(function() {
+                        hint.classList.remove('show');
+                    }, 5200);
                 }
             }
         })();
 
         // Toast Helper
-        window.showToast = function (message, delay = 3000) {
+        window.showToast = function(message, delay = 3000) {
             try {
                 const container = document.getElementById('toast-container');
                 if (!container) return;
@@ -3896,11 +4082,11 @@
             }
 
             // Toggle dropdown on click (always respects manual toggle)
-            attributesDropdown.addEventListener('click', function (e) {
+            attributesDropdown.addEventListener('click', function(e) {
                 try {
                     e.preventDefault();
                     e.stopPropagation();
-                } catch (err) { }
+                } catch (err) {}
                 const isOpen = attributesMenu.classList.toggle('show');
                 this.classList.toggle('active');
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
@@ -3925,11 +4111,11 @@
                 expensesMenu.classList.remove('show');
             }
 
-            expensesDropdown.addEventListener('click', function (e) {
+            expensesDropdown.addEventListener('click', function(e) {
                 try {
                     e.preventDefault();
                     e.stopPropagation();
-                } catch (err) { }
+                } catch (err) {}
                 const isOpen = expensesMenu.classList.toggle('show');
                 this.classList.toggle('active');
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
@@ -3954,11 +4140,11 @@
                 emailMenu.classList.remove('show');
             }
 
-            emailDropdown.addEventListener('click', function (e) {
+            emailDropdown.addEventListener('click', function(e) {
                 try {
                     e.preventDefault();
                     e.stopPropagation();
-                } catch (err) { }
+                } catch (err) {}
                 const isOpen = emailMenu.classList.toggle('show');
                 this.classList.toggle('active');
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
@@ -3984,11 +4170,11 @@
                 toolsMenu.classList.remove('show');
             }
 
-            toolsDropdown.addEventListener('click', function (e) {
+            toolsDropdown.addEventListener('click', function(e) {
                 try {
                     e.preventDefault();
                     e.stopPropagation();
-                } catch (err) { }
+                } catch (err) {}
                 const isOpen = toolsMenu.classList.toggle('show');
                 this.classList.toggle('active');
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
@@ -4013,11 +4199,11 @@
                 shopifyMenu.classList.remove('show');
             }
 
-            shopifyDropdown.addEventListener('click', function (e) {
+            shopifyDropdown.addEventListener('click', function(e) {
                 try {
                     e.preventDefault();
                     e.stopPropagation();
-                } catch (err) { }
+                } catch (err) {}
                 const isOpen = shopifyMenu.classList.toggle('show');
                 this.classList.toggle('active');
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
@@ -4098,9 +4284,9 @@
         }
 
         // Handle notification item clicks for navigation
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.notification-item').forEach(item => {
-                item.addEventListener('click', function (e) {
+                item.addEventListener('click', function(e) {
                     // Don't navigate if clicking the close button
                     if (e.target.closest('.notification-close')) {
                         return;
@@ -4115,10 +4301,12 @@
                             fetch(`/admin/notifications/${notificationId}/read`, {
                                 method: 'POST',
                                 headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    'X-CSRF-TOKEN': document.querySelector(
+                                        'meta[name="csrf-token"]').content,
                                     'Content-Type': 'application/json'
                                 }
-                            }).catch(err => console.error('Error marking notification as read:', err));
+                            }).catch(err => console.error('Error marking notification as read:',
+                                err));
                         }
 
                         // Navigate to the URL
@@ -4136,12 +4324,12 @@
         // Mark all as read function
         function markAllReadNotifications() {
             fetch('/admin/notifications/mark-all-read', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Content-Type': 'application/json'
-                }
-            })
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    }
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -4164,7 +4352,7 @@
         document.head.appendChild(style);
 
         // Global alert helper function
-        window.showAlert = function (message, type = 'info', title = null) {
+        window.showAlert = function(message, type = 'info', title = null) {
             const typeConfig = {
                 'success': {
                     icon: 'success',
@@ -4207,7 +4395,8 @@
         };
 
         // Global confirm helper function
-        window.showConfirm = function (message, title = 'Are you sure?', confirmButtonText = 'Yes', cancelButtonText = 'Cancel') {
+        window.showConfirm = function(message, title = 'Are you sure?', confirmButtonText = 'Yes', cancelButtonText =
+            'Cancel') {
             return Swal.fire({
                 title: title,
                 text: message,
@@ -4225,10 +4414,10 @@
         };
 
         // Global error handler for fetch requests
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Intercept fetch calls to handle errors globally
             const originalFetch = window.fetch;
-            window.fetch = function (...args) {
+            window.fetch = function(...args) {
                 return originalFetch.apply(this, args)
                     .then(response => {
                         if (!response.ok && response.status !== 422) {
@@ -4250,9 +4439,9 @@
     </script>
 
     <!-- Draft Notification Popup on Login -->
-    @if(auth()->guard('admin')->check())
+    @if (auth()->guard('admin')->check())
         <script>
-            (function () {
+            (function() {
                 // Check if we should show the draft notification
                 // Only show once per session (use sessionStorage)
                 const DRAFT_POPUP_KEY = 'draft_popup_shown_{{ auth()->guard('admin')->id() }}';
@@ -4263,13 +4452,13 @@
                 }
 
                 // Fetch drafts for current admin
-                fetch('{{ route("orders.drafts.my-drafts") }}', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
+                fetch('{{ route('orders.drafts.my-drafts') }}', {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
                     .then(response => response.json())
                     .then(data => {
                         if (data.count > 0) {
@@ -4279,10 +4468,11 @@
                             // Build the drafts list HTML
                             let draftsHtml = '<div style="text-align: left; max-height: 200px; overflow-y: auto;">';
                             data.drafts.forEach(draft => {
-                                const hasError = draft.has_error
-                                    ? '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>'
-                                    : '';
-                                draftsHtml += `
+                                const hasError = draft.has_error ?
+                                    '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>' :
+                                    '';
+                                draftsHtml +=
+                                    `
                                                                                                                                                     <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
                                                                                                                                                         <div>
                                                                                                                                                             <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
@@ -4319,7 +4509,7 @@
                                 }
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    window.location.href = '{{ route("orders.drafts.index") }}';
+                                    window.location.href = '{{ route('orders.drafts.index') }}';
                                 }
                             });
                         }
@@ -4333,7 +4523,7 @@
 
     <script>
         /* ══════════════════════════════════════
-           ENHANCEMENTS JS
+                    ENHANCEMENTS JS
         ══════════════════════════════════════ */
 
         // ── DARK MODE ──
@@ -4357,40 +4547,146 @@
         });
 
         // ── COMMAND PALETTE ──
-        const CMD_ITEMS = [
-            { label: 'Dashboard', group: 'Navigation', icon: 'bi-house', bg: 'rgba(99,102,241,0.1)', color: 'var(--primary)', url: '{{ route("admin.dashboard") }}', hint: 'Go to Home' },
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.view']))
-                { label: 'Orders', group: 'Navigation', icon: 'bi-basket', bg: 'rgba(16,185,129,0.1)', color: '#10b981', url: '{{ route("orders.index") }}', hint: 'View all orders' },
+        const CMD_ITEMS = [{
+                label: 'Dashboard',
+                group: 'Navigation',
+                icon: 'bi-house',
+                bg: 'rgba(99,102,241,0.1)',
+                color: 'var(--primary)',
+                url: '{{ route('admin.dashboard') }}',
+                hint: 'Go to Home'
+            },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['orders.view']))
+                {
+                    label: 'Orders',
+                    group: 'Navigation',
+                    icon: 'bi-basket',
+                    bg: 'rgba(16,185,129,0.1)',
+                    color: '#10b981',
+                    url: '{{ route('orders.index') }}',
+                    hint: 'View all orders'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
-                { label: 'Stock List', group: 'Navigation', icon: 'bi-gem', bg: 'rgba(139,92,246,0.1)', color: '#8b5cf6', url: '{{ route("diamond.index") }}', hint: 'View diamonds' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
+                {
+                    label: 'Stock List',
+                    group: 'Navigation',
+                    icon: 'bi-gem',
+                    bg: 'rgba(139,92,246,0.1)',
+                    color: '#8b5cf6',
+                    url: '{{ route('diamond.index') }}',
+                    hint: 'View diamonds'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['clients.view']))
-                { label: 'Clients', group: 'Navigation', icon: 'bi-people', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', url: '{{ route("clients.index") }}', hint: 'Manage clients' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+                {
+                    label: 'Clients',
+                    group: 'Navigation',
+                    icon: 'bi-people',
+                    bg: 'rgba(245,158,11,0.1)',
+                    color: '#f59e0b',
+                    url: '{{ route('clients.index') }}',
+                    hint: 'Manage clients'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['invoices.view']))
-                { label: 'Invoices', group: 'Finance', icon: 'bi-receipt', bg: 'rgba(16,185,129,0.1)', color: '#10b981', url: '{{ route("invoices.index") }}', hint: 'Manage invoices' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['invoices.view']))
+                {
+                    label: 'Invoices',
+                    group: 'Finance',
+                    icon: 'bi-receipt',
+                    bg: 'rgba(16,185,129,0.1)',
+                    color: '#10b981',
+                    url: '{{ route('invoices.index') }}',
+                    hint: 'Manage invoices'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['purchases.view']))
-                { label: 'Purchases', group: 'Finance', icon: 'bi-cart', bg: 'rgba(59,130,246,0.1)', color: '#3b82f6', url: '{{ route("purchases.index") }}', hint: 'Manage purchases' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['purchases.view']))
+                {
+                    label: 'Purchases',
+                    group: 'Finance',
+                    icon: 'bi-cart',
+                    bg: 'rgba(59,130,246,0.1)',
+                    color: '#3b82f6',
+                    url: '{{ route('purchases.index') }}',
+                    hint: 'Manage purchases'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['expenses.view']))
-                { label: 'Expenses', group: 'Finance', icon: 'bi-wallet2', bg: 'rgba(239,68,68,0.1)', color: '#ef4444', url: '{{ route("expenses.index") }}', hint: 'Manage expenses' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['expenses.view']))
+                {
+                    label: 'Expenses',
+                    group: 'Finance',
+                    icon: 'bi-wallet2',
+                    bg: 'rgba(239,68,68,0.1)',
+                    color: '#ef4444',
+                    url: '{{ route('expenses.index') }}',
+                    hint: 'Manage expenses'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['gold-tracking.view']))
-                { label: 'Gold Tracking', group: 'Tracking', icon: 'bi-bar-chart', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', url: '{{ route("gold-tracking.index") }}', hint: 'Manage gold tracking' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['gold-tracking.view']))
+                {
+                    label: 'Gold Tracking',
+                    group: 'Tracking',
+                    icon: 'bi-bar-chart',
+                    bg: 'rgba(245,158,11,0.1)',
+                    color: '#f59e0b',
+                    url: '{{ route('gold-tracking.index') }}',
+                    hint: 'Manage gold tracking'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['parties.view']))
-                { label: 'Parties', group: 'Tracking', icon: 'bi-briefcase', bg: 'rgba(168,85,247,0.1)', color: '#a855f7', url: '{{ route("parties.index") }}', hint: 'Manage parties' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['parties.view']))
+                {
+                    label: 'Parties',
+                    group: 'Tracking',
+                    icon: 'bi-briefcase',
+                    bg: 'rgba(168,85,247,0.1)',
+                    color: '#a855f7',
+                    url: '{{ route('parties.index') }}',
+                    hint: 'Manage parties'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['factories.view']))
-                { label: 'Factories', group: 'Tracking', icon: 'bi-building', bg: 'rgba(99,102,241,0.1)', color: '#6366f1', url: '{{ route("factories.index") }}', hint: 'Manage factories' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['factories.view']))
+                {
+                    label: 'Factories',
+                    group: 'Tracking',
+                    icon: 'bi-building',
+                    bg: 'rgba(99,102,241,0.1)',
+                    color: '#6366f1',
+                    url: '{{ route('factories.index') }}',
+                    hint: 'Manage factories'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['leads.view']))
-                { label: 'Leads', group: 'Navigation', icon: 'bi-magnet', bg: 'rgba(14,165,233,0.1)', color: '#0ea5e9', url: '{{ route("leads.index") }}', hint: 'Manage leads' },
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['leads.view']))
+                {
+                    label: 'Leads',
+                    group: 'Navigation',
+                    icon: 'bi-magnet',
+                    bg: 'rgba(14,165,233,0.1)',
+                    color: '#0ea5e9',
+                    url: '{{ route('leads.index') }}',
+                    hint: 'Manage leads'
+                },
             @endif
-            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
-                { label: 'Settings', group: 'System', icon: 'bi-gear', bg: 'rgba(100,116,139,0.1)', color: '#64748b', url: '{{ route("settings.security.index") }}', hint: 'System configuration' }
+            @if (auth()->guard('admin')->user() &&
+                    auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
+                {
+                    label: 'Settings',
+                    group: 'System',
+                    icon: 'bi-gear',
+                    bg: 'rgba(100,116,139,0.1)',
+                    color: '#64748b',
+                    url: '{{ route('settings.security.index') }}',
+                    hint: 'System configuration'
+                }
             @endif
         ];
 
@@ -4413,9 +4709,10 @@
         }
 
         function renderCmdResults(q) {
-            const filtered = q
-                ? CMD_ITEMS.filter(i => i.label.toLowerCase().includes(q) || i.hint.toLowerCase().includes(q) || i.group.toLowerCase().includes(q))
-                : CMD_ITEMS;
+            const filtered = q ?
+                CMD_ITEMS.filter(i => i.label.toLowerCase().includes(q) || i.hint.toLowerCase().includes(q) || i.group
+                    .toLowerCase().includes(q)) :
+                CMD_ITEMS;
 
             const groups = [...new Set(filtered.map(i => i.group))];
             const container = document.getElementById('cmdResults');
@@ -4424,32 +4721,45 @@
             container.innerHTML = groups.map(g => `
             <div class="cmd-group-label">${g}</div>
             ${filtered.filter(i => i.group === g).map((item, idx) => `
-                <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
-                    <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
-                        <i class="bi ${item.icon}"></i>
-                    </div>
-                    <div class="cmd-item-text">
-                        <div>${item.label}</div>
-                        <div class="cmd-item-hint">${item.hint}</div>
-                    </div>
-                </a>
-            `).join('')}
-        `).join('') || '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:0.875rem;">No results found</div>';
+                    <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
+                        <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
+                            <i class="bi ${item.icon}"></i>
+                        </div>
+                        <div class="cmd-item-text">
+                            <div>${item.label}</div>
+                            <div class="cmd-item-hint">${item.hint}</div>
+                        </div>
+                    </a>
+                `).join('')}
+        `).join('') ||
+                '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:0.875rem;">No results found</div>';
         }
 
-        document.getElementById('cmdInput')?.addEventListener('input', function () {
+        document.getElementById('cmdInput')?.addEventListener('input', function() {
             cmdActive = -1;
             renderCmdResults(this.value.toLowerCase());
         });
 
-        document.getElementById('cmdInput')?.addEventListener('keydown', function (e) {
+        document.getElementById('cmdInput')?.addEventListener('keydown', function(e) {
             const items = document.querySelectorAll('.cmd-item');
-            if (e.key === 'ArrowDown') { e.preventDefault(); cmdActive = Math.min(cmdActive + 1, items.length - 1); }
-            else if (e.key === 'ArrowUp') { e.preventDefault(); cmdActive = Math.max(cmdActive - 1, 0); }
-            else if (e.key === 'Enter' && cmdActive >= 0) { e.preventDefault(); items[cmdActive]?.click(); return; }
-            else if (e.key === 'Escape') { closeCommandPalette(); return; }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                cmdActive = Math.min(cmdActive + 1, items.length - 1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                cmdActive = Math.max(cmdActive - 1, 0);
+            } else if (e.key === 'Enter' && cmdActive >= 0) {
+                e.preventDefault();
+                items[cmdActive]?.click();
+                return;
+            } else if (e.key === 'Escape') {
+                closeCommandPalette();
+                return;
+            }
             items.forEach((el, i) => el.classList.toggle('active', i === cmdActive));
-            if (cmdActive >= 0) items[cmdActive]?.scrollIntoView({ block: 'nearest' });
+            if (cmdActive >= 0) items[cmdActive]?.scrollIntoView({
+                block: 'nearest'
+            });
         });
 
         // Ctrl+K / Cmd+K shortcut
@@ -4478,7 +4788,7 @@
         });
 
         // ── REAL-TIME NOTIFICATION BADGE via Pusher ──
-        (function () {
+        (function() {
             if (!window.chatPusherKey || !window.authAdminId) return;
             try {
                 // Only if Pusher/Echo is available
@@ -4501,20 +4811,21 @@
                             }
                             // Play subtle sound
                             try {
-                                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                                const ctx = new(window.AudioContext || window.webkitAudioContext)();
                                 const osc = ctx.createOscillator();
                                 const gain = ctx.createGain();
-                                osc.connect(gain); gain.connect(ctx.destination);
+                                osc.connect(gain);
+                                gain.connect(ctx.destination);
                                 osc.frequency.value = 880;
                                 gain.gain.setValueAtTime(0.15, ctx.currentTime);
                                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-                                osc.start(); osc.stop(ctx.currentTime + 0.4);
-                            } catch (e) { }
+                                osc.start();
+                                osc.stop(ctx.currentTime + 0.4);
+                            } catch (e) {}
                         });
                 }
-            } catch (e) { }
+            } catch (e) {}
         })();
-
     </script>
     @stack('scripts')
 </body>

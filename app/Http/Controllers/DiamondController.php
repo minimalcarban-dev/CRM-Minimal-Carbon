@@ -39,9 +39,7 @@ class DiamondController extends Controller
      */
     public function create()
     {
-        $admins = Cache::remember('admins_list', 3600, function () {
-            return Admin::orderBy('name')->get();
-        });
+        $admins = Admin::orderBy('name')->get();
 
         $stoneTypes = Cache::remember('stone_types_list', 86400, function () {
             return StoneType::orderBy('name')->get();
@@ -63,15 +61,10 @@ class DiamondController extends Controller
             return DiamondClarity::orderBy('name')->get();
         });
 
-        $adminauth = [];
-        if (Auth::guard('admin')->user()?->hasPermission('diamonds.assign')) {
-            $admins = Admin::orderBy('name')->get();
-        }
-
         // Get countries list for location dropdown
         $countries = config('countries', []);
 
-        return view('diamonds.create', compact('admins', 'stoneTypes', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities', 'countries', 'adminauth'));
+        return view('diamonds.create', compact('admins', 'stoneTypes', 'stoneShapes', 'stoneColors', 'diamondCuts', 'diamondClarities', 'countries'));
     }
 
     /**
@@ -201,10 +194,8 @@ class DiamondController extends Controller
         $materials = Diamond::select('material')->distinct()->whereNotNull('material')->pluck('material')->filter()->sort();
         $diamondTypes = Diamond::select('diamond_type')->distinct()->whereNotNull('diamond_type')->pluck('diamond_type')->filter()->sort();
 
-        // Get all admins for reassignment dropdown (cached)
-        $admins = Cache::remember('admins_list', 3600, function () {
-            return Admin::orderBy('name')->get();
-        });
+        // Get all admins for reassignment dropdown
+        $admins = Admin::orderBy('name')->get();
 
         // Get countries list for location filter
         $countries = config('countries', []);
@@ -225,9 +216,7 @@ class DiamondController extends Controller
      */
     public function edit(Diamond $diamond)
     {
-        $admins = Cache::remember('admins_list', 3600, function () {
-            return Admin::orderBy('name')->get();
-        });
+        $admins = Admin::orderBy('name')->get();
 
         $stoneShapes = Cache::remember('stone_shapes_list', 86400, function () {
             return StoneShape::orderBy('name')->get();
@@ -301,6 +290,7 @@ class DiamondController extends Controller
                 'sku' => $sku,
                 'margin' => $validated['margin'] ?? 0,
                 'listing_price' => $listingPrice,
+                'offer_calculation' => $validated['offer_calculation'] ?? 0,
                 'cut' => $validated['cut'] ?? null,
                 'shape' => $validated['shape'] ?? null,
                 'color' => $validated['color'] ?? null,
@@ -465,6 +455,7 @@ class DiamondController extends Controller
             $diamond->lot_no = $validated['lot_no'];
             $diamond->margin = $validated['margin'] ?? 0;
             $diamond->listing_price = $listingPrice;
+            $diamond->offer_calculation = $validated['offer_calculation'] ?? 0;
             $diamond->cut = $validated['cut'] ?? null;
             $diamond->shape = $validated['shape'] ?? null;
             $diamond->color = $validated['color'] ?? null;

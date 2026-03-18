@@ -1649,7 +1649,8 @@
                                                         $sizeNum = end($sizeParts);
                                                     @endphp
                                                     <tr class="searchable-row"
-                                                        data-search="{{ strtolower($diamond->size_label . ' ' . $diamond->shape) }}">
+                                                        data-search="{{ strtolower($diamond->size_label . ' ' . $diamond->shape) }}"
+                                                        data-diamond-id="{{ $diamond->id }}">
                                                         <td class="fw-bold">{{ $sizeNum }}</td>
                                                         <td class="text-muted small">
                                                             {{ str_replace('-', ' ', $diamond->size_label) }}
@@ -1657,6 +1658,7 @@
                                                         <td>
                                                             @if ($diamond->available_pieces != 0)
                                                                 <span
+                                                                    data-stock-badge="1"
                                                                     class="badge {{ $diamond->available_pieces > 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' }} border px-3 py-2 rounded-pill"
                                                                     style="cursor:pointer"
                                                                     onclick="openHistoryModal({{ $diamond->id }})"
@@ -1665,6 +1667,7 @@
                                                                 </span>
                                                             @else
                                                                 <span
+                                                                    data-stock-badge="1"
                                                                     class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill"
                                                                     style="cursor:pointer"
                                                                     onclick="openHistoryModal({{ $diamond->id }})"
@@ -1676,11 +1679,11 @@
                                                         <td class="fw-medium">
                                                             ${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}
                                                         </td>
-                                                        <td class="fw-medium">
+                                                        <td class="fw-medium" data-stock-carat="1">
                                                             {{ number_format($diamond->available_carat_weight ?? 0, 3) }}
                                                             ct
                                                         </td>
-                                                        <td class="fw-bold">
+                                                        <td class="fw-bold" data-stock-price="1">
                                                             ${{ number_format($diamond->total_price ?? 0, 2) }}</td>
                                                         <td class="text-end">
                                                             <button class="btn btn-sm btn-theme-icon btn-theme-icon-in"
@@ -2875,5 +2878,135 @@
                     showMeleeToast('An unexpected error occurred.', 'danger');
                 });
         }
+
+        // ── Real-time Stock Updates ──
+        function refreshMeleeStock(meleeDiamondIds = null) {
+            if (!meleeDiamondIds || meleeDiamondIds.length === 0) {
+                // Refresh all stock data
+                location.reload();
+                return;
+            }
+
+            // Refresh specific diamonds
+            meleeDiamondIds.forEach(diamondId => {
+                fetch(`/admin/melee/stock/${diamondId}`, {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && data.diamond) {
+                            updateStockDisplay(diamondId, data.diamond);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error refreshing stock for diamond', diamondId, err);
+                    });
+            });
+        }
+
+        function updateStockDisplay(diamondId, diamondData) {
+            // Find the table row for this diamond
+            const row = document.querySelector(`tr.searchable-row[data-diamond-id="${diamondId}"]`);
+            if (!row) return;
+
+            // Update stock badge
+            const stockBadge = row.querySelector('[data-stock-badge="1"]');
+            if (stockBadge) {
+                const pieces = diamondData.available_pieces;
+                const badgeClass = pieces > 0 ?
+                    'bg-success-subtle text-success border-success-subtle' :
+                    'bg-danger-subtle text-danger border-danger-subtle';
+                const badgeText = pieces !== 0 ? `${pieces} pcs` : 'Out of Stock';
+
+                stockBadge.className = `badge ${badgeClass} border px-3 py-2 rounded-pill`;
+                stockBadge.textContent = badgeText;
+                stockBadge.onclick = () => openHistoryModal(diamondId);
+            }
+
+            // Update total carats
+            const caratCell = row.querySelector('[data-stock-carat="1"]');
+            if (caratCell) {
+                caratCell.textContent = `${parseFloat(diamondData.available_carat_weight || 0).toFixed(3)} ct`;
+            }
+
+            // Update total price
+            const priceCell = row.querySelector('[data-stock-price="1"]');
+            if (priceCell) {
+                priceCell.textContent = `$${parseFloat(diamondData.total_price || 0).toFixed(2)}`;
+            }
+
+            // Update shape group totals
+            updateShapeGroupTotals();
+        }
+
+        function applyMeleeStockSummary(stockSummary = {}) {
+            Object.values(stockSummary).forEach(diamondData => {
+                if (diamondData && diamondData.id) {
+                    updateStockDisplay(diamondData.id, diamondData);
+                }
+            });
+        }
+
+        function applyMeleeStockRefreshPayload(payload) {
+            if (!payload || typeof payload !== 'object') {
+                return;
+            }
+
+            if (payload.stock && Object.keys(payload.stock).length) {
+                applyMeleeStockSummary(payload.stock);
+                return;
+            }
+
+            if (Array.isArray(payload.ids) && payload.ids.length) {
+                refreshMeleeStock(payload.ids);
+            }
+        }
+
+        function updateShapeGroupTotals() {
+            const shapeGroups = document.querySelectorAll('.shape-group');
+            shapeGroups.forEach(group => {
+                const rows = group.querySelectorAll('.searchable-row');
+                let totalPieces = 0;
+
+                rows.forEach(row => {
+                    const badge = row.querySelector('.badge');
+                    if (badge && badge.textContent.includes('pcs')) {
+                        const piecesText = badge.textContent.replace(' pcs', '');
+                        const pieces = parseInt(piecesText);
+                        if (!isNaN(pieces)) {
+                            totalPieces += pieces;
+                        }
+                    }
+                });
+
+                const totalPill = group.querySelector('.stock-total-pill');
+                if (totalPill) {
+                    totalPill.textContent = `${totalPieces} pcs`;
+                    totalPill.className = `stock-total-pill ${totalPieces < 0 ? 'bg-danger text-white' : ''}`;
+                }
+            });
+        }
+
+        // Global function for external calls (from order forms)
+        window.refreshMeleeStock = refreshMeleeStock;
+        window.applyMeleeStockSummary = applyMeleeStockSummary;
+
+        window.addEventListener('melee:stock-refresh', event => {
+            applyMeleeStockRefreshPayload(event.detail);
+        });
+
+        window.addEventListener('storage', event => {
+            if (event.key !== 'melee_stock_refresh' || !event.newValue) {
+                return;
+            }
+
+            try {
+                applyMeleeStockRefreshPayload(JSON.parse(event.newValue));
+            } catch (error) {
+                console.error('Invalid melee stock refresh payload:', error);
+            }
+        });
     </script>
 @endsection

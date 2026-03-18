@@ -5,7 +5,7 @@ use App\Models\Permission;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
-uses(Tests\CreatesApplication::class);
+
 
 it('allows super admin to view and update permissions for another admin', function () {
     // create super admin

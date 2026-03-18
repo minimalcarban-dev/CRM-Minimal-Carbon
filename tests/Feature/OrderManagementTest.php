@@ -5,7 +5,7 @@ use App\Models\Admin;
 use App\Models\Permission;
 use App\Models\Order;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+
 
 test('admin with permissions.create can create and see order in index search', function () {
     // seed the orders.create permission

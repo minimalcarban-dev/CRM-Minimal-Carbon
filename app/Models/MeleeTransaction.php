@@ -42,6 +42,16 @@ class MeleeTransaction extends Model
                 return;
 
             if ($transaction->transaction_type === 'in') {
+                if ($transaction->reference_type === 'order') {
+                    $diamond->available_pieces += abs($transaction->pieces);
+                    $diamond->available_carat_weight += abs($transaction->carat_weight);
+                } else {
+                    $diamond->total_pieces += abs($transaction->pieces);
+                    $diamond->available_pieces += abs($transaction->pieces);
+                    $diamond->total_carat_weight += abs($transaction->carat_weight);
+                    $diamond->available_carat_weight += abs($transaction->carat_weight);
+                }
+            } elseif ($transaction->transaction_type === 'adjustment') {
                 $diamond->total_pieces += abs($transaction->pieces);
                 $diamond->available_pieces += abs($transaction->pieces);
                 $diamond->total_carat_weight += abs($transaction->carat_weight);
@@ -49,8 +59,6 @@ class MeleeTransaction extends Model
             } elseif ($transaction->transaction_type === 'out') {
                 $diamond->available_pieces -= abs($transaction->pieces);
                 $diamond->available_carat_weight -= abs($transaction->carat_weight);
-            } elseif ($transaction->transaction_type === 'adjustment') {
-                $diamond->available_pieces += $transaction->pieces; // can be negative
             }
 
             $diamond->save();
