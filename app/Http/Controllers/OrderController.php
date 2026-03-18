@@ -223,6 +223,28 @@ class OrderController extends Controller
                 });
         }
 
+        // TEMP: Melee diamond-only listing filter (remove after temporary production use)
+        if ($request->boolean('melee_diamond_temp')) {
+            $textPatterns = ['%melee diamond%', '%melee-diamond%', '%melee%diamond%'];
+
+            $query->where(function ($meleeQuery) use ($textPatterns) {
+                $meleeQuery
+                    ->whereNotNull('melee_diamond_id')
+                    ->orWhere(function ($entriesQuery) {
+                        $entriesQuery->whereNotNull('melee_entries')
+                            ->where('melee_entries', '!=', '[]')
+                            ->where('melee_entries', '!=', '{}');
+                    })
+                    ->orWhere(function ($textQuery) use ($textPatterns) {
+                        foreach (['special_notes', 'jewellery_details', 'diamond_details'] as $field) {
+                            foreach ($textPatterns as $pattern) {
+                                $textQuery->orWhereRaw("LOWER(COALESCE($field, '')) LIKE ?", [$pattern]);
+                            }
+                        }
+                    });
+            });
+        }
+
         $orders = $query->latest()->paginate(20);
         return view('orders.index', compact(
             'orders',

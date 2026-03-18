@@ -380,22 +380,22 @@ class DiamondController extends Controller
             $lotNoChanged = $validated['lot_no'] != $diamond->lot_no;
             $skuChanged = $validated['sku'] != $diamond->sku;
 
-            // If lot_no changed, regenerate barcode_number and image (image uses SKU)
-            if ($lotNoChanged) {
+            // If lot_no or SKU changed, regenerate barcode number + barcode image.
+            if ($lotNoChanged || $skuChanged) {
                 $sku = $validated['sku'];
-                $newBarcodeNumber = $this->buildBarcodeNumber($validated['lot_no']);
+                $newBarcodeNumber = $this->generateUniqueBarcodeNumber(
+                    $validated['lot_no'],
+                    $diamond->id,
+                    $diamond->barcode_number
+                );
                 $dataUri = $this->generateBarcodeDataUri($sku, $newBarcodeNumber);
 
-                // Remove old barcode image files if they exist
-                $this->deleteOldBarcodeFiles($diamond->barcode_number);
+                // Remove old barcode files only if barcode number changed.
+                if ($newBarcodeNumber !== $diamond->barcode_number) {
+                    $this->deleteOldBarcodeFiles($diamond->barcode_number);
+                }
 
                 $diamond->barcode_number = $newBarcodeNumber;
-                $diamond->sku = $sku;
-                $diamond->barcode_image_url = $dataUri;
-            } elseif ($skuChanged) {
-                // SKU changed but lot_no same: regenerate only barcode image
-                $sku = $validated['sku'];
-                $dataUri = $this->generateBarcodeDataUri($sku, $diamond->barcode_number);
                 $diamond->sku = $sku;
                 $diamond->barcode_image_url = $dataUri;
             }
@@ -923,7 +923,7 @@ class DiamondController extends Controller
      * - Category separation (Natural: 100, Lab-grown: 200)
      * - Supplier identification (Supplier A: 501, Supplier B: 502)
      */
-    protected function buildBarcodeNumber(string $lotNo): string
+    protected function buildBarcodeNumber(string $lotNo, ?int $ignoreDiamondId = null): string
     {
         $year = date('y');
 
@@ -942,7 +942,7 @@ class DiamondController extends Controller
         // Check if this barcode already exists, if so, append a unique suffix
         $barcode = $baseBarcode;
         $counter = 1;
-        while (Diamond::where('barcode_number', $barcode)->exists()) {
+        while ($this->barcodeExists($barcode, $ignoreDiamondId)) {
             $barcode = $baseBarcode . $counter;
             $counter++;
         }
@@ -954,14 +954,16 @@ class DiamondController extends Controller
      * Generate a unique barcode number that doesn't exist in the database.
      * Falls back to incrementing if the calculated barcode already exists.
      */
-    protected function generateUniqueBarcodeNumber($lotNo): string
+    protected function generateUniqueBarcodeNumber($lotNo, ?int $ignoreDiamondId = null, ?string $avoidBarcode = null): string
     {
-        $barcodeNumber = $this->buildBarcodeNumber((string) $lotNo);
+        $barcodeNumber = $this->buildBarcodeNumber((string) $lotNo, $ignoreDiamondId);
 
-        // If barcode already exists, find the max numeric barcode and increment
-        if (Diamond::where('barcode_number', $barcodeNumber)->exists()) {
+        // If barcode exists (or we must rotate away from current barcode), find next available.
+        if (($avoidBarcode !== null && $barcodeNumber === $avoidBarcode) || $this->barcodeExists($barcodeNumber, $ignoreDiamondId)) {
             // Get max barcode number from database (last 6 digits are the lot number)
-            $maxBarcode = Diamond::max('barcode_number');
+            $maxBarcode = Diamond::withTrashed()
+                ->when($ignoreDiamondId, fn($query) => $query->where('id', '!=', $ignoreDiamondId))
+                ->max('barcode_number');
 
             if ($maxBarcode) {
                 $year = date('y');
@@ -977,7 +979,7 @@ class DiamondController extends Controller
 
         // Final safety check: keep incrementing if still not unique
         $attempts = 0;
-        while (Diamond::where('barcode_number', $barcodeNumber)->exists() && $attempts < 100) {
+        while ((($avoidBarcode !== null && $barcodeNumber === $avoidBarcode) || $this->barcodeExists($barcodeNumber, $ignoreDiamondId)) && $attempts < 100) {
             $year = date('y');
             $brandCode = env('DIAMOND_BRAND_CODE', '100');
             $numericPart = (int) substr($barcodeNumber, -6) + 1;
@@ -986,6 +988,18 @@ class DiamondController extends Controller
         }
 
         return $barcodeNumber;
+    }
+
+    /**
+     * Check barcode existence including soft-deleted records.
+     * DB unique index also includes soft-deleted rows.
+     */
+    protected function barcodeExists(string $barcodeNumber, ?int $ignoreDiamondId = null): bool
+    {
+        return Diamond::withTrashed()
+            ->where('barcode_number', $barcodeNumber)
+            ->when($ignoreDiamondId, fn($query) => $query->where('id', '!=', $ignoreDiamondId))
+            ->exists();
     }
 
     /**
