@@ -739,6 +739,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const type = document.getElementById('order_type').value;
             loadForm(type);
+            setupAjaxEditSubmission();
 
             document.getElementById('order_type').addEventListener('change', function () {
                 loadForm(this.value);
@@ -816,6 +817,217 @@
                     }
                 @endif
                             }
+
+            function setupAjaxEditSubmission() {
+                const form = document.getElementById('editOrderForm');
+                if (!form || form.dataset.ajaxBound === '1') {
+                    return;
+                }
+
+                form.dataset.ajaxBound = '1';
+
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    if (form.dataset.submitting === '1') {
+                        return;
+                    }
+
+                    form.dataset.submitting = '1';
+                    clearFormErrors(form);
+
+                    const externalBtns = document.querySelectorAll(`button[type="submit"][form="${form.id}"]`);
+                    const internalBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+                    const allBtns = Array.from(externalBtns).concat(Array.from(internalBtns));
+                    allBtns.forEach(btn => btn.disabled = true);
+
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                        .then(async response => {
+                            const data = await response.json();
+
+                            if (response.ok && data.success) {
+                                broadcastMeleeStockRefresh(form, data, formData);
+
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: data.message,
+                                        timer: 1800,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        window.location.href = data.redirect || '/admin/orders';
+                                    });
+                                } else {
+                                    window.location.href = data.redirect || '/admin/orders';
+                                }
+                                return;
+                            }
+
+                            form.dataset.submitting = '0';
+                            allBtns.forEach(btn => btn.disabled = false);
+
+                            if (data.errors) {
+                                displayValidationErrors(form, data.errors);
+                            } else {
+                                showErrorBanner(form, data.message || 'Unable to update order right now.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Edit form submission error:', error);
+                            form.dataset.submitting = '0';
+                            allBtns.forEach(btn => btn.disabled = false);
+                            showErrorBanner(form, 'Network error. Please try again.');
+                        });
+                });
+            }
+
+            function clearFormErrors(form) {
+                form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+                form.querySelectorAll('.error-banner').forEach(el => el.remove());
+            }
+
+            function displayValidationErrors(form, errors) {
+                Object.entries(errors).forEach(([field, messages]) => {
+                    const input = findFieldInput(form, field);
+                    if (!input) {
+                        return;
+                    }
+
+                    input.classList.add('is-invalid');
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = Array.isArray(messages) ? messages[0] : messages;
+                    (input.parentNode || form).appendChild(errorDiv);
+                });
+
+                const firstError = form.querySelector('.is-invalid, .error-banner');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            function findFieldInput(form, field) {
+                const bracketField = convertFieldToBracketNotation(field);
+                const selectors = [
+                    `[name="${field}"]`,
+                    `[name="${field}[]"]`,
+                    `[name="${bracketField}"]`,
+                    `[name="${bracketField}[]"]`
+                ];
+
+                for (const selector of selectors) {
+                    const input = form.querySelector(selector);
+                    if (input) {
+                        return input;
+                    }
+                }
+
+                if (field === 'melee_entries_json') {
+                    return document.getElementById('melee_search_select') || form.querySelector('[name="melee_entries_json"]');
+                }
+
+                return null;
+            }
+
+            function convertFieldToBracketNotation(field) {
+                const parts = String(field).split('.');
+                return parts.reduce((name, part, index) => {
+                    return index === 0 ? part : `${name}[${part}]`;
+                }, '');
+            }
+
+            function showErrorBanner(form, message) {
+                const banner = document.createElement('div');
+                banner.className = 'error-banner alert alert-danger';
+                banner.textContent = message;
+                form.prepend(banner);
+            }
+
+            function extractMeleeDiamondIds(formData, responseData = null) {
+                const ids = new Set();
+
+                if (responseData && responseData.melee_stock_summary) {
+                    Object.keys(responseData.melee_stock_summary).forEach(id => ids.add(parseInt(id, 10)));
+                }
+
+                const jsonPayloads = [
+                    formData.get('melee_entries_json'),
+                    formData.get('melee_entries')
+                ].filter(Boolean);
+
+                jsonPayloads.forEach(rawEntries => {
+                    try {
+                        const entries = JSON.parse(rawEntries);
+                        if (Array.isArray(entries)) {
+                            entries.forEach(entry => {
+                                if (entry.melee_diamond_id) {
+                                    ids.add(parseInt(entry.melee_diamond_id, 10));
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse melee entries payload:', e);
+                    }
+                });
+
+                for (const [key, value] of formData.entries()) {
+                    if (/^melee_entries\[\d+\]\[melee_diamond_id\]$/.test(key) && value) {
+                        ids.add(parseInt(value, 10));
+                    }
+                }
+
+                const singleId = formData.get('melee_diamond_id');
+                if (singleId) {
+                    ids.add(parseInt(singleId, 10));
+                }
+
+                return Array.from(ids).filter(Number.isFinite);
+            }
+
+            function broadcastMeleeStockRefresh(form, responseData, formData) {
+                const ids = extractMeleeDiamondIds(formData, responseData);
+                const stockSummary = responseData && typeof responseData.melee_stock_summary === 'object'
+                    ? responseData.melee_stock_summary
+                    : {};
+
+                if (!ids.length && !Object.keys(stockSummary).length) {
+                    return;
+                }
+
+                const payload = {
+                    timestamp: Date.now(),
+                    ids,
+                    stock: stockSummary
+                };
+
+                try {
+                    localStorage.setItem('melee_stock_refresh', JSON.stringify(payload));
+                } catch (e) {
+                    console.warn('Unable to persist melee stock refresh payload:', e);
+                }
+
+                if (window.applyMeleeStockSummary && Object.keys(stockSummary).length) {
+                    window.applyMeleeStockSummary(stockSummary);
+                } else if (window.refreshMeleeStock && ids.length) {
+                    window.refreshMeleeStock(ids);
+                }
+
+                window.dispatchEvent(new CustomEvent('melee:stock-refresh', {
+                    detail: payload
+                }));
+            }
 
             // Initialize file preview for dynamically loaded forms
             function initializeFilePreview() {

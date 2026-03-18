@@ -14,6 +14,7 @@ use App\Models\SettingType;
 use App\Models\Client;
 use App\Notifications\OrderUpdatedNotification;
 use App\Notifications\OrderCancelledNotification;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -22,23 +23,26 @@ use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Services\CurrencyService;
+use App\Services\MeleeStockService;
 use App\Models\OrderDraft;
 use App\Models\JewelleryStock;
 use App\Notifications\DiamondSoldNotification;
-use App\Models\MeleeTransaction;
 use App\Models\MeleeDiamond;
 use App\Services\ShippingTrackingService;
 use App\Notifications\OrderCreatedNotification;
 use Illuminate\Support\Facades\Notification;
-use App\Services\AuditLogger;
 use Illuminate\Validation\ValidationException;
+
 
 class OrderController extends Controller
 {
     private $cloudinary;
+    private MeleeStockService $meleeStockService;
 
-    public function __construct()
+    public function __construct(MeleeStockService $meleeStockService)
     {
+        $this->meleeStockService = $meleeStockService;
+
         // Initialize Cloudinary with direct configuration
         $this->cloudinary = new Cloudinary([
             'cloud' => [
@@ -262,7 +266,11 @@ class OrderController extends Controller
             
             // ✅ CRITICAL: Extract and validate melee entries BEFORE creating order
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
-            $this->validateMeleeStockAvailability($incomingMeleeEntries);
+            $meleeEntriesForStock = $incomingMeleeEntries;
+            $validationResult = $this->meleeStockService->validateAvailability($incomingMeleeEntries);
+            if (!$validationResult['valid']) {
+                return $this->orderErrorResponse($request, $validationResult['message']);
+            }
 
             // ✅ CRITICAL: Extract and validate ALL diamond SKUs BEFORE creating order
             $allSkus = $this->extractValidatedSkus($validated);
@@ -271,11 +279,7 @@ class OrderController extends Controller
             foreach ($allSkus as $sku) {
                 $skuCheck = $this->checkOrderSkuAvailability($sku);
                 if (!$skuCheck['available']) {
-                    $errorMsg = $skuCheck['message'];
-                    if ($request->expectsJson()) {
-                        return response()->json(['success' => false, 'message' => $errorMsg], 422);
-                    }
-                    return back()->withInput()->with('error', $errorMsg);
+                    return $this->orderErrorResponse($request, $skuCheck['message']);
                 }
 
                 if ($skuCheck['type'] === 'diamond' && isset($skuCheck['item'])) {
@@ -384,50 +388,24 @@ class OrderController extends Controller
                 })->afterResponse();
             }
 
-            // ⚡ PERFORMANCE: Batch create melee transactions
-            $meleeEntriesForStock = $order->melee_entries ?? [];
-            $meleeTransactionsToCreate = [];
-            
+// ⚡ PERFORMANCE: Use MeleeStockService for atomic stock deduction
             if (!empty($meleeEntriesForStock)) {
-                foreach ($meleeEntriesForStock as $meleeEntry) {
-                    if (!empty($meleeEntry['melee_diamond_id']) && ($meleeEntry['pieces'] ?? 0) > 0) {
-                        $meleeCarat = ($meleeEntry['pieces'] ?? 0) * ($meleeEntry['avg_carat_per_piece'] ?? 0);
-                        $meleeTransactionsToCreate[] = [
-                            'melee_diamond_id' => $meleeEntry['melee_diamond_id'],
-                            'transaction_type' => 'out',
-                            'pieces' => abs($meleeEntry['pieces']),
-                            'carat_weight' => abs(round($meleeCarat, 3)),
-                            'reference_type' => 'order',
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::guard('admin')->id(),
-                            'notes' => 'Stock used in Order #' . $order->id,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                    }
+                $stockResult = $this->meleeStockService->deductForOrder($order->id, $meleeEntriesForStock);
+                if (!$stockResult['success']) {
+                    DB::rollBack();
+                    return $this->orderErrorResponse(
+                        $request,
+                        $stockResult['message'],
+                        $stockResult['status'] ?? 422
+                    );
                 }
-            } elseif (!empty($order->melee_diamond_id) && $order->melee_pieces > 0) {
-                // Backward compat: single melee entry
-                $meleeTransactionsToCreate[] = [
-                    'melee_diamond_id' => $order->melee_diamond_id,
-                    'transaction_type' => 'out',
-                    'pieces' => abs($order->melee_pieces),
-                    'carat_weight' => abs($order->melee_carat ?? 0),
-                    'reference_type' => 'order',
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::guard('admin')->id(),
-                    'notes' => 'Stock used in Order #' . $order->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            // Bulk insert melee transactions
-            if (!empty($meleeTransactionsToCreate)) {
-                MeleeTransaction::insert($meleeTransactionsToCreate);
             }
 
             DB::commit();
+
+            $meleeStockSummary = $this->meleeStockService->getStockSummary(
+                array_column($meleeEntriesForStock, 'melee_diamond_id')
+            );
 
             // ⚡ PERFORMANCE: Queue order creation notification instead of sending synchronously
             dispatch(function () use ($order) {
@@ -467,7 +445,8 @@ class OrderController extends Controller
                     'success' => true,
                     'message' => $successMsg,
                     'redirect' => route('orders.index'),
-                    'order_id' => $order->id
+                    'order_id' => $order->id,
+                    'melee_stock_summary' => $meleeStockSummary,
                 ]);
             }
 
@@ -565,8 +544,19 @@ class OrderController extends Controller
             $order->update([
                 'special_notes' => $validated['special_notes'] ?? null
             ]);
-            return redirect()->route('orders.show', $order->id)
-                ->with('success', 'Order note updated successfully (Order is cancelled).');
+            $message = 'Order note updated successfully (Order is cancelled).';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'redirect' => route('orders.show', $order->id),
+                    'order_id' => $order->id,
+                    'melee_stock_summary' => [],
+                ]);
+            }
+
+            return redirect()->route('orders.show', $order->id)->with('success', $message);
         }
         
         try {
@@ -585,7 +575,7 @@ class OrderController extends Controller
             foreach ($newlyAddedSkus as $sku) {
                 $skuCheck = $this->checkOrderSkuAvailability($sku);
                 if (!$skuCheck['available']) {
-                    return back()->withInput()->with('error', $skuCheck['message']);
+                    return $this->orderErrorResponse($request, $skuCheck['message']);
                 }
 
                 if (($skuCheck['type'] ?? null) === 'diamond' && isset($skuCheck['item'])) {
@@ -700,102 +690,50 @@ class OrderController extends Controller
             }
             $order->save();
 
-            // Melee Stock Change Detection
-            $oldMeleeEntries = $oldSnapshot['melee_entries'] ?? [];
-            if (is_string($oldMeleeEntries)) {
-                $oldMeleeEntries = json_decode($oldMeleeEntries, true) ?? [];
-            }
-            $newMeleeEntries = $order->melee_entries ?? [];
+            // Melee Stock Change Detection using service
+            $oldMeleeEntries = $this->extractSnapshotMeleeEntries($oldSnapshot);
+            $newMeleeEntries = $this->normalizeStoredMeleeEntries(
+                $order->melee_entries,
+                $order->melee_diamond_id,
+                $order->melee_pieces,
+                $order->melee_carat,
+                $order->melee_price_per_ct
+            );
+            $updatedMeleeDiamondIds = array_values(array_unique(array_merge(
+                array_column($oldMeleeEntries, 'melee_diamond_id'),
+                array_column($newMeleeEntries, 'melee_diamond_id')
+            )));
 
             $meleeChanged = json_encode($oldMeleeEntries) !== json_encode($newMeleeEntries);
 
             if ($meleeChanged) {
-                // ⚡ PERFORMANCE: Batch create melee transaction reversals
-                $transactionsToCreate = [];
-                
-                // Reverse ALL old melee stock entries
-                foreach ($oldMeleeEntries as $oldEntry) {
-                    if (!empty($oldEntry['melee_diamond_id']) && ($oldEntry['pieces'] ?? 0) > 0) {
-                        $oldCarat = ($oldEntry['pieces'] ?? 0) * ($oldEntry['avg_carat_per_piece'] ?? 0);
-                        $transactionsToCreate[] = [
-                            'melee_diamond_id' => $oldEntry['melee_diamond_id'],
-                            'transaction_type' => 'in',
-                            'pieces' => abs($oldEntry['pieces']),
-                            'carat_weight' => abs(round($oldCarat, 3)),
-                            'reference_type' => 'order',
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::guard('admin')->id(),
-                            'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+                // Reverse old stock
+                if (!empty($oldMeleeEntries)) {
+                    $returnResult = $this->meleeStockService->returnForOrder($order->id, $oldMeleeEntries);
+                    if (!$returnResult['success']) {
+                        DB::rollBack();
+                        return $this->orderErrorResponse(
+                            $request,
+                            'Failed to return old stock: ' . $returnResult['message'],
+                            $returnResult['status'] ?? 422
+                        );
                     }
                 }
 
-                // Deduct ALL new melee stock entries
-                foreach ($newMeleeEntries as $newEntry) {
-                    if (!empty($newEntry['melee_diamond_id']) && ($newEntry['pieces'] ?? 0) > 0) {
-                        $newCarat = ($newEntry['pieces'] ?? 0) * ($newEntry['avg_carat_per_piece'] ?? 0);
-                        $transactionsToCreate[] = [
-                            'melee_diamond_id' => $newEntry['melee_diamond_id'],
-                            'transaction_type' => 'out',
-                            'pieces' => abs($newEntry['pieces']),
-                            'carat_weight' => abs(round($newCarat, 3)),
-                            'reference_type' => 'order',
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::guard('admin')->id(),
-                            'notes' => 'Stock used in Order #' . $order->id,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+                // Deduct new stock
+                if (!empty($newMeleeEntries)) {
+                    $deductResult = $this->meleeStockService->deductForOrder($order->id, $newMeleeEntries);
+                    if (!$deductResult['success']) {
+                        DB::rollBack();
+                        return $this->orderErrorResponse(
+                            $request,
+                            'Failed to deduct new stock: ' . $deductResult['message'],
+                            $deductResult['status'] ?? 422
+                        );
                     }
                 }
-
-                // Backward compat: if no multi-entries but single fields changed
-                if (empty($oldMeleeEntries) && empty($newMeleeEntries)) {
-                    $oldMeleeId = $oldSnapshot['melee_diamond_id'] ?? null;
-                    $oldMeleePieces = $oldSnapshot['melee_pieces'] ?? 0;
-                    $oldMeleeCarat = $oldSnapshot['melee_carat'] ?? 0;
-                    $newMeleeId = $order->melee_diamond_id;
-                    $newMeleePieces = $order->melee_pieces ?? 0;
-                    $newMeleeCarat = $order->melee_carat ?? 0;
-
-                    if ($oldMeleeId != $newMeleeId || $oldMeleePieces != $newMeleePieces || $oldMeleeCarat != $newMeleeCarat) {
-                        if (!empty($oldMeleeId) && $oldMeleePieces > 0) {
-                            $transactionsToCreate[] = [
-                                'melee_diamond_id' => $oldMeleeId,
-                                'transaction_type' => 'in',
-                                'pieces' => abs($oldMeleePieces),
-                                'carat_weight' => abs($oldMeleeCarat),
-                                'reference_type' => 'order',
-                                'reference_id' => $order->id,
-                                'created_by' => Auth::guard('admin')->id(),
-                                'notes' => 'Stock reversed (order #' . $order->id . ' updated)',
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ];
-                        }
-                        if (!empty($newMeleeId) && $newMeleePieces > 0) {
-                            $transactionsToCreate[] = [
-                                'melee_diamond_id' => $newMeleeId,
-                                'transaction_type' => 'out',
-                                'pieces' => abs($newMeleePieces),
-                                'carat_weight' => abs($newMeleeCarat),
-                                'reference_type' => 'order',
-                                'reference_id' => $order->id,
-                                'created_by' => Auth::guard('admin')->id(),
-                                'notes' => 'Stock used in Order #' . $order->id,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ];
-                        }
-                    }
-                }
-
-                // Bulk insert all transactions
-                if (!empty($transactionsToCreate)) {
-                    MeleeTransaction::insert($transactionsToCreate);
-                }
+            } else {
+                $updatedMeleeDiamondIds = array_values(array_unique(array_column($newMeleeEntries, 'melee_diamond_id')));
             }
 
             // Log audit after save succeeds
@@ -819,6 +757,8 @@ class OrderController extends Controller
             }
 
             DB::commit();
+
+            $meleeStockSummary = $this->meleeStockService->getStockSummary($updatedMeleeDiamondIds ?? []);
 
             Log::info('Order updated successfully', [
                 'order_id' => $order->id,
@@ -857,8 +797,19 @@ class OrderController extends Controller
                 })->afterResponse();
             }
 
-            return redirect()->route('orders.index')
-                ->with('success', 'Order updated successfully! Added ' . count($newImages) . ' new images and ' . count($newPdfs) . ' new PDFs.');
+            $successMessage = 'Order updated successfully! Added ' . count($newImages) . ' new images and ' . count($newPdfs) . ' new PDFs.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMessage,
+                    'redirect' => route('orders.index'),
+                    'order_id' => $order->id,
+                    'melee_stock_summary' => $meleeStockSummary,
+                ]);
+            }
+
+            return redirect()->route('orders.index')->with('success', $successMessage);
 
         } catch (ValidationException $e) {
             if (DB::transactionLevel() > 0) {
@@ -874,7 +825,7 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
                 'admin_id' => Auth::guard('admin')->id()
             ]);
-            return back()->withInput()->with('error', 'Failed to update order: ' . $e->getMessage());
+            return $this->orderErrorResponse($request, 'Failed to update order: ' . $e->getMessage(), 500);
         }
     }
 
@@ -1075,21 +1026,18 @@ class OrderController extends Controller
                 }
             }
 
+            DB::beginTransaction();
+
             // Reverse Stock on Delete (if not already cancelled)
             $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
             if (!in_array($order->diamond_status, $cancelledStatuses)) {
-                // Reverse melee stock
-                if (!empty($order->melee_diamond_id) && ($order->melee_pieces ?? 0) > 0) {
-                    MeleeTransaction::create([
-                        'melee_diamond_id' => $order->melee_diamond_id,
-                        'transaction_type' => 'in',
-                        'pieces' => abs($order->melee_pieces),
-                        'carat_weight' => abs($order->melee_carat ?? 0),
-                        'reference_type' => 'order',
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::guard('admin')->id(),
-                        'notes' => 'Stock returned (Order #' . $order->id . ' deleted)',
-                    ]);
+                $meleeEntries = $this->extractStoredMeleeEntries($order);
+                if (!empty($meleeEntries)) {
+                    $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
+                    if (!$returnResult['success']) {
+                        DB::rollBack();
+                        return back()->with('error', 'Failed to return melee stock before delete: ' . $returnResult['message']);
+                    }
                 }
 
                 // Restore Diamond SKUs
@@ -1114,6 +1062,7 @@ class OrderController extends Controller
             }
 
             $order->delete();
+            DB::commit();
 
             Log::info('Order deleted successfully', [
                 'order_id' => $orderId,
@@ -1125,6 +1074,9 @@ class OrderController extends Controller
             return redirect()->route('orders.index')->with('success', 'Order and all associated files deleted successfully from Cloudinary.');
 
         } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             Log::error('Order deletion failed', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
@@ -1181,17 +1133,13 @@ class OrderController extends Controller
             $order->save();
 
             // Reverse melee diamond stock
-            if (!empty($order->melee_diamond_id) && ($order->melee_pieces ?? 0) > 0) {
-                MeleeTransaction::create([
-                    'melee_diamond_id' => $order->melee_diamond_id,
-                    'transaction_type' => 'in',
-                    'pieces' => abs($order->melee_pieces),
-                    'carat_weight' => abs($order->melee_carat ?? 0),
-                    'reference_type' => 'order',
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::guard('admin')->id(),
-                    'notes' => 'Stock returned (Order #' . $order->id . ' cancelled)',
-                ]);
+            $meleeEntries = $this->extractStoredMeleeEntries($order);
+            if (!empty($meleeEntries)) {
+                $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
+                if (!$returnResult['success']) {
+                    DB::rollBack();
+                    return back()->with('error', 'Failed to return melee stock: ' . $returnResult['message']);
+                }
             }
 
             // Restore Diamond SKUs to 'In Stock'
@@ -1574,6 +1522,80 @@ class OrderController extends Controller
     }
 
     /**
+     * Normalize melee entries stored on an order or snapshot, with legacy fallback support.
+     *
+     * @param mixed $entries
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeStoredMeleeEntries(
+        $entries,
+        $fallbackDiamondId = null,
+        $fallbackPieces = null,
+        $fallbackCarat = null,
+        $fallbackPricePerCt = null
+    ): array {
+        if (is_string($entries)) {
+            $decoded = json_decode($entries, true);
+            $entries = is_array($decoded) ? $decoded : [];
+        }
+
+        if (empty($entries) && !empty($fallbackDiamondId) && (int) $fallbackPieces > 0) {
+            $entries = [[
+                'melee_diamond_id' => (int) $fallbackDiamondId,
+                'pieces' => (int) $fallbackPieces,
+                'avg_carat_per_piece' => (int) $fallbackPieces > 0
+                    ? round((float) $fallbackCarat / (int) $fallbackPieces, 5)
+                    : 0,
+                'price_per_ct' => (float) ($fallbackPricePerCt ?? 0),
+            ]];
+        }
+
+        return array_values(array_filter(array_map(function ($entry) {
+            return [
+                'melee_diamond_id' => (int) ($entry['melee_diamond_id'] ?? 0),
+                'pieces' => (int) ($entry['pieces'] ?? 0),
+                'avg_carat_per_piece' => round((float) ($entry['avg_carat_per_piece'] ?? 0), 5),
+                'price_per_ct' => (float) ($entry['price_per_ct'] ?? 0),
+            ];
+        }, (array) $entries), function ($entry) {
+            return $entry['melee_diamond_id'] > 0 && $entry['pieces'] > 0;
+        }));
+    }
+
+    /**
+     * Normalize melee entries directly from the persisted order record.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractStoredMeleeEntries(Order $order): array
+    {
+        return $this->normalizeStoredMeleeEntries(
+            $order->melee_entries,
+            $order->melee_diamond_id,
+            $order->melee_pieces,
+            $order->melee_carat,
+            $order->melee_price_per_ct
+        );
+    }
+
+    /**
+     * Normalize melee entries from an old audit snapshot.
+     *
+     * @param array<string, mixed> $snapshot
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractSnapshotMeleeEntries(array $snapshot): array
+    {
+        return $this->normalizeStoredMeleeEntries(
+            $snapshot['melee_entries'] ?? [],
+            $snapshot['melee_diamond_id'] ?? null,
+            $snapshot['melee_pieces'] ?? null,
+            $snapshot['melee_carat'] ?? null,
+            $snapshot['melee_price_per_ct'] ?? null
+        );
+    }
+
+    /**
      * ✅ CRITICAL HELPER: Validate requested melee pieces against live stock.
      */
     private function validateMeleeStockAvailability(array $incomingEntries, ?Order $existingOrder = null): void
@@ -1648,22 +1670,10 @@ class OrderController extends Controller
             return [];
         }
 
-        $entries = $order->melee_entries ?? [];
-        if (is_string($entries)) {
-            $entries = json_decode($entries, true) ?? [];
-        }
-
-        if (empty($entries) && !empty($order->melee_diamond_id) && (int) ($order->melee_pieces ?? 0) > 0) {
-            $entries = [
-                [
-                    'melee_diamond_id' => $order->melee_diamond_id,
-                    'pieces' => (int) $order->melee_pieces,
-                ]
-            ];
-        }
+        $entries = $this->extractStoredMeleeEntries($order);
 
         $reserved = [];
-        foreach ((array) $entries as $entry) {
+        foreach ($entries as $entry) {
             $meleeId = (int) ($entry['melee_diamond_id'] ?? 0);
             $pieces = (int) ($entry['pieces'] ?? 0);
 
@@ -1675,6 +1685,18 @@ class OrderController extends Controller
         }
 
         return $reserved;
+    }
+
+    private function orderErrorResponse(Request $request, string $message, int $status = 422)
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], $status);
+        }
+
+        return back()->withInput()->with('error', $message);
     }
 
     /**
