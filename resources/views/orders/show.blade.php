@@ -6,8 +6,8 @@
 
     <style>
         /* =============================================
-                    THEME VARIABLES — matches project palette
-                ============================================= */
+                        THEME VARIABLES — matches project palette
+                    ============================================= */
         /* Bridge local vars to theme vars so dark mode works automatically */
         :root {
             --primary: var(--bs-primary, #4f46e5);
@@ -1839,7 +1839,8 @@
                                     <div class="sku-row">
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="sku-code">{{ $skuInfo['sku'] }}</span>
-                                            <span class="badge {{ $skuInfo['type_class'] }} rounded-pill">{{ $skuInfo['type_label'] }}</span>
+                                            <span
+                                                class="badge {{ $skuInfo['type_class'] }} rounded-pill">{{ $skuInfo['type_label'] }}</span>
                                         </div>
                                         <div>
                                             @if(isset($prices[$skuInfo['sku']]))
@@ -1855,12 +1856,14 @@
                             $meleeEntries = $order->melee_entries ?? [];
                             // Fallback: if no melee_entries but old single-melee fields exist
                             if (empty($meleeEntries) && $order->melee_diamond_id) {
-                                $meleeEntries = [[
-                                    'melee_diamond_id' => $order->melee_diamond_id,
-                                    'pieces' => $order->melee_pieces,
-                                    'avg_carat_per_piece' => $order->melee_carat && $order->melee_pieces ? $order->melee_carat / $order->melee_pieces : 0,
-                                    'price_per_ct' => $order->melee_price_per_ct,
-                                ]];
+                                $meleeEntries = [
+                                    [
+                                        'melee_diamond_id' => $order->melee_diamond_id,
+                                        'pieces' => $order->melee_pieces,
+                                        'avg_carat_per_piece' => $order->melee_carat && $order->melee_pieces ? $order->melee_carat / $order->melee_pieces : 0,
+                                        'price_per_ct' => $order->melee_price_per_ct,
+                                    ]
+                                ];
                             }
                         @endphp
 
@@ -1882,33 +1885,33 @@
                                         @endif
                                     </div>
                                     <div class="od-melee-grid">
-                                        <div class="od-melee-item" style="grid-column: span 2;">
+                                        <div class="od-melee-item">
                                             <small>Melee Item</small>
-                                            <span>{{ $melee->category->name ?? 'Melee' }} —
-                                                {{ str_replace('-', ' ', $melee->size_label ?? 'N/A') }}</span>
+                                            <span>
+                                                [{{ $melee->category->type === 'lab_grown' ? 'Lab Grown' : 'Natural' }}]
+                                                {{ $melee->category->full_name }} - {{ $melee->shape }} - {{ $melee->size_label }}
+                                            </span>
                                         </div>
-                                        @if($mPieces)
-                                            <div class="od-melee-item">
-                                                <small>Pieces</small>
-                                                <span>{{ $mPieces }} pcs</span>
-                                            </div>
-                                        @endif
-                                        @if($mTotalCarat)
-                                            <div class="od-melee-item">
-                                                <small>Carat</small>
-                                                <span>{{ number_format($mTotalCarat, 3) }} ct</span>
-                                            </div>
-                                        @endif
-                                        @if($mPriceCt)
-                                            <div class="od-melee-item">
-                                                <small>Price / ct</small>
-                                                <span>$ {{ number_format($mPriceCt, 2) }}</span>
-                                            </div>
-                                            <div class="od-melee-item">
-                                                <small>Total Value</small>
-                                                <span>$ {{ number_format($mTotalValue, 2) }}</span>
-                                            </div>
-                                        @endif
+                                        <div class="od-melee-item">
+                                            <small>Pieces</small>
+                                            <span>{{ $mPieces }}</span>
+                                        </div>
+                                        <div class="od-melee-item">
+                                            <small>Avg Carat/Piece</small>
+                                            <span>{{ number_format($mAvgCarat, 3) }}</span>
+                                        </div>
+                                        <div class="od-melee-item">
+                                            <small>Total Carat</small>
+                                            <span>{{ number_format($mTotalCarat, 3) }}</span>
+                                        </div>
+                                        <div class="od-melee-item">
+                                            <small>Price/Carat</small>
+                                            <span>$ {{ number_format($mPriceCt, 2) }}</span>
+                                        </div>
+                                        <div class="od-melee-item">
+                                            <small>Total Value</small>
+                                            <span>$ {{ number_format($mTotalValue, 2) }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
