@@ -124,29 +124,43 @@
             </div>
             <div class="section-body">
                 <div class="form-grid">
-                    @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
-                        <div class="form-group">
-                            <label class="form-label">Price Per Ct</label>
-                            <p class="form-value">${{ number_format($diamond->per_ct ?? 0, 2) }}</p>
-                        </div>
-                    @endif
+                    <div class="form-group">
+                        <label class="form-label">Price Per Ct</label>
+                        <p class="form-value">
+                            @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
+                                ${{ number_format($diamond->per_ct ?? 0, 2) }}
+                            @else
+                                <span class="text-muted" title="Restricted">Restricted</span>
+                            @endif
+                        </p>
+                    </div>
 
                     <div class="form-group">
                         <label class="form-label">Weight</label>
                         <p class="form-value">{{ $diamond->weight ?? 0 }} carats</p>
                     </div>
 
-                    @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
-                        <div class="form-group">
-                            <label class="form-label">Purchase Price</label>
-                            <p class="form-value">${{ number_format($diamond->purchase_price ?? 0, 2) }}</p>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Purchase Price</label>
+                        <p class="form-value">
+                            @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
+                                ${{ number_format($diamond->purchase_price ?? 0, 2) }}
+                            @else
+                                <span class="text-muted" title="Restricted">Restricted</span>
+                            @endif
+                        </p>
+                    </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Margin</label>
-                            <p class="form-value">{{ $diamond->margin ?? 0 }}%</p>
-                        </div>
-                    @endif
+                    <div class="form-group">
+                        <label class="form-label">Margin</label>
+                        <p class="form-value">
+                            @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
+                                {{ $diamond->margin ?? 0 }}%
+                            @else
+                                <span class="text-muted" title="Restricted">Restricted</span>
+                            @endif
+                        </p>
+                    </div>
 
                     <div class="form-group">
                         <label class="form-label">Listing Price</label>
@@ -220,20 +234,36 @@
 
                     <div class="form-group">
                         <label class="form-label">Duration Price</label>
-                        <p class="form-value">${{ number_format($diamond->duration_price ?? 0, 2) }}</p>
+                        <p class="form-value">
+                            @if(auth()->guard('admin')->user() && (auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing')))
+                                ${{ number_format($diamond->duration_price ?? 0, 2) }}
+                            @else
+                                <span class="text-muted" title="Restricted">Restricted</span>
+                            @endif
+                        </p>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Sold Out Price</label>
-                        <p class="form-value">${{ number_format($diamond->sold_out_price ?? 0, 2) }}</p>
+                        <p class="form-value">
+                            @if(auth()->guard('admin')->user() && (auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing')))
+                                ${{ number_format($diamond->sold_out_price ?? 0, 2) }}
+                            @else
+                                <span class="text-muted" title="Restricted">Restricted</span>
+                            @endif
+                        </p>
                     </div>
 
-                    @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
-                        <div class="form-group">
-                            <label class="form-label">Profit</label>
-                            <p class="form-value">${{ number_format($diamond->profit ?? 0, 2) }}</p>
-                        </div>
-                    @endif
+                    <div class="form-group">
+                        <label class="form-label">Profit</label>
+                        <p class="form-value">
+                            @if(Auth::guard('admin')->user()?->hasPermission('diamonds.view_pricing'))
+                                ${{ number_format($diamond->profit ?? 0, 2) }}
+                            @else
+                                <span class="text-muted" title="Restricted">Restricted</span>
+                            @endif
+                        </p>
+                    </div>
 
                     <div class="form-group">
                         <label class="form-label">Sold Out Month</label>

@@ -97,6 +97,7 @@ class PermissionSeeder extends Seeder
 
             // Diamonds
             ['name' => 'View Diamonds', 'slug' => 'diamonds.view', 'description' => 'View diamonds list and details', 'category' => 'diamonds'],
+            ['name' => 'View Team Diamonds', 'slug' => 'diamonds.view_team', 'description' => 'Allow admin to view diamonds assigned to other admins', 'category' => 'diamonds'],
             ['name' => 'Create Diamonds', 'slug' => 'diamonds.create', 'description' => 'Create diamonds', 'category' => 'diamonds'],
             ['name' => 'Edit Diamonds', 'slug' => 'diamonds.edit', 'description' => 'Edit diamonds', 'category' => 'diamonds'],
             ['name' => 'Delete Diamonds', 'slug' => 'diamonds.delete', 'description' => 'Delete diamonds', 'category' => 'diamonds'],

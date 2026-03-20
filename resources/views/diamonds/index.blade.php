@@ -335,7 +335,7 @@
                         </select>
                     </div>
 
-                    @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->is_super)
+                    @if(auth()->guard('admin')->user() && (auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('diamonds.view_team')))
                         <div class="filter-field">
                             <label class="filter-label">
                                 <i class="bi bi-person"></i>
@@ -526,7 +526,11 @@
                         </td>
                         <td>
                             <div class="cell-content">
-                                <span class="price-value">${{ number_format($d->purchase_price ?? 0, 2) }}</span>
+                                @if(auth()->guard('admin')->user() && (auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing')))
+                                    <span class="price-value">${{ number_format($d->purchase_price ?? 0, 2) }}</span>
+                                @else
+                                    <span class="text-muted" title="Restricted">Restricted</span>
+                                @endif
                             </div>
                         </td>
                         <td>
