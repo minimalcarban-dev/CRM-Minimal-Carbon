@@ -20,9 +20,10 @@ class MeleeStockService
      * @param array<int, array<string, mixed>> $entries
      * @return array<string, mixed>
      */
-    public function deductForOrder(int $orderId, array $entries): array
+    public function deductForOrder(int $orderId, array $entries, array $options = []): array
     {
         $entries = $this->normalizeEntries($entries);
+        $allowNegative = (bool) ($options['allow_negative'] ?? false);
 
         if (empty($entries)) {
             return [
@@ -33,9 +34,9 @@ class MeleeStockService
         }
 
         try {
-            return DB::transaction(function () use ($orderId, $entries) {
+            return DB::transaction(function () use ($orderId, $entries, $allowNegative) {
                 $diamonds = $this->lockDiamondsForEntries($entries);
-                $validationResult = $this->validateLockedAvailability($entries, $diamonds);
+                $validationResult = $this->validateLockedAvailability($entries, $diamonds, $allowNegative);
 
                 if (!$validationResult['valid']) {
                     return [
@@ -181,9 +182,10 @@ class MeleeStockService
      * @param array<int, array<string, mixed>> $entries
      * @return array{valid: bool, message: string}
      */
-    public function validateAvailability(array $entries): array
+    public function validateAvailability(array $entries, array $options = []): array
     {
         $entries = $this->normalizeEntries($entries);
+        $allowNegative = (bool) ($options['allow_negative'] ?? false);
 
         if (empty($entries)) {
             return ['valid' => true, 'message' => 'No melee stock selected.'];
@@ -194,7 +196,7 @@ class MeleeStockService
             ->get()
             ->keyBy('id');
 
-        return $this->validateLockedAvailability($entries, $diamonds);
+        return $this->validateLockedAvailability($entries, $diamonds, $allowNegative);
     }
 
     /**
@@ -357,7 +359,7 @@ class MeleeStockService
      * @param \Illuminate\Support\Collection<int, MeleeDiamond> $diamonds
      * @return array{valid: bool, message: string}
      */
-    private function validateLockedAvailability(array $entries, Collection $diamonds): array
+    private function validateLockedAvailability(array $entries, Collection $diamonds, bool $allowNegative = false): array
     {
         $requestedByDiamond = $this->aggregateRequestedPieces($entries);
 
@@ -372,7 +374,7 @@ class MeleeStockService
                 ];
             }
 
-            if ((int) $diamond->available_pieces < $requestedPieces) {
+            if (!$allowNegative && (int) $diamond->available_pieces < $requestedPieces) {
                 return [
                     'valid' => false,
                     'message' => $this->buildInsufficientStockMessage($diamond, $requestedPieces),

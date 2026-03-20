@@ -28,3 +28,6 @@ composer.lock
 package-lock.json
 /.agents
 /antigravity-skills
+/antigravity-skills-temp
+/.yoyo
+.yoyo/snapshot

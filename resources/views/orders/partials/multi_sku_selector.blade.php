@@ -138,24 +138,31 @@
     }
 
     .sku-pill-sku {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 5px 10px;
+        color: #5d5ced;
+        background: #f8f9ff;
+        border: 1px solid #e0e7ff;
+        border-radius: 24px;
+        /* Rounded pill shape like SKU */
+        font-size: 0.8125rem;
+        transition: all 0.15s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        flex-wrap: nowrap;
+        min-width: 0;
         font-weight: 700;
-        font-size: 0.75rem;
-        color: #4f46e5;
-        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        letter-spacing: 0.3px;
-        white-space: nowrap;
     }
 
     .sku-pill.loading .sku-pill-sku {
-        color: #64748b;
+        color: #eef2ff;
         background: rgba(100, 116, 139, 0.1);
     }
 
     .sku-pill-details {
         font-size: 0.7rem;
-        color: #64748b;
+        color: #eef2ff;
         font-weight: 500;
         white-space: nowrap;
     }

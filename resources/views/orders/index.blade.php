@@ -83,9 +83,11 @@
                 </div>
                 <div class="header-right">
                     @php
-                        $draftCount = \App\Models\OrderDraft::where('admin_id', auth()->guard('admin')->id())->notExpired()->count();
+                        $draftCount = \App\Models\OrderDraft::where('admin_id', auth()->guard('admin')->id())
+                            ->notExpired()
+                            ->count();
                     @endphp
-                    @if($draftCount > 0)
+                    @if ($draftCount > 0)
                         <a href="{{ route('orders.drafts.index') }}" class="btn-drafts-custom">
                             <i class="bi bi-file-earmark-text"></i>
                             <span>Drafts</span>
@@ -209,7 +211,7 @@
             </a>
 
             {{-- Today's Sales (Clickable to toggle Company Progress) - Only visible with sales.view permission --}}
-            @if(auth('admin')->user()->hasExplicitPermission('sales.view'))
+            @if (auth('admin')->user()->hasExplicitPermission('sales.view'))
                 <div class="stat-card stat-card-sales" id="todaysSalesCard" onclick="toggleCompanyProgress()"
                     style="cursor: pointer;">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
@@ -227,7 +229,8 @@
                             style="font-size: 0.7rem; color: var(--gray); margin-top: 4px; border-top: 1px solid rgba(16, 185, 129, 0.1); padding-top: 4px;">
                             <span style="display: flex; justify-content: space-between; align-items: center;">
                                 <span>Month:</span>
-                                <span style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
+                                <span
+                                    style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
                             </span>
                         </div>
                     </div>
@@ -236,7 +239,9 @@
         </div>
 
         {{-- Company Monthly Progress Section (Hidden by default, toggle on Today's Sales click) --}}
-        @if(auth('admin')->user()->hasExplicitPermission('sales.view') && isset($companySalesStats) && $companySalesStats->count() > 0)
+        @if (auth('admin')->user()->hasExplicitPermission('sales.view') &&
+                isset($companySalesStats) &&
+                $companySalesStats->count() > 0)
             <div class="company-progress-section" id="companyProgressSection" style="display: none;">
                 <div class="section-header">
                     <h3 class="section-title">
@@ -245,17 +250,20 @@
                     </h3>
                 </div>
                 <div class="company-progress-grid">
-                    @foreach($companySalesStats as $company)
-                        <a href="{{ route('companies.sales-dashboard', $company['id']) }}" class="company-progress-card-simple">
+                    @foreach ($companySalesStats as $company)
+                        <a href="{{ route('companies.sales-dashboard', $company['id']) }}"
+                            class="company-progress-card-simple">
                             <div class="company-name-simple">{{ $company['name'] }}</div>
                             <div class="progress-ring-large">
-                                @if($company['target_progress'] !== null)
+                                @if ($company['target_progress'] !== null)
                                     <svg viewBox="0 0 36 36" class="circular-chart-large">
                                         <path class="circle-bg-large"
                                             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path class="circle-large" stroke-dasharray="{{ min($company['target_progress'], 100) }}, 100"
+                                        <path class="circle-large"
+                                            stroke-dasharray="{{ min($company['target_progress'], 100) }}, 100"
                                             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <text x="18" y="20.35" class="percentage-large">{{ round($company['target_progress']) }}%</text>
+                                        <text x="18" y="20.35"
+                                            class="percentage-large">{{ round($company['target_progress']) }}%</text>
                                     </svg>
                                 @else
                                     <div class="no-target-large">
@@ -273,7 +281,7 @@
         @endif
 
         {{-- Overdue Orders Alert Banner --}}
-        @if(isset($overdueOrdersCount) && $overdueOrdersCount > 0 && !session('hide_overdue_banner'))
+        @if (isset($overdueOrdersCount) && $overdueOrdersCount > 0 && !session('hide_overdue_banner'))
             <div class="overdue-alert-banner" id="overdueAlertBanner">
                 <div class="overdue-alert-content">
                     <div class="overdue-alert-icon">
@@ -319,34 +327,64 @@
                     <option value="">All Diamond Status</option>
 
                     {{-- Ready to Ship Statuses --}}
-                    <option value="r_order_in_process" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process</option>
-                    <option value="r_order_shipped" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
-                    <option value="r_order_cancelled" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled</option>
+                    <option value="r_order_in_process" class="status-option ready_to_ship"
+                        {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process
+                    </option>
+                    <option value="r_order_shipped" class="status-option ready_to_ship"
+                        {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
+                    <option value="r_order_cancelled" class="status-option ready_to_ship"
+                        {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled
+                    </option>
 
                     {{-- Custom Diamond Statuses --}}
-                    <option value="d_diamond_in_discuss" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
+                    <option value="d_diamond_in_discuss" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
                     </option>
-                    <option value="d_diamond_in_making" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making</option>
-                    <option value="d_diamond_completed" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed</option>
-                    <option value="d_diamond_in_certificate" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
+                    <option value="d_diamond_in_making" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making
+                    </option>
+                    <option value="d_diamond_completed" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed
+                    </option>
+                    <option value="d_diamond_in_certificate" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
                         Certificate</option>
-                    <option value="d_order_shipped" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
-                    <option value="d_order_cancelled" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled</option>
+                    <option value="d_order_shipped" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
+                    <option value="d_order_cancelled" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled
+                    </option>
 
                     {{-- Custom Jewellery Statuses --}}
-                    <option value="j_diamond_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In Progress
+                    <option value="j_diamond_in_progress" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In
+                        Progress
                     </option>
-                    <option value="j_diamond_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed</option>
-                    <option value="j_diamond_in_discuss" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
+                    <option value="j_diamond_completed" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed
                     </option>
-                    <option value="j_cad_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress</option>
-                    <option value="j_cad_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
-                    <option value="j_order_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed</option>
-                    <option value="j_order_in_qc" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
-                    <option value="j_qc_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
-                    <option value="j_order_shipped" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
-                    <option value="j_order_hold" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
-                    <option value="j_order_cancelled" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled</option>
+                    <option value="j_diamond_in_discuss" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
+                    </option>
+                    <option value="j_cad_in_progress" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress
+                    </option>
+                    <option value="j_cad_done" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
+                    <option value="j_order_completed" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed
+                    </option>
+                    <option value="j_order_in_qc" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
+                    <option value="j_qc_done" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
+                    <option value="j_order_shipped" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
+                    <option value="j_order_hold" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
+                    <option value="j_order_cancelled" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled
+                    </option>
                 </select>
 
                 <div class="date-range-wrapper">
@@ -361,13 +399,15 @@
                     $overdueActive = request('overdue') === '1';
                     $overdueParams = $overdueActive
                         ? request()->except(['overdue', 'page'])
-                        : array_merge(request()->except(['page', 'shipped', 'cancelled', 'in_transit']), ['overdue' => '1']);
+                        : array_merge(request()->except(['page', 'shipped', 'cancelled', 'in_transit']), [
+                            'overdue' => '1',
+                        ]);
                 @endphp
                 <a href="{{ route('orders.index', $overdueParams) }}"
                     class="btn-overdue-filter {{ $overdueActive ? 'active' : '' }}">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <span>Overdue</span>
-                    @if(isset($overdueOrdersCount) && $overdueOrdersCount > 0)
+                    @if (isset($overdueOrdersCount) && $overdueOrdersCount > 0)
                         <span class="badge {{ $overdueActive ? 'bg-light text-danger' : 'bg-danger text-white' }}"
                             style="border-radius: 12px; padding: 2px 6px; font-size: 0.75rem;">{{ $overdueOrdersCount }}</span>
                     @endif
@@ -378,20 +418,22 @@
                     $cancelledActive = request('cancelled') === '1';
                     $cancelledParams = $cancelledActive
                         ? request()->except(['cancelled', 'page'])
-                        : array_merge(request()->except(['page', 'shipped', 'overdue', 'in_transit']), ['cancelled' => '1']);
+                        : array_merge(request()->except(['page', 'shipped', 'overdue', 'in_transit']), [
+                            'cancelled' => '1',
+                        ]);
                 @endphp
                 <a href="{{ route('orders.index', $cancelledParams) }}"
                     class="btn-cancelled-filter {{ $cancelledActive ? 'active' : '' }}">
                     <i class="bi bi-x-circle-fill"></i>
                     <span>Cancelled</span>
-                    @if(isset($cancelledOrdersCount) && $cancelledOrdersCount > 0)
+                    @if (isset($cancelledOrdersCount) && $cancelledOrdersCount > 0)
                         <span class="badge {{ $cancelledActive ? 'bg-light text-danger' : 'bg-danger text-white' }}"
                             style="border-radius: 12px; padding: 2px 6px; font-size: 0.75rem;">{{ $cancelledOrdersCount }}</span>
                     @endif
                 </a>
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', function () {
+                    document.addEventListener('DOMContentLoaded', function() {
                         const filterForm = document.getElementById('orderFilterForm');
                         const orderTypeSelect = document.querySelector('select[name="order_type"]');
                         const statusSelect = document.querySelector('select[name="diamond_status"]');
@@ -400,6 +442,8 @@
 
                         // Debounce function for search input
                         let searchTimeout;
+                        let lastSubmittedSearchValue = searchInput.value.trim();
+
                         function debounceSearch(fn, delay) {
                             clearTimeout(searchTimeout);
                             searchTimeout = setTimeout(fn, delay);
@@ -453,34 +497,46 @@
                         updateStatusDropdown();
 
                         // Auto-submit on order type change
-                        orderTypeSelect.addEventListener('change', function () {
+                        orderTypeSelect.addEventListener('change', function() {
                             updateStatusDropdown();
                             filterForm.submit();
                         });
 
                         // Auto-submit on diamond status change
-                        statusSelect.addEventListener('change', function () {
+                        statusSelect.addEventListener('change', function() {
                             filterForm.submit();
                         });
 
-                        // Debounced auto-submit on search input (500ms delay)
-                        searchInput.addEventListener('input', function () {
-                            debounceSearch(function () {
+                        // Debounced auto-submit on search input
+                        searchInput.addEventListener('input', function() {
+                            const currentValue = searchInput.value.trim();
+                            debounceSearch(function() {
+                                // Submit only if search value actually changed
+                                if (currentValue === lastSubmittedSearchValue) {
+                                    return;
+                                }
+                                lastSubmittedSearchValue = currentValue;
                                 filterForm.submit();
-                            }, 500);
+                            }, 800);
                         });
 
                         // Also submit on Enter key for search
-                        searchInput.addEventListener('keypress', function (e) {
+                        searchInput.addEventListener('keypress', function(e) {
                             if (e.key === 'Enter') {
+                                e.preventDefault();
                                 clearTimeout(searchTimeout);
+                                const currentValue = searchInput.value.trim();
+                                if (currentValue === lastSubmittedSearchValue) {
+                                    return;
+                                }
+                                lastSubmittedSearchValue = currentValue;
                                 filterForm.submit();
                             }
                         });
                         // Sync All Confirm & Loader
                         const btnSyncAll = document.getElementById('btnSyncAll');
                         if (btnSyncAll) {
-                            btnSyncAll.addEventListener('click', function (e) {
+                            btnSyncAll.addEventListener('click', function(e) {
                                 e.preventDefault();
                                 const url = this.getAttribute('href');
 
@@ -521,7 +577,7 @@
                     <span>Filter</span>
                 </button>
 
-                @if(request('search') || request('order_type') || request('diamond_status') || request('overdue'))
+                @if (request('search') || request('order_type') || request('diamond_status') || request('overdue'))
                     <a href="{{ route('orders.index') }}" class="btn-reset">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Reset</span>
@@ -538,16 +594,16 @@
         <!-- Orders Table -->
         <div class="orders-table-card">
             <div class="table-container">
-                @if($orders->count() > 0)
+                @if ($orders->count() > 0)
                     <table class="orders-table">
                         <thead>
                             <tr>
                                 <!-- <th class="th-id">
-                                    <div class="th-content">
-                                        <i class="bi bi-hash"></i>
-                                        <span>ID</span>
-                                    </div>
-                                </th> -->
+                                        <div class="th-content">
+                                            <i class="bi bi-hash"></i>
+                                            <span>ID</span>
+                                        </div>
+                                    </th> -->
                                 <th>
                                     <div class="th-content">
                                         <i class="bi bi-image"></i>
@@ -606,7 +662,8 @@
                                     // Check if order is overdue: dispatch_date is in the past AND order is NOT shipped
                                     $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
                                     $isShipped = in_array($order->diamond_status, $shippedStatuses);
-                                    $isOverdue = $order->dispatch_date &&
+                                    $isOverdue =
+                                        $order->dispatch_date &&
                                         \Carbon\Carbon::parse($order->dispatch_date)->lt(now()->startOfDay()) &&
                                         !$isShipped;
                                 @endphp
@@ -629,16 +686,26 @@
                                             @php
                                                 $firstImage = null;
                                                 if (!empty($order->images)) {
-                                                    $imgs = is_string($order->images) ? json_decode($order->images, true) : $order->images;
+                                                    $imgs = is_string($order->images)
+                                                        ? json_decode($order->images, true)
+                                                        : $order->images;
                                                     $firstImage = is_array($imgs) && count($imgs) > 0 ? $imgs[0] : null;
                                                 }
 
-                                                $skus = is_array($order->diamond_skus) ? $order->diamond_skus : (!empty($order->diamond_sku) ? [$order->diamond_sku] : []);
+                                                $skus = is_array($order->diamond_skus)
+                                                    ? $order->diamond_skus
+                                                    : (!empty($order->diamond_sku)
+                                                        ? [$order->diamond_sku]
+                                                        : []);
                                                 $skuText = !empty($skus) ? implode(', ', $skus) : '—';
                                             @endphp
-                                            
-                                            <div class="thumbnail-container">
-                                                @if($firstImage)
+
+                                            <div class="thumbnail-container {{ $firstImage ? 'has-image' : '' }}"
+                                                @if ($firstImage) data-preview-src="{{ $firstImage['url'] }}"
+                                                    tabindex="0"
+                                                    role="button"
+                                                    aria-label="Preview product image for order #{{ $order->id }}" @endif>
+                                                @if ($firstImage)
                                                     <img src="{{ $firstImage['url'] }}" alt="Product">
                                                 @else
                                                     <div
@@ -650,14 +717,14 @@
 
                                             <div class="order-details-column">
                                                 {{-- Company --}}
-                                                @if($order->company)
+                                                @if ($order->company)
                                                     <span class="badge-item badge-company">
                                                         <i class="bi bi-building"></i> {{ $order->company->name }}
                                                     </span>
                                                 @endif
 
                                                 {{-- Order Type --}}
-                                                @if($order->order_type == 'ready_to_ship')
+                                                @if ($order->order_type == 'ready_to_ship')
                                                     <span class="badge-item badge-ready-to-ship">
                                                         <i class="bi bi-box-seam"></i> Ready to Ship
                                                     </span>
@@ -671,10 +738,10 @@
                                                     </span>
                                                 @endif
 
-                                                
+
 
                                                 {{-- SKU --}}
-                                                @if($skuText !== '—')
+                                                @if ($skuText !== '—')
                                                     <span class="badge-item badge-sku"
                                                         style="background-color: rgb(253 240 240 / 60%); border-color: rgb(212 45 45 / 50%); color: #ff0101; font-weight: normal;"
                                                         title="{{ $skuText }}">
@@ -692,29 +759,30 @@
 
                                             <div class="client-meta d-flex flex-column gap-1" style="font-size: 0.75rem;">
 
-                                                @if($address = $order->display_client_address)
+                                                @if ($address = $order->display_client_address)
                                                     <div class="d-flex align-items-start text-muted">
                                                         <span
                                                             style="white-space: normal; line-height: 1.2;">{!! nl2br(e($address)) !!}</span>
                                                     </div>
                                                 @endif
 
-                                                @if($email = $order->display_client_email)
+                                                @if ($email = $order->display_client_email)
                                                     <div class="d-flex align-items-center text-muted">
                                                         {{ $email }}
                                                     </div>
                                                 @endif
 
-                                                @if($mobile = $order->display_client_mobile)
+                                                @if ($mobile = $order->display_client_mobile)
                                                     <div class="d-flex align-items-center text-muted">
                                                         {{ $mobile }}
                                                     </div>
                                                 @endif
 
-                                                @if($taxId = $order->display_client_tax_id)
+                                                @if ($taxId = $order->display_client_tax_id)
                                                     <div class="d-flex align-items-center text-muted">
-                                                        <span class="text-uppercase me-1" style="font-size: 0.7rem; font-weight: 600;">
-                                                            {{ $order->client_tax_id_type ? (\App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? $order->client_tax_id_type) : 'Tax ID' }}:
+                                                        <span class="text-uppercase me-1"
+                                                            style="font-size: 0.7rem; font-weight: 600;">
+                                                            {{ $order->client_tax_id_type ? \App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? $order->client_tax_id_type : 'Tax ID' }}:
                                                         </span>
                                                         {{ $taxId }}
                                                     </div>
@@ -724,21 +792,25 @@
                                     </td>
 
                                     <td>
-                                        <div class="d-flex flex-column gap-1" style="font-size: 0.8rem; max-width: 300px;">
-                                            @if($order->jewellery_details)
+                                        <div class="d-flex flex-column gap-1"
+                                            style="font-size: 0.8rem; max-width: 300px;">
+                                            @if ($order->jewellery_details)
                                                 <div>
                                                     <strong
                                                         style="font-size: 0.7rem; color: #6366f1; display: block;">Jewellery:</strong>
-                                                    <div style="white-space: pre-wrap;">{{ trim($order->jewellery_details) }}</div>
+                                                    <div style="white-space: pre-wrap;">
+                                                        {{ trim($order->jewellery_details) }}</div>
                                                 </div>
                                             @endif
-                                            @if($order->diamond_details)
+                                            @if ($order->diamond_details)
                                                 <div>
-                                                    <strong style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
-                                                    <div style="white-space: pre-wrap;">{{ trim($order->diamond_details) }}</div>
+                                                    <strong
+                                                        style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
+                                                    <div style="white-space: pre-wrap;">
+                                                        {{ trim($order->diamond_details) }}</div>
                                                 </div>
                                             @endif
-                                            @if(!$order->jewellery_details && !$order->diamond_details)
+                                            @if (!$order->jewellery_details && !$order->diamond_details)
                                                 <span class="text-muted">&mdash;</span>
                                             @endif
                                         </div>
@@ -746,7 +818,7 @@
 
                                     <td>
                                         <span class="amount-value">
-                                            @if($order->gross_sell)
+                                            @if ($order->gross_sell)
                                                 $ {{ number_format($order->gross_sell, 2) }}
                                             @else
                                                 <span class="text-muted">&mdash;</span>
@@ -771,11 +843,12 @@
                                         </div>
                                     </td>
                                     <td>
-                                        @if($order->shipping_company_name || $order->tracking_number)
+                                        @if ($order->shipping_company_name || $order->tracking_number)
                                             <div class="shipping-info-cell">
                                                 <div class="shipping-main">
-                                                    <span class="shipping-company">{{ $order->shipping_company_name }}</span>
-                                                    @if($order->tracking_number)
+                                                    <span
+                                                        class="shipping-company">{{ $order->shipping_company_name }}</span>
+                                                    @if ($order->tracking_number)
                                                         <a href="javascript:void(0)" class="tracking-number-link"
                                                             onclick="showTrackingHistory({{ $order->id }}, {{ json_encode($order->tracking_number) }}, {{ json_encode($order->shipping_company_name) }}, {{ json_encode($order->tracking_history) }}, {{ json_encode($order->tracking_url) }})"
                                                             title="Click to view history">
@@ -783,14 +856,15 @@
                                                         </a>
                                                     @endif
 
-                                                    @if($order->tracking_url)
-                                                        <button class="btn-sync-inline" onclick="syncTracking({{ $order->id }}, this)"
+                                                    @if ($order->tracking_url)
+                                                        <button class="btn-sync-inline"
+                                                            onclick="syncTracking({{ $order->id }}, this)"
                                                             title="Sync Tracking">
                                                             <i class="bi bi-arrow-repeat"></i>
                                                         </button>
                                                     @endif
                                                 </div>
-                                                @if($order->tracking_status)
+                                                @if ($order->tracking_status)
                                                     <div
                                                         class="shipping-status-label status-{{ strtolower(str_replace(' ', '_', $order->tracking_status)) }}">
                                                         {{ $order->tracking_status }}
@@ -811,32 +885,38 @@
                                     </td>
                                     <td class="td-actions">
                                         <div class="action-buttons">
-                                            <a href="{{ route('orders.show', $order->id) }}" class="action-btn action-btn-view"
-                                                title="View Order">
+                                            <a href="{{ route('orders.show', $order->id) }}"
+                                                class="action-btn action-btn-view" title="View Order">
                                                 <i class="bi bi-eye"></i>
                                             </a>
 
-                                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.edit']))
-                                                <a href="{{ route('orders.edit', $order->id) }}" class="action-btn action-btn-edit"
-                                                    title="Edit Order">
+                                            @if (auth()->guard('admin')->user() &&
+                                                    auth()->guard('admin')->user()->canAccessAny(['orders.edit']))
+                                                <a href="{{ route('orders.edit', $order->id) }}"
+                                                    class="action-btn action-btn-edit" title="Edit Order">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                             @endif
 
-                                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->hasPermission('orders.cancel') && !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
-                                                <button type="button" class="action-btn action-btn-cancel" title="Cancel Order"
+                                            @if (auth()->guard('admin')->user() &&
+                                                    auth()->guard('admin')->user()->hasPermission('orders.cancel') &&
+                                                    !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
+                                                <button type="button" class="action-btn action-btn-cancel"
+                                                    title="Cancel Order"
                                                     onclick="openCancelModal({{ $order->id }}, '{{ addslashes($order->client_name) }}')"
                                                     style="color: #dc3545; background: rgba(220, 53, 69, 0.1);">
                                                     <i class="bi bi-x-circle"></i>
                                                 </button>
                                             @endif
 
-                                            @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
+                                            @if (auth()->guard('admin')->user() &&
+                                                    auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
                                                 <form action="{{ route('orders.destroy', $order->id) }}" method="POST"
                                                     class="d-inline delete-form">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="action-btn action-btn-delete" title="Delete Order">
+                                                    <button type="submit" class="action-btn action-btn-delete"
+                                                        title="Delete Order">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
@@ -854,13 +934,13 @@
                         </div>
                         <h3 class="empty-title">No orders found</h3>
                         <p class="empty-description">
-                            @if(request('search') || request('order_type') || request('diamond_status'))
+                            @if (request('search') || request('order_type') || request('diamond_status'))
                                 No orders match your search criteria. Try adjusting your filters.
                             @else
                                 Get started by creating your first order.
                             @endif
                         </p>
-                        @if(request('search') || request('order_type') || request('diamond_status'))
+                        @if (request('search') || request('order_type') || request('diamond_status'))
                             <a href="{{ route('orders.index') }}" class="btn-primary-custom">
                                 <i class="bi bi-arrow-counterclockwise"></i>
                                 Reset Filters
@@ -876,7 +956,7 @@
             </div>
 
             <!-- Pagination -->
-            @if($orders->hasPages())
+            @if ($orders->hasPages())
                 <div class="pagination-container">
                     {{ $orders->appends(request()->query())->links('pagination::bootstrap-5') }}
                 </div>
@@ -887,7 +967,8 @@
     <!-- Tracking History Modal -->
     <div class="modal fade" id="trackingHistoryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered tracking-history-dialog">
-            <div class="modal-content border-0 shadow-lg tracking-modal-shell" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-content border-0 shadow-lg tracking-modal-shell"
+                style="border-radius: 16px; overflow: hidden;">
                 <div class="modal-header bg-light border-bottom p-3 tracking-modal-header">
                     <h5 class="modal-title fw-bold tracking-modal-title">
                         <i class="bi bi-truck text-primary me-2"></i>
@@ -2859,12 +2940,10 @@
             height: 100px;
             position: relative;
             border-radius: 8px;
-            /* overflow: hidden; Removed to allow pop-out */
-            /* margin: 0 auto; */
             border: 1px solid var(--border);
             background: #fff;
-            transition: transform 0.2s ease, z-index 0s;
-            z-index: 1;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
         }
 
         .thumbnail-container img {
@@ -2874,36 +2953,37 @@
             border-radius: 8px;
         }
 
-        .thumbnail-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .thumbnail-container.has-image {
+            cursor: zoom-in;
+        }
+
+        .thumbnail-container.has-image:hover,
+        .thumbnail-container.has-image:focus-visible {
+            border-color: rgba(37, 99, 235, 0.45);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.16);
+            outline: none;
+        }
+
+        .image-preview-popover {
+            position: fixed;
+            z-index: 20000;
+            width: 220px;
+            height: 220px;
+            border-radius: 14px;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            background: #fff;
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.22);
+            padding: 10px;
+            display: none;
+            pointer-events: none;
+        }
+
+        .image-preview-popover img {
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            cursor: pointer;
-            border-radius: 8px;
-        }
-
-        .thumbnail-container:hover {
-            transform: scale(2.5);
-            z-index: 1000;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .thumbnail-container:hover .thumbnail-overlay {
-            opacity: 1;
-        }
-
-        .thumbnail-overlay i {
-            color: white;
-            font-size: 1.5rem;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            object-fit: contain;
+            border-radius: 10px;
+            background: #f8fafc;
         }
 
         .product-sku {
@@ -3126,8 +3206,8 @@
             }
 
             /* .client-info {
-                                                                                                                                                                                                                                        text-align: start;
-                                                                                                                                                                                                                                    } */
+                                                                                                                                                                                                                                            text-align: start;
+                                                                                                                                                                                                                                        } */
         }
 
         /* Print Styles */
@@ -3429,6 +3509,7 @@
         [data-theme="dark"] .table-row:hover {
             background: #17243a !important;
         }
+
         .custom-row span.badge-item {
             padding: 7.8px 12px;
             font-size: 14px;
@@ -3442,7 +3523,7 @@
     @push('scripts')
         <script>
             // Initialize Date Range Picker for Orders
-            $(document).ready(function () {
+            $(document).ready(function() {
                 var startDate = $('#orderDateFrom').val() ? moment($('#orderDateFrom').val()) : null;
                 var endDate = $('#orderDateTo').val() ? moment($('#orderDateTo').val()) : null;
 
@@ -3457,14 +3538,15 @@
                         'Last 7 Days': [moment().subtract(6, 'days'), moment()],
                         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
                         'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
+                            'month').endOf('month')]
                     },
                     locale: {
                         cancelLabel: 'Clear',
                         applyLabel: 'Apply',
                         format: 'MMM D, YYYY'
                     }
-                }, function (start, end, label) {
+                }, function(start, end, label) {
                     $('#orderDateFrom').val(start.format('YYYY-MM-DD'));
                     $('#orderDateTo').val(end.format('YYYY-MM-DD'));
                     $('#orderDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
@@ -3478,7 +3560,7 @@
                 }
 
                 // Clear dates on cancel and auto-submit
-                $('#orderDateRange').on('cancel.daterangepicker', function (ev, picker) {
+                $('#orderDateRange').on('cancel.daterangepicker', function(ev, picker) {
                     $(this).val('');
                     $('#orderDateFrom').val('');
                     $('#orderDateTo').val('');
@@ -3486,15 +3568,75 @@
                     $('#orderFilterForm').submit();
                 });
 
-                // Fix z-index issue on image hover - raise the row above others
-                $('.thumbnail-container').hover(
-                    function () {
-                        $(this).closest('.table-row').css({ 'z-index': 9999, 'position': 'relative' });
-                    },
-                    function () {
-                        $(this).closest('.table-row').css({ 'z-index': '', 'position': '' });
+                // Stable image preview: keep thumbnail fixed and show an external popover.
+                const previewBox = document.createElement('div');
+                previewBox.className = 'image-preview-popover';
+                previewBox.innerHTML = '<img alt="Product preview">';
+                document.body.appendChild(previewBox);
+
+                const previewImg = previewBox.querySelector('img');
+                const offset = 14;
+
+                const placePreview = (event, anchorEl = null) => {
+                    const viewportGap = 12;
+                    let clientX = typeof event?.clientX === 'number' ? event.clientX : null;
+                    let clientY = typeof event?.clientY === 'number' ? event.clientY : null;
+
+                    if ((clientX === null || clientY === null) && anchorEl) {
+                        const rect = anchorEl.getBoundingClientRect();
+                        clientX = rect.right;
+                        clientY = rect.top;
                     }
-                );
+
+                    if (clientX === null || clientY === null) {
+                        clientX = window.innerWidth / 2;
+                        clientY = window.innerHeight / 2;
+                    }
+
+                    let left = clientX + offset;
+                    let top = clientY + offset;
+
+                    if (left + previewBox.offsetWidth + viewportGap > window.innerWidth) {
+                        left = event.clientX - previewBox.offsetWidth - offset;
+                    }
+
+                    if (top + previewBox.offsetHeight + viewportGap > window.innerHeight) {
+                        top = window.innerHeight - previewBox.offsetHeight - viewportGap;
+                    }
+
+                    if (top < viewportGap) top = viewportGap;
+                    if (left < viewportGap) left = viewportGap;
+
+                    previewBox.style.left = `${left}px`;
+                    previewBox.style.top = `${top}px`;
+                };
+
+                const showPreview = (event, source, anchorEl = null) => {
+                    if (!source) return;
+                    previewImg.src = source;
+                    previewBox.style.display = 'block';
+                    placePreview(event, anchorEl);
+                };
+
+                const hidePreview = () => {
+                    previewBox.style.display = 'none';
+                    previewImg.removeAttribute('src');
+                };
+
+                document.querySelectorAll('.thumbnail-container.has-image').forEach((thumb) => {
+                    const source = thumb.getAttribute('data-preview-src');
+                    if (!source) return;
+
+                    thumb.addEventListener('mouseenter', (e) => showPreview(e, source, thumb));
+                    thumb.addEventListener('mousemove', (e) => placePreview(e, thumb));
+                    thumb.addEventListener('mouseleave', hidePreview);
+
+                    thumb.addEventListener('focus', (e) => showPreview(e, source, thumb));
+                    thumb.addEventListener('blur', hidePreview);
+                });
+
+                window.addEventListener('scroll', hidePreview, true);
+                window.addEventListener('resize', hidePreview);
             });
 
             // Toggle Company Progress Section
@@ -3530,14 +3672,14 @@
             window.dismissOverdueBanner = dismissOverdueBanner;
 
             // Check if banner should be hidden on load
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 if (sessionStorage.getItem('hideOverdueBanner') === 'true') {
                     const banner = document.getElementById('overdueAlertBanner');
                     if (banner) banner.style.display = 'none';
                 }
             });
 
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // Add stagger animation to table rows
                 const rows = document.querySelectorAll('.table-row');
                 rows.forEach((row, index) => {
@@ -3555,7 +3697,7 @@
 
                 // Handle delete confirmations with SweetAlert2
                 document.querySelectorAll('.delete-form').forEach(form => {
-                    form.addEventListener('submit', async function (e) {
+                    form.addEventListener('submit', async function(e) {
                         e.preventDefault();
 
                         const confirmed = await showConfirm(
@@ -3584,8 +3726,7 @@
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                            ,
+                            'Content-Type': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
@@ -3610,8 +3751,14 @@
 
             function escapeHtml(str) {
                 if (!str) return '';
-                return String(str).replace(/[&<>"']/g, function (m) {
-                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+                return String(str).replace(/[&<>"']/g, function(m) {
+                    return {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;'
+                    } [m];
                 });
             }
 
@@ -3623,7 +3770,8 @@
                 container.innerHTML = '';
 
                 if (!history || history.length === 0) {
-                    container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
+                    container.innerHTML =
+                        '<div class="text-center py-4 text-muted"><i class="bi bi-info-circle me-2"></i>No journey history available yet. Click sync to update.</div>';
                     document.getElementById('modalLatestStatus').textContent = 'No Data';
                 } else {
                     document.getElementById('modalLatestStatus').textContent = history[0].status;
@@ -3652,14 +3800,15 @@
                     officialLink.href = trackingUrl;
                     officialLink.style.display = 'inline-block';
                 } else {
-                    officialLink.href = `https://www.google.com/search?q=${encodeURIComponent(carrier)}+tracking+${encodeURIComponent(trackingNumber)}`;
+                    officialLink.href =
+                        `https://www.google.com/search?q=${encodeURIComponent(carrier)}+tracking+${encodeURIComponent(trackingNumber)}`;
                     officialLink.style.display = 'inline-block';
                 }
                 // Setup Sync Button
                 const syncBtn = document.getElementById('modalSyncBtn');
                 if (syncBtn) {
                     // Creating a fresh onClick handler that captures current orderId
-                    syncBtn.onclick = function () {
+                    syncBtn.onclick = function() {
                         syncTracking(orderId, this);
                     };
                 }
@@ -3706,7 +3855,8 @@
                         </div>
 
                         <div class="form-group mb-0">
-                            <label for="cancel_reason" class="form-label fw-bold small text-muted text-uppercase">Reason for
+                            <label for="cancel_reason" class="form-label fw-bold small text-muted text-uppercase">Reason
+                                for
                                 Cancellation <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="cancel_reason" name="cancel_reason" rows="3" required
                                 placeholder="Please provide a reason..."></textarea>

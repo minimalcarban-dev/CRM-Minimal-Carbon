@@ -28,6 +28,9 @@ use App\Models\OrderDraft;
 use App\Models\JewelleryStock;
 use App\Notifications\DiamondSoldNotification;
 use App\Models\MeleeDiamond;
+use App\Models\Channel;
+use App\Models\Message;
+use App\Events\MessageSent;
 use App\Services\ShippingTrackingService;
 use App\Notifications\OrderCreatedNotification;
 use Illuminate\Support\Facades\Notification;
@@ -223,6 +226,28 @@ class OrderController extends Controller
                 });
         }
 
+        // TEMP: Melee diamond-only listing filter (remove after temporary production use)
+        if ($request->boolean('melee_diamond_temp')) {
+            $textPatterns = ['%melee diamond%', '%melee-diamond%', '%melee%diamond%'];
+
+            $query->where(function ($meleeQuery) use ($textPatterns) {
+                $meleeQuery
+                    ->whereNotNull('melee_diamond_id')
+                    ->orWhere(function ($entriesQuery) {
+                        $entriesQuery->whereNotNull('melee_entries')
+                            ->where('melee_entries', '!=', '[]')
+                            ->where('melee_entries', '!=', '{}');
+                    })
+                    ->orWhere(function ($textQuery) use ($textPatterns) {
+                        foreach (['special_notes', 'jewellery_details', 'diamond_details'] as $field) {
+                            foreach ($textPatterns as $pattern) {
+                                $textQuery->orWhereRaw("LOWER(COALESCE($field, '')) LIKE ?", [$pattern]);
+                            }
+                        }
+                    });
+            });
+        }
+
         $orders = $query->latest()->paginate(20);
         return view('orders.index', compact(
             'orders',
@@ -263,11 +288,14 @@ class OrderController extends Controller
     {
         try {
             $validated = $this->validateOrder($request);
+            $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
             
             // ✅ CRITICAL: Extract and validate melee entries BEFORE creating order
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
             $meleeEntriesForStock = $incomingMeleeEntries;
-            $validationResult = $this->meleeStockService->validateAvailability($incomingMeleeEntries);
+            $validationResult = $this->meleeStockService->validateAvailability($incomingMeleeEntries, [
+                'allow_negative' => $allowNegativeMelee,
+            ]);
             if (!$validationResult['valid']) {
                 return $this->orderErrorResponse($request, $validationResult['message']);
             }
@@ -388,9 +416,11 @@ class OrderController extends Controller
                 })->afterResponse();
             }
 
-// ⚡ PERFORMANCE: Use MeleeStockService for atomic stock deduction
+            // ⚡ PERFORMANCE: Use MeleeStockService for atomic stock deduction
             if (!empty($meleeEntriesForStock)) {
-                $stockResult = $this->meleeStockService->deductForOrder($order->id, $meleeEntriesForStock);
+                $stockResult = $this->meleeStockService->deductForOrder($order->id, $meleeEntriesForStock, [
+                    'allow_negative' => $allowNegativeMelee,
+                ]);
                 if (!$stockResult['success']) {
                     DB::rollBack();
                     return $this->orderErrorResponse(
@@ -561,10 +591,11 @@ class OrderController extends Controller
         
         try {
             $validated = $this->validateOrder($request);
+            $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
             
             // ✅ CRITICAL: Validate melee stock with reservation logic
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
-            $this->validateMeleeStockAvailability($incomingMeleeEntries, $order);
+            $this->validateMeleeStockAvailability($incomingMeleeEntries, $order, $allowNegativeMelee);
 
             // ✅ CRITICAL: Validate only NEWLY ADDED SKUs (existing ones are already reserved)
             $submittedSkus = $this->extractValidatedSkus($validated);
@@ -722,7 +753,9 @@ class OrderController extends Controller
 
                 // Deduct new stock
                 if (!empty($newMeleeEntries)) {
-                    $deductResult = $this->meleeStockService->deductForOrder($order->id, $newMeleeEntries);
+                    $deductResult = $this->meleeStockService->deductForOrder($order->id, $newMeleeEntries, [
+                        'allow_negative' => $allowNegativeMelee,
+                    ]);
                     if (!$deductResult['success']) {
                         DB::rollBack();
                         return $this->orderErrorResponse(
@@ -836,18 +869,7 @@ class OrderController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
-        if (!$admin->is_super) {
-            if ($order->submitted_by !== $admin->id && !$admin->hasPermission('orders.view_team')) {
-                abort(403, 'You don\'t have permission to view orders submitted by other admins.');
-            }
-
-            $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
-            if (in_array($order->diamond_status, $shippedStatuses)) {
-                if ($order->dispatch_date && \Illuminate\Support\Carbon::parse($order->dispatch_date)->lt(now()->subDays(10)->startOfDay())) {
-                    abort(403, 'This shipped order is no longer visible (exceeded 10-day viewing window).');
-                }
-            }
-        }
+        $this->enforceOrderViewAccess($order, $admin);
 
         $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator', 'lastModifier']);
 
@@ -859,6 +881,27 @@ class OrderController extends Controller
         $companies = Company::all();
 
         $editHistory = $order->editHistory()->with('admin')->get();
+        $discussionChannel = $this->getOrCreateOrderDiscussionChannel();
+        $discussionRootMessage = $this->getOrCreateOrderDiscussionRootMessage($order, $discussionChannel, $admin);
+        $canPostDiscussion = $admin->is_super || $admin->hasPermission('orders.edit');
+        $discussionSearch = trim((string) request()->query('discussion_search', ''));
+        $discussionRootMessage->load([
+            'sender:id,name',
+            'replies' => fn($q) => $q->with('sender:id,name')->latest()->limit(50),
+        ]);
+
+        if ($discussionSearch !== '') {
+            $filteredReplies = $discussionRootMessage->replies->filter(function (Message $reply) use ($discussionSearch) {
+                $replyBody = mb_strtolower((string) ($reply->body ?? ''));
+                $replySender = mb_strtolower((string) ($reply->sender->name ?? ''));
+                $needle = mb_strtolower($discussionSearch);
+                return str_contains($replyBody, $needle) || str_contains($replySender, $needle);
+            })->values();
+
+            $discussionRootMessage->setRelation('replies', $filteredReplies);
+        }
+
+        $discussionMessages = collect([$discussionRootMessage]);
 
         return view('orders.show', compact(
             'order',
@@ -867,8 +910,213 @@ class OrderController extends Controller
             'settingTypes',
             'closureTypes',
             'companies',
-            'editHistory'
+            'editHistory',
+            'discussionChannel',
+            'discussionMessages',
+            'discussionSearch',
+            'canPostDiscussion',
+            'discussionRootMessage'
         ));
+    }
+
+    /**
+     * Post a new order discussion parent message.
+     */
+    public function postDiscussionMessage(Request $request, Order $order)
+    {
+        $admin = Auth::guard('admin')->user();
+        $this->enforceOrderViewAccess($order, $admin);
+
+        if (!$admin->is_super && !$admin->hasPermission('orders.edit')) {
+            abort(403, 'You do not have permission to post order discussion updates.');
+        }
+
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $channel = $this->getOrCreateOrderDiscussionChannel();
+        $parentMessage = $this->getOrCreateOrderDiscussionRootMessage($order, $channel, $admin);
+
+        $reply = Message::create([
+            'channel_id' => $channel->id,
+            'sender_id' => $admin->id,
+            'reply_to_id' => $parentMessage->id,
+            'type' => 'text',
+            'body' => trim($validated['body']),
+            'metadata' => [
+                'order_id' => $order->id,
+                'is_order_thread_reply' => true,
+            ],
+        ]);
+
+        $parentMessage->increment('thread_count');
+        $reply->markAsRead($admin);
+        broadcast(new MessageSent($reply->load('sender')))->toOthers();
+
+        return redirect()
+            ->to(route('orders.show', $order->id) . '#discussion-message-' . $parentMessage->id)
+            ->with('success', 'Order discussion update posted.');
+    }
+
+    /**
+     * Post a threaded reply for an existing order discussion message.
+     */
+    public function postDiscussionReply(Request $request, Order $order, Message $message)
+    {
+        $admin = Auth::guard('admin')->user();
+        $this->enforceOrderViewAccess($order, $admin);
+
+        if (!$admin->is_super && !$admin->hasPermission('orders.edit')) {
+            abort(403, 'You do not have permission to post order discussion replies.');
+        }
+
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $channel = $this->getOrCreateOrderDiscussionChannel();
+        $rootMessage = $this->getOrCreateOrderDiscussionRootMessage($order, $channel, $admin);
+
+        if ($rootMessage->id !== ($message->reply_to_id ? $message->reply_to_id : $message->id)) {
+            abort(404, 'Discussion thread not found for this order.');
+        }
+
+        $reply = Message::create([
+            'channel_id' => $channel->id,
+            'sender_id' => $admin->id,
+            'reply_to_id' => $rootMessage->id,
+            'type' => 'text',
+            'body' => trim($validated['body']),
+            'metadata' => [
+                'order_id' => $order->id,
+                'is_order_thread_reply' => true,
+            ],
+        ]);
+
+        $rootMessage->increment('thread_count');
+        $reply->markAsRead($admin);
+        broadcast(new MessageSent($reply->load('sender')))->toOthers();
+
+        return redirect()
+            ->to(route('orders.show', $order->id) . '#discussion-message-' . $rootMessage->id)
+            ->with('success', 'Thread reply posted.');
+    }
+
+    private function enforceOrderViewAccess(Order $order, Admin $admin): void
+    {
+        if (!$admin->is_super) {
+            if ($order->submitted_by !== $admin->id && !$admin->hasPermission('orders.view_team')) {
+                abort(403, 'You don\'t have permission to view orders submitted by other admins.');
+            }
+
+            $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
+            if (
+                in_array($order->diamond_status, $shippedStatuses, true)
+                && $order->dispatch_date
+                && \Illuminate\Support\Carbon::parse($order->dispatch_date)->lt(now()->subDays(10)->startOfDay())
+            ) {
+                abort(403, 'This shipped order is no longer visible (exceeded 10-day viewing window).');
+            }
+        }
+    }
+
+    private function getOrCreateOrderDiscussionChannel(): Channel
+    {
+        $existing = Channel::query()
+            ->where('type', 'group')
+            ->where('settings->kind', 'order_discussion_global')
+            ->first();
+
+        if ($existing) {
+            $this->syncOrderDiscussionMembers($existing);
+            return $existing;
+        }
+
+        // Enforce policy: channel owner/creator should be a super admin.
+        // If request comes from non-super admin, we still create using a super admin identity.
+        $creator = Admin::query()->where('is_super', true)->orderBy('id')->first();
+        if (!$creator) {
+            $creator = Auth::guard('admin')->user();
+        }
+
+        if (!$creator) {
+            abort(500, 'Unable to initialize Order Discussion channel owner.');
+        }
+        $channel = Channel::create([
+            'name' => 'Order Discussion',
+            'type' => 'group',
+            'description' => 'Global internal order discussion channel (thread per order)',
+            'settings' => [
+                'kind' => 'order_discussion_global',
+            ],
+            'created_by' => $creator->id,
+        ]);
+
+        $this->syncOrderDiscussionMembers($channel);
+        return $channel;
+    }
+
+    private function getOrCreateOrderDiscussionRootMessage(Order $order, Channel $channel, Admin $actor): Message
+    {
+        $existing = Message::query()
+            ->where('channel_id', $channel->id)
+            ->whereNull('reply_to_id')
+            ->where('metadata->kind', 'order_root')
+            ->where('metadata->order_id', $order->id)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $clientName = (string) ($order->display_client_name ?? $order->client_name ?? 'N/A');
+        $status = (string) ($order->diamond_status ?? 'N/A');
+        $createdOn = optional($order->created_at)->format('d M Y, h:i A');
+
+        return Message::create([
+            'channel_id' => $channel->id,
+            'sender_id' => $actor->id,
+            'type' => 'text',
+            'body' => "Order #{$order->id} | Client: {$clientName} | Created: {$createdOn} | Status: {$status}",
+            'metadata' => [
+                'kind' => 'order_root',
+                'order_id' => $order->id,
+                'order_number' => (string) $order->id,
+                'client_name' => $clientName,
+                'order_created_at' => optional($order->created_at)->toIso8601String(),
+                'order_status' => $status,
+            ],
+            'thread_count' => 0,
+        ]);
+    }
+
+    private function syncOrderDiscussionMembers(Channel $channel): void
+    {
+        $eligibleAdmins = Admin::query()->get()->filter(function (Admin $candidate) {
+            if ($candidate->is_super) {
+                return true;
+            }
+
+            return $candidate->hasPermission('chat.access');
+        });
+
+        $membersPayload = [];
+        foreach ($eligibleAdmins as $candidate) {
+            $membersPayload[$candidate->id] = [
+                'role' => $candidate->id === (int) $channel->created_by ? 'owner' : 'member',
+                'settings' => null,
+            ];
+        }
+
+        if (!isset($membersPayload[$channel->created_by])) {
+            $membersPayload[$channel->created_by] = [
+                'role' => 'owner',
+                'settings' => null,
+            ];
+        }
+
+        $channel->users()->syncWithoutDetaching($membersPayload);
     }
 
     /**
@@ -1405,6 +1653,7 @@ class OrderController extends Controller
             'melee_entries.*.pieces' => 'required|integer|min:1',
             'melee_entries.*.avg_carat_per_piece' => 'nullable|numeric|min:0',
             'melee_entries.*.price_per_ct' => 'nullable|numeric|min:0',
+            'allow_negative_melee' => 'nullable|boolean',
             
             'melee_diamond_id' => 'nullable|exists:melee_diamonds,id',
             'melee_pieces' => 'nullable|integer|min:1',
@@ -1598,7 +1847,11 @@ class OrderController extends Controller
     /**
      * ✅ CRITICAL HELPER: Validate requested melee pieces against live stock.
      */
-    private function validateMeleeStockAvailability(array $incomingEntries, ?Order $existingOrder = null): void
+    private function validateMeleeStockAvailability(
+        array $incomingEntries,
+        ?Order $existingOrder = null,
+        bool $allowNegative = false
+    ): void
     {
         if (empty($incomingEntries)) {
             return;
@@ -1644,7 +1897,7 @@ class OrderController extends Controller
 
             $allowedPieces = (int) $diamond->available_pieces + (int) ($reservedByMeleeId[$meleeId] ?? 0);
 
-            if ($requestedPieces > $allowedPieces) {
+            if (!$allowNegative && $requestedPieces > $allowedPieces) {
                 $label = $this->buildMeleeStockLabel($diamond);
                 $message = "{$label} has only {$allowedPieces} pieces available in stock.";
 
