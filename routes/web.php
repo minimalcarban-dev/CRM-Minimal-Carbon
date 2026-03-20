@@ -246,6 +246,12 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::get('orders/{order}', [OrderController::class , 'show'])
             ->name('orders.show')
             ->middleware('admin.permission:orders.view');
+        Route::post('orders/{order}/discussion/messages', [OrderController::class , 'postDiscussionMessage'])
+            ->name('orders.discussion.messages.store')
+            ->middleware('admin.permission:orders.view');
+        Route::post('orders/{order}/discussion/messages/{message}/reply', [OrderController::class , 'postDiscussionReply'])
+            ->name('orders.discussion.messages.reply')
+            ->middleware('admin.permission:orders.view');
         Route::get('orders/{order}/edit', [OrderController::class , 'edit'])
             ->name('orders.edit')
             ->middleware('admin.permission:orders.edit');

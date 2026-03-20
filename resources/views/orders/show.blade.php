@@ -368,7 +368,7 @@
         /* ── Two-column Layout ───────────────────── */
         .od-grid {
             display: grid;
-            grid-template-columns: 3fr 2fr;
+            grid-template-columns: minmax(320px, 2fr) minmax(0, 2fr);
             gap: 1.5rem;
             align-items: start;
         }
@@ -437,8 +437,8 @@
 
         .od-info-row {
             display: grid;
-            grid-template-columns: 140px 1fr;
-            gap: 1.5rem;
+            grid-template-columns: minmax(110px, 140px) minmax(0, 1fr);
+            gap: .9rem;
             padding: .875rem 0;
             border-bottom: 1px solid var(--border);
             align-items: start;
@@ -468,6 +468,8 @@
             color: var(--dark);
             line-height: 1.6;
             word-break: break-word;
+            overflow-wrap: anywhere;
+            min-width: 0;
         }
 
         .od-info-val.address {
@@ -1001,6 +1003,7 @@
 
         .changes-detail {
             display: none;
+            overflow-x: auto;
         }
 
         .timeline-changes.expanded .changes-detail {
@@ -1011,6 +1014,8 @@
             width: 100%;
             font-size: .875rem;
             border-collapse: collapse;
+            table-layout: fixed;
+            min-width: 680px;
         }
 
         .changes-table th {
@@ -1029,6 +1034,7 @@
             padding: .5rem .75rem;
             border-bottom: 1px solid var(--border);
             vertical-align: top;
+            min-width: 0;
         }
 
         .changes-table tr:last-child td {
@@ -1038,14 +1044,29 @@
         .field-name {
             font-weight: 600;
             color: var(--dark);
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .val-badge {
-            display: inline-block;
+            display: block;
             padding: .2rem .5rem;
             border-radius: 4px;
             font-size: .8125rem;
             font-family: var(--font-mono);
+            width: 100%;
+            max-width: 100%;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            line-height: 1.35;
+        }
+
+        @media (max-width: 768px) {
+            .od-info-row {
+                grid-template-columns: 1fr;
+                gap: .25rem;
+            }
         }
 
         .val-old {
@@ -1610,6 +1631,173 @@
             background: rgba(99, 102, 241, 0.12);
             border-color: rgba(99, 102, 241, 0.4);
             color: #818cf8;
+        }
+
+        .od-discussion-meta {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: .65rem;
+            align-items: center;
+            padding: .75rem .875rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            margin-bottom: .85rem;
+        }
+
+        .od-discussion-meta small {
+            color: var(--muted);
+            font-size: .75rem;
+            display: block;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .od-discussion-meta strong {
+            font-size: .9rem;
+            color: var(--dark);
+            word-break: break-word;
+        }
+
+        .od-discussion-search {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: .85rem;
+        }
+
+        .od-discussion-search input {
+            flex: 1;
+            min-width: 0;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: .55rem .7rem;
+            font-size: .9rem;
+            background: var(--surface);
+            color: var(--dark);
+        }
+
+        .od-discussion-composer textarea,
+        .od-thread-reply textarea {
+            width: 100%;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: .65rem .75rem;
+            resize: vertical;
+            min-height: 88px;
+            font-size: .92rem;
+            color: var(--dark);
+            background: var(--surface);
+        }
+
+        .od-discussion-composer textarea:focus,
+        .od-discussion-search input:focus,
+        .od-thread-reply textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+
+        .od-discussion-actions {
+            margin-top: .55rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: .5rem;
+        }
+
+        .od-discussion-item {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            padding: .75rem .85rem;
+            margin-bottom: .75rem;
+        }
+
+        .od-discussion-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .4rem;
+        }
+
+        .od-discussion-author {
+            font-size: .86rem;
+            color: var(--dark);
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+        .od-discussion-time {
+            font-size: .78rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .od-discussion-body {
+            color: var(--body);
+            font-size: .9rem;
+            line-height: 1.45;
+            margin: 0;
+        }
+
+        .od-thread-wrap {
+            margin-top: .55rem;
+            border-top: 1px dashed var(--border);
+            padding-top: .55rem;
+        }
+
+        .od-thread-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: .82rem;
+        }
+
+        .od-thread-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .od-thread-list {
+            margin-top: .55rem;
+            display: grid;
+            gap: .5rem;
+        }
+
+        .od-thread-item {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: .55rem .65rem;
+            background: var(--bg);
+        }
+
+        .od-thread-item p {
+            margin: .25rem 0 0;
+            font-size: .85rem;
+            color: var(--body);
+            line-height: 1.4;
+        }
+
+        .od-discussion-empty {
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: .88rem;
+            background: var(--bg);
+        }
+
+        .od-chat-hint {
+            margin-top: .45rem;
+            font-size: .78rem;
+            color: var(--muted);
         }
     </style>
 
@@ -2284,6 +2472,113 @@
                     </div>
                 @endif
 
+                {{-- Order Discussion --}}
+                <div class="od-card" id="order-discussion">
+                    <div class="od-card-head">
+                        <h3 class="od-card-title">
+                            <i class="bi bi-chat-square-text"></i> Order Discussion
+                            <span
+                                style="font-size:.72rem; background:var(--primary-soft); color:var(--primary); padding:.1rem .45rem; border-radius:100px; font-weight:700; margin-left:.25rem;">{{ (int) ($discussionRootMessage->thread_count ?? 0) }}</span>
+                        </h3>
+                    </div>
+                    <div class="od-card-body">
+                        <div class="od-discussion-meta">
+                            <div>
+                                <small>Context</small>
+                                <strong>Order #{{ $order->id }} | {{ $order->display_client_name ?? $order->client_name ?? 'N/A' }}</strong>
+                            </div>
+                            @if(Auth::guard('admin')->user()?->hasPermission('chat.access'))
+                                <a href="{{ route('chat.index', ['channel_id' => $discussionChannel->id, 'message_id' => $discussionRootMessage->id, 'open_thread' => 1]) }}" class="btn-od no-print" style="padding:.5rem .75rem;">
+                                    <i class="bi bi-box-arrow-up-right"></i> Open in Chat
+                                </a>
+                            @endif
+                        </div>
+
+                        <form method="GET" action="{{ route('orders.show', $order->id) }}" class="od-discussion-search no-print">
+                            <input type="text" name="discussion_search" value="{{ $discussionSearch }}"
+                                placeholder="Search old message by text or admin name...">
+                            <button type="submit" class="btn-od" style="padding:.5rem .8rem;"><i class="bi bi-search"></i></button>
+                        </form>
+
+                        @if($canPostDiscussion)
+                            <form method="POST" action="{{ route('orders.discussion.messages.store', $order->id) }}"
+                                class="od-discussion-composer no-print">
+                                @csrf
+                                <textarea name="body"
+                                    placeholder="Write order update with context (issue, action, next step)..."
+                                    required></textarea>
+                                <div class="od-discussion-actions">
+                                    <button type="submit" class="btn-od btn-od-primary">
+                                        <i class="bi bi-send"></i> Send Update
+                                    </button>
+                                </div>
+                                <p class="od-chat-hint">Only admins with order edit permission can post updates.</p>
+                            </form>
+                        @endif
+
+                        <hr style="margin: .95rem 0;">
+
+                        @forelse($discussionMessages as $discussionMessage)
+                            <div class="od-discussion-item" id="discussion-message-{{ $discussionMessage->id }}">
+                                <div class="od-discussion-head">
+                                    <span class="od-discussion-author">
+                                        <i class="bi bi-person-fill"></i> {{ $discussionMessage->sender->name ?? 'Unknown' }}
+                                    </span>
+                                    <span class="od-discussion-time d-flex align-items-center gap-2">
+                                        {{ $discussionMessage->created_at->diffForHumans() }}
+                                        @if(Auth::guard('admin')->user()?->hasPermission('chat.access'))
+                                            <a class="btn-od no-print" style="padding:.28rem .5rem; font-size:.74rem;"
+                                                href="{{ route('chat.index', ['channel_id' => $discussionChannel->id, 'message_id' => $discussionMessage->id, 'open_thread' => 1]) }}">
+                                                <i class="bi bi-link-45deg"></i> Open in Chat
+                                            </a>
+                                        @endif
+                                    </span>
+                                </div>
+                                <p class="od-discussion-body">{!! nl2br(e($discussionMessage->body ?? '')) !!}</p>
+
+                                <details class="od-thread-wrap">
+                                    <summary class="od-thread-summary">
+                                        <span><i class="bi bi-chat-left-dots"></i> View Thread</span>
+                                        <span>{{ (int) $discussionMessage->thread_count }} repl{{ (int) $discussionMessage->thread_count === 1 ? 'y' : 'ies' }}</span>
+                                    </summary>
+
+                                    <div class="od-thread-list">
+                                        @forelse($discussionMessage->replies as $reply)
+                                            <div class="od-thread-item">
+                                                <div class="od-discussion-head" style="margin-bottom:0;">
+                                                    <span class="od-discussion-author">{{ $reply->sender->name ?? 'Unknown' }}</span>
+                                                    <span class="od-discussion-time">{{ $reply->created_at->diffForHumans() }}</span>
+                                                </div>
+                                                <p>{!! nl2br(e($reply->body ?? '')) !!}</p>
+                                            </div>
+                                        @empty
+                                            <div class="od-discussion-empty">No replies yet in this thread.</div>
+                                        @endforelse
+
+                                        @if($canPostDiscussion)
+                                            <form method="POST"
+                                                action="{{ route('orders.discussion.messages.reply', ['order' => $order->id, 'message' => $discussionMessage->id]) }}"
+                                                class="od-thread-reply no-print">
+                                                @csrf
+                                                <textarea name="body" rows="2" placeholder="Reply in this thread..." required></textarea>
+                                                <div class="od-discussion-actions">
+                                                    <button type="submit" class="btn-od" style="padding:.45rem .85rem;">
+                                                        <i class="bi bi-reply"></i> Post Reply
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </details>
+                            </div>
+                        @empty
+                            <div class="od-discussion-empty">
+                                No internal discussion yet. Start the first update for this order.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
                 {{-- Edit History (Superadmin) --}}
                 @if(Auth::guard('admin')->user()?->is_super && $editHistory->count() > 0)
                     <div class="od-card">
@@ -2331,16 +2626,54 @@
                                                                 @php
                                                                     $oldDisplay = $log->old_values[$field] ?? '—';
                                                                     $newDisplay = $newVal ?? '—';
-                                                                    $oldDisplay = is_array($oldDisplay) ? json_encode($oldDisplay) : $oldDisplay;
-                                                                    $newDisplay = is_array($newDisplay) ? json_encode($newDisplay) : $newDisplay;
+
+                                                                    $normalizeAuditArray = function ($fieldName, $value) {
+                                                                        $isMeleeEntriesField = strtolower(trim((string) $fieldName)) === 'melee entries';
+
+                                                                        $asArray = null;
+                                                                        if (is_array($value)) {
+                                                                            $asArray = $value;
+                                                                        } elseif (is_string($value)) {
+                                                                            $decoded = json_decode($value, true);
+                                                                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                                                                $asArray = $decoded;
+                                                                            }
+                                                                        }
+
+                                                                        if ($asArray === null) {
+                                                                            return $value;
+                                                                        }
+
+                                                                        if (!$isMeleeEntriesField) {
+                                                                            return json_encode($asArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                                                                        }
+
+                                                                        if (empty($asArray)) {
+                                                                            return '—';
+                                                                        }
+
+                                                                        $rows = collect($asArray)->map(function ($entry, $idx) {
+                                                                            $lotId = $entry['melee_diamond_id'] ?? 'N/A';
+                                                                            $pieces = $entry['pieces'] ?? 0;
+                                                                            $avgCarat = isset($entry['avg_carat_per_piece']) ? number_format((float) $entry['avg_carat_per_piece'], 3) : '0.000';
+                                                                            $pricePerCt = isset($entry['price_per_ct']) ? number_format((float) $entry['price_per_ct'], 2) : '0.00';
+
+                                                                            return '#' . ($idx + 1) . ': Lot ' . $lotId . ' | Pcs ' . $pieces . ' | AvgCt ' . $avgCarat . ' | $/Ct ' . $pricePerCt;
+                                                                        })->all();
+
+                                                                        return implode(' ; ', $rows);
+                                                                    };
+
+                                                                    $oldDisplay = $normalizeAuditArray($field, $oldDisplay);
+                                                                    $newDisplay = $normalizeAuditArray($field, $newDisplay);
                                                                 @endphp
                                                                 <tr>
                                                                     <td class="field-name">{{ $field }}</td>
                                                                     <td><span
-                                                                            class="val-badge val-old">{{ Str::limit($oldDisplay, 80) }}</span>
+                                                                            class="val-badge val-old">{{ Str::limit((string) $oldDisplay, 220) }}</span>
                                                                     </td>
                                                                     <td><span
-                                                                            class="val-badge val-new">{{ Str::limit($newDisplay, 80) }}</span>
+                                                                            class="val-badge val-new">{{ Str::limit((string) $newDisplay, 220) }}</span>
                                                                     </td>
                                                                 </tr>
                                                             @endforeach

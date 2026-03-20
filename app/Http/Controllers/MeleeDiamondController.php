@@ -65,6 +65,8 @@ class MeleeDiamondController extends Controller
     {
         $term = $request->term ?? '';
         $categoryId = $request->category_id;
+        $limit = (int) $request->input('limit', 50);
+        $limit = max(1, min($limit, 100));
 
         $query = MeleeDiamond::with('category');
 
@@ -92,7 +94,7 @@ class MeleeDiamondController extends Controller
             });
         }
 
-        $diamonds = $query->limit(50)
+        $diamonds = $query->limit($limit)
             ->get()
             ->map(function ($d) {
                 $typeLabel = $d->category->type === 'lab_grown' ? 'Lab Grown' : 'Natural';
