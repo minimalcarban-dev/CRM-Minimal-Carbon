@@ -14,12 +14,14 @@ class DiamondsExport implements FromCollection, WithHeadings, WithMapping, WithC
 {
     protected $diamonds;
     protected $filters;
+    protected $admin;
 
     /**
      * Constructor accepts either a Collection (from job) or Request (direct export)
      * @param Collection|Request|null $data
+     * @param int|null $adminId
      */
-    public function __construct($data = null)
+    public function __construct($data = null, $adminId = null)
     {
         if ($data instanceof Collection) {
             // From job - already have the diamonds collection
@@ -33,6 +35,12 @@ class DiamondsExport implements FromCollection, WithHeadings, WithMapping, WithC
             // No data - export all
             $this->diamonds = null;
             $this->filters = [];
+        }
+
+        if ($adminId) {
+            $this->admin = \App\Models\Admin::find($adminId);
+        } else {
+            $this->admin = auth('admin')->user();
         }
     }
 
@@ -97,11 +105,19 @@ class DiamondsExport implements FromCollection, WithHeadings, WithMapping, WithC
             $query->where('admin_id', (int) $this->filters['admin_id']);
         }
 
+        if ($this->admin && !$this->admin->is_super) {
+            if (!$this->admin->hasPermission('diamonds.view_team')) {
+                $query->where('admin_id', $this->admin->id);
+            }
+        }
+
         return $query->get();
     }
 
     public function map($diamond): array
     {
+        $hasPricingPerm = $this->admin && ($this->admin->is_super || $this->admin->hasPermission('diamonds.view_pricing'));
+
         return [
             $diamond->id,
             $diamond->lot_no,
@@ -113,18 +129,18 @@ class DiamondsExport implements FromCollection, WithHeadings, WithMapping, WithC
             $diamond->shape,
             $diamond->measurement,
             $diamond->weight,
-            $diamond->per_ct,
-            $diamond->purchase_price,
-            $diamond->margin,
+            $hasPricingPerm ? $diamond->per_ct : 'Restricted',
+            $hasPricingPerm ? $diamond->purchase_price : 'Restricted',
+            $hasPricingPerm ? $diamond->margin : 'Restricted',
             $diamond->listing_price,
             $diamond->shipping_price,
             $diamond->purchase_date ? $diamond->purchase_date->format('Y-m-d') : '',
             $diamond->sold_out_date ? $diamond->sold_out_date->format('Y-m-d') : '',
             $diamond->is_sold_out,
             $diamond->duration_days,
-            $diamond->duration_price,
-            $diamond->sold_out_price,
-            $diamond->profit,
+            $hasPricingPerm ? $diamond->duration_price : 'Restricted',
+            $hasPricingPerm ? $diamond->sold_out_price : 'Restricted',
+            $hasPricingPerm ? $diamond->profit : 'Restricted',
             $diamond->sold_out_month,
             $diamond->barcode_number,
             $diamond->description,

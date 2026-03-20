@@ -77,7 +77,9 @@ class DiamondController extends Controller
 
         // If not super admin, only show diamonds assigned to them
         if ($currentAdmin && !$currentAdmin->is_super) {
-            $query->where('admin_id', $currentAdmin->id);
+            if (!$currentAdmin->hasPermission('diamonds.view_team')) {
+                $query->where('admin_id', $currentAdmin->id);
+            }
         }
 
         // Filter by SKU (partial match)
@@ -208,6 +210,13 @@ class DiamondController extends Controller
      */
     public function show(Diamond $diamond)
     {
+        $currentAdmin = auth('admin')->user();
+        if ($currentAdmin && !$currentAdmin->is_super) {
+            if ($diamond->admin_id !== $currentAdmin->id && !$currentAdmin->hasPermission('diamonds.view_team')) {
+                abort(403, 'Unauthorized access to this diamond.');
+            }
+        }
+        
         return view('diamonds.show', compact('diamond'));
     }
 

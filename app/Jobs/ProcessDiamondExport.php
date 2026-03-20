@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Admin;
 use App\Models\Diamond;
 use App\Models\JobTrack;
 use App\Exports\DiamondsExport;
@@ -51,6 +52,14 @@ class ProcessDiamondExport implements ShouldQueue
 
             // Build query with filters and eager load relationships
             $query = Diamond::with(['assignedAdmin:id,name', 'assignedByAdmin:id,name']);
+            
+            $admin = Admin::find($this->adminId);
+            if ($admin && !$admin->is_super) {
+                if (!$admin->hasPermission('diamonds.view_team')) {
+                    $query->where('admin_id', $admin->id);
+                }
+            }
+
             $this->applyFilters($query, $this->filters);
             
             $totalRows = $query->count();
@@ -64,7 +73,7 @@ class ProcessDiamondExport implements ShouldQueue
             $diamonds = $query->get();
             
             // Export to Excel with chunking support
-            Excel::store(new DiamondsExport($diamonds), $filePath, 'public');
+            Excel::store(new DiamondsExport($diamonds, $this->adminId), $filePath, 'public');
 
             // Update final status
             $jobTrack->update([

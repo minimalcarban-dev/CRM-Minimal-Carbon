@@ -198,6 +198,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::post('orders/sync-all-tracking', [OrderController::class , 'syncAllTracking'])
             ->name('orders.sync-all-tracking')
             ->middleware('admin.permission:orders.edit');
+        Route::get('orders/unread-count', [OrderController::class , 'unreadOrderCount'])
+            ->name('orders.unread-count')
+            ->middleware('admin.permission:orders.view');
         Route::get('orders/form/{type}', [OrderController::class , 'loadFormPartial'])
             ->name('orders.loadFormPartial')
             ->middleware('admin.permission:orders.create');
@@ -597,7 +600,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         // Rate limited: Export can be heavy on large datasets
         Route::get('diamonds/export', [DiamondController::class , 'export'])
             ->name('diamonds.export')
-            ->middleware('throttle:20,1'); // 20 exports per minute
+            ->middleware(['throttle:20,1', 'admin.permission:diamonds.view']);
     
         // Background Job Routes
         Route::get('diamonds/jobs/history', [DiamondController::class , 'jobHistory'])

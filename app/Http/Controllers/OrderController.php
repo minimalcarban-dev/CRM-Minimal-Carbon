@@ -35,6 +35,7 @@ use App\Services\ShippingTrackingService;
 use App\Notifications\OrderCreatedNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use App\Notifications\OrderDiscussionNotification;
 
 
 class OrderController extends Controller
@@ -249,6 +250,12 @@ class OrderController extends Controller
         }
 
         $orders = $query->latest()->paginate(20);
+
+        // Mark all unread order-created notifications as read for this admin
+        $admin->unreadNotifications()
+            ->where('type', 'App\Notifications\OrderCreatedNotification')
+            ->update(['read_at' => now()]);
+
         return view('orders.index', compact(
             'orders',
             'totalOrders',
@@ -439,11 +446,20 @@ class OrderController extends Controller
 
             // ⚡ PERFORMANCE: Queue order creation notification instead of sending synchronously
             dispatch(function () use ($order) {
-                $superAdmins = Admin::where('is_super', true)->get();
                 $createdBy = Admin::find($order->submitted_by);
-                
-                if ($superAdmins->isNotEmpty() && $createdBy) {
-                    Notification::send($superAdmins, new OrderCreatedNotification($order, $createdBy));
+                if (!$createdBy) return;
+
+                // Send to all admins who have access to orders (excluding the creator)
+                $eligibleAdmins = Admin::where('id', '!=', $createdBy->id)
+                    ->where(function ($q) {
+                        $q->where('is_super', true)
+                          ->orWhereHas('permissions', function ($pq) {
+                              $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                          });
+                    })->get();
+
+                if ($eligibleAdmins->isNotEmpty()) {
+                    Notification::send($eligibleAdmins, new OrderCreatedNotification($order, $createdBy));
                 }
             })->afterResponse();
 
@@ -903,6 +919,19 @@ class OrderController extends Controller
 
         $discussionMessages = collect([$discussionRootMessage]);
 
+        // Mark unread order notifications for this specific order as read
+        $admin->unreadNotifications()
+            ->where(function ($q) use ($order) {
+                $q->where(function ($sub) use ($order) {
+                    $sub->where('type', 'App\Notifications\OrderCreatedNotification')
+                        ->where('data->order_id', $order->id);
+                })->orWhere(function ($sub) use ($order) {
+                    $sub->where('type', 'App\Notifications\OrderDiscussionNotification')
+                        ->where('data->order_id', $order->id);
+                });
+            })
+            ->update(['read_at' => now()]);
+
         return view('orders.show', compact(
             'order',
             'metalTypes',
@@ -954,6 +983,9 @@ class OrderController extends Controller
         $reply->markAsRead($admin);
         broadcast(new MessageSent($reply->load('sender')))->toOthers();
 
+        // Notify eligible admins about the new discussion message
+        $this->notifyOrderDiscussion($order, $admin, $validated['body']);
+
         return redirect()
             ->to(route('orders.show', $order->id) . '#discussion-message-' . $parentMessage->id)
             ->with('success', 'Order discussion update posted.');
@@ -997,6 +1029,9 @@ class OrderController extends Controller
         $rootMessage->increment('thread_count');
         $reply->markAsRead($admin);
         broadcast(new MessageSent($reply->load('sender')))->toOthers();
+
+        // Notify eligible admins about the new discussion reply
+        $this->notifyOrderDiscussion($order, $admin, $validated['body']);
 
         return redirect()
             ->to(route('orders.show', $order->id) . '#discussion-message-' . $rootMessage->id)
@@ -2208,5 +2243,42 @@ class OrderController extends Controller
             'settingTypes',
             'closureTypes'
         ))->render();
+    }
+
+    /**
+     * Get unread new-order notification count for the sidebar badge.
+     */
+    public function unreadOrderCount()
+    {
+        $admin = Auth::guard('admin')->user();
+
+        $count = $admin->unreadNotifications()
+            ->where('type', 'App\Notifications\OrderCreatedNotification')
+            ->count();
+
+        return response()->json(['unread_count' => $count]);
+    }
+
+    /**
+     * Send OrderDiscussionNotification to eligible admins (excluding the sender).
+     */
+    private function notifyOrderDiscussion(Order $order, Admin $sender, string $messageBody): void
+    {
+        dispatch(function () use ($order, $sender, $messageBody) {
+            $eligibleAdmins = Admin::where('id', '!=', $sender->id)
+                ->where(function ($q) {
+                    $q->where('is_super', true)
+                      ->orWhereHas('permissions', function ($pq) {
+                          $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                      });
+                })->get();
+
+            if ($eligibleAdmins->isNotEmpty()) {
+                Notification::send(
+                    $eligibleAdmins,
+                    new OrderDiscussionNotification($order, $sender, $messageBody)
+                );
+            }
+        })->afterResponse();
     }
 }

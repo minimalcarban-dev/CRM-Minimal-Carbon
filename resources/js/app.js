@@ -109,6 +109,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (title.includes("created") || title.includes("new order") || nType === "App\\Notifications\\OrderCreatedNotification") {
                 return { icon: "bi-plus-circle-fill", color: "green", tag: "New Order" };
             }
+            if (title.includes("discussion") || nType === "App\\Notifications\\OrderDiscussionNotification") {
+                return { icon: "bi-chat-left-text-fill", color: "blue", tag: "Discussion" };
+            }
             return { icon: "bi-bell-fill", color: "gray", tag: "Alert" };
         };
 
@@ -222,6 +225,18 @@ document.addEventListener("DOMContentLoaded", () => {
                         "[DEBUG] window.playNotificationSound is not available",
                     );
                 }
+
+                // 4. Update Order Unread Badge for new order notifications
+                const nType = String(e.type || "");
+                if (nType === "App\\Notifications\\OrderCreatedNotification") {
+                    const orderBadge = document.getElementById("orderUnreadBadge");
+                    if (orderBadge) {
+                        let currentCount = parseInt(orderBadge.innerText) || 0;
+                        currentCount++;
+                        orderBadge.innerText = currentCount;
+                        orderBadge.classList.remove("hidden");
+                    }
+                }
             },
         );
     } catch (err) {
@@ -323,7 +338,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Function to fetch order unread count
+    const fetchOrderUnreadCount = async () => {
+        try {
+            const response = await window.axios.get("/admin/orders/unread-count");
+            const count = response.data.unread_count || 0;
+
+            const orderBadge = document.getElementById("orderUnreadBadge");
+            if (orderBadge && count > 0) {
+                orderBadge.innerText = count;
+                orderBadge.classList.remove("hidden");
+            }
+        } catch (error) {
+            // Silently fail — admin might not have orders.view permission
+        }
+    };
+
     subscribeToChatChannels();
+    fetchOrderUnreadCount();
 });
 
 // Helper for sound

@@ -747,6 +747,40 @@
             box-shadow: 0 0 0 1px var(--danger);
         }
 
+        /* Order Unread Badge Styles */
+        #orderUnreadBadge {
+            position: absolute;
+            right: 14px;
+            top: 10px;
+            background: var(--primary);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        #orderUnreadBadge:not(.hidden) {
+            display: inline-block;
+        }
+
+        /* When sidebar is collapsed, show order badge as a dot */
+        .sidebar.collapsed #orderUnreadBadge:not(.hidden) {
+            display: block;
+            right: 12px;
+            top: 12px;
+            padding: 0;
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            min-height: 8px;
+            font-size: 0;
+            line-height: 0;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
         /* Nav Badge for Drafts */
         .nav-badge {
             position: absolute;
@@ -2871,6 +2905,7 @@
                             href="{{ route('orders.index') }}" data-tooltip="Orders">
                             <i class="bi bi-basket"></i>
                             <span>Orders</span>
+                            <span id="orderUnreadBadge" class="hidden"></span>
                         </a>
                     </li>
                 @endif
