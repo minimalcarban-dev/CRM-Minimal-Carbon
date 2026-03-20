@@ -1603,6 +1603,10 @@ export default {
         );
         const isMobile = computed(() => viewportWidth.value <= 768);
         const mobileSidebarOpen = ref(false);
+        const deepLinkChannelId = ref(null);
+        const deepLinkMessageId = ref(null);
+        const deepLinkOpenThread = ref(false);
+        const deepLinkConsumed = ref(false);
 
         // PDF Viewer Modal State
         const pdfModalOpen = ref(false);
@@ -2519,6 +2523,45 @@ export default {
             searchResults.value = [];
         };
 
+        const parseDeepLinkParams = () => {
+            if (typeof window === "undefined") return;
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const channelParam = params.get("channel_id");
+                const messageParam = params.get("message_id");
+                const openThreadParam = params.get("open_thread");
+
+                const parsedChannel = channelParam ? Number(channelParam) : NaN;
+                const parsedMessage = messageParam ? Number(messageParam) : NaN;
+
+                deepLinkChannelId.value = Number.isFinite(parsedChannel)
+                    ? parsedChannel
+                    : null;
+                deepLinkMessageId.value = Number.isFinite(parsedMessage)
+                    ? parsedMessage
+                    : null;
+                deepLinkOpenThread.value =
+                    openThreadParam === "1" ||
+                    openThreadParam === "true" ||
+                    openThreadParam === "yes";
+            } catch (_) {
+                deepLinkChannelId.value = null;
+                deepLinkMessageId.value = null;
+                deepLinkOpenThread.value = false;
+            }
+        };
+
+        const clearDeepLinkParamsFromUrl = () => {
+            if (typeof window === "undefined") return;
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.delete("channel_id");
+                url.searchParams.delete("message_id");
+                url.searchParams.delete("open_thread");
+                window.history.replaceState({}, "", url.toString());
+            } catch (_) {}
+        };
+
         const scrollToMessage = async (message) => {
             if (!message) return;
 
@@ -2592,6 +2635,30 @@ export default {
                     setTimeout(() => scrollToMessageById(messageId), 300);
                 }
             });
+        };
+
+        const applyDeepLinkIfNeeded = async () => {
+            if (deepLinkConsumed.value) return;
+            if (!currentChannel.value?.id) return;
+            if (
+                deepLinkChannelId.value &&
+                Number(currentChannel.value.id) !== Number(deepLinkChannelId.value)
+            ) {
+                return;
+            }
+
+            deepLinkConsumed.value = true;
+
+            if (deepLinkMessageId.value) {
+                if (deepLinkOpenThread.value) {
+                    await openThread({ id: deepLinkMessageId.value });
+                }
+                setTimeout(() => {
+                    scrollToMessageById(deepLinkMessageId.value);
+                }, 350);
+            }
+
+            clearDeepLinkParamsFromUrl();
         };
 
         const scrollToBottom = () => {
@@ -3458,6 +3525,7 @@ export default {
 
         // Lifecycle Hooks
         onMounted(() => {
+            parseDeepLinkParams();
             handleViewportChange();
             window.addEventListener("resize", handleViewportChange, {
                 passive: true,
@@ -3622,23 +3690,43 @@ export default {
                     Array.isArray(list) &&
                     list.length
                 ) {
-                    // Try to restore the last selected channel from localStorage
                     let channelToSelect = null;
-                    try {
-                        const savedId = localStorage.getItem(
-                            "chat_current_channel_id",
+
+                    if (deepLinkChannelId.value) {
+                        channelToSelect = list.find(
+                            (c) =>
+                                Number(c.id) === Number(deepLinkChannelId.value),
                         );
-                        if (savedId) {
-                            channelToSelect = list.find(
-                                (c) => String(c.id) === savedId,
-                            );
-                        }
-                    } catch (e) {
-                        // Ignore localStorage errors
                     }
 
-                    // If no saved channel found, or saved channel doesn't exist anymore, use first one
-                    selectChannel(channelToSelect || list[0]);
+                    if (!channelToSelect) {
+                        // Try to restore the last selected channel from localStorage
+                        try {
+                            const savedId = localStorage.getItem(
+                                "chat_current_channel_id",
+                            );
+                            if (savedId) {
+                                channelToSelect = list.find(
+                                    (c) => String(c.id) === savedId,
+                                );
+                            }
+                        } catch (e) {
+                            // Ignore localStorage errors
+                        }
+                    }
+
+                    selectChannel(channelToSelect || list[0]).then(() => {
+                        if (
+                            deepLinkChannelId.value &&
+                            Number(channelToSelect?.id || list[0]?.id) !==
+                                Number(deepLinkChannelId.value)
+                        ) {
+                            deepLinkConsumed.value = true;
+                            clearDeepLinkParamsFromUrl();
+                            return;
+                        }
+                        applyDeepLinkIfNeeded();
+                    });
                 }
             },
             { deep: false },

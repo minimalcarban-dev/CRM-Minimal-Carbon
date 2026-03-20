@@ -319,34 +319,34 @@
                     <select name="diamond_status" class="form-control-modern" required>
                         <option value="">-- Select Status --</option>
                         <option value="j_diamond_in_progress" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_in_progress' ? 'selected' : '' }}>
-                            J - Diamond In Progress
+                            CJ - Diamond In Progress
                         </option>
                         <option value="j_diamond_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_completed' ? 'selected' : '' }}>
-                            J - Diamond Completed
+                            CJ - Diamond Completed
                         </option>
                         <option value="j_diamond_in_discuss" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_in_discuss' ? 'selected' : '' }}>
-                            J - Diamond In Discuss
+                            CJ - Diamond In Discuss
                         </option>
                         <option value="j_cad_in_progress" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_cad_in_progress' ? 'selected' : '' }}>
-                            J - CAD In Progress
+                            CJ - CAD In Progress
                         </option>
                         <option value="j_cad_done" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_cad_done' ? 'selected' : '' }}>
-                            J - CAD Done
+                            CJ - CAD Done
                         </option>
                         <option value="j_order_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_completed' ? 'selected' : '' }}>
-                            J - Order Completed
+                            CJ - Order Completed
                         </option>
                         <option value="j_order_in_qc" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_in_qc' ? 'selected' : '' }}>
-                            J - Order IN QC
+                            CJ - Order IN QC
                         </option>
                         <option value="j_qc_done" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_qc_done' ? 'selected' : '' }}>
                             J - QC Done
                         </option>
                         <option value="j_order_shipped" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_shipped' ? 'selected' : '' }}>
-                            J - Order Shipped
+                            CJ - Order Shipped
                         </option>
                         <option value="j_order_hold" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_hold' ? 'selected' : '' }}>
-                            J - Order Hold
+                            CJ - Order Hold
                         </option>
                     </select>
                 </div>

@@ -18,8 +18,8 @@
                         <span class="label-text">Client Name</span>
                         <span class="required-badge">Required</span>
                     </label>
-                    <input type="text" name="client_name" class="form-control-modern" required placeholder="Full name"
-                        value="{{ old('client_name', $order->client_name ?? '') }}">
+                    <input type="text" name="client_name" class="form-control-modern" required
+                        placeholder="Full name" value="{{ old('client_name', $order->client_name ?? '') }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label-modern">
@@ -58,8 +58,9 @@
                         <div class="col-5">
                             <select name="client_tax_id_type" class="form-control-modern">
                                 <option value="">Select Type</option>
-                                @foreach(\App\Models\Order::TAX_ID_TYPES as $value => $label)
-                                    <option value="{{ $value }}" {{ old('client_tax_id_type', $order->client_tax_id_type ?? '') == $value ? 'selected' : '' }}>
+                                @foreach (\App\Models\Order::TAX_ID_TYPES as $value => $label)
+                                    <option value="{{ $value }}"
+                                        {{ old('client_tax_id_type', $order->client_tax_id_type ?? '') == $value ? 'selected' : '' }}>
                                         {{ $label }}
                                     </option>
                                 @endforeach
@@ -126,8 +127,9 @@
                     </label>
                     <select name="company_id" class="form-control-modern" required>
                         <option value="">-- Select Company --</option>
-                        @foreach($companies as $company)
-                            <option value="{{ $company->id }}" {{ old('company_id', $order->company_id ?? '') == $company->id ? 'selected' : '' }}>
+                        @foreach ($companies as $company)
+                            <option value="{{ $company->id }}"
+                                {{ old('company_id', $order->company_id ?? '') == $company->id ? 'selected' : '' }}>
                                 {{ $company->name }}
                             </option>
                         @endforeach
@@ -146,8 +148,9 @@
                     </label>
                     <select name="factory_id" class="form-control-modern">
                         <option value="">Select Factory</option>
-                        @foreach($factories as $factory)
-                            <option value="{{ $factory->id }}" {{ old('factory_id', $order->factory_id ?? '') == $factory->id ? 'selected' : '' }}>
+                        @foreach ($factories as $factory)
+                            <option value="{{ $factory->id }}"
+                                {{ old('factory_id', $order->factory_id ?? '') == $factory->id ? 'selected' : '' }}>
                                 {{ $factory->name }} ({{ $factory->code }})
                             </option>
                         @endforeach
@@ -170,10 +173,12 @@
                     </label>
                     <select name="note" class="form-control-modern">
                         <option value="">-- Select Priority --</option>
-                        <option value="priority" {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
+                        <option value="priority"
+                            {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
                             Priority
                         </option>
-                        <option value="non_priority" {{ old('note', $order->note ?? '') == 'non_priority' ? 'selected' : '' }}>
+                        <option value="non_priority"
+                            {{ old('note', $order->note ?? '') == 'non_priority' ? 'selected' : '' }}>
                             Non Priority
                         </option>
                     </select>
@@ -191,20 +196,25 @@
                     </label>
                     <select name="diamond_status" class="form-control-modern" required>
                         <option value="">-- Select Status --</option>
-                        <option value="d_diamond_in_discuss" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_discuss' ? 'selected' : '' }}>
-                            D - Diamond In Discuss
+                        <option value="d_diamond_in_discuss"
+                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_discuss' ? 'selected' : '' }}>
+                            CD - Diamond In Discuss
                         </option>
-                        <option value="d_diamond_in_making" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_making' ? 'selected' : '' }}>
-                            D - Diamond In Making
+                        <option value="d_diamond_in_making"
+                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_making' ? 'selected' : '' }}>
+                            CD - Diamond In Making
                         </option>
-                        <option value="d_diamond_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_completed' ? 'selected' : '' }}>
-                            D - Diamond Completed
+                        <option value="d_diamond_completed"
+                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_completed' ? 'selected' : '' }}>
+                            CD - Diamond Completed
                         </option>
-                        <option value="d_diamond_in_certificate" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_certificate' ? 'selected' : '' }}>
-                            D - Diamond In Certificate
+                        <option value="d_diamond_in_certificate"
+                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_certificate' ? 'selected' : '' }}>
+                            CD - Diamond In Certificate
                         </option>
-                        <option value="d_order_shipped" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_order_shipped' ? 'selected' : '' }}>
-                            D - Order Shipped
+                        <option value="d_order_shipped"
+                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_order_shipped' ? 'selected' : '' }}>
+                            CD - Order Shipped
                         </option>
                     </select>
                     <div class="form-hint">
@@ -272,15 +282,15 @@
                     <i class="bi bi-card-image"></i>
                 </span>
                 <span class="label-text">Diamond Images</span>
-                @if(!isset($order) || !$order)
+                @if (!isset($order) || !$order)
                     <span class="required-badge">Required</span>
                 @else
                     <span class="optional-badge">Optional</span>
                 @endif
                 <span class="badge-info">Max 10 images</span>
             </label>
-            <input type="file" name="images[]" id="diamond_images" class="file-input-hidden" accept="image/*" multiple
-                {{ !isset($order) || !$order ? 'required' : '' }}>
+            <input type="file" name="images[]" id="diamond_images" class="file-input-hidden" accept="image/*"
+                multiple {{ !isset($order) || !$order ? 'required' : '' }}>
             <label for="diamond_images" class="file-upload-area diamond">
                 <div class="file-upload-content">
                     <div class="file-upload-icon diamond">
@@ -305,8 +315,8 @@
                 <span class="optional-badge">Optional</span>
                 <span class="badge-info">Max 5 PDFs</span>
             </label>
-            <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden" accept="application/pdf"
-                multiple>
+            <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden"
+                accept="application/pdf" multiple>
             <label for="order_pdfs" class="file-upload-area pdf">
                 <div class="file-upload-content">
                     <div class="file-upload-icon pdf">
@@ -348,17 +358,48 @@
                     </label>
                     <select name="shipping_company_name" class="form-control-modern">
                         <option value="">Select Carrier</option>
-                        <option value="Aramex" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'Aramex' ? 'selected' : '' }}>Aramex</option>
-                        <option value="USPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'USPS' ? 'selected' : '' }}>USPS</option>
-                        <option value="DHL" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'DHL' ? 'selected' : '' }}>DHL</option>
-                        <option value="FedEx" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'FedEx' ? 'selected' : '' }}>FedEx</option>
-                        <option value="UPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>UPS</option>
-                        <option value="EMS / Speed Post" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>EMS / Speed Post</option>
-                        <option value="UPS - Ground" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - Ground' ? 'selected' : '' }}>UPS - Ground</option>
-                        <option value="UPS - DDP" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - DDP' ? 'selected' : '' }}>UPS - DDP</option>
-                        <option value="LP Service" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'LP Service' ? 'selected' : '' }}>LP Service</option>
-                        @if(isset($order) && !empty($order->shipping_company_name) && !in_array($order->shipping_company_name, ['Aramex', 'USPS', 'DHL', 'FedEx', 'UPS', 'EMS / Speed Post', 'UPS - Ground', 'UPS - DDP', 'LP Service']))
-                            <option value="{{ $order->shipping_company_name }}" selected>{{ $order->shipping_company_name }}
+                        <option value="Aramex"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'Aramex' ? 'selected' : '' }}>
+                            Aramex</option>
+                        <option value="USPS"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'USPS' ? 'selected' : '' }}>
+                            USPS</option>
+                        <option value="DHL"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'DHL' ? 'selected' : '' }}>
+                            DHL</option>
+                        <option value="FedEx"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'FedEx' ? 'selected' : '' }}>
+                            FedEx</option>
+                        <option value="UPS"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>
+                            UPS</option>
+                        <option value="EMS / Speed Post"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>
+                            EMS / Speed Post</option>
+                        <option value="UPS - Ground"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - Ground' ? 'selected' : '' }}>
+                            UPS - Ground</option>
+                        <option value="UPS - DDP"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - DDP' ? 'selected' : '' }}>
+                            UPS - DDP</option>
+                        <option value="LP Service"
+                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'LP Service' ? 'selected' : '' }}>
+                            LP Service</option>
+                        @if (isset($order) &&
+                                !empty($order->shipping_company_name) &&
+                                !in_array($order->shipping_company_name, [
+                                    'Aramex',
+                                    'USPS',
+                                    'DHL',
+                                    'FedEx',
+                                    'UPS',
+                                    'EMS / Speed Post',
+                                    'UPS - Ground',
+                                    'UPS - DDP',
+                                    'LP Service',
+                                ]))
+                            <option value="{{ $order->shipping_company_name }}" selected>
+                                {{ $order->shipping_company_name }}
                             </option>
                         @endif
                     </select>
@@ -1038,19 +1079,19 @@
 </style>
 
 <script>
-    (function () {
+    (function() {
         // Image upload preview
         const imageInput = document.getElementById('diamond_images');
         const imagePreview = document.getElementById('preview_diamond_images');
 
         if (imageInput && imagePreview) {
-            imageInput.addEventListener('change', function (e) {
+            imageInput.addEventListener('change', function(e) {
                 const files = Array.from(e.target.files);
                 imagePreview.innerHTML = '';
 
                 files.slice(0, 10).forEach((file, index) => {
                     const reader = new FileReader();
-                    reader.onload = function (e) {
+                    reader.onload = function(e) {
                         const div = document.createElement('div');
                         div.className = 'file-preview-item';
                         div.innerHTML = `
@@ -1071,7 +1112,7 @@
         const pdfPreview = document.getElementById('preview_order_pdfs');
 
         if (pdfInput && pdfPreview) {
-            pdfInput.addEventListener('change', function (e) {
+            pdfInput.addEventListener('change', function(e) {
                 const files = Array.from(e.target.files);
                 pdfPreview.innerHTML = '';
 
@@ -1124,7 +1165,7 @@
     }
 
     // Diamond SKU Real-time Validation
-    (function () {
+    (function() {
         const skuInput = document.getElementById('diamond_sku_input');
         const validationIcon = document.getElementById('sku_validation_icon');
         const validationMessage = document.getElementById('sku_validation_message');
@@ -1133,7 +1174,7 @@
 
         let debounceTimer;
 
-        skuInput.addEventListener('input', function () {
+        skuInput.addEventListener('input', function() {
             const sku = this.value.trim();
 
             // Clear previous validation
@@ -1154,27 +1195,33 @@
                     .then(data => {
                         if (data.available) {
                             skuInput.classList.add('sku-valid');
-                            validationIcon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                            validationIcon.innerHTML =
+                                '<i class="bi bi-check-circle-fill text-success"></i>';
                             const d = data.diamond;
-                            const price = d.listing_price ? `$${parseFloat(d.listing_price).toLocaleString()}` : 'N/A';
-                            validationMessage.innerHTML = `<span class="text-success">✓ ${data.message} - ${d.carat || '?'}ct ${d.shape || ''} ${d.clarity || ''} ${d.color || ''} (${price})</span>`;
+                            const price = d.listing_price ?
+                                `$${parseFloat(d.listing_price).toLocaleString()}` : 'N/A';
+                            validationMessage.innerHTML =
+                                `<span class="text-success">✓ ${data.message} - ${d.carat || '?'}ct ${d.shape || ''} ${d.clarity || ''} ${d.color || ''} (${price})</span>`;
                         } else {
                             skuInput.classList.add('sku-invalid');
-                            validationIcon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
-                            validationMessage.innerHTML = `<span class="text-danger">✗ ${data.message}</span>`;
+                            validationIcon.innerHTML =
+                                '<i class="bi bi-x-circle-fill text-danger"></i>';
+                            validationMessage.innerHTML =
+                                `<span class="text-danger">✗ ${data.message}</span>`;
                         }
                     })
                     .catch(err => {
                         console.error('SKU validation error:', err);
                         validationIcon.innerHTML = '';
-                        validationMessage.innerHTML = '<span class="text-danger">✗ Error checking SKU</span>';
+                        validationMessage.innerHTML =
+                            '<span class="text-danger">✗ Error checking SKU</span>';
                     });
             }, 500);
         });
     })();
 
     // Client Autocomplete
-    (function () {
+    (function() {
         const clientNameInput = document.querySelector('input[name="client_name"]');
         if (!clientNameInput) return;
 
@@ -1185,14 +1232,15 @@
             if (autocompleteList) return;
             autocompleteList = document.createElement('div');
             autocompleteList.className = 'client-autocomplete-list';
-            autocompleteList.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid #e2e8f0;border-radius:10px;max-height:200px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
+            autocompleteList.style.cssText =
+                'position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid #e2e8f0;border-radius:10px;max-height:200px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
             clientNameInput.parentElement.style.position = 'relative';
             clientNameInput.parentElement.appendChild(autocompleteList);
         }
 
         createAutocompleteList();
 
-        clientNameInput.addEventListener('input', function () {
+        clientNameInput.addEventListener('input', function() {
             clearTimeout(debounceTimer);
             const term = this.value.trim();
 
@@ -1224,20 +1272,30 @@
 
                         autocompleteList.style.display = 'block';
 
-                        autocompleteList.querySelectorAll('.autocomplete-item').forEach(item => {
-                            item.addEventListener('mouseenter', () => item.style.background = '#f8fafc');
-                            item.addEventListener('mouseleave', () => item.style.background = '#fff');
+                        autocompleteList.querySelectorAll('.autocomplete-item').forEach(
+                        item => {
+                            item.addEventListener('mouseenter', () => item.style
+                                .background = '#f8fafc');
+                            item.addEventListener('mouseleave', () => item.style
+                                .background = '#fff');
                             item.addEventListener('click', () => {
                                 clientNameInput.value = item.dataset.name;
 
-                                const emailInput = document.querySelector('input[name="client_email"]');
-                                const mobileInput = document.querySelector('input[name="client_mobile"]');
-                                const addressInput = document.querySelector('textarea[name="client_address"]');
-                                const taxInput = document.querySelector('input[name="client_tax_id"]');
+                                const emailInput = document.querySelector(
+                                    'input[name="client_email"]');
+                                const mobileInput = document.querySelector(
+                                    'input[name="client_mobile"]');
+                                const addressInput = document.querySelector(
+                                    'textarea[name="client_address"]');
+                                const taxInput = document.querySelector(
+                                    'input[name="client_tax_id"]');
 
-                                if (emailInput) emailInput.value = item.dataset.email;
-                                if (mobileInput) mobileInput.value = item.dataset.mobile;
-                                if (addressInput) addressInput.value = item.dataset.address;
+                                if (emailInput) emailInput.value = item.dataset
+                                    .email;
+                                if (mobileInput) mobileInput.value = item
+                                    .dataset.mobile;
+                                if (addressInput) addressInput.value = item
+                                    .dataset.address;
                                 if (taxInput) taxInput.value = item.dataset.tax;
 
                                 autocompleteList.style.display = 'none';
@@ -1248,7 +1306,7 @@
             }, 300);
         });
 
-        document.addEventListener('click', function (e) {
+        document.addEventListener('click', function(e) {
             if (!clientNameInput.contains(e.target) && !autocompleteList.contains(e.target)) {
                 autocompleteList.style.display = 'none';
             }

@@ -537,6 +537,7 @@
         const MultiMeleeManager = {
             entries: [], // Array of {melee_diamond_id, name, pieces, avg_carat_per_piece, price_per_ct, available_pieces}
             select2Initialized: false,
+            overstockAlertShownByMeleeId: {},
 
             init() {
                 this.container = document.getElementById('melee_pills_container');
@@ -675,7 +676,7 @@
                     });
                 }
 
-                // Validate again on submit to avoid confusing silent block.
+                // Submit time par sirf hidden flag sync karo; warning real-time on input change.
                 const form = this.jsonInput ? this.jsonInput.closest('form') : null;
                 if (form && !form.dataset.meleeValidationBound) {
                     form.dataset.meleeValidationBound = '1';
@@ -708,12 +709,6 @@
                     return;
                 }
 
-                if (availablePieces <= 0) {
-                    this.showNotification('This melee lot is out of stock', 'warning');
-                    $select.val(null).trigger('change');
-                    return;
-                }
-
                 // Add entry with default 1 piece
                 this.entries.push({
                     melee_diamond_id: meleeId,
@@ -740,14 +735,11 @@
 
                 const carat = (entry.pieces * entry.avg_carat_per_piece).toFixed(3);
                 const totalPrice = (carat * entry.price_per_ct).toFixed(2);
-                const maxPieces = parseInt(entry.available_pieces) || 0;
-                const piecesInputMax = maxPieces > 0 ? maxPieces : 9999;
-
                 pill.innerHTML = `
                 <span class="melee-pill-name" title="${this.escapeHtml(entry.name)}">${this.escapeHtml(this.truncateName(entry.name))}</span>
                 <div class="melee-pill-pieces-wrapper">
                     <label>Pcs:</label>
-                    <input type="number" class="melee-pill-pieces-input" value="${entry.pieces}" min="1" max="${piecesInputMax}" data-index="${index}">
+                    <input type="number" class="melee-pill-pieces-input" value="${entry.pieces}" min="1" data-index="${index}">
                 </div>
                 <span class="melee-pill-price" title="$${entry.price_per_ct}/ct × ${carat}ct">$${totalPrice}</span>
                 <span class="melee-pill-details">${carat}ct</span>
@@ -776,18 +768,25 @@
                 const entry = this.entries[index];
                 if (!entry) return;
                 const available = parseInt(entry.available_pieces) || 0;
+                const meleeId = parseInt(entry.melee_diamond_id) || 0;
+                const isOverstock = val > available;
 
-                // Cap at available pieces
-                if (available > 0 && val > available) {
-                    val = available;
-                    e.target.value = val;
-                    e.target.setCustomValidity(`Only ${available} pieces are available in stock.`);
-                    if (typeof e.target.reportValidity === 'function') {
-                        e.target.reportValidity();
+                if (isOverstock) {
+                    e.target.setCustomValidity('');
+
+                    // Sirf threshold cross hone par SweetAlert show karo (har keypress par nahi).
+                    if (
+                        meleeId > 0 &&
+                        !this.overstockAlertShownByMeleeId[meleeId]
+                    ) {
+                        this.showOverstockSweetAlert(entry, available, val);
+                        this.overstockAlertShownByMeleeId[meleeId] = true;
                     }
-                    this.showNotification(`Only ${available} pieces are available in stock`, 'warning');
                 } else {
                     e.target.setCustomValidity('');
+                    if (meleeId > 0) {
+                        this.overstockAlertShownByMeleeId[meleeId] = false;
+                    }
                 }
 
                 entry.pieces = val;
@@ -804,50 +803,11 @@
 
                 this.updateHiddenInputs();
                 this.updateAggregates();
+                this.syncAllowNegativeMeleeFlag();
             },
 
             validateEntriesBeforeSubmit() {
-                if (!Array.isArray(this.entries) || this.entries.length === 0) {
-                    return true;
-                }
-
-                const aggregateByMeleeId = {};
-                this.entries.forEach((entry, index) => {
-                    const meleeId = parseInt(entry.melee_diamond_id) || 0;
-                    const pieces = parseInt(entry.pieces) || 0;
-                    const available = parseInt(entry.available_pieces) || 0;
-                    if (!meleeId) return;
-
-                    if (!aggregateByMeleeId[meleeId]) {
-                        aggregateByMeleeId[meleeId] = {
-                            requested: 0,
-                            available,
-                            indexes: [],
-                            name: entry.name || 'selected melee lot'
-                        };
-                    }
-                    aggregateByMeleeId[meleeId].requested += pieces;
-                    aggregateByMeleeId[meleeId].indexes.push(index);
-                });
-
-                for (const data of Object.values(aggregateByMeleeId)) {
-                    if (data.available > 0 && data.requested > data.available) {
-                        const index = data.indexes[0];
-                        const input = this.container.querySelector(
-                            `.melee-pill[data-index="${index}"] .melee-pill-pieces-input`);
-                        if (input) {
-                            input.setCustomValidity(`Only ${data.available} pieces are available in stock.`);
-                            if (typeof input.reportValidity === 'function') {
-                                input.reportValidity();
-                            }
-                            input.focus();
-                        }
-                        this.showNotification(`Only ${data.available} pieces are available for ${data.name}`,
-                            'warning');
-                        return false;
-                    }
-                }
-
+                this.syncAllowNegativeMeleeFlag();
                 return true;
             },
 
@@ -901,6 +861,7 @@
 
                 // Backward compatibility: set old single melee fields from first entry
                 this.setBackwardCompatFields();
+                this.syncAllowNegativeMeleeFlag();
             },
 
             setBackwardCompatFields() {
@@ -977,9 +938,113 @@
                     this.rebuildPills();
                     this.updateHiddenInputs();
                     this.updateAggregates();
+                    this.syncAllowNegativeMeleeFlag();
                 } catch (e) {
                     console.error('[MultiMelee] Error loading existing entries:', e);
                 }
+            },
+
+            syncAllowNegativeMeleeFlag() {
+                const form = this.jsonInput ? this.jsonInput.closest('form') : null;
+                if (!form) return;
+
+                const hasOverstock = this.entries.some((entry) => {
+                    const pieces = parseInt(entry.pieces) || 0;
+                    const available = parseInt(entry.available_pieces) || 0;
+                    return pieces > available;
+                });
+
+                this.setFieldValue(form, 'allow_negative_melee', hasOverstock ? '1' : '0');
+            },
+
+            showOverstockSweetAlert(entry, available, requested) {
+                const shortage = Math.max(0, requested - available);
+                const lotName = this.escapeHtml(entry.name || 'Selected Melee Lot');
+
+                if (typeof window.Swal !== 'undefined') {
+                    window.Swal.fire({
+                        icon: 'warning',
+                        title: 'Stock Limit Crossed',
+                        html: `
+                                <div style="text-align:left; font-family:system-ui;">
+
+                                    <!-- Lot Name -->
+                                    <div style="font-size:16px; font-weight:600; margin-bottom:10px;">
+                                        📦 ${lotName}
+                                    </div>
+
+                                    <!-- Stats Card -->
+                                    <div style="
+                                        display:flex;
+                                        justify-content:space-between;
+                                        gap:10px;
+                                        margin-bottom:12px;
+                                    ">
+                                        <div style="
+                                            flex:1;
+                                            background:#f1f5f9;
+                                            padding:10px;
+                                            border-radius:10px;
+                                            text-align:center;
+                                        ">
+                                            <div style="font-size:12px;color:#64748b;">Available</div>
+                                            <div style="font-size:18px;font-weight:600;">${available}</div>
+                                        </div>
+
+                                        <div style="
+                                            flex:1;
+                                            background:#fef3c7;
+                                            padding:10px;
+                                            border-radius:10px;
+                                            text-align:center;
+                                        ">
+                                            <div style="font-size:12px;color:#92400e;">Requested</div>
+                                            <div style="font-size:18px;font-weight:600;">${requested}</div>
+                                        </div>
+
+                                        <div style="
+                                            flex:1;
+                                            background:#fee2e2;
+                                            padding:10px;
+                                            border-radius:10px;
+                                            text-align:center;
+                                        ">
+                                            <div style="font-size:12px;color:#991b1b;">Extra</div>
+                                            <div style="font-size:18px;font-weight:600;">${shortage}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Warning Box -->
+                                    <div style="
+                                        background:#fff7ed;
+                                        border:1px solid #fdba74;
+                                        padding:10px;
+                                        border-radius:10px;
+                                        font-size:13px;
+                                        color:#9a3412;
+                                    ">
+                                        ⚠️ Saving this order with the current quantity will result in <b>negative stock</b>.
+                                    </div>
+
+                                </div>
+                            `,
+                        confirmButtonText: 'Proceed Anyway',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#DB1A1A',
+                        cancelButtonColor: '#64748b',
+                        background: '#ffffff',
+                        customClass: {
+                            popup: 'rounded-2xl shadow-xl'
+                        }
+                    });
+                    return;
+                }
+
+                this.showNotification(
+                    `Stock limit crossed for ${entry.name}. Available ${available}, requested ${requested}. Saving with this quantity will make <b>stock negative</b>.`,
+                    'warning'
+                );
             },
 
             truncateName(name) {
