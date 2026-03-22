@@ -1107,6 +1107,7 @@ class OrderController extends Controller
 
         $clientName = (string) ($order->display_client_name ?? $order->client_name ?? 'N/A');
         $status = (string) ($order->diamond_status ?? 'N/A');
+        $statusPayload = $this->formatOrderDiscussionStatusPayload($order->diamond_status);
         $createdOn = optional($order->created_at)->format('d M Y, h:i A');
 
         return Message::create([
@@ -1121,9 +1122,63 @@ class OrderController extends Controller
                 'client_name' => $clientName,
                 'order_created_at' => optional($order->created_at)->toIso8601String(),
                 'order_status' => $status,
+                'order_status_key' => $statusPayload['status_key'],
+                'order_status_label' => $statusPayload['status_label'],
+                'order_status_color' => $statusPayload['status_color'],
+                'order_url' => route('orders.show', $order->id),
+                'shipping_company_name' => $order->shipping_company_name,
+                'tracking_number' => $order->tracking_number,
+                'tracking_status' => $order->tracking_status,
+                'dispatch_date' => optional($order->dispatch_date)->toIso8601String(),
             ],
             'thread_count' => 0,
         ]);
+    }
+
+    private function formatOrderDiscussionStatusPayload(?string $status): array
+    {
+        $status = trim((string) $status);
+
+        $map = [
+            'r_order_in_process' => ['status_label' => 'In Process', 'status_color' => 'info'],
+            'r_order_shipped' => ['status_label' => 'Shipped', 'status_color' => 'success'],
+            'r_order_cancelled' => ['status_label' => 'Cancelled', 'status_color' => 'danger'],
+            'd_diamond_in_discuss' => ['status_label' => 'In Discuss', 'status_color' => 'info'],
+            'd_diamond_in_making' => ['status_label' => 'In Making', 'status_color' => 'warning'],
+            'd_diamond_completed' => ['status_label' => 'Completed', 'status_color' => 'success'],
+            'd_diamond_in_certificate' => ['status_label' => 'In Certificate', 'status_color' => 'purple'],
+            'd_order_shipped' => ['status_label' => 'Shipped', 'status_color' => 'dark'],
+            'd_order_cancelled' => ['status_label' => 'Cancelled', 'status_color' => 'danger'],
+            'j_diamond_in_progress' => ['status_label' => 'In Progress', 'status_color' => 'info'],
+            'j_diamond_completed' => ['status_label' => 'Completed', 'status_color' => 'success'],
+            'j_diamond_in_discuss' => ['status_label' => 'In Discuss', 'status_color' => 'cyan'],
+            'j_cad_in_progress' => ['status_label' => 'CAD In Progress', 'status_color' => 'warning'],
+            'j_cad_done' => ['status_label' => 'CAD Done', 'status_color' => 'purple'],
+            'j_order_completed' => ['status_label' => 'Completed', 'status_color' => 'success'],
+            'j_order_in_qc' => ['status_label' => 'In QC', 'status_color' => 'warning'],
+            'j_qc_done' => ['status_label' => 'QC Done', 'status_color' => 'success'],
+            'j_order_shipped' => ['status_label' => 'Shipped', 'status_color' => 'dark'],
+            'j_order_hold' => ['status_label' => 'On Hold', 'status_color' => 'danger'],
+            'j_order_cancelled' => ['status_label' => 'Cancelled', 'status_color' => 'danger'],
+        ];
+
+        if ($status === '') {
+            return [
+                'status_key' => 'unknown',
+                'status_label' => 'Unknown',
+                'status_color' => 'secondary',
+            ];
+        }
+
+        if (isset($map[$status])) {
+            return array_merge(['status_key' => $status], $map[$status]);
+        }
+
+        return [
+            'status_key' => $status,
+            'status_label' => \Illuminate\Support\Str::headline(str_replace(['_', '-'], ' ', $status)),
+            'status_color' => 'secondary',
+        ];
     }
 
     private function syncOrderDiscussionMembers(Channel $channel): void

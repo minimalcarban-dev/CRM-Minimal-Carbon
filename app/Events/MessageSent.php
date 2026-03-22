@@ -22,7 +22,7 @@ class MessageSent implements ShouldBroadcastNow
     public function __construct(Message $message)
     {
         // Ensure relationships are loaded for broadcast
-        $this->message = $message->load(['sender', 'attachments', 'reads']);
+        $this->message = $message->load(['sender', 'attachments', 'reads', 'reactions', 'pins']);
     }
 
     /**
@@ -42,6 +42,16 @@ class MessageSent implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        $reactions = $this->message->reactions
+            ->groupBy('emoji')
+            ->map(fn($items, $emoji) => [
+                'emoji' => $emoji,
+                'count' => $items->count(),
+                'my' => false,
+            ])
+            ->values()
+            ->toArray();
+
         return [
             'message' => [
                 'id' => $this->message->id,
@@ -71,6 +81,9 @@ class MessageSent implements ShouldBroadcastNow
                     'user_id' => $r->user_id,
                     'read_at' => $r->read_at,
                 ])->toArray(),
+                'reactions' => $reactions,
+                'is_pinned' => $this->message->pins->isNotEmpty(),
+                'is_saved' => false,
             ],
         ];
     }

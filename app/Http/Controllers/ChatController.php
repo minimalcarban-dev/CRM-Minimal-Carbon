@@ -3,11 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Events\ChannelMembershipChanged;
+use App\Events\MessagePinned;
+use App\Events\MessageReacted;
 use App\Models\Admin;
 use App\Models\Channel;
 use App\Models\Message;
 use App\Models\MessageAttachment;
 use App\Models\MessageLink;
+use App\Models\MessageReaction;
+use App\Models\Order;
+use App\Models\PinnedMessage;
+use App\Models\SavedMessage;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +27,7 @@ use App\Events\BroadcastTest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
@@ -568,12 +575,17 @@ class ChatController extends Controller
         DB::beginTransaction();
 
         try {
+            $body = trim((string) $request->input('body', ''));
+            $metadata = $request->input('metadata', []);
+            $metadata = is_array($metadata) ? $metadata : [];
+            $metadata = $this->enrichChatMetadataWithOrderReferences($metadata, $body);
+
             // Create message
             $message = $channel->messages()->create([
                 'sender_id' => $userId,
-                'body' => $request->input('body', ''),
+                'body' => $body,
                 'type' => 'text',
-                'metadata' => $request->input('metadata', []),
+                'metadata' => $metadata,
             ]);
 
             $scanner = app(VirusScanner::class);
@@ -586,9 +598,39 @@ class ChatController extends Controller
                         continue;
                     }
 
-                    $realMime = $finfo->file($file->getRealPath());
+                    $realMime = (string) $finfo->file($file->getRealPath());
+                    $clientMime = (string) $file->getMimeType();
+                    $resolvedMime = $realMime;
 
-                    if (!in_array($realMime, $allowedMimes, true)) {
+                    // Clipboard images may sometimes resolve as octet-stream via finfo.
+                    if ($resolvedMime === 'application/octet-stream' && str_starts_with($clientMime, 'image/')) {
+                        $resolvedMime = $clientMime;
+                    }
+
+                    if (!in_array($resolvedMime, $allowedMimes, true)) {
+                        if (in_array($clientMime, $allowedMimes, true)) {
+                            $resolvedMime = $clientMime;
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    $originalName = trim((string) $file->getClientOriginalName());
+                    if ($originalName === '' || !str_contains($originalName, '.')) {
+                        $extension = strtolower((string) $file->extension());
+                        if ($extension === '' && str_contains($resolvedMime, '/')) {
+                            $extension = strtolower((string) Str::after($resolvedMime, '/'));
+                        }
+                        if ($extension === 'jpeg') {
+                            $extension = 'jpg';
+                        }
+                        if ($extension === 'svg+xml') {
+                            $extension = 'svg';
+                        }
+                        $originalName = 'attachment-' . Str::uuid() . ($extension !== '' ? ".{$extension}" : '');
+                    }
+
+                    if ($originalName === '') {
                         continue;
                     }
 
@@ -606,9 +648,9 @@ class ChatController extends Controller
 
                     // Save attachment record
                     $attachment = $message->attachments()->create([
-                        'filename' => $file->getClientOriginalName(),
+                        'filename' => $originalName,
                         'path' => $path,
-                        'mime_type' => $realMime,
+                        'mime_type' => $resolvedMime,
                         'size' => $file->getSize(),
                     ]);
 
@@ -644,10 +686,10 @@ class ChatController extends Controller
 
             // Extract and persist links for efficient sidebar queries
             // First, remove email addresses to prevent extracting domains from them
-            if (!empty($request->body)) {
+            if (!empty($body)) {
                 // Remove emails first to prevent matching domains like gmail.com from user@gmail.com
                 $emailPattern = '/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/';
-                $bodyWithoutEmails = preg_replace($emailPattern, '', $request->body);
+                $bodyWithoutEmails = preg_replace($emailPattern, '', $body);
 
                 // Now find URLs in the cleaned text
                 $pattern = '/(?:https?:\/\/)?(?:www\.)?[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)+(?:\/[^\s<>()"\']*)?\b/i';
@@ -671,7 +713,7 @@ class ChatController extends Controller
             DB::commit();
 
             // Load relations for frontend
-            $message->load(['sender', 'attachments', 'reads']);
+            $message->load(['sender', 'attachments', 'reads', 'reactions', 'pins', 'savedBy']);
 
             // Broadcast (safe)
             try {
@@ -683,7 +725,7 @@ class ChatController extends Controller
                 ]);
             }
 
-            return response()->json($message);
+            return response()->json($this->decorateMessagePayload($message, (int) $userId));
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -710,9 +752,13 @@ class ChatController extends Controller
 
         $messages = $channel->messages()
             ->whereNull('reply_to_id')
-            ->with(['sender', 'attachments', 'reads'])
+            ->with(['sender', 'attachments', 'reads', 'reactions', 'pins', 'savedBy'])
             ->latest()
             ->paginate(5000);
+
+        $messages->getCollection()->transform(function (Message $message) use ($adminId) {
+            return $this->decorateMessagePayload($message, (int) $adminId);
+        });
 
         return response()->json($messages);
     }
@@ -1088,16 +1134,16 @@ class ChatController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $parentMessage = $message->load(['sender', 'attachments']);
+        $parentMessage = $message->load(['sender', 'attachments', 'reactions', 'pins', 'savedBy']);
 
         $replies = Message::where('reply_to_id', $message->id)
-            ->with(['sender', 'attachments'])
+            ->with(['sender', 'attachments', 'reactions', 'pins', 'savedBy'])
             ->orderBy('created_at', 'asc')
             ->get();
 
         return response()->json([
-            'parent_message' => $parentMessage,
-            'replies' => $replies,
+            'parent_message' => $this->decorateMessagePayload($parentMessage, (int) $user->id),
+            'replies' => $replies->map(fn(Message $reply) => $this->decorateMessagePayload($reply, (int) $user->id)),
         ]);
     }
 
@@ -1124,16 +1170,20 @@ class ChatController extends Controller
         try {
             DB::beginTransaction();
 
+            $body = trim((string) $request->input('body', ''));
+            $metadata = [
+                'reply_preview' => substr($body, 0, 100),
+                'reply_sender' => $user->name,
+            ];
+            $metadata = $this->enrichChatMetadataWithOrderReferences($metadata, $body);
+
             $reply = Message::create([
                 'channel_id' => $message->channel_id,
                 'sender_id' => $user->id,
                 'reply_to_id' => $message->id,
                 'type' => 'text',
-                'body' => $request->body,
-                'metadata' => [
-                    'reply_preview' => substr($request->body ?? '', 0, 100),
-                    'reply_sender' => $user->name,
-                ]
+                'body' => $body,
+                'metadata' => $metadata,
             ]);
 
             // Handle attachments (Simpler version of sendMessage attachment logic)
@@ -1141,10 +1191,25 @@ class ChatController extends Controller
                 foreach ($request->file('attachments') as $file) {
                     // $path = $file->store('chat-attachments', 'public');
                     $path = $file->store('uploads/chat-attachments', 'public');
+                    $mimeType = (string) ($file->getMimeType() ?: 'application/octet-stream');
+                    $originalName = trim((string) $file->getClientOriginalName());
+                    if ($originalName === '' || !str_contains($originalName, '.')) {
+                        $extension = strtolower((string) $file->extension());
+                        if ($extension === '' && str_contains($mimeType, '/')) {
+                            $extension = strtolower((string) Str::after($mimeType, '/'));
+                        }
+                        if ($extension === 'jpeg') {
+                            $extension = 'jpg';
+                        }
+                        if ($extension === 'svg+xml') {
+                            $extension = 'svg';
+                        }
+                        $originalName = 'attachment-' . Str::uuid() . ($extension !== '' ? ".{$extension}" : '');
+                    }
                     $reply->attachments()->create([
-                        'filename' => $file->getClientOriginalName(),
+                        'filename' => $originalName,
                         'path' => $path,
-                        'mime_type' => $file->getMimeType(),
+                        'mime_type' => $mimeType,
                         'size' => $file->getSize()
                     ]);
                 }
@@ -1155,14 +1220,14 @@ class ChatController extends Controller
 
             DB::commit();
 
-            $reply->load('sender', 'attachments');
+            $reply->load(['sender', 'attachments', 'reactions', 'pins', 'savedBy']);
 
             // Broadcast using existing MessageSent event
             broadcast(new MessageSent($reply))->toOthers();
 
             return response()->json([
                 'success' => true,
-                'reply' => $reply,
+                'reply' => $this->decorateMessagePayload($reply, (int) $user->id),
                 'parent_thread_count' => $message->fresh()->thread_count,
             ]);
         } catch (\Exception $e) {
@@ -1193,6 +1258,508 @@ class ChatController extends Controller
             ->count();
 
         return response()->json(['unread_count' => $unreadCount]);
+    }
+
+    /**
+     * Toggle emoji reaction on a message.
+     */
+    public function reactToMessage(Request $request, Message $message)
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if (!$message->channel || !$message->channel->users()->where('admin_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+
+        $request->validate([
+            'emoji' => 'required|string|max:20',
+        ]);
+
+        $emoji = trim((string) $request->input('emoji'));
+        if ($emoji === '') {
+            return response()->json(['error' => 'Invalid emoji'], 422);
+        }
+
+        $existing = MessageReaction::query()
+            ->where('message_id', $message->id)
+            ->where('admin_id', $user->id)
+            ->where('emoji', $emoji)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            $action = 'removed';
+        } else {
+            MessageReaction::create([
+                'message_id' => $message->id,
+                'admin_id' => $user->id,
+                'emoji' => $emoji,
+            ]);
+            $action = 'added';
+        }
+
+        broadcast(new MessageReacted($message->channel_id, $message->id, $user->id, $emoji, $action))->toOthers();
+
+        $message->load('reactions');
+
+        return response()->json([
+            'reactions' => $this->groupMessageReactions($message, (int) $user->id),
+            'action' => $action,
+            'emoji' => $emoji,
+        ]);
+    }
+
+    /**
+     * Pin a message in a channel.
+     */
+    public function pinMessage(Channel $channel, Message $message)
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        if ((int) $message->channel_id !== (int) $channel->id) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+        if (!$channel->users()->where('admin_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+
+        PinnedMessage::firstOrCreate([
+            'message_id' => $message->id,
+            'channel_id' => $channel->id,
+        ], [
+            'pinned_by' => $user->id,
+        ]);
+
+        broadcast(new MessagePinned($channel->id, $message->id, 'pinned'))->toOthers();
+
+        return response()->json(['success' => true, 'action' => 'pinned']);
+    }
+
+    /**
+     * Remove pinned state for a message.
+     */
+    public function unpinMessage(Channel $channel, Message $message)
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        if ((int) $message->channel_id !== (int) $channel->id) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+        if (!$channel->users()->where('admin_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+
+        PinnedMessage::query()
+            ->where('message_id', $message->id)
+            ->where('channel_id', $channel->id)
+            ->delete();
+
+        broadcast(new MessagePinned($channel->id, $message->id, 'unpinned'))->toOthers();
+
+        return response()->json(['success' => true, 'action' => 'unpinned']);
+    }
+
+    /**
+     * Get pinned messages for a channel.
+     */
+    public function getPinnedMessages(Channel $channel)
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        if (!$channel->users()->where('admin_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+
+        $pins = PinnedMessage::query()
+            ->where('channel_id', $channel->id)
+            ->with(['message.sender'])
+            ->latest()
+            ->get()
+            ->filter(fn(PinnedMessage $pin) => $pin->message !== null)
+            ->map(function (PinnedMessage $pin) {
+                return [
+                    'id' => $pin->message->id,
+                    'body' => $pin->message->body,
+                    'sender' => $pin->message->sender?->name,
+                    'created_at' => $pin->message->created_at?->toIso8601String(),
+                    'pinned_at' => $pin->created_at?->toIso8601String(),
+                ];
+            })
+            ->values();
+
+        return response()->json(['pins' => $pins]);
+    }
+
+    /**
+     * Save a message for the current admin.
+     */
+    public function saveMessage(Message $message)
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        if (!$message->channel || !$message->channel->users()->where('admin_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+
+        SavedMessage::firstOrCreate([
+            'message_id' => $message->id,
+            'admin_id' => $user->id,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Remove saved state for the current admin.
+     */
+    public function unsaveMessage(Message $message)
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        if (!$message->channel || !$message->channel->users()->where('admin_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Not Found'], 404);
+        }
+
+        SavedMessage::query()
+            ->where('message_id', $message->id)
+            ->where('admin_id', $user->id)
+            ->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Get all messages saved by the current admin.
+     */
+    public function getSavedMessages()
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $saved = SavedMessage::query()
+            ->where('admin_id', $user->id)
+            ->with(['message.sender', 'message.channel'])
+            ->latest()
+            ->get()
+            ->filter(fn(SavedMessage $savedMessage) => $savedMessage->message !== null)
+            ->map(function (SavedMessage $savedMessage) {
+                return [
+                    'id' => $savedMessage->message->id,
+                    'body' => $savedMessage->message->body,
+                    'sender' => $savedMessage->message->sender?->name,
+                    'channel_name' => $savedMessage->message->channel?->name,
+                    'created_at' => $savedMessage->message->created_at?->toIso8601String(),
+                ];
+            })
+            ->values();
+
+        return response()->json(['saved' => $saved]);
+    }
+
+    /**
+     * #Order autosuggest.
+     */
+    public function orderSuggest(Request $request)
+    {
+        $user = Auth::guard('admin')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $q = trim((string) $request->query('q', ''));
+        $limit = 12;
+        $ordersQuery = Order::query();
+
+        if ($q === '') {
+            $orders = $ordersQuery->latest('id')->limit($limit)->get();
+
+            return response()->json([
+                'orders' => $orders->map(fn(Order $order) => $this->buildOrderSuggestPayload($order))->values(),
+            ]);
+        }
+
+        $hasDigits = preg_match('/\d/', $q) === 1;
+        $hasLetters = preg_match('/[a-z]/i', $q) === 1;
+        $digitProjection = preg_replace('/\D+/', '', $q) ?? '';
+
+        $ordersQuery->where(function ($inner) use ($hasDigits, $hasLetters, $digitProjection, $q) {
+            $added = false;
+
+            // Digits present => try order ID prefix match from numeric projection.
+            if ($hasDigits && $digitProjection !== '') {
+                $inner->whereRaw('CAST(id AS CHAR) LIKE ?', [$digitProjection . '%']);
+                $added = true;
+            }
+
+            // Letters present => try client name search.
+            // Fallback for symbol-only query: still run client_name LIKE instead of forcing empty.
+            if ($hasLetters || !$added) {
+                if ($added) {
+                    $inner->orWhere('client_name', 'like', '%' . $q . '%');
+                } else {
+                    $inner->where('client_name', 'like', '%' . $q . '%');
+                }
+            }
+        });
+
+        if ($hasDigits && $digitProjection !== '') {
+            $ordersQuery->orderByRaw(
+                "CASE
+                    WHEN CAST(id AS CHAR) = ? THEN 0
+                    WHEN CAST(id AS CHAR) LIKE ? THEN 1
+                    ELSE 2
+                 END",
+                [$digitProjection, $digitProjection . '%']
+            );
+        }
+
+        $orders = $ordersQuery
+            ->latest('id')
+            ->limit($limit)
+            ->get()
+            ->unique('id')
+            ->values();
+
+        return response()->json([
+            'orders' => $orders->map(fn(Order $order) => $this->buildOrderSuggestPayload($order))->values(),
+        ]);
+    }
+
+    /**
+     * Extract order references from a chat message body and enrich metadata with
+     * structured order preview data.
+     */
+    private function enrichChatMetadataWithOrderReferences(array $metadata, ?string $body): array
+    {
+        $references = $this->buildOrderReferencePayloads($body);
+
+        if (!empty($references)) {
+            $metadata['order_refs'] = $references;
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * Build a normalized payload for all #order references in a message body.
+     */
+    private function buildOrderReferencePayloads(?string $body): array
+    {
+        $orderIds = $this->extractOrderReferenceIds($body);
+
+        if (empty($orderIds)) {
+            return [];
+        }
+
+        $ordersById = Order::query()
+            ->whereIn('id', $orderIds)
+            ->get()
+            ->keyBy('id');
+
+        $payloads = [];
+
+        foreach ($orderIds as $orderId) {
+            $order = $ordersById->get($orderId);
+            $payloads[] = $this->buildOrderReferencePayload($order, $orderId);
+        }
+
+        return $payloads;
+    }
+
+    /**
+     * Parse numeric references from a chat body in the form #123.
+     */
+    private function extractOrderReferenceIds(?string $body): array
+    {
+        $text = trim((string) $body);
+
+        if ($text === '') {
+            return [];
+        }
+
+        preg_match_all('/(?<!\w)#(\d+)\b/', $text, $matches);
+
+        $ids = [];
+        $seen = [];
+
+        foreach ($matches[1] ?? [] as $rawId) {
+            $id = (int) $rawId;
+            if ($id <= 0 || isset($seen[$id])) {
+                continue;
+            }
+
+            $seen[$id] = true;
+            $ids[] = $id;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Create the normalized structure used by the frontend order cards.
+     */
+    private function buildOrderReferencePayload(?Order $order, int $fallbackId): array
+    {
+        if (!$order) {
+            return [
+                'id' => $fallbackId,
+                'display_number' => (string) $fallbackId,
+                'client_name' => null,
+                'created_at' => null,
+                'status_key' => 'missing',
+                'status_label' => 'Order not found',
+                'status_color' => 'secondary',
+                'order_url' => null,
+                'shipping_company_name' => null,
+                'tracking_number' => null,
+                'tracking_status' => null,
+                'dispatch_date' => null,
+                'exists' => false,
+            ];
+        }
+
+        $status = $this->formatOrderStatusPayload($order->diamond_status);
+
+        return [
+            'id' => $order->id,
+            'display_number' => (string) $order->id,
+            'client_name' => $order->display_client_name ?? $order->client_name,
+            'created_at' => $order->created_at?->toIso8601String(),
+            'status_key' => $status['status_key'],
+            'status_label' => $status['status_label'],
+            'status_color' => $status['status_color'],
+            'order_url' => route('orders.show', $order->id),
+            'shipping_company_name' => $order->shipping_company_name,
+            'tracking_number' => $order->tracking_number,
+            'tracking_status' => $order->tracking_status,
+            'dispatch_date' => $order->dispatch_date?->toIso8601String(),
+            'exists' => true,
+        ];
+    }
+
+    /**
+     * Map raw order status keys to a human-friendly label and badge color.
+     */
+    private function formatOrderStatusPayload(?string $status): array
+    {
+        $status = trim((string) $status);
+
+        $map = [
+            'r_order_in_process' => ['status_label' => 'In Process', 'status_color' => 'info'],
+            'r_order_shipped' => ['status_label' => 'Shipped', 'status_color' => 'success'],
+            'r_order_cancelled' => ['status_label' => 'Cancelled', 'status_color' => 'danger'],
+            'd_diamond_in_discuss' => ['status_label' => 'In Discuss', 'status_color' => 'info'],
+            'd_diamond_in_making' => ['status_label' => 'In Making', 'status_color' => 'warning'],
+            'd_diamond_completed' => ['status_label' => 'Completed', 'status_color' => 'success'],
+            'd_diamond_in_certificate' => ['status_label' => 'In Certificate', 'status_color' => 'purple'],
+            'd_order_shipped' => ['status_label' => 'Shipped', 'status_color' => 'dark'],
+            'd_order_cancelled' => ['status_label' => 'Cancelled', 'status_color' => 'danger'],
+            'j_diamond_in_progress' => ['status_label' => 'In Progress', 'status_color' => 'info'],
+            'j_diamond_completed' => ['status_label' => 'Completed', 'status_color' => 'success'],
+            'j_diamond_in_discuss' => ['status_label' => 'In Discuss', 'status_color' => 'cyan'],
+            'j_cad_in_progress' => ['status_label' => 'CAD In Progress', 'status_color' => 'warning'],
+            'j_cad_done' => ['status_label' => 'CAD Done', 'status_color' => 'purple'],
+            'j_order_completed' => ['status_label' => 'Completed', 'status_color' => 'success'],
+            'j_order_in_qc' => ['status_label' => 'In QC', 'status_color' => 'warning'],
+            'j_qc_done' => ['status_label' => 'QC Done', 'status_color' => 'success'],
+            'j_order_shipped' => ['status_label' => 'Shipped', 'status_color' => 'dark'],
+            'j_order_hold' => ['status_label' => 'On Hold', 'status_color' => 'danger'],
+            'j_order_cancelled' => ['status_label' => 'Cancelled', 'status_color' => 'danger'],
+        ];
+
+        if ($status === '') {
+            return [
+                'status_key' => 'unknown',
+                'status_label' => 'Unknown',
+                'status_color' => 'secondary',
+            ];
+        }
+
+        if (isset($map[$status])) {
+            return array_merge(['status_key' => $status], $map[$status]);
+        }
+
+        return [
+            'status_key' => $status,
+            'status_label' => Str::headline(str_replace(['_', '-'], ' ', $status)),
+            'status_color' => 'secondary',
+        ];
+    }
+
+    /**
+     * Normalize a message payload with derived chat fields expected by the frontend.
+     */
+    private function decorateMessagePayload(Message $message, int $adminId): array
+    {
+        if (!$message->relationLoaded('reactions')) {
+            $message->load('reactions');
+        }
+        if (!$message->relationLoaded('pins')) {
+            $message->load('pins');
+        }
+        if (!$message->relationLoaded('savedBy')) {
+            $message->load('savedBy');
+        }
+
+        $payload = $message->toArray();
+        $payload['reactions'] = $this->groupMessageReactions($message, $adminId);
+        $payload['is_pinned'] = $message->pins->isNotEmpty();
+        $payload['is_saved'] = $message->savedBy->contains(fn(SavedMessage $saved) => (int) $saved->admin_id === $adminId);
+
+        unset($payload['pins'], $payload['saved_by']);
+
+        return $payload;
+    }
+
+    /**
+     * Group reactions by emoji and annotate if the current admin reacted.
+     */
+    private function groupMessageReactions(Message $message, int $adminId): array
+    {
+        if (!$message->relationLoaded('reactions')) {
+            $message->load('reactions');
+        }
+
+        return $message->reactions
+            ->groupBy('emoji')
+            ->map(function ($items, $emoji) use ($adminId) {
+                return [
+                    'emoji' => $emoji,
+                    'count' => $items->count(),
+                    'my' => $items->contains(fn(MessageReaction $reaction) => (int) $reaction->admin_id === $adminId),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Build the compact payload used by #order autosuggest dropdown.
+     */
+    private function buildOrderSuggestPayload(Order $order): array
+    {
+        $status = $this->formatOrderStatusPayload($order->diamond_status);
+
+        return [
+            'id' => $order->id,
+            'client_name' => $order->display_client_name ?? $order->client_name,
+            'status_label' => $status['status_label'],
+        ];
     }
 
     /**

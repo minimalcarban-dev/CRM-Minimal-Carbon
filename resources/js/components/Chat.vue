@@ -141,6 +141,11 @@
             :class="{ 'sidebar-open-mobile': isMobile && mobileSidebarOpen }"
             v-if="currentChannel"
             :style="chatMainStyle"
+            @click="closeMenus"
+            @dragenter="onDragEnter"
+            @dragover="onDragOver"
+            @dragleave="onDragLeave"
+            @drop="onDrop"
         >
             <!-- Chat Header -->
             <div class="chat-header">
@@ -195,6 +200,25 @@
                     >
                         <i class="bi bi-people"></i>
                     </button>
+                    <button
+                        class="btn-icon-secondary"
+                        @click="toggleSavedPanel"
+                        :class="{ active: showSavedPanel }"
+                        title="Saved Messages"
+                    >
+                        <i class="bi bi-bookmark"></i>
+                    </button>
+                    <button
+                        class="btn-icon-secondary"
+                        @click="togglePinnedPanel"
+                        :class="{ active: showPinnedPanel }"
+                        title="Pinned Messages"
+                    >
+                        <i class="bi bi-pin-angle"></i>
+                        <span v-if="pinnedMessages.length" class="pin-count">{{
+                            pinnedMessages.length
+                        }}</span>
+                    </button>
                     <!-- Toggle info sidebar -->
                     <button
                         class="btn-icon-secondary info-toggle-btn"
@@ -207,7 +231,72 @@
                 </div>
             </div>
 
+            <div v-if="isDragging" class="drag-overlay">
+                <div class="drag-overlay-content">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span>Drop files to attach</span>
+                </div>
+            </div>
+
             <!-- Messages Area -->
+            <div v-if="showPinnedPanel" class="pinned-panel">
+                <div class="pinned-header">
+                    <i class="bi bi-pin-angle-fill"></i>
+                    <span
+                        >{{ pinnedMessages.length }} Pinned Message{{
+                            pinnedMessages.length === 1 ? "" : "s"
+                        }}</span
+                    >
+                    <button @click="showPinnedPanel = false" class="panel-close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="pinned-list">
+                    <div v-if="!pinnedMessages.length" class="pinned-empty">
+                        No pinned messages in this channel
+                    </div>
+                    <div
+                        v-for="pin in pinnedMessages"
+                        :key="`pin-${pin.id}`"
+                        class="pinned-item"
+                        @click="scrollToMessageById(pin.id)"
+                    >
+                        <div class="pinned-sender">{{ pin.sender }}</div>
+                        <div class="pinned-body">
+                            {{ pin.body?.slice(0, 100) || "Attachment" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="showSavedPanel" class="pinned-panel saved-panel">
+                <div class="pinned-header">
+                    <i class="bi bi-bookmark-fill"></i>
+                    <span>Saved Messages</span>
+                    <button @click="showSavedPanel = false" class="panel-close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="pinned-list">
+                    <div v-if="!savedMessages.length" class="pinned-empty">
+                        No saved messages yet
+                    </div>
+                    <div
+                        v-for="saved in savedMessages"
+                        :key="`saved-${saved.id}`"
+                        class="pinned-item"
+                        @click="jumpToSavedMessage(saved)"
+                    >
+                        <div class="pinned-sender">
+                            {{ saved.sender }} · {{ saved.channel_name }}
+                        </div>
+                        <div class="pinned-body">
+                            {{ saved.body?.slice(0, 100) || "Attachment" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="messages-container" ref="messageContainer">
                 <!-- Search Results -->
                 <div v-if="searchResults.length" class="search-results-area">
@@ -364,7 +453,7 @@
                                         </div>
                                         <!-- Text Content -->
                                         <div
-                                            v-if="message.body"
+                                            v-if="hasRenderableMessageBody(message)"
                                             class="message-text"
                                             v-html="
                                                 formatMessageWithMentions(
@@ -372,6 +461,137 @@
                                                 )
                                             "
                                         ></div>
+
+                                        <div
+                                            v-if="getOrderReferences(message).length"
+                                            class="order-reference-stack"
+                                        >
+                                            <button
+                                                v-for="orderRef in getOrderReferences(message)"
+                                                :key="`${message.id}-${orderRef.id}`"
+                                                type="button"
+                                                class="order-reference-card"
+                                                :class="{
+                                                    'order-reference-card--missing':
+                                                        !orderRef.order_url,
+                                                }"
+                                                :disabled="!orderRef.order_url"
+                                                @click="openOrderReference(orderRef)"
+                                            >
+                                                <div class="order-reference-header">
+                                                    <div class="order-reference-title">
+                                                        <span class="order-reference-number">
+                                                            #{{
+                                                                orderRef.display_number
+                                                            }}
+                                                        </span>
+                                                        <span class="order-reference-label-text">
+                                                            Order
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="order-reference-status"
+                                                        :class="`status-${orderRef.status_color || 'secondary'}`"
+                                                    >
+                                                        {{
+                                                            orderRef.status_label ||
+                                                            "Unknown"
+                                                        }}
+                                                    </span>
+                                                </div>
+
+                                                <div class="order-reference-body">
+                                                    <div class="order-reference-row">
+                                                        <div class="order-reference-row-icon">
+                                                            <i class="bi bi-person-badge"></i>
+                                                        </div>
+                                                        <div class="order-reference-row-content">
+                                                            <span class="order-reference-row-label">
+                                                                Client
+                                                            </span>
+                                                            <span class="order-reference-row-value">
+                                                                {{
+                                                                    orderRef.exists
+                                                                        ? orderRef.client_name ||
+                                                                          "Unknown client"
+                                                                        : "Order not found"
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="order-reference-row">
+                                                        <div class="order-reference-row-icon">
+                                                            <i class="bi bi-calendar3"></i>
+                                                        </div>
+                                                        <div class="order-reference-row-content">
+                                                            <span class="order-reference-row-label">
+                                                                Created
+                                                            </span>
+                                                            <span class="order-reference-row-value">
+                                                                {{
+                                                                    orderRef.created_at
+                                                                        ? formatOrderCreatedAt(
+                                                                              orderRef.created_at,
+                                                                          )
+                                                                        : "Not available"
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        v-if="
+                                                            orderRef.shipping_company_name ||
+                                                            orderRef.tracking_number ||
+                                                            orderRef.dispatch_date ||
+                                                            orderRef.tracking_status
+                                                        "
+                                                        class="order-reference-row"
+                                                    >
+                                                        <div class="order-reference-row-icon">
+                                                            <i class="bi bi-truck"></i>
+                                                        </div>
+                                                        <div class="order-reference-row-content">
+                                                            <span class="order-reference-row-label">
+                                                                Shipping
+                                                            </span>
+                                                            <span class="order-reference-row-value">
+                                                                {{
+                                                                    orderRef.shipping_company_name ||
+                                                                    orderRef.tracking_status ||
+                                                                    "Tracking ready"
+                                                                }}
+                                                            </span>
+                                                            <span
+                                                                v-if="
+                                                                    orderRef.tracking_number
+                                                                "
+                                                                class="order-reference-row-subvalue"
+                                                            >
+                                                                Tracking:
+                                                                {{
+                                                                    orderRef.tracking_number
+                                                                }}
+                                                            </span>
+                                                            <span
+                                                                v-if="
+                                                                    orderRef.dispatch_date
+                                                                "
+                                                                class="order-reference-row-subvalue"
+                                                            >
+                                                                Dispatch:
+                                                                {{
+                                                                    formatOrderCreatedAt(
+                                                                        orderRef.dispatch_date,
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </div>
 
                                         <!-- Attachments -->
                                         <!-- <div v-if="message.attachments && message.attachments.length"
@@ -454,6 +674,30 @@
                                                 </a>
                                             </div>
                                         </div>
+
+                                        <div
+                                            v-if="message.is_pinned"
+                                            class="pin-indicator"
+                                        >
+                                            <i class="bi bi-pin-angle-fill"></i>
+                                            Pinned
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        v-if="groupedReactions(message).length"
+                                        class="reaction-bar"
+                                    >
+                                        <button
+                                            v-for="group in groupedReactions(message)"
+                                            :key="`${message.id}-${group.emoji}`"
+                                            class="reaction-chip"
+                                            :class="{ mine: group.my }"
+                                            @click.stop="reactToMessage(message, group.emoji)"
+                                        >
+                                            {{ group.emoji }}
+                                            <span>{{ group.count }}</span>
+                                        </button>
                                     </div>
 
                                     <!-- Thread Indicator -->
@@ -487,23 +731,133 @@
                                         <i class="bi bi-chevron-right"></i>
                                     </div>
 
-                                    <!-- Time Outside Bubble -->
-                                    <div class="message-time-outside">
-                                        {{ formatDate(message.created_at) }}
-                                        <button
-                                            class="meta-action"
-                                            title="Reply in Thread"
-                                            @click.stop="openThread(message)"
-                                        >
-                                            <i class="bi bi-chat-text"></i>
-                                        </button>
+                                    <div class="message-meta">
+                                        <span class="message-time">
+                                            {{ formatDate(message.created_at) }}
+                                        </span>
                                         <button
                                             class="meta-action"
                                             title="Reply Quote"
-                                            @click="replyToMessage(message)"
+                                            @click.stop="replyToMessage(message)"
                                         >
                                             <i class="bi bi-reply"></i>
                                         </button>
+
+                                        <div class="message-actions-float">
+                                            <button
+                                                class="meta-action"
+                                                title="React"
+                                                @click.stop="
+                                                    toggleReactionPicker(
+                                                        message.id,
+                                                    )
+                                                "
+                                            >
+                                                <i
+                                                    class="bi bi-emoji-smile"
+                                                ></i>
+                                            </button>
+                                            <div
+                                                v-if="
+                                                    activeReactionPickerId ===
+                                                    message.id
+                                                "
+                                                class="message-reaction-picker"
+                                                @click.stop
+                                            >
+                                                <button
+                                                    v-for="emoji in QUICK_EMOJIS"
+                                                    :key="`reaction-picker-${message.id}-${emoji}`"
+                                                    class="reaction-picker-emoji"
+                                                    :title="emoji"
+                                                    @click.stop="
+                                                        reactAndClose(
+                                                            message,
+                                                            emoji,
+                                                        )
+                                                    "
+                                                >
+                                                    {{ emoji }}
+                                                </button>
+                                            </div>
+                                            <button
+                                                class="meta-action"
+                                                title="More actions"
+                                                @click.stop="
+                                                    toggleMessageMenu(message.id)
+                                                "
+                                            >
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                            <div
+                                                v-if="
+                                                    activeMessageMenuId ===
+                                                    message.id
+                                                "
+                                                class="message-actions-menu"
+                                                @click.stop
+                                            >
+                                                <button
+                                                    class="message-actions-item"
+                                                    @click.stop="
+                                                        toggleSaveMessage(
+                                                            message,
+                                                        );
+                                                        closeMenus();
+                                                    "
+                                                >
+                                                    <i
+                                                        :class="
+                                                            message.is_saved
+                                                                ? 'bi bi-bookmark-fill'
+                                                                : 'bi bi-bookmark'
+                                                        "
+                                                    ></i>
+                                                    {{
+                                                        message.is_saved
+                                                            ? "Unsave"
+                                                            : "Save"
+                                                    }}
+                                                </button>
+                                                <button
+                                                    class="message-actions-item"
+                                                    @click.stop="
+                                                        message.is_pinned
+                                                            ? unpinMessage(
+                                                                  message,
+                                                              )
+                                                            : pinMessage(
+                                                                  message,
+                                                              );
+                                                        closeMenus();
+                                                    "
+                                                >
+                                                    <i
+                                                        :class="
+                                                            message.is_pinned
+                                                                ? 'bi bi-pin-angle-fill'
+                                                                : 'bi bi-pin-angle'
+                                                        "
+                                                    ></i>
+                                                    {{
+                                                        message.is_pinned
+                                                            ? "Unpin"
+                                                            : "Pin"
+                                                    }}
+                                                </button>
+                                                <button
+                                                    class="message-actions-item"
+                                                    @click.stop="
+                                                        openThread(message);
+                                                        closeMenus();
+                                                    "
+                                                >
+                                                    <i class="bi bi-chat-text"></i>
+                                                    Reply in Thread
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         <span
                                             v-if="message.sender_id === userId"
                                             class="message-status"
@@ -610,11 +964,29 @@
                         >
                             <i class="bi bi-paperclip"></i>
                         </button>
-                        <div class="input-with-suggestions">
+                        <button
+                            @click.stop="showEmojiPicker = !showEmojiPicker"
+                            class="btn-attach"
+                            title="Emoji"
+                        >
+                            <i class="bi bi-emoji-smile"></i>
+                        </button>
+                        <div class="input-with-suggestions" @click.stop>
+                            <div
+                                v-if="showEmojiPicker"
+                                class="emoji-mart-wrapper"
+                                @click.stop
+                            >
+                                <EmojiPicker
+                                    :data="emojiData"
+                                    @emoji-select="appendEmoji"
+                                />
+                            </div>
                             <textarea
                                 v-model="newMessage"
                                 @keydown="onKeyDownInEditor"
                                 @input="onEditorInput"
+                                @paste="handlePaste"
                                 :placeholder="mobileInputPlaceholder"
                                 ref="messageInput"
                                 class="message-textarea"
@@ -644,6 +1016,32 @@
                                         </div>
                                         <div class="mention-email">
                                             {{ m.email }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="orderSuggestOpen && orderSuggestItems.length"
+                                class="mention-popover order-suggest-popover"
+                            >
+                                <div
+                                    v-for="(order, i) in orderSuggestItems"
+                                    :key="`order-suggest-${order.id}`"
+                                    :class="[
+                                        'mention-item',
+                                        { active: i === orderSuggestIndex },
+                                    ]"
+                                    @mousedown.prevent="pickOrderSuggest(order)"
+                                >
+                                    <span class="mention-avatar">#</span>
+                                    <div class="mention-info">
+                                        <div class="mention-name">
+                                            #{{ order.id }}
+                                        </div>
+                                        <div class="mention-email">
+                                            {{ order.client_name || "Unknown client" }}
+                                            · {{ order.status_label || "Unknown" }}
                                         </div>
                                     </div>
                                 </div>
@@ -724,6 +1122,11 @@
                             </div>
                             <div class="message-bubble parent-bubble">
                                 <div
+                                    v-if="
+                                        hasRenderableMessageBody(
+                                            activeThreadMessage,
+                                        )
+                                    "
                                     v-html="
                                         formatMessageWithMentions(
                                             activeThreadMessage,
@@ -731,6 +1134,140 @@
                                     "
                                     class="message-text"
                                 ></div>
+                            <div
+                                v-if="
+                                    getOrderReferences(activeThreadMessage)
+                                        .length
+                                "
+                                class="order-reference-stack"
+                            >
+                                <button
+                                    v-for="orderRef in getOrderReferences(
+                                        activeThreadMessage,
+                                    )"
+                                    :key="`${activeThreadMessage.id}-${orderRef.id}`"
+                                    type="button"
+                                    class="order-reference-card"
+                                    :class="{
+                                        'order-reference-card--missing':
+                                            !orderRef.order_url,
+                                    }"
+                                    :disabled="!orderRef.order_url"
+                                    @click="openOrderReference(orderRef)"
+                                >
+                                    <div class="order-reference-header">
+                                        <div class="order-reference-title">
+                                            <span class="order-reference-number">
+                                                #{{ orderRef.display_number }}
+                                            </span>
+                                            <span class="order-reference-label-text">
+                                                Order
+                                            </span>
+                                        </div>
+                                        <span
+                                            class="order-reference-status"
+                                            :class="`status-${orderRef.status_color || 'secondary'}`"
+                                        >
+                                            {{
+                                                orderRef.status_label ||
+                                                "Unknown"
+                                            }}
+                                        </span>
+                                    </div>
+                                    <div class="order-reference-body">
+                                        <div class="order-reference-row">
+                                            <div class="order-reference-row-icon">
+                                                <i class="bi bi-person-badge"></i>
+                                            </div>
+                                            <div
+                                                class="order-reference-row-content"
+                                            >
+                                                <span class="order-reference-row-label">
+                                                    Client
+                                                </span>
+                                                <span class="order-reference-row-value">
+                                                    {{
+                                                        orderRef.exists
+                                                            ? orderRef.client_name ||
+                                                              "Unknown client"
+                                                            : "Order not found"
+                                                    }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="order-reference-row">
+                                            <div class="order-reference-row-icon">
+                                                <i class="bi bi-calendar3"></i>
+                                            </div>
+                                            <div
+                                                class="order-reference-row-content"
+                                            >
+                                                <span class="order-reference-row-label">
+                                                    Created
+                                                </span>
+                                                <span class="order-reference-row-value">
+                                                    {{
+                                                        orderRef.created_at
+                                                            ? formatOrderCreatedAt(
+                                                                  orderRef.created_at,
+                                                              )
+                                                            : "Not available"
+                                                    }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div
+                                            v-if="
+                                                orderRef.shipping_company_name ||
+                                                orderRef.tracking_number ||
+                                                orderRef.dispatch_date ||
+                                                orderRef.tracking_status
+                                            "
+                                            class="order-reference-row"
+                                        >
+                                            <div class="order-reference-row-icon">
+                                                <i class="bi bi-truck"></i>
+                                            </div>
+                                            <div
+                                                class="order-reference-row-content"
+                                            >
+                                                <span class="order-reference-row-label">
+                                                    Shipping
+                                                </span>
+                                                <span class="order-reference-row-value">
+                                                    {{
+                                                        orderRef.shipping_company_name ||
+                                                        orderRef.tracking_status ||
+                                                        "Tracking ready"
+                                                    }}
+                                                </span>
+                                                <span
+                                                    v-if="
+                                                        orderRef.tracking_number
+                                                    "
+                                                    class="order-reference-row-subvalue"
+                                                >
+                                                    Tracking:
+                                                    {{ orderRef.tracking_number }}
+                                                </span>
+                                                <span
+                                                    v-if="
+                                                        orderRef.dispatch_date
+                                                    "
+                                                    class="order-reference-row-subvalue"
+                                                >
+                                                    Dispatch:
+                                                    {{
+                                                        formatOrderCreatedAt(
+                                                            orderRef.dispatch_date,
+                                                        )
+                                                    }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
                                 <!-- <div
                                     v-if="
                                         activeThreadMessage.attachments &&
@@ -831,11 +1368,147 @@
                                 </div>
                                 <div class="message-bubble">
                                     <div
+                                        v-if="
+                                            hasRenderableMessageBody(reply)
+                                        "
                                         v-html="
                                             formatMessageWithMentions(reply)
                                         "
                                         class="message-text"
                                     ></div>
+
+                                    <div
+                                        v-if="getOrderReferences(reply).length"
+                                        class="order-reference-stack"
+                                    >
+                                        <button
+                                            v-for="orderRef in getOrderReferences(reply)"
+                                            :key="`${reply.id}-${orderRef.id}`"
+                                            type="button"
+                                            class="order-reference-card"
+                                            :class="{
+                                                'order-reference-card--missing':
+                                                    !orderRef.order_url,
+                                            }"
+                                            :disabled="!orderRef.order_url"
+                                            @click="openOrderReference(orderRef)"
+                                        >
+                                            <div class="order-reference-header">
+                                                <div class="order-reference-title">
+                                                    <span class="order-reference-number">
+                                                        #{{ orderRef.display_number }}
+                                                    </span>
+                                                    <span class="order-reference-label-text">
+                                                        Order
+                                                    </span>
+                                                </div>
+                                                <span
+                                                    class="order-reference-status"
+                                                    :class="`status-${orderRef.status_color || 'secondary'}`"
+                                                >
+                                                    {{
+                                                        orderRef.status_label ||
+                                                        "Unknown"
+                                                    }}
+                                                </span>
+                                            </div>
+
+                                            <div class="order-reference-body">
+                                                <div class="order-reference-row">
+                                                    <div class="order-reference-row-icon">
+                                                        <i class="bi bi-person-badge"></i>
+                                                    </div>
+                                                    <div
+                                                        class="order-reference-row-content"
+                                                    >
+                                                        <span class="order-reference-row-label">
+                                                            Client
+                                                        </span>
+                                                        <span class="order-reference-row-value">
+                                                            {{
+                                                                orderRef.exists
+                                                                    ? orderRef.client_name ||
+                                                                      "Unknown client"
+                                                                    : "Order not found"
+                                                            }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="order-reference-row">
+                                                    <div class="order-reference-row-icon">
+                                                        <i class="bi bi-calendar3"></i>
+                                                    </div>
+                                                    <div
+                                                        class="order-reference-row-content"
+                                                    >
+                                                        <span class="order-reference-row-label">
+                                                            Created
+                                                        </span>
+                                                        <span class="order-reference-row-value">
+                                                            {{
+                                                                orderRef.created_at
+                                                                    ? formatOrderCreatedAt(
+                                                                          orderRef.created_at,
+                                                                      )
+                                                                    : "Not available"
+                                                            }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    v-if="
+                                                        orderRef.shipping_company_name ||
+                                                        orderRef.tracking_number ||
+                                                        orderRef.dispatch_date ||
+                                                        orderRef.tracking_status
+                                                    "
+                                                    class="order-reference-row"
+                                                >
+                                                    <div class="order-reference-row-icon">
+                                                        <i class="bi bi-truck"></i>
+                                                    </div>
+                                                    <div
+                                                        class="order-reference-row-content"
+                                                    >
+                                                        <span class="order-reference-row-label">
+                                                            Shipping
+                                                        </span>
+                                                        <span class="order-reference-row-value">
+                                                            {{
+                                                                orderRef.shipping_company_name ||
+                                                                orderRef.tracking_status ||
+                                                                "Tracking ready"
+                                                            }}
+                                                        </span>
+                                                        <span
+                                                            v-if="
+                                                                orderRef.tracking_number
+                                                            "
+                                                            class="order-reference-row-subvalue"
+                                                        >
+                                                            Tracking:
+                                                            {{ orderRef.tracking_number }}
+                                                        </span>
+                                                        <span
+                                                            v-if="
+                                                                orderRef.dispatch_date
+                                                            "
+                                                            class="order-reference-row-subvalue"
+                                                        >
+                                                            Dispatch:
+                                                            {{
+                                                                formatOrderCreatedAt(
+                                                                    orderRef.dispatch_date,
+                                                                )
+                                                            }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
 
                                     <!-- <div
                                         v-if="reply.attachments && reply.attachments.length"
@@ -1526,12 +2199,16 @@ import {
     watch,
     computed,
     nextTick,
+    defineComponent,
+    h,
 } from "vue";
 import axios from "axios";
 import { format } from "date-fns";
 import debounce from "lodash/debounce";
 import DOMPurify from "dompurify";
 import MediaGallery from "./MediaGallery.vue";
+import { Picker as EmojiMartPicker } from "emoji-mart";
+import emojiData from "@emoji-mart/data";
 import * as pdfjsLib from "pdfjs-dist";
 
 // Set PDF.js worker
@@ -1540,8 +2217,31 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     import.meta.url,
 ).toString();
 
+const EmojiPicker = defineComponent({
+    name: "EmojiPicker",
+    props: {
+        data: { type: [Object, Array], required: true },
+    },
+    emits: ["emoji-select"],
+    mounted() {
+        this.picker = new EmojiMartPicker({
+            data: this.data,
+            onEmojiSelect: (emoji) => this.$emit("emoji-select", emoji),
+        });
+        this.$el.appendChild(this.picker);
+    },
+    beforeUnmount() {
+        if (this.picker && this.picker.remove) {
+            this.picker.remove();
+        }
+    },
+    render() {
+        return h("div", { class: "emoji-picker-host" });
+    },
+});
+
 export default {
-    components: { MediaGallery },
+    components: { MediaGallery, EmojiPicker },
     props: {
         userId: { type: Number, required: true },
         pusherKey: { type: String, required: true },
@@ -1574,6 +2274,9 @@ export default {
         const hasMoreMessages = ref(true);
         const loadingMessages = ref(false);
         const showScrollDown = ref(false);
+        const isDragging = ref(false);
+        const activeMessageMenuId = ref(null);
+        const activeReactionPickerId = ref(null);
         const channelInfo = ref({
             creator: null,
             members: [],
@@ -1584,6 +2287,16 @@ export default {
         const sidebarLinks = ref([]);
         const typingUsers = ref({});
         const lastTypingSentAt = ref(0);
+        const showEmojiPicker = ref(false);
+        const pinnedMessages = ref([]);
+        const showPinnedPanel = ref(false);
+        const savedMessages = ref([]);
+        const showSavedPanel = ref(false);
+        const orderSuggestOpen = ref(false);
+        const orderSuggestQuery = ref("");
+        const orderSuggestItems = ref([]);
+        const orderSuggestIndex = ref(0);
+        const QUICK_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "✅", "👀"];
         const manageOpen = ref(false);
         const membersLoading = ref(false);
         const isSavingMembers = ref(false);
@@ -1661,6 +2374,37 @@ export default {
             } catch {
                 return "";
             }
+        };
+
+        const formatOrderCreatedAt = (date) => {
+            if (!date) return "";
+            try {
+                return format(new Date(date), "dd MMM yyyy, hh:mm a");
+            } catch {
+                return "";
+            }
+        };
+
+        const getOrderReferences = (message) =>
+            Array.isArray(message?.metadata?.order_refs)
+                ? message.metadata.order_refs
+                : [];
+
+        const hasRenderableMessageBody = (message) => {
+            const text = String(message?.body ?? "");
+            if (!text.trim()) return false;
+
+            const withoutRefs = text
+                .replace(/(^|[^\w])#(\d+)\b/g, "$1")
+                .replace(/[\s|,;:!?.()\-\u2013\u2014]+/g, " ")
+                .trim();
+
+            return withoutRefs.length > 0;
+        };
+
+        const openOrderReference = (orderRef) => {
+            if (!orderRef?.order_url) return;
+            window.location.href = orderRef.order_url;
         };
 
         // Return a publicly accessible URL for an attachment (handles Cloudinary full URLs)
@@ -1934,14 +2678,325 @@ export default {
                 if (now - typingUsers.value[uid].at > 3500)
                     delete typingUsers.value[uid];
             });
-            const names = Object.values(typingUsers.value)
-                .map((x) => x.name)
-                .filter(Boolean);
-            if (!names.length) return "";
-            return `${names.slice(0, 2).join(", ")}${
+            const users = Object.values(typingUsers.value).filter(Boolean);
+            if (!users.length) return "";
+
+            const names = users.map((x) => x.name).filter(Boolean);
+            const nameStr = `${names.slice(0, 2).join(", ")}${
                 names.length > 2 ? ` +${names.length - 2}` : ""
-            } is typing...`;
+            }`;
+            const channelName = users[0]?.channelName;
+            const channelNote =
+                channelName && channelName !== currentChannel.value?.name
+                    ? ` in ${channelName}`
+                    : "";
+            const verb = names.length > 1 ? "are" : "is";
+            return `${nameStr} ${verb} typing${channelNote}...`;
         });
+
+        const groupedReactions = (message) => {
+            if (!Array.isArray(message?.reactions)) return [];
+            return message.reactions;
+        };
+
+        const applyMessageDefaults = (message) => {
+            if (!message || typeof message !== "object") return message;
+            message.reactions = Array.isArray(message.reactions)
+                ? message.reactions
+                : [];
+            message.is_pinned = !!message.is_pinned;
+            message.is_saved = !!message.is_saved;
+            message.attachments = Array.isArray(message.attachments)
+                ? message.attachments
+                : [];
+            message.reads = Array.isArray(message.reads) ? message.reads : [];
+            return message;
+        };
+
+        const reactToMessage = async (message, emoji) => {
+            if (!message?.id || !emoji) return;
+            try {
+                const { data } = await axios.post(
+                    `/admin/chat/messages/${message.id}/react`,
+                    {
+                        emoji,
+                    },
+                );
+                const target = messages.value.find((m) => m.id === message.id);
+                if (target) {
+                    target.reactions = Array.isArray(data?.reactions)
+                        ? data.reactions
+                        : [];
+                }
+            } catch (e) {
+                if (import.meta.env.DEV)
+                    console.error("Failed to react to message", e);
+            }
+        };
+
+        const pinMessage = async (message) => {
+            if (!message?.id || !currentChannel.value?.id) return;
+            try {
+                await axios.post(
+                    `/admin/chat/channels/${currentChannel.value.id}/pin/${message.id}`,
+                );
+                message.is_pinned = true;
+                await loadPinnedMessages();
+            } catch (e) {
+                if (import.meta.env.DEV)
+                    console.error("Failed to pin message", e);
+            }
+        };
+
+        const unpinMessage = async (message) => {
+            if (!message?.id || !currentChannel.value?.id) return;
+            try {
+                await axios.delete(
+                    `/admin/chat/channels/${currentChannel.value.id}/pin/${message.id}`,
+                );
+                message.is_pinned = false;
+                await loadPinnedMessages();
+            } catch (e) {
+                if (import.meta.env.DEV)
+                    console.error("Failed to unpin message", e);
+            }
+        };
+
+        const loadPinnedMessages = async () => {
+            if (!currentChannel.value?.id) {
+                pinnedMessages.value = [];
+                return;
+            }
+            try {
+                const { data } = await axios.get(
+                    `/admin/chat/channels/${currentChannel.value.id}/pins`,
+                );
+                pinnedMessages.value = data?.pins || [];
+            } catch (e) {
+                if (import.meta.env.DEV)
+                    console.error("Failed to load pinned messages", e);
+                pinnedMessages.value = [];
+            }
+        };
+
+        const togglePinnedPanel = async () => {
+            showPinnedPanel.value = !showPinnedPanel.value;
+            showSavedPanel.value = false;
+            if (showPinnedPanel.value) {
+                await loadPinnedMessages();
+            }
+        };
+
+        const toggleSaveMessage = async (message) => {
+            if (!message?.id) return;
+            try {
+                if (message.is_saved) {
+                    await axios.delete(`/admin/chat/messages/${message.id}/save`);
+                    message.is_saved = false;
+                } else {
+                    await axios.post(`/admin/chat/messages/${message.id}/save`);
+                    message.is_saved = true;
+                }
+                await loadSavedMessages();
+            } catch (e) {
+                if (import.meta.env.DEV)
+                    console.error("Failed to toggle save message", e);
+            }
+        };
+
+        const loadSavedMessages = async () => {
+            try {
+                const { data } = await axios.get("/admin/chat/saved-messages");
+                savedMessages.value = data?.saved || [];
+            } catch (e) {
+                if (import.meta.env.DEV)
+                    console.error("Failed to load saved messages", e);
+                savedMessages.value = [];
+            }
+        };
+
+        const toggleSavedPanel = async () => {
+            showSavedPanel.value = !showSavedPanel.value;
+            showPinnedPanel.value = false;
+            if (showSavedPanel.value) {
+                await loadSavedMessages();
+            }
+        };
+
+        const jumpToSavedMessage = async (saved) => {
+            if (!saved?.id) return;
+            const inCurrentChannel = messages.value.some((m) => m.id === saved.id);
+            showSavedPanel.value = false;
+            if (inCurrentChannel) {
+                scrollToMessageById(saved.id);
+                return;
+            }
+            const msg = searchResults.value.find((m) => m.id === saved.id);
+            if (msg) {
+                await scrollToMessage(msg);
+                return;
+            }
+            window.showToast?.("Open the related channel to view this message");
+        };
+
+        const closeMenus = () => {
+            showEmojiPicker.value = false;
+            mentionOpen.value = false;
+            orderSuggestOpen.value = false;
+            activeMessageMenuId.value = null;
+            activeReactionPickerId.value = null;
+        };
+
+        const toggleMessageMenu = (messageId) => {
+            if (!messageId) return;
+            activeReactionPickerId.value = null;
+            activeMessageMenuId.value =
+                activeMessageMenuId.value === messageId ? null : messageId;
+        };
+
+        const toggleReactionPicker = (messageId) => {
+            if (!messageId) return;
+            activeMessageMenuId.value = null;
+            activeReactionPickerId.value =
+                activeReactionPickerId.value === messageId ? null : messageId;
+        };
+
+        const reactAndClose = async (message, emoji) => {
+            await reactToMessage(message, emoji);
+            activeReactionPickerId.value = null;
+        };
+
+        const appendEmoji = (emoji) => {
+            const selectedEmoji =
+                typeof emoji === "string" ? emoji : emoji?.native;
+            if (!selectedEmoji) return;
+            newMessage.value += selectedEmoji;
+            closeMenus();
+            nextTick(() => messageInput.value?.focus());
+        };
+
+        const handlePaste = (e) => {
+            if (!e || e.__chatImagePasteHandled) return;
+            const items = Array.from(e.clipboardData?.items || []);
+            if (!items.length) return;
+
+            const imageFiles = items
+                .filter((item) => item.type?.startsWith("image/"))
+                .map((item) => item.getAsFile())
+                .filter(Boolean);
+
+            if (!imageFiles.length) return;
+
+            const normalizedImageFiles = imageFiles.map((file, index) => {
+                const mimeType = file.type || "image/png";
+                const rawExt = mimeType.split("/")[1] || "png";
+                const normalizedExt = rawExt.split("+")[0].toLowerCase();
+                const extension =
+                    normalizedExt === "jpeg" ? "jpg" : normalizedExt;
+                const hasExtension =
+                    typeof file.name === "string" &&
+                    /\.[a-z0-9]{2,6}$/i.test(file.name);
+
+                if (hasExtension && file.name.trim() !== "") {
+                    return file;
+                }
+
+                const generatedName = `pasted-image-${Date.now()}-${index + 1}.${extension}`;
+                return new File([file], generatedName, {
+                    type: mimeType,
+                    lastModified: Date.now(),
+                });
+            });
+
+            e.__chatImagePasteHandled = true;
+            e.preventDefault();
+            attachmentFiles.value = [
+                ...attachmentFiles.value,
+                ...normalizedImageFiles,
+            ];
+        };
+
+        const isFileDragEvent = (e) => {
+            const types = Array.from(e.dataTransfer?.types || []);
+            return types.includes("Files");
+        };
+
+        const onDragEnter = (e) => {
+            if (!isFileDragEvent(e)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging.value = true;
+        };
+
+        const onDragOver = (e) => {
+            if (!isFileDragEvent(e)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.dataTransfer) {
+                e.dataTransfer.dropEffect = "copy";
+            }
+            isDragging.value = true;
+        };
+
+        const onDragLeave = (e) => {
+            if (!isFileDragEvent(e)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging.value = false;
+        };
+
+        const onDrop = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging.value = false;
+            const files = Array.from(e.dataTransfer?.files || []);
+            if (!files.length) return;
+            attachmentFiles.value = [...attachmentFiles.value, ...files];
+        };
+
+        const updateOrderSuggest = async () => {
+            const q = orderSuggestQuery.value.trim();
+            try {
+                const { data } = await axios.get("/admin/chat/orders/suggest", {
+                    params: { q },
+                });
+                orderSuggestItems.value = data?.orders || [];
+                orderSuggestIndex.value = 0;
+                orderSuggestOpen.value = orderSuggestItems.value.length > 0;
+            } catch (_) {
+                orderSuggestItems.value = [];
+                orderSuggestOpen.value = false;
+            }
+        };
+
+        const pickOrderSuggest = (order) => {
+            if (!order?.id) return;
+            const textarea = messageInput.value;
+            const val = newMessage.value;
+            const caret = textarea?.selectionStart ?? val.length;
+            const before = val.slice(0, caret);
+            const after = val.slice(caret);
+            const orderMatch = before.match(/(^|\s)#(\w*)$/);
+            if (!orderMatch) return;
+
+            const prefix = orderMatch[1] || "";
+            const insert = `${prefix}#${order.id} `;
+            newMessage.value =
+                before.replace(/(^|\s)#(\w*)$/, insert) + after;
+            orderSuggestOpen.value = false;
+            orderSuggestItems.value = [];
+            orderSuggestQuery.value = "";
+
+            nextTick(() => {
+                try {
+                    const pos = (
+                        before.replace(/(^|\s)#(\w*)$/, "") + insert
+                    ).length;
+                    textarea.focus();
+                    textarea.setSelectionRange(pos, pos);
+                } catch (_) {}
+            });
+        };
 
         // Core Functions
         const loadChannels = async () => {
@@ -2004,7 +3059,10 @@ export default {
                     ? response.data.data
                     : [];
                 // API returns newest-first; reverse for UI (oldest-first)
-                const pageMessages = apiMessages.slice().reverse();
+                const pageMessages = apiMessages
+                    .slice()
+                    .reverse()
+                    .map((m) => applyMessageDefaults(m));
 
                 if (reset) {
                     messages.value = pageMessages;
@@ -2060,6 +3118,10 @@ export default {
 
         const selectChannel = async (channel) => {
             currentChannel.value = channel;
+            typingUsers.value = {};
+            showEmojiPicker.value = false;
+            orderSuggestOpen.value = false;
+            mentionOpen.value = false;
             if (isMobile.value) {
                 mobileSidebarOpen.value = false;
                 userInfoOpen.value = false;
@@ -2083,6 +3145,8 @@ export default {
                 );
             }
             await loadSidebar(channel.id);
+            await loadPinnedMessages();
+            await loadSavedMessages();
             scrollToBottom();
         };
 
@@ -2141,6 +3205,7 @@ export default {
                         : [],
                     reads: Array.isArray(data.reads) ? data.reads : [],
                 });
+                applyMessageDefaults(messages.value[messages.value.length - 1]);
                 messages.value.sort(
                     (a, b) => new Date(a.created_at) - new Date(b.created_at),
                 );
@@ -2150,6 +3215,9 @@ export default {
                 attachmentFiles.value = [];
                 replyTo.value = null;
                 pendingMentionIds.value = new Set();
+                showEmojiPicker.value = false;
+                orderSuggestOpen.value = false;
+                orderSuggestItems.value = [];
                 // Reset textarea height after sending
                 nextTick(() => {
                     if (messageInput.value) {
@@ -2249,38 +3317,30 @@ export default {
         // };
 
         const onEditorInput = (e) => {
-    handleTyping();
-    autoResizeTextarea();
-    
-    const val = newMessage.value;
-    const caret = e.target.selectionStart;
-    const before = val.slice(0, caret);
-    const match = before.match(/(^|\s)@([\w.\-]*)$/);
-    
-    if (match) {
-        mentionQuery.value = match[2] || "";
-        updateMentionList();
-        
-        // ✅ Position mention popup dynamically
-        nextTick(() => {
-            const textarea = messageInput.value;
-            const popup = document.querySelector('.mention-popover');
-            
-            if (textarea && popup && mentionOpen.value) {
-                const rect = textarea.getBoundingClientRect();
-                
-                // Position popup above the textarea (fixed positioning)
-                popup.style.position = 'fixed';
-                popup.style.left = `${rect.left}px`;
-                popup.style.bottom = `${window.innerHeight - rect.top + 10}px`;
-                popup.style.width = `${Math.min(400, rect.width)}px`;
-                popup.style.zIndex = '9999';
+            handleTyping();
+            autoResizeTextarea();
+
+            const val = newMessage.value;
+            const caret = e.target.selectionStart;
+            const before = val.slice(0, caret);
+            const mentionMatch = before.match(/(^|\s)@([\w.\-]*)$/);
+            const orderMatch = before.match(/(^|\s)#(\w*)$/);
+
+            if (mentionMatch) {
+                mentionQuery.value = mentionMatch[2] || "";
+                updateMentionList();
+                orderSuggestOpen.value = false;
+            } else {
+                mentionOpen.value = false;
             }
-        });
-    } else {
-        mentionOpen.value = false;
-    }
-};
+
+            if (orderMatch) {
+                orderSuggestQuery.value = orderMatch[2] || "";
+                updateOrderSuggest();
+            } else {
+                orderSuggestOpen.value = false;
+            }
+        };
 
         const onKeyDownInEditor = (e) => {
             // If mention popover is open, intercept navigation/selection keys
@@ -2310,8 +3370,43 @@ export default {
                 return;
             }
 
-            // When mention popover is not open, handle Enter key
-            if (!mentionOpen.value && e.key === "Enter") {
+            // If #order suggest popover is open, intercept navigation/selection keys
+            if (orderSuggestOpen.value) {
+                if (
+                    ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(
+                        e.key,
+                    )
+                ) {
+                    e.preventDefault();
+                }
+                if (orderSuggestItems.value.length === 0) {
+                    orderSuggestOpen.value = false;
+                    return;
+                }
+                if (e.key === "ArrowDown") {
+                    orderSuggestIndex.value =
+                        (orderSuggestIndex.value + 1) %
+                        orderSuggestItems.value.length;
+                    return;
+                }
+                if (e.key === "ArrowUp") {
+                    orderSuggestIndex.value =
+                        (orderSuggestIndex.value - 1 + orderSuggestItems.value.length) %
+                        orderSuggestItems.value.length;
+                    return;
+                }
+                if (e.key === "Enter" || e.key === "Tab") {
+                    pickOrderSuggest(orderSuggestItems.value[orderSuggestIndex.value]);
+                    return;
+                }
+                if (e.key === "Escape") {
+                    orderSuggestOpen.value = false;
+                    return;
+                }
+            }
+
+            // When no popover is open, handle Enter key
+            if (!mentionOpen.value && !orderSuggestOpen.value && e.key === "Enter") {
                 // Shift+Enter = new line (allow default behavior)
                 if (e.shiftKey) {
                     return;
@@ -2447,7 +3542,38 @@ export default {
                     // Ignore mention format errors
                 }
 
-                // 6. Sanitize final HTML to prevent XSS
+                // 6. Format order references as clickable order links
+                try {
+                    const orderRefs = getOrderReferences(message);
+                    if (orderRefs.length > 0) {
+                        const orderRefMap = new Map(
+                            orderRefs.map((ref) => [
+                                String(ref.display_number ?? ref.id),
+                                ref,
+                            ]),
+                        );
+                        const orderPattern = /(^|[^\w])#(\d+)\b/g;
+                        content = content.replace(
+                            orderPattern,
+                            (match, prefix, orderNumber) => {
+                                const ref = orderRefMap.get(
+                                    String(orderNumber),
+                                );
+                                if (!ref) return match;
+
+                                if (!ref.order_url) {
+                                    return `${prefix}<span class="order-reference-token order-reference-token--missing">#${orderNumber}</span>`;
+                                }
+
+                                return `${prefix}<a href="${ref.order_url}" class="order-reference-token" target="_self" rel="noopener noreferrer">#${orderNumber}</a>`;
+                            },
+                        );
+                    }
+                } catch (e) {
+                    // Ignore order reference format errors
+                }
+
+                // 7. Sanitize final HTML to prevent XSS
                 return DOMPurify.sanitize(content, {
                     ALLOWED_TAGS: ["span", "a"],
                     ALLOWED_ATTR: ["class", "href", "target", "rel"],
@@ -2766,13 +3892,15 @@ export default {
             const now = Date.now();
             if (now - lastTypingSentAt.value < 1500) return;
             lastTypingSentAt.value = now;
-            if (currentChannel.value?.id) {
+            if (currentChannel.value?.id && window.Echo) {
                 try {
-                    Echo.private(
+                    window.Echo.private(
                         `chat.channel.${currentChannel.value.id}`,
                     ).whisper("typing", {
                         userId: props.userId,
                         name: window?.authAdminName || "Someone",
+                        channelId: currentChannel.value.id,
+                        channelName: currentChannel.value.name || "",
                     });
                 } catch (e) {}
             }
@@ -3138,9 +4266,13 @@ export default {
                     if (mainMsg) {
                         mainMsg.thread_count = data.parent_message.thread_count;
                     }
-                    activeThreadMessage.value = data.parent_message;
+                    activeThreadMessage.value = applyMessageDefaults(
+                        data.parent_message,
+                    );
                 }
-                threadReplies.value = data.replies || [];
+                threadReplies.value = Array.isArray(data.replies)
+                    ? data.replies.map((reply) => applyMessageDefaults(reply))
+                    : [];
 
                 nextTick(() => {
                     const container = document.querySelector(".thread-replies");
@@ -3204,7 +4336,7 @@ export default {
                 );
 
                 if (data.success) {
-                    threadReplies.value.push(data.reply);
+                    threadReplies.value.push(applyMessageDefaults(data.reply));
 
                     if (activeThreadMessage.value) {
                         activeThreadMessage.value.thread_count =
@@ -3331,7 +4463,7 @@ export default {
                                 activeThreadMessage.value?.id ==
                                 e.message.reply_to_id
                             ) {
-                                threadReplies.value.push({
+                                const replyMessage = applyMessageDefaults({
                                     ...e.message,
                                     attachments: Array.isArray(
                                         e.message.attachments,
@@ -3339,6 +4471,7 @@ export default {
                                         ? e.message.attachments
                                         : [],
                                 });
+                                threadReplies.value.push(replyMessage);
                                 nextTick(() => {
                                     const container =
                                         document.querySelector(
@@ -3363,7 +4496,7 @@ export default {
                             return;
                         }
 
-                        messages.value.push({
+                        const incomingMessage = applyMessageDefaults({
                             ...e.message,
                             attachments: Array.isArray(e.message.attachments)
                                 ? e.message.attachments
@@ -3372,11 +4505,12 @@ export default {
                                 ? e.message.reads
                                 : [],
                         });
+                        messages.value.push(incomingMessage);
                         messages.value.sort(
                             (a, b) =>
                                 new Date(a.created_at) - new Date(b.created_at),
                         );
-                        updatePreview(channelId, e.message);
+                        updatePreview(channelId, incomingMessage);
 
                         const senderName =
                             e?.message?.sender?.name || "New message";
@@ -3398,10 +4532,108 @@ export default {
                         }
                         scrollToBottom();
                     })
+                    .listen("MessageReacted", (e) => {
+                        if (!e?.message_id) return;
+                        const applyReactionToMessage = (targetMessage) => {
+                            if (!targetMessage || targetMessage.id !== e.message_id)
+                                return;
+
+                            const existing = Array.isArray(targetMessage.reactions)
+                                ? [...targetMessage.reactions]
+                                : [];
+                            const idx = existing.findIndex(
+                                (r) => r?.emoji === e.emoji,
+                            );
+
+                            if (e.action === "added") {
+                                if (idx >= 0) {
+                                    existing[idx] = {
+                                        ...existing[idx],
+                                        count: (existing[idx].count || 0) + 1,
+                                    };
+                                } else {
+                                    existing.push({
+                                        emoji: e.emoji,
+                                        count: 1,
+                                        my: false,
+                                    });
+                                }
+                            } else if (e.action === "removed" && idx >= 0) {
+                                const nextCount = (existing[idx].count || 1) - 1;
+                                if (nextCount > 0) {
+                                    existing[idx] = {
+                                        ...existing[idx],
+                                        count: nextCount,
+                                    };
+                                } else {
+                                    existing.splice(idx, 1);
+                                }
+                            }
+
+                            targetMessage.reactions = existing;
+                        };
+
+                        const topLevel = messages.value.find(
+                            (m) => m.id === e.message_id,
+                        );
+                        if (topLevel) {
+                            applyReactionToMessage(topLevel);
+                        }
+
+                        if (
+                            activeThreadMessage.value?.id === e.message_id &&
+                            activeThreadMessage.value
+                        ) {
+                            applyReactionToMessage(activeThreadMessage.value);
+                        }
+
+                        const threadReply = threadReplies.value.find(
+                            (r) => r.id === e.message_id,
+                        );
+                        if (threadReply) {
+                            applyReactionToMessage(threadReply);
+                        }
+                    })
+                    .listen("MessagePinned", async (e) => {
+                        if (!e?.message_id) return;
+
+                        const isPinned = e.action === "pinned";
+                        const applyPinToMessage = (targetMessage) => {
+                            if (!targetMessage || targetMessage.id !== e.message_id)
+                                return;
+                            targetMessage.is_pinned = isPinned;
+                        };
+
+                        const topLevel = messages.value.find(
+                            (m) => m.id === e.message_id,
+                        );
+                        if (topLevel) {
+                            applyPinToMessage(topLevel);
+                        }
+
+                        if (
+                            activeThreadMessage.value?.id === e.message_id &&
+                            activeThreadMessage.value
+                        ) {
+                            applyPinToMessage(activeThreadMessage.value);
+                        }
+
+                        const threadReply = threadReplies.value.find(
+                            (r) => r.id === e.message_id,
+                        );
+                        if (threadReply) {
+                            applyPinToMessage(threadReply);
+                        }
+
+                        if (showPinnedPanel.value) {
+                            await loadPinnedMessages();
+                        }
+                    })
                     .listenForWhisper("typing", (e) => {
                         if (!e || e.userId === props.userId) return;
                         typingUsers.value[e.userId] = {
                             name: e.name || "Someone",
+                            channelName: e.channelName || "",
                             at: Date.now(),
                         };
                     })
@@ -3530,6 +4762,7 @@ export default {
             window.addEventListener("resize", handleViewportChange, {
                 passive: true,
             });
+            window.addEventListener("paste", handlePaste);
             loadChannels();
             checkCreateCapability();
 
@@ -3580,6 +4813,7 @@ export default {
 
         onBeforeUnmount(() => {
             window.removeEventListener("resize", handleViewportChange);
+            window.removeEventListener("paste", handlePaste);
             if (messageContainer.value) {
                 messageContainer.value.removeEventListener(
                     "scroll",
@@ -3774,6 +5008,19 @@ export default {
             createSearch,
             createMemberIds,
             typingLabel,
+            showEmojiPicker,
+            pinnedMessages,
+            showPinnedPanel,
+            savedMessages,
+            showSavedPanel,
+            activeMessageMenuId,
+            activeReactionPickerId,
+            orderSuggestOpen,
+            orderSuggestItems,
+            orderSuggestIndex,
+            QUICK_EMOJIS,
+            emojiData,
+            isDragging,
             canSendMessage,
             isSuperAdmin,
             isPersonalChannel,
@@ -3783,8 +5030,12 @@ export default {
             avatarInitials,
             formatDate,
             formatFullDate,
+            formatOrderCreatedAt,
             isImage,
             getAttachmentUrl,
+            getOrderReferences,
+            hasRenderableMessageBody,
+            openOrderReference,
             storageUrl,
             storageThumbUrl,
             downloadAttachment,
@@ -3794,6 +5045,27 @@ export default {
             handleFiles,
             removeAttachment,
             handleTyping,
+            groupedReactions,
+            reactToMessage,
+            pinMessage,
+            unpinMessage,
+            toggleSaveMessage,
+            togglePinnedPanel,
+            toggleSavedPanel,
+            loadPinnedMessages,
+            loadSavedMessages,
+            closeMenus,
+            toggleMessageMenu,
+            toggleReactionPicker,
+            appendEmoji,
+            reactAndClose,
+            pickOrderSuggest,
+            jumpToSavedMessage,
+            handlePaste,
+            onDragEnter,
+            onDragOver,
+            onDragLeave,
+            onDrop,
             // mentions
             mentionOpen,
             mentionItems,
@@ -4148,6 +5420,31 @@ export default {
     flex-shrink: 1;
     min-width: 0;
     min-height: 0;
+    position: relative;
+}
+
+.drag-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    background: rgba(99, 102, 241, 0.15);
+    border: 2px dashed var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.drag-overlay-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    background: white;
+    color: var(--primary-dark);
+    font-weight: 600;
+    box-shadow: var(--shadow);
 }
 
 .chat-header {
@@ -4544,6 +5841,229 @@ export default {
     font-weight: 500;
 }
 
+:deep(.message-text .order-reference-token) {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid rgba(99, 102, 241, 0.16);
+    margin: 0 2px;
+}
+
+:deep(.message-text .order-reference-token:hover) {
+    background: rgba(99, 102, 241, 0.2);
+    color: var(--primary-dark);
+}
+
+:deep(.message-text .order-reference-token--missing) {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--gray-500);
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+:deep(.own-message .message-text .order-reference-token) {
+    background: rgba(255, 255, 255, 0.18);
+    color: #1d4ed8;
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+:deep(.own-message .message-text .order-reference-token:hover) {
+    background: rgba(255, 255, 255, 0.24);
+    color: #1d4ed8;
+}
+
+.order-reference-stack {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.order-reference-card {
+    appearance: none;
+    -webkit-appearance: none;
+    font: inherit;
+    color: inherit;
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 1px solid rgba(99, 102, 241, 0.16);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 249, 255, 0.88));
+    border-radius: 16px;
+    padding: 0.95rem 1rem 0.9rem;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.own-message .order-reference-card {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 244, 255, 0.9));
+}
+
+.order-reference-card:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+    border-color: rgba(99, 102, 241, 0.28);
+}
+
+.order-reference-card:disabled {
+    cursor: default;
+    opacity: 0.88;
+}
+
+.order-reference-card--missing {
+    border-style: dashed;
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    box-shadow: none;
+}
+
+.order-reference-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.order-reference-title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.order-reference-number {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: 0.01em;
+}
+
+.order-reference-label-text {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--gray-700);
+}
+
+.order-reference-status {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.order-reference-status.status-info {
+    background: rgba(59, 130, 246, 0.14);
+    color: #1d4ed8;
+}
+
+.order-reference-status.status-success {
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+}
+
+.order-reference-status.status-warning {
+    background: rgba(245, 158, 11, 0.16);
+    color: #b45309;
+}
+
+.order-reference-status.status-danger {
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+}
+
+.order-reference-status.status-dark {
+    background: rgba(15, 23, 42, 0.1);
+    color: #0f172a;
+}
+
+.order-reference-status.status-purple {
+    background: rgba(124, 58, 237, 0.14);
+    color: #6d28d9;
+}
+
+.order-reference-status.status-cyan {
+    background: rgba(6, 182, 212, 0.14);
+    color: #0e7490;
+}
+
+.order-reference-status.status-secondary {
+    background: rgba(148, 163, 184, 0.14);
+    color: var(--gray-600);
+}
+
+.order-reference-body {
+    margin-top: 0.85rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.18);
+    padding-top: 0.8rem;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.order-reference-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.order-reference-row-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.order-reference-row-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.order-reference-row-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.order-reference-row-value {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    word-break: break-word;
+}
+
+.order-reference-row-subvalue {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    word-break: break-word;
+}
+
 .message-attachments {
     margin-top: 0.5rem;
     display: flex;
@@ -4605,14 +6125,117 @@ export default {
     margin-top: 0.375rem;
     font-size: 0.75rem;
     color: var(--gray-400);
+    padding: 0 1rem;
+    flex-wrap: wrap;
 }
 
 .own-message .message-meta {
     color: black;
+    justify-content: flex-end;
 }
 
 .message-time {
     font-weight: 500;
+}
+
+.meta-reactions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.meta-emoji {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0.12rem 0.28rem;
+    cursor: pointer;
+}
+
+.meta-emoji:hover {
+    border-color: var(--gray-300);
+    background: white;
+}
+
+.reaction-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.message-actions-float {
+    position: relative;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.message-actions-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    min-width: 150px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    background: white;
+    box-shadow: var(--shadow);
+    padding: 0.35rem;
+    z-index: 50;
+}
+
+.message-reaction-picker {
+    position: absolute;
+    right: calc(100% + 6px);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 999px;
+    background: white;
+    box-shadow: var(--shadow);
+    padding: 0.2rem 0.35rem;
+    z-index: 55;
+}
+
+.reaction-picker-emoji {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0.12rem 0.24rem;
+    cursor: pointer;
+}
+
+.reaction-picker-emoji:hover {
+    border-color: var(--gray-300);
+    background: white;
+}
+
+.message-actions-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--gray-700);
+    border-radius: 8px;
+    padding: 0.32rem 0.45rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.message-actions-item:hover {
+    background: var(--gray-100);
 }
 
 /* Time outside message bubble */
@@ -4727,7 +6350,7 @@ export default {
     box-shadow:
         0 8px 22px rgba(15, 23, 42, 0.08),
         0 1px 2px rgba(15, 23, 42, 0.08);
-    overflow: hidden;
+    overflow: visible;
     transition:
         border-color 0.2s,
         box-shadow 0.2s,
@@ -4813,15 +6436,18 @@ export default {
 }
 
 .mention-popover {
-    position: fixed; /* ✅ CHANGED from absolute to fixed */
-    /* left, bottom, width will be set by JavaScript */
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 10px);
+    width: 100%;
+    max-width: min(420px, calc(100vw - 24px));
     background: white;
     border: 2px solid var(--gray-200);
     border-radius: 12px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     max-height: 220px;
     overflow-y: auto;
-    z-index: 9999; /* ✅ Very high z-index */
+    z-index: 999;
 }
 
 .mention-item {
@@ -6614,6 +8240,160 @@ export default {
 
 .attachment-pdf i {
     color: #ef4444;
+}
+
+/* Chat enhancements: pins, saves, reactions, emoji picker, order suggest */
+.pin-count {
+    margin-left: 0.4rem;
+    font-size: 0.72rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.pinned-panel {
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin: 0.5rem 0.75rem 0;
+    background: #fff;
+}
+
+.saved-panel {
+    border-color: #c7d2fe;
+    background: #f8faff;
+}
+
+.pinned-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.pinned-list {
+    max-height: 180px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.pinned-item {
+    width: 100%;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 0.5rem 0.6rem;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+}
+
+.pinned-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.pinned-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-bottom: 0.2rem;
+}
+
+.pinned-item-body {
+    font-size: 0.83rem;
+    color: var(--gray-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pinned-empty {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+}
+
+.panel-close {
+    border: 1px solid var(--gray-300);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--gray-700);
+    width: 28px;
+    height: 28px;
+}
+
+.reaction-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+}
+
+.reaction-chip {
+    border: 1px solid var(--gray-300);
+    border-radius: 999px;
+    background: #fff;
+    padding: 0.12rem 0.45rem;
+    font-size: 0.72rem;
+    color: var(--gray-700);
+}
+
+.reaction-chip.mine {
+    border-color: var(--primary);
+    color: var(--primary-dark);
+    background: var(--primary-light);
+}
+
+.quick-reactions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.quick-reaction-btn {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0.12rem 0.28rem;
+    cursor: pointer;
+}
+
+.quick-reaction-btn:hover {
+    border-color: var(--gray-300);
+    background: #fff;
+}
+
+.pin-indicator {
+    margin-right: 0.25rem;
+    color: #f59e0b;
+}
+
+.emoji-mart-wrapper {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 10px);
+    max-width: min(360px, calc(100vw - 24px));
+    z-index: 999;
+    box-shadow: var(--shadow);
+}
+
+.order-suggest-popover {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.order-suggest-item.active {
+    background: var(--primary-light);
+    border-color: #c7d2fe;
 }
 
 /* Responsive adjustments */

@@ -76,6 +76,30 @@ class Message extends Model
     }
 
     /**
+     * Emoji reactions for this message.
+     */
+    public function reactions()
+    {
+        return $this->hasMany(MessageReaction::class);
+    }
+
+    /**
+     * Pinned entries that point to this message.
+     */
+    public function pins()
+    {
+        return $this->hasMany(PinnedMessage::class);
+    }
+
+    /**
+     * Saved-message entries for this message.
+     */
+    public function savedBy()
+    {
+        return $this->hasMany(SavedMessage::class);
+    }
+
+    /**
      * Mark this message as read by the given user
      */
     public function markAsRead(Admin $user)
