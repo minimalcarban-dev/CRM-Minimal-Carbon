@@ -2534,7 +2534,81 @@
                                         @endif
                                     </span>
                                 </div>
-                                <p class="od-discussion-body">{!! nl2br(e($discussionMessage->body ?? '')) !!}</p>
+                                @if(($discussionMessage->metadata['kind'] ?? null) === 'order_root')
+                                    @php
+                                        $statusKey = $discussionMessage->metadata['order_status_key'] ?? $order->diamond_status ?? 'unknown';
+                                        $statusLabel = $discussionMessage->metadata['order_status_label'] ?? ($order->diamond_status ? ucfirst(str_replace('_', ' ', $order->diamond_status)) : 'Unknown');
+                                        $statusColor = $discussionMessage->metadata['order_status_color'] ?? 'secondary';
+                                        $clientName = $discussionMessage->metadata['client_name'] ?? $order->display_client_name ?? $order->client_name ?? 'Unknown';
+                                        $createdAt = $discussionMessage->metadata['order_created_at'] ?? optional($order->created_at)->toIso8601String();
+                                        $shippingLabel = $discussionMessage->metadata['shipping_company_name'] ?? $order->shipping_company_name;
+                                        $trackingNumber = $discussionMessage->metadata['tracking_number'] ?? $order->tracking_number;
+                                        $trackingStatus = $discussionMessage->metadata['tracking_status'] ?? $order->tracking_status;
+                                        $dispatchDate = $discussionMessage->metadata['dispatch_date'] ?? optional($order->dispatch_date)->toIso8601String();
+                                        $statusStyle = match ($statusColor) {
+                                            'info' => 'background: rgba(59,130,246,.14); color:#1d4ed8;',
+                                            'success' => 'background: rgba(16,185,129,.14); color:#047857;',
+                                            'warning' => 'background: rgba(245,158,11,.16); color:#b45309;',
+                                            'danger' => 'background: rgba(239,68,68,.14); color:#b91c1c;',
+                                            'dark' => 'background: rgba(15,23,42,.1); color:#0f172a;',
+                                            'purple' => 'background: rgba(124,58,237,.14); color:#6d28d9;',
+                                            'cyan' => 'background: rgba(6,182,212,.14); color:#0e7490;',
+                                            default => 'background: rgba(148,163,184,.14); color:var(--gray-600);',
+                                        };
+                                    @endphp
+                                    <div style="margin-top:.5rem; border:1px solid rgba(99,102,241,.18); border-radius:18px; background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(247,249,255,.9)); box-shadow:0 12px 28px rgba(15,23,42,.08); overflow:hidden;">
+                                        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; padding:1rem 1rem .85rem;">
+                                            <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:.45rem;">
+                                                <span style="font-size:1rem; font-weight:800; color:var(--primary);">#{{ $order->id }}</span>
+                                                <span style="font-size:.92rem; font-weight:700; color:var(--gray-700);">Order</span>
+                                            </div>
+                                            <span class="badge" style="{{ $statusStyle }} border:1px solid transparent; padding:.35rem .75rem; border-radius:999px; font-size:.78rem; font-weight:700;">
+                                                {{ $statusLabel }}
+                                            </span>
+                                        </div>
+                                        <div style="border-top:1px solid rgba(148,163,184,.18); padding: .85rem 1rem 1rem; display:grid; gap:.75rem;">
+                                            <div style="display:flex; gap:.7rem; align-items:flex-start;">
+                                                <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
+                                                    <i class="bi bi-person-badge"></i>
+                                                </div>
+                                                <div style="min-width:0; display:flex; flex-direction:column; gap:.15rem;">
+                                                    <span style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Client</span>
+                                                    <span style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $clientName }}</span>
+                                                </div>
+                                            </div>
+
+                                            <div style="display:flex; gap:.7rem; align-items:flex-start;">
+                                                <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
+                                                    <i class="bi bi-calendar3"></i>
+                                                </div>
+                                                <div style="min-width:0; display:flex; flex-direction:column; gap:.15rem;">
+                                                    <span style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Created</span>
+                                                    <span style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d M Y, h:i A') : 'Not available' }}</span>
+                                                </div>
+                                            </div>
+
+                                            @if($shippingLabel || $trackingNumber || $trackingStatus || $dispatchDate)
+                                                <div style="display:flex; gap:.7rem; align-items:flex-start;">
+                                                    <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
+                                                        <i class="bi bi-truck"></i>
+                                                    </div>
+                                                    <div style="min-width:0; display:flex; flex-direction:column; gap:.15rem;">
+                                                        <span style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Shipping</span>
+                                                        <span style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $shippingLabel ?: $trackingStatus ?: 'Tracking ready' }}</span>
+                                                        @if($trackingNumber)
+                                                            <span style="font-size:.8rem; color:var(--gray-600);">Tracking: {{ $trackingNumber }}</span>
+                                                        @endif
+                                                        @if($dispatchDate)
+                                                            <span style="font-size:.8rem; color:var(--gray-600);">Dispatch: {{ \Carbon\Carbon::parse($dispatchDate)->format('d M Y, h:i A') }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @else
+                                    <p class="od-discussion-body">{!! nl2br(e($discussionMessage->body ?? '')) !!}</p>
+                                @endif
 
                                 <details class="od-thread-wrap">
                                     <summary class="od-thread-summary">

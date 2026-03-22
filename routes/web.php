@@ -96,6 +96,22 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             Route::get('/messages/{message}/thread', [ChatController::class , 'getThreadMessages']);
             Route::post('/messages/{message}/thread/replies', [ChatController::class , 'postThreadReply']);
 
+            // Message reactions
+            Route::post('/messages/{message}/react', [ChatController::class, 'reactToMessage']);
+
+            // Message pinning
+            Route::post('/channels/{channel}/pin/{message}', [ChatController::class, 'pinMessage']);
+            Route::delete('/channels/{channel}/pin/{message}', [ChatController::class, 'unpinMessage']);
+            Route::get('/channels/{channel}/pins', [ChatController::class, 'getPinnedMessages']);
+
+            // Saved messages / bookmarks
+            Route::post('/messages/{message}/save', [ChatController::class, 'saveMessage']);
+            Route::delete('/messages/{message}/save', [ChatController::class, 'unsaveMessage']);
+            Route::get('/saved-messages', [ChatController::class, 'getSavedMessages']);
+
+            // #Order autosuggest
+            Route::get('/orders/suggest', [ChatController::class, 'orderSuggest']);
+
             // Get unread message count
             Route::get('/unread-count', [ChatController::class , 'getUnreadCount']);
 
