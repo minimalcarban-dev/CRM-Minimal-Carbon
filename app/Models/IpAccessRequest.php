@@ -18,6 +18,7 @@ class IpAccessRequest extends Model
         'latitude',
         'longitude',
         'user_agent',
+        'request_token',
         'status',
         'reviewed_by',
         'reviewed_at',

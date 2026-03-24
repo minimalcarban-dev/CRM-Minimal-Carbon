@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'IP Security Settings')
+@section('title', 'Security & Device Management')
 
 @push('styles')
     <style>
@@ -553,13 +553,13 @@
                             <i class="bi bi-house-door"></i> Dashboard
                         </a>
                         <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                        <span class="breadcrumb-current">IP Security Settings</span>
+                        <span class="breadcrumb-current">Security & Device Management</span>
                     </div>
                     <h1 class="page-title">
                         <i class="bi bi-shield-lock"></i>
-                        IP Security Settings
+                        Security & Device Management
                     </h1>
-                    <p class="page-subtitle">Manage IP-based access control to restrict who can access this application</p>
+                    <p class="page-subtitle">Manage device-based access control with IP, browser fingerprint, and geo-fencing</p>
                 </div>
             </div>
         </div>
@@ -603,7 +603,7 @@
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <div class="config-alert-content">
                         <h6>IP Restriction is Active</h6>
-                        <p>Only whitelisted IPs can access the site. If locked out, use <code>php artisan ip:reset</code> via
+                        <p>Only trusted devices can access the site. If locked out, use <code>php artisan device:approve {email}</code> via
                             SSH.</p>
                     </div>
                 </div>
@@ -635,15 +635,15 @@
             </div>
         </div>
 
-        <!-- IP Whitelist -->
+        <!-- Trusted Devices -->
         <div class="settings-card">
             <div class="settings-card-header">
                 <h2 class="settings-card-title">
                     <i class="bi bi-list-check shield"></i>
-                    IP Whitelist
+                    Trusted Devices
                 </h2>
                 <span style="font-size: 0.85rem; color: var(--gray);">
-                    {{ $allowedIps->count() }} IP(s) registered
+                    {{ $allowedIps->count() }} device(s) registered
                 </span>
             </div>
 
@@ -677,9 +677,10 @@
                             <tr>
                                 <th>Label</th>
                                 <th>IP Address</th>
+                                <th>Browser</th>
+                                <th>Location</th>
+                                <th>Last Active</th>
                                 <th>Status</th>
-                                <th>Added By</th>
-                                <th>Added On</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -692,18 +693,47 @@
                                             <span
                                                 style="background: rgba(99, 102, 241, 0.1); color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem;">YOU</span>
                                         @endif
+                                        @if($ip->device_token)
+                                            <span
+                                                style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.25rem;">
+                                                <i class="bi bi-shield-check"></i> DEVICE
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="ip-address-cell">{{ $ip->ip_address }}</td>
+                                    <td style="font-size: 0.85rem;">
+                                        @if($ip->user_agent)
+                                            <div style="display:flex; align-items:center; gap: 0.4rem;">
+                                                <i class="bi bi-globe2" style="color: var(--info); font-size: 0.9rem;"></i>
+                                                {{ \App\Models\AllowedIp::parseBrowserName($ip->user_agent) }}
+                                            </div>
+                                        @else
+                                            <span style="color: var(--gray);">—</span>
+                                        @endif
+                                    </td>
+                                    <td style="font-size: 0.85rem;">
+                                        @if($ip->city || $ip->country)
+                                            <div style="display:flex; align-items:center; gap: 0.4rem;">
+                                                <i class="bi bi-geo-alt" style="color: var(--danger); font-size: 0.9rem;"></i>
+                                                {{ implode(', ', array_filter([$ip->city, $ip->country])) }}
+                                            </div>
+                                        @else
+                                            <span style="color: var(--gray);">—</span>
+                                        @endif
+                                    </td>
+                                    <td style="font-size: 0.8rem; color: var(--gray);">
+                                        @if($ip->last_used_at)
+                                            {{ $ip->last_used_at->diffForHumans() }}
+                                        @else
+                                            Never
+                                        @endif
+                                    </td>
                                     <td>
                                         <span class="status-badge {{ $ip->is_active ? 'active' : 'inactive' }}"
                                             id="statusBadge{{ $ip->id }}">
                                             <i class="bi bi-{{ $ip->is_active ? 'check-circle' : 'pause-circle' }}"></i>
                                             {{ $ip->is_active ? 'Active' : 'Inactive' }}
                                         </span>
-                                    </td>
-                                    <td>{{ $ip->addedBy ? $ip->addedBy->name : '—' }}</td>
-                                    <td style="font-size: 0.85rem; color: var(--gray);">
-                                        {{ $ip->created_at->format('d M Y, h:i A') }}
                                     </td>
                                     <td>
                                         <div class="action-row">
@@ -712,7 +742,7 @@
                                                 <i class="bi bi-{{ $ip->is_active ? 'pause' : 'play' }}"></i>
                                             </button>
                                             <button type="button" class="btn-danger-custom"
-                                                onclick="deleteIp({{ $ip->id }}, '{{ $ip->ip_address }}')" title="Remove IP">
+                                                onclick="deleteIp({{ $ip->id }}, '{{ $ip->ip_address }}')" title="Remove Device">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -725,8 +755,8 @@
             @else
                 <div class="empty-state">
                     <i class="bi bi-shield-slash"></i>
-                    <p>No IP addresses in the whitelist</p>
-                    <p style="font-size: 0.85rem;">Add your IP address above to get started</p>
+                    <p>No trusted devices registered</p>
+                    <p style="font-size: 0.85rem;">Add your IP address above or approve device requests to get started</p>
                 </div>
             @endif
         </div>

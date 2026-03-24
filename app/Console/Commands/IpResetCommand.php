@@ -30,6 +30,14 @@ class IpResetCommand extends Command
         AllowedIp::truncate();
         $this->info("✅ Cleared {$count} IP(s) from the whitelist.");
 
+        // Fetch the setting to log it
+        $setting = \App\Models\AppSetting::where('key', 'ip_restriction_enabled')->first();
+
+        // Audit Log entry
+        if ($setting) {
+            \App\Services\AuditLogger::log('IP Restriction Reset (CLI)', $setting, null, ['status' => 'potentially_enabled'], ['status' => 'disabled']);
+        }
+
         $this->newLine();
         $this->info('🔓 Site is now accessible from any IP address.');
         $this->info('   Navigate to Settings > IP Security to reconfigure.');

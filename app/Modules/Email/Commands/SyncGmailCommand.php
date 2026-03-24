@@ -12,7 +12,7 @@ class SyncGmailCommand extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'email:sync {--account= : The ID of the account to sync} {--limit=50 : Max emails to fetch}';
+    protected $signature = 'email:sync {--account= : The ID of the account to sync} {--limit= : Max emails to fetch}';
 
     /**
      * The console command description.
@@ -25,7 +25,7 @@ class SyncGmailCommand extends Command
     public function handle(GmailSyncService $syncService, AuditLogger $logger)
     {
         $accountId = $this->option('account');
-        $limit = (int) $this->option('limit');
+        $limit = max(1, (int) ($this->option('limit') ?: config('gmail.sync.per_page', 50)));
 
         $query = EmailAccount::where('is_active', true);
         if ($accountId) {

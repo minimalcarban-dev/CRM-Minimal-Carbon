@@ -2,6 +2,7 @@
 
 namespace App\Modules\Email\Providers;
 
+use App\Modules\Email\Commands\SyncGmailCommand;
 use App\Modules\Email\Models\Email;
 use App\Modules\Email\Models\EmailAccount;
 use App\Modules\Email\Policies\EmailPolicy;
@@ -22,15 +23,15 @@ class EmailServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Bind Services
-        $this->app->singleton(GmailAuthService::class, function ($app) {
+        $this->app->bind(GmailAuthService::class, function ($app) {
             return new GmailAuthService();
         });
 
-        $this->app->singleton(GmailSyncService::class, function ($app) {
+        $this->app->bind(GmailSyncService::class, function ($app) {
             return new GmailSyncService($app->make(GmailAuthService::class));
         });
 
-        $this->app->singleton(EmailComposeService::class, function ($app) {
+        $this->app->bind(EmailComposeService::class, function ($app) {
             return new EmailComposeService($app->make(GmailAuthService::class));
         });
 
@@ -52,6 +53,12 @@ class EmailServiceProvider extends ServiceProvider
         // Register Policies
         Gate::policy(Email::class, EmailPolicy::class);
         Gate::policy(EmailAccount::class, EmailPolicy::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SyncGmailCommand::class,
+            ]);
+        }
 
         // Load Routes
         $this->registerRoutes();

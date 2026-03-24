@@ -13,3 +13,6 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('orders:sync-tracking')->hourly();
+Schedule::command(sprintf('email:sync --limit=%d', (int) config('gmail.sync.per_page', 50)))
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

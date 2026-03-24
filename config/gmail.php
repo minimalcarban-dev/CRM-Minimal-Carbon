@@ -15,6 +15,9 @@ return [
     'client_secret' => env('GMAIL_CLIENT_SECRET'),
     'redirect_uri' => env('GMAIL_REDIRECT_URI'), // Optional, can be dynamic
     'application_name' => env('GMAIL_APP_NAME', 'Minimal Carbon CRM'),
+    'http' => [
+        'verify' => env('GMAIL_HTTP_VERIFY'),
+    ],
 
     'scopes' => [
         'https://www.googleapis.com/auth/gmail.readonly',
@@ -29,8 +32,10 @@ return [
     'prompt' => 'consent',
 
     'sync' => [
-        'per_page' => 50,
-        'storage_path' => 'emails/attachments',
-        'history_poll_interval' => 300, // Seconds
+        'per_page' => (int) env('EMAIL_SYNC_BATCH_SIZE', 50),
+        'interval_minutes' => (int) env('EMAIL_SYNC_INTERVAL', 5),
+        'initial_limit' => (int) env('EMAIL_INITIAL_SYNC_LIMIT', 20),
+        'storage_path' => env('ATTACHMENT_PATH', 'emails/attachments'),
+        'history_poll_interval' => ((int) env('EMAIL_SYNC_INTERVAL', 5)) * 60,
     ],
 ];
