@@ -925,6 +925,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             // Gold Return
             Route::get('/return', [GoldTrackingController::class , 'returnGold'])->name('return');
             Route::post('/return', [GoldTrackingController::class , 'storeReturn'])->name('return.store');
+
+            // Factory Gold Stock API (for order form real-time validation)
+            Route::get('/factory/{factory}/stock', [GoldTrackingController::class , 'factoryStock'])->name('factory.stock');
         }
         );
 

@@ -370,6 +370,30 @@
                 </div>
             </div>
 
+            @if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
+            <div class="col-md-6">
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <span class="label-icon">
+                            <i class="bi bi-heptagon-half"></i>
+                        </span>
+                        <span class="label-text">Gold Net Weight (g)</span>
+                        <span class="optional-badge" style="background: linear-gradient(135deg, var(--warning), #d97706); color: white;">Internal</span>
+                    </label>
+                    <input type="number" step="0.001" name="gold_net_weight" id="gold_net_weight_input" class="form-control-modern"
+                        placeholder="0.000 (Grams)" value="{{ old('gold_net_weight', $order->gold_net_weight ?? '') }}">
+                    <div class="form-hint" id="gold_stock_hint">
+                        <i class="bi bi-info-circle"></i>
+                        <span id="gold_stock_text">Auto-deducts from factory stock</span>
+                    </div>
+                    <div id="gold_stock_warning" style="display:none; margin-top:6px; padding:8px 12px; border-radius:8px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); color:#dc2626; font-size:0.82rem; font-weight:500;">
+                        <i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i>
+                        <span id="gold_stock_warning_text"></span>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="col-md-6">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
@@ -1363,3 +1387,93 @@
         });
     })();
 </script>
+
+{{-- Gold Stock Real-time Validation --}}
+@if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
+<script>
+(function() {
+    const factorySelect = document.querySelector('select[name="factory_id"]');
+    const goldInput = document.getElementById('gold_net_weight_input');
+    const stockText = document.getElementById('gold_stock_text');
+    const stockWarning = document.getElementById('gold_stock_warning');
+    const stockWarningText = document.getElementById('gold_stock_warning_text');
+
+    if (!factorySelect || !goldInput) return;
+
+    // The order's existing gold weight (on edit, this is already consumed from factory stock)
+    const existingGoldWeight = parseFloat('{{ $order->gold_net_weight ?? 0 }}') || 0;
+    let currentFactoryStock = null;
+
+    function fetchFactoryStock(factoryId) {
+        if (!factoryId) {
+            resetStockDisplay();
+            return;
+        }
+
+        fetch(`/admin/gold-tracking/factory/${factoryId}/stock`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            currentFactoryStock = parseFloat(data.current_stock);
+            // On edit: the max the user can enter = factory stock + existing order weight
+            const maxAllowed = currentFactoryStock + existingGoldWeight;
+            stockText.innerHTML = `Available: <strong style="color:#f59e0b;">${currentFactoryStock.toFixed(3)} gm</strong> in ${data.factory_name}` +
+                (existingGoldWeight > 0 ? ` (max: ${maxAllowed.toFixed(3)} gm incl. current order)` : '');
+            goldInput.setAttribute('max', maxAllowed.toFixed(3));
+            validateGoldWeight();
+        })
+        .catch(() => {
+            resetStockDisplay();
+        });
+    }
+
+    function resetStockDisplay() {
+        currentFactoryStock = null;
+        stockText.textContent = 'Auto-deducts from factory stock';
+        goldInput.removeAttribute('max');
+        stockWarning.style.display = 'none';
+        goldInput.style.borderColor = '';
+    }
+
+    function validateGoldWeight() {
+        if (currentFactoryStock === null) return;
+
+        const enteredWeight = parseFloat(goldInput.value) || 0;
+        const maxAllowed = currentFactoryStock + existingGoldWeight;
+
+        if (enteredWeight > 0 && enteredWeight > maxAllowed) {
+            const excess = (enteredWeight - maxAllowed).toFixed(3);
+            stockWarningText.textContent = `Exceeds available stock by ${excess}g! Factory has ${currentFactoryStock.toFixed(3)}g available.`;
+            stockWarning.style.display = 'block';
+            goldInput.style.borderColor = '#dc2626';
+        } else {
+            stockWarning.style.display = 'none';
+            goldInput.style.borderColor = '';
+        }
+    }
+
+    // Listen for factory change
+    factorySelect.addEventListener('change', function() {
+        fetchFactoryStock(this.value);
+    });
+
+    // Also listen if Select2 is used (common in this project)
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        $(factorySelect).on('select2:select select2:unselect', function() {
+            fetchFactoryStock(this.value);
+        });
+    }
+
+    // Listen for gold weight input
+    goldInput.addEventListener('input', validateGoldWeight);
+    goldInput.addEventListener('change', validateGoldWeight);
+
+    // Fetch on page load if factory already selected (e.g., edit mode)
+    if (factorySelect.value) {
+        fetchFactoryStock(factorySelect.value);
+    }
+})();
+</script>
+@endif
+

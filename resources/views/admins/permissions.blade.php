@@ -132,9 +132,9 @@
                                         Select All
                                     </label>
                                 </div>
-                                <!-- <div class="collapse-toggle">
+                                <div class="collapse-toggle">
                                     <i class="bi bi-chevron-down"></i>
-                                </div> -->
+                                </div>
                             </div>
                         </div>
 

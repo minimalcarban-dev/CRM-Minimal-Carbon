@@ -106,6 +106,7 @@
                         <option value="purchase" {{ request('type') == 'purchase' ? 'selected' : '' }}>Purchase</option>
                         <option value="distribute" {{ request('type') == 'distribute' ? 'selected' : '' }}>Distribute</option>
                         <option value="return" {{ request('type') == 'return' ? 'selected' : '' }}>Return</option>
+                        <option value="consumed" {{ request('type') == 'consumed' ? 'selected' : '' }}>Consumed</option>
                     </select>
                 </div>
                 <div class="tracker-filter-field">
@@ -199,9 +200,13 @@
                                         <span class="tracker-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
                                             <i class="bi bi-arrow-right"></i> DISTRIBUTE
                                         </span>
-                                    @else
+                                    @elseif($txn['type'] === 'return')
                                         <span class="tracker-badge" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
                                             <i class="bi bi-arrow-left"></i> RETURN
+                                        </span>
+                                    @elseif($txn['type'] === 'consumed')
+                                        <span class="tracker-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                            <i class="bi bi-heptagon-half"></i> CONSUMED
                                         </span>
                                     @endif
                                 </td>
@@ -210,8 +215,10 @@
                                         <span style="color: #10b981; font-weight: 600;">+{{ number_format($txn['weight'], 3) }} gm</span>
                                     @elseif($txn['type'] === 'distribute')
                                         <span style="color: #ef4444; font-weight: 600;">-{{ number_format($txn['weight'], 3) }} gm</span>
-                                    @else
+                                    @elseif($txn['type'] === 'return')
                                         <span style="color: #8b5cf6; font-weight: 600;">+{{ number_format($txn['weight'], 3) }} gm</span>
+                                    @elseif($txn['type'] === 'consumed')
+                                        <span style="color: #f59e0b; font-weight: 600;">-{{ number_format($txn['weight'], 3) }} gm</span>
                                     @endif
                                 </td>
                                 <td>
@@ -219,8 +226,10 @@
                                         {{ $txn['from_to'] }}
                                     @elseif($txn['type'] === 'distribute')
                                         → {{ $txn['from_to'] }}
-                                    @else
+                                    @elseif($txn['type'] === 'return')
                                         ← {{ $txn['from_to'] }}
+                                    @elseif($txn['type'] === 'consumed')
+                                        Order #{{ $txn['order_id'] ?? '' }} ({{ $txn['from_to'] }})
                                     @endif
                                 </td>
                                 <td>

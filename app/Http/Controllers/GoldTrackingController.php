@@ -65,6 +65,9 @@ class GoldTrackingController extends Controller
             } elseif ($request->type === 'return') {
                 $purchasesQuery->whereRaw('1 = 0');
                 $distributionsQuery->where('type', 'return');
+            } elseif ($request->type === 'consumed') {
+                $purchasesQuery->whereRaw('1 = 0');
+                $distributionsQuery->where('type', 'consumed');
             }
         }
         if ($request->filled('factory_id')) {
@@ -80,12 +83,13 @@ class GoldTrackingController extends Controller
             ->latest('purchase_date')
             ->get();
 
-        $distributions = GoldDistribution::with(['admin', 'factory'])
+        $distributions = GoldDistribution::with(['admin', 'factory', 'order'])
             ->when($request->filled('from_date'), fn($q) => $q->whereDate('distribution_date', '>=', $request->from_date))
             ->when($request->filled('to_date'), fn($q) => $q->whereDate('distribution_date', '<=', $request->to_date))
             ->when($request->type === 'purchase', fn($q) => $q->whereRaw('1 = 0'))
             ->when($request->type === 'distribute', fn($q) => $q->where('type', 'out'))
             ->when($request->type === 'return', fn($q) => $q->where('type', 'return'))
+            ->when($request->type === 'consumed', fn($q) => $q->where('type', 'consumed'))
             ->when($request->filled('factory_id'), fn($q) => $q->where('factory_id', $request->factory_id))
             ->latest('distribution_date')
             ->get();
@@ -108,11 +112,13 @@ class GoldTrackingController extends Controller
             ]);
         }
         foreach ($distributions as $d) {
+            $type = $d->type === 'out' ? 'distribute' : ($d->type === 'consumed' ? 'consumed' : 'return');
             $transactions->push([
                 'id' => $d->id,
                 'date' => $d->distribution_date,
-                'type' => $d->type === 'out' ? 'distribute' : 'return',
+                'type' => $type,
                 'weight' => $d->weight_grams,
+                'order_id' => $d->order_id,
                 'from_to' => $d->factory->name ?? 'Unknown',
                 'amount' => null,
                 'status' => 'completed',
@@ -559,6 +565,18 @@ class GoldTrackingController extends Controller
             'paid_to_received_from' => $purchase->supplier_name,
             'reference_number' => $purchase->invoice_number,
             'notes' => "Auto-updated from Gold Purchase #{$purchase->id}. " . ($purchase->notes ?? ''),
+        ]);
+    }
+
+    /**
+     * Return factory gold stock as JSON (for order form real-time validation).
+     */
+    public function factoryStock(Factory $factory)
+    {
+        return response()->json([
+            'factory_id' => $factory->id,
+            'factory_name' => $factory->name,
+            'current_stock' => round($factory->current_stock, 3),
         ]);
     }
 }
