@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Route;
 // Account Management
 Route::get('/accounts', [InboxController::class, 'accounts'])->name('accounts.list');
 Route::post('/accounts/{account}/revoke', [AuthController::class, 'revoke'])->name('account.revoke');
+Route::delete('/accounts/{account}', [AuthController::class, 'destroy'])->name('account.delete');
+
 
 // OAuth Flow
 Route::get('/oauth/redirect/{company}', [AuthController::class, 'redirect'])->name('oauth.redirect');

@@ -40,6 +40,9 @@ Route::get('/', function () {
 // return view('welcome');
 });
 
+Route::view('/privacy-policy', 'legal.privacy-policy')->name('legal.privacy');
+Route::view('/terms-of-service', 'legal.terms-of-service')->name('legal.terms');
+
 // Public access request (from 403 page — no auth needed)
 Route::post('ip/request-access', [SettingsController::class , 'submitAccessRequest'])
     ->middleware('throttle:3,10') // Max 3 requests per 10 minutes
@@ -1080,3 +1083,4 @@ Route::prefix('webhook/meta')->group(function () {
 
 Route::post('webhook/17track', [TrackingWebhookController::class , 'handle17Track'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+

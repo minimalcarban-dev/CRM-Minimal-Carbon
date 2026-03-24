@@ -3,33 +3,35 @@
 namespace App\Modules\Email\Services;
 
 use App\Modules\Email\Models\EmailAccount;
+use GuzzleHttp\Client as GuzzleClient;
 use Google\Client;
-use Google\Service\Gmail;
 use Google\Service\Oauth2;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 
 class GmailAuthService
 {
     private Client $client;
 
-    public function __construct()
+    public function __construct(?Client $client = null)
     {
-        $this->client = new Client();
+        $this->client = $client ?? new Client();
 
-        // Fix for SSL certificate issue on Windows
-        $caPath = 'C:\tools\php84\cacert.pem';
         $httpClientOptions = [
-            'timeout' => 60.0,        // Request timeout (60 seconds)
-            'connect_timeout' => 30.0, // Connection timeout (30 seconds)
+            'timeout' => 60.0,
+            'connect_timeout' => 30.0,
         ];
-        if (file_exists($caPath)) {
-            $httpClientOptions['verify'] = $caPath;
+
+        $verify = config('gmail.http.verify');
+        if (is_string($verify) && $verify !== '' && file_exists($verify)) {
+            $httpClientOptions['verify'] = $verify;
+        } elseif (is_bool($verify)) {
+            $httpClientOptions['verify'] = $verify;
         }
-        $this->client->setHttpClient(new \GuzzleHttp\Client($httpClientOptions));
+
+        $this->client->setHttpClient(new GuzzleClient($httpClientOptions));
 
         $this->client->setClientId(config('gmail.client_id'));
         $this->client->setClientSecret(config('gmail.client_secret'));
-        // Redirect URI is set dynamically when needed to avoid early route resolution errors
 
         foreach (config('gmail.scopes') as $scope) {
             $this->client->addScope($scope);
@@ -51,9 +53,14 @@ class GmailAuthService
     /**
      * Get the OAuth authorization URL.
      */
-    public function getAuthUrl(): string
+    public function getAuthUrl(?string $state = null): string
     {
-        $this->client->setRedirectUri(config('gmail.redirect_uri') ?? route('email.oauth.callback'));
+        $this->setRedirectUri();
+
+        if ($state !== null) {
+            $this->client->setState($state);
+        }
+
         return $this->client->createAuthUrl();
     }
 
@@ -62,7 +69,7 @@ class GmailAuthService
      */
     public function handleCallback(string $code, int $companyId, int $adminId): EmailAccount
     {
-        $this->client->setRedirectUri(config('gmail.redirect_uri') ?? route('email.oauth.callback'));
+        $this->setRedirectUri();
         $token = $this->client->fetchAccessTokenWithAuthCode($code);
 
         if (isset($token['error'])) {
@@ -90,20 +97,51 @@ class GmailAuthService
             $dataToUpdate['refresh_token'] = $token['refresh_token'];
         }
 
-        $account = EmailAccount::withTrashed()->updateOrCreate(
-            ['email_address' => $emailAddress],
-            $dataToUpdate
-        );
+        $account = DB::transaction(function () use ($adminId, $companyId, $dataToUpdate, $emailAddress) {
+            $account = EmailAccount::withTrashed()
+                ->with('users:id')
+                ->where('email_address', $emailAddress)
+                ->first();
+
+            if ($account && $account->users->where('id', '!=', $adminId)->isNotEmpty()) {
+                throw new \RuntimeException('This Gmail account is already connected to another user.');
+            }
+
+            if (!$account) {
+                $account = new EmailAccount([
+                    'email_address' => $emailAddress,
+                    'provider' => 'gmail',
+                ]);
+            }
+
+            $account->fill($dataToUpdate);
+            $account->provider = 'gmail';
+            $account->save();
+
+            if ($account->trashed()) {
+                $account->restore();
+            }
+
+            $pivotQuery = $account->users()->newPivotStatement()
+                ->where('email_account_id', $account->id)
+                ->where('user_id', $adminId);
+
+            $pivotQuery->delete();
+
+            $account->users()->attach($adminId, [
+                'role' => 'owner',
+                'company_id' => $companyId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return $account->fresh(['users']);
+        });
 
         // Log the connection
         app(AuditLogger::class)->log($account, $adminId, 'oauth_connect', [
             'company_id' => $companyId,
-            'email' => $emailAddress
-        ]);
-
-        // Attach user with role owner
-        $account->users()->syncWithoutDetaching([
-            $adminId => ['role' => 'owner', 'company_id' => $companyId]
+            'email' => $emailAddress,
         ]);
 
         return $account;
@@ -190,5 +228,10 @@ class GmailAuthService
         ]);
 
         return true;
+    }
+
+    private function setRedirectUri(): void
+    {
+        $this->client->setRedirectUri(config('gmail.redirect_uri') ?: route('email.oauth.callback'));
     }
 }

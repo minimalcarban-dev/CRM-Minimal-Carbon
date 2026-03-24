@@ -140,13 +140,32 @@
                                 </li>
                                 <li>
                                     <form action="{{ route('email.account.revoke', $account->id) }}" method="POST"
-                                        onsubmit="return confirm('Are you sure you want to disconnect this account?')">
+                                        class="confirm-action-form" 
+                                        data-confirm-title="Disconnect Account?" 
+                                        data-confirm-text="Are you sure you want to disconnect this account? This will revoke access tokens and stop email synchronization.">
+
                                         @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
+                                        <button type="button" class="dropdown-item text-danger confirm-btn">
                                             <i class="bi bi-link-45deg"></i> Disconnect
                                         </button>
                                     </form>
                                 </li>
+
+                                <li>
+                                    <form action="{{ route('email.account.delete', $account->id) }}" method="POST"
+                                        class="confirm-action-form"
+                                        data-confirm-title="Remove Account Permanently?"
+                                        data-confirm-text="Are you sure you want to remove this account? All locally stored emails, threads, and attachments will be permanently deleted. This action cannot be undone.">
+
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="dropdown-item text-danger confirm-btn">
+                                            <i class="bi bi-trash"></i> Remove Account
+                                        </button>
+                                    </form>
+                                </li>
+
+
                             </ul>
                         </div>
                     </div>
@@ -280,6 +299,32 @@
                         showConfirmButton: false,
                         didOpen: () => {
                             Swal.showLoading();
+                        }
+                    });
+                });
+            });
+            
+            // --- Confirmation Logic ---
+            const confirmButtons = document.querySelectorAll('.confirm-btn');
+            confirmButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const form = this.closest('.confirm-action-form');
+                    const title = form.dataset.confirmTitle || 'Are you sure?';
+                    const text = form.dataset.confirmText || 'Do you want to proceed?';
+                    
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Yes, proceed',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
                         }
                     });
                 });

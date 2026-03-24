@@ -3280,10 +3280,13 @@
                                     </a>
                                 </li>
                                 @php
-                                    $recentAccount = \App\Modules\Email\Models\EmailAccount::where(
-                                        'is_active',
-                                        true,
-                                    )->first();
+                                    $recentAccount = auth()
+                                        ->guard('admin')
+                                        ->user()
+                                        ?->emailAccounts()
+                                        ->where('is_active', true)
+                                        ->orderByDesc('email_account_users.updated_at')
+                                        ->first();
                                 @endphp
                                 @if ($recentAccount)
                                     <li>
@@ -3509,14 +3512,20 @@
                     <i class="bi bi-moon-fill" id="darkModeIcon"></i>
                 </button>
 
-                {{-- IP Security --}}
+                {{-- Security & Device Management --}}
                 @if (auth()->guard('admin')->user() &&
                         auth()->guard('admin')->user()->canAccessAny(['settings.manage']))
+                    @php $devicePendingCount = \App\Models\IpAccessRequest::pending()->count(); @endphp
                     <a href="{{ route('settings.security.index') }}"
                         class="dark-mode-btn {{ request()->routeIs('settings.security.*') ? 'active' : '' }}"
-                        title="IP Security"
-                        style="text-decoration:none;{{ request()->routeIs('settings.security.*') ? 'border-color:var(--primary);color:var(--primary);background:rgba(99,102,241,0.06);' : '' }}">
-                        <i class="bi bi-shield-lock"></i>
+                        title="Security & Devices"
+                        style="text-decoration:none;position:relative;{{ request()->routeIs('settings.security.*') ? 'border-color:var(--primary);color:var(--primary);background:rgba(99,102,241,0.06);' : '' }}">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        @if($devicePendingCount > 0)
+                            <span style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;width:16px;height:16px;border-radius:50%;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-weight:700;">
+                                {{ $devicePendingCount > 9 ? '9+' : $devicePendingCount }}
+                            </span>
+                        @endif
                     </a>
                 @endif
 
