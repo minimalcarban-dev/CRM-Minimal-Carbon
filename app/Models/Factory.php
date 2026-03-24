@@ -97,7 +97,11 @@ class Factory extends Model
             ->where('type', GoldDistribution::TYPE_RETURN)
             ->sum('weight_grams');
 
-        return round((float) $out - (float) $returned, 3);
+        $consumed = $this->distributions()
+            ->where('type', GoldDistribution::TYPE_CONSUMED)
+            ->sum('weight_grams');
+
+        return round((float) $out - (float) $returned - (float) $consumed, 3);
     }
 
     /**
@@ -120,6 +124,10 @@ class Factory extends Model
             },
             'distributions as stock_return' => function ($q) {
                 $q->where('type', GoldDistribution::TYPE_RETURN)
+                    ->select(DB::raw('COALESCE(SUM(weight_grams), 0)'));
+            },
+            'distributions as stock_consumed' => function ($q) {
+                $q->where('type', GoldDistribution::TYPE_CONSUMED)
                     ->select(DB::raw('COALESCE(SUM(weight_grams), 0)'));
             },
         ]);

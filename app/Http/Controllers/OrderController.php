@@ -36,6 +36,7 @@ use App\Notifications\OrderCreatedNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use App\Notifications\OrderDiscussionNotification;
+use App\Models\GoldDistribution;
 
 
 class OrderController extends Controller
@@ -438,6 +439,32 @@ class OrderController extends Controller
                 }
             }
 
+            // ⚡ GOLD TRACING: Auto-log consumption if gold weight is provided on create
+            $newWeight = (float)$order->gold_net_weight;
+            if ($newWeight > 0 && $order->factory_id) {
+                // ✅ STOCK GUARD: Prevent consuming more gold than factory has
+                $factory = Factory::find($order->factory_id);
+                if ($factory) {
+                    $factoryStock = $factory->current_stock;
+                    if ($newWeight > $factoryStock) {
+                        DB::rollBack();
+                        $errorMsg = "Gold weight ({$newWeight}g) exceeds factory stock ({$factoryStock}g) for {$factory->name}. Please reduce the weight or distribute more gold to the factory first.";
+                        return $this->orderErrorResponse($request, $errorMsg);
+                    }
+                }
+
+                GoldDistribution::create([
+                    'distribution_date' => now()->toDateString(),
+                    'factory_id' => $order->factory_id,
+                    'order_id' => $order->id,
+                    'weight_grams' => $newWeight,
+                    'type' => GoldDistribution::TYPE_CONSUMED,
+                    'purpose' => 'System Auto Consumption for Order #' . $order->id,
+                    'notes' => 'Initial weight recorded during order creation.',
+                    'admin_id' => Auth::guard('admin')->id(),
+                ]);
+            }
+
             DB::commit();
 
             $meleeStockSummary = $this->meleeStockService->getStockSummary(
@@ -699,6 +726,7 @@ class OrderController extends Controller
                 'melee_carat' => 'Melee Carat',
                 'melee_price_per_ct' => 'Melee Price/CT',
                 'melee_entries' => 'Melee Entries',
+                'gold_net_weight' => 'Gold Net Weight',
             ];
             $oldSnapshot = [];
             foreach (array_keys($auditFields) as $field) {
@@ -805,8 +833,40 @@ class OrderController extends Controller
                 }
             }
 
-            DB::commit();
+            // ⚡ GOLD TRACING: Auto-log consumption if gold weight changes during update
+            $oldWeight = (float)($oldSnapshot['gold_net_weight'] ?? 0);
+            $newWeight = (float)$order->gold_net_weight;
+            if ($oldWeight !== $newWeight && $order->factory_id) {
+                $difference = $newWeight - $oldWeight;
+                if ($difference != 0) {
+                    // ✅ STOCK GUARD: Prevent consuming more gold than factory has
+                    if ($difference > 0) {
+                        $factory = Factory::find($order->factory_id);
+                        if ($factory) {
+                            $factoryStock = $factory->current_stock;
+                            if ($difference > $factoryStock) {
+                                DB::rollBack();
+                                $errorMsg = "Gold weight increase ({$difference}g) exceeds factory stock ({$factoryStock}g) for {$factory->name}. Available: {$factoryStock}g, max total weight: " . round($oldWeight + $factoryStock, 3) . "g.";
+                                return $this->orderErrorResponse($request, $errorMsg);
+                            }
+                        }
+                    }
 
+                    GoldDistribution::updateOrCreate(
+                        ['order_id' => $order->id, 'type' => GoldDistribution::TYPE_CONSUMED],
+                        [
+                            'distribution_date' => now()->toDateString(),
+                            'factory_id' => $order->factory_id,
+                            'weight_grams' => $newWeight,
+                            'purpose' => 'System Auto Consumption for Order #' . $order->id,
+                            'notes' => 'Weight updated: ' . $oldWeight . 'g => ' . $newWeight . 'g',
+                            'admin_id' => Auth::guard('admin')->id(),
+                        ]
+                    );
+                }
+            }
+
+            DB::commit();
             $meleeStockSummary = $this->meleeStockService->getStockSummary($updatedMeleeDiamondIds ?? []);
 
             Log::info('Order updated successfully', [
@@ -1725,6 +1785,7 @@ class OrderController extends Controller
             'company_id' => 'required|exists:companies,id',
             'factory_id' => 'nullable|exists:factories,id',
             'gross_sell' => 'nullable|numeric|min:0',
+            'gold_net_weight' => 'nullable|numeric|min:0',
             'dispatch_date' => 'nullable|date',
             'note' => 'nullable|in:priority,non_priority',
             'special_notes' => 'nullable|string|max:2000',
@@ -2146,6 +2207,13 @@ class OrderController extends Controller
         $order->note = !empty($validated['note']) ? $validated['note'] : null;
 
         $order->gross_sell = $validated['gross_sell'] ?? 0;
+
+        $admin = Auth::guard('admin')->user();
+        if (array_key_exists('gold_net_weight', $validated)) {
+            if ($admin->is_super || $admin->hasPermission('orders.add_gold_weight')) {
+                $order->gold_net_weight = $validated['gold_net_weight'];
+            }
+        }
 
         $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
     }

@@ -15,6 +15,7 @@ class GoldDistribution extends Model
      */
     public const TYPE_OUT = 'out';       // Gold sent TO factory
     public const TYPE_RETURN = 'return'; // Gold returned FROM factory
+    public const TYPE_CONSUMED = 'consumed'; // Gold consumed in production
 
     /**
      * Type labels for display
@@ -22,6 +23,7 @@ class GoldDistribution extends Model
     public const TYPE_LABELS = [
         'out' => 'Distributed',
         'return' => 'Returned',
+        'consumed' => 'Consumed',
     ];
 
     protected $fillable = [
@@ -32,6 +34,7 @@ class GoldDistribution extends Model
         'purpose',
         'notes',
         'admin_id',
+        'order_id',
     ];
 
     protected $casts = [
@@ -49,6 +52,14 @@ class GoldDistribution extends Model
     public function factory()
     {
         return $this->belongsTo(Factory::class);
+    }
+
+    /**
+     * Get the order associated with this consumption (if any).
+     */
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 
     /**
@@ -76,6 +87,14 @@ class GoldDistribution extends Model
     }
 
     /**
+     * Scope for consumption occurrences.
+     */
+    public function scopeConsumed($query)
+    {
+        return $query->where('type', self::TYPE_CONSUMED);
+    }
+
+    /**
      * Check if this is an outgoing distribution.
      */
     public function isOutgoing(): bool
@@ -89,6 +108,14 @@ class GoldDistribution extends Model
     public function isReturn(): bool
     {
         return $this->type === self::TYPE_RETURN;
+    }
+
+    /**
+     * Check if this is a consumption.
+     */
+    public function isConsumed(): bool
+    {
+        return $this->type === self::TYPE_CONSUMED;
     }
 
     /**

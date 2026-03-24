@@ -2109,7 +2109,10 @@
                 </div>
 
                 {{-- Specifications --}}
-                @if($order->goldDetail || $order->ringSize || $order->settingType || $order->earringDetail)
+                @php
+                    $canSeeGoldWeight = Auth::guard('admin')->user()->is_super_admin || Auth::guard('admin')->user()->can('orders.add_gold_weight');
+                @endphp
+                @if($order->goldDetail || $order->ringSize || $order->settingType || $order->earringDetail || ($canSeeGoldWeight && $order->gold_net_weight))
                     <div class="od-card">
                         <div class="od-card-head">
                             <h3 class="od-card-title"><i class="bi bi-sliders"></i> Specifications</h3>
@@ -2138,6 +2141,12 @@
                                     <div class="od-spec">
                                         <span class="od-spec-label">Earring Type</span>
                                         <span class="od-spec-val">{{ $order->earringDetail->name }}</span>
+                                    </div>
+                                @endif
+                                @if($canSeeGoldWeight && $order->gold_net_weight)
+                                    <div class="od-spec" style="border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05);">
+                                        <span class="od-spec-label" style="color: #d97706;"><i class="bi bi-heptagon-half"></i> Gold Consumed</span>
+                                        <span class="od-spec-val" style="color: #b45309;">{{ number_format((float) $order->gold_net_weight, 3) }} gm</span>
                                     </div>
                                 @endif
                             </div>

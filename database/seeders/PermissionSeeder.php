@@ -120,7 +120,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Set Sales Targets', 'slug' => 'sales.set_targets', 'description' => 'Set monthly sales targets for companies', 'category' => 'sales'],
             ['name' => 'Export Sales Reports', 'slug' => 'sales.export', 'description' => 'Export sales reports as PDF/CSV', 'category' => 'sales'],
             ['name' => 'View All Sales', 'slug' => 'sales.view_all', 'description' => 'View aggregated sales dashboard for all companies', 'category' => 'sales'],
-            
+
             // Parties
             ['name' => 'View Parties', 'slug' => 'parties.view', 'description' => 'View parties list and details', 'category' => 'parties'],
             ['name' => 'Create Parties', 'slug' => 'parties.create', 'description' => 'Create new parties', 'category' => 'parties'],
@@ -166,10 +166,11 @@ class PermissionSeeder extends Seeder
             ['name' => 'Delete Factories', 'slug' => 'factories.delete', 'description' => 'Delete factories', 'category' => 'factories'],
 
             // Gold Tracking
-            ['name' => 'View Gold Tracking', 'slug' => 'gold-tracking.view', 'description' => 'View gold stock and tracking', 'category' => 'gold'],
-            ['name' => 'Create Gold Transaction', 'slug' => 'gold-tracking.create', 'description' => 'Create gold purchases or distributions', 'category' => 'gold'],
-            ['name' => 'Edit Gold Transaction', 'slug' => 'gold-tracking.edit', 'description' => 'Edit gold transactions', 'category' => 'gold'],
-            ['name' => 'Delete Gold Transaction', 'slug' => 'gold-tracking.delete', 'description' => 'Delete gold transactions', 'category' => 'gold'],
+            ['name' => 'View Gold Tracking', 'slug' => 'gold-tracking.view', 'description' => 'View gold stock and tracking', 'category' => 'gold_tracking'],
+            ['name' => 'Create Gold Transaction', 'slug' => 'gold-tracking.create', 'description' => 'Create gold purchases or distributions', 'category' => 'gold_tracking'],
+            ['name' => 'Edit Gold Transaction', 'slug' => 'gold-tracking.edit', 'description' => 'Edit gold transactions', 'category' => 'gold_tracking'],
+            ['name' => 'Delete Gold Transaction', 'slug' => 'gold-tracking.delete', 'description' => 'Delete gold transactions', 'category' => 'gold_tracking'],
+            ['name' => 'Add Gold Weight', 'slug' => 'orders.add_gold_weight', 'description' => 'Add gold weight to orders', 'category' => 'orders'],
 
             // Mail System
             ['name' => 'Access Mail System', 'slug' => 'mail.access', 'description' => 'Access the mail system', 'category' => 'mail'],
