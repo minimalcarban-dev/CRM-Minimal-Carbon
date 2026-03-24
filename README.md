@@ -9,136 +9,115 @@
   <img src="https://img.shields.io/badge/Status-Production-brightgreen?style=for-the-badge" />
 </p>
 
-> **A full-featured, production-grade CRM system** built for the diamond and jewelry industry. Manages the complete business lifecycle — from inventory and procurement to orders, multi-currency invoicing, sales analytics, lead management, and team collaboration.
+> **A full-featured, production-grade CRM system** built specifically for the diamond and jewelry industry. Manages the complete business lifecycle — from stone-level inventory and factory procurement to multi-currency invoicing, real-time team collaboration, and automated Shopify synchronization.
 
-> ⚠️ **This is a proprietary project.** It is not open for public use, contribution, or redistribution.
+---
+
+## 🚀 What's New in 2026?
+
+We've recently upgraded the system with several heavy-weight features to improve security, automation, and team efficiency:
+
+- 🛡️ **Adaptive Device Trust** — Replaced static IP whitelisting with a secure, cookie-based session trust system. Includes emergency CLI bypass and GeoIP logging.
+- 💍 **Jewellery Stock Module** — Dedicated tracking for finished jewelry items with SKU-based inventory, weight/metal categorization, and automated low-stock alerts.
+- 🔔 **Order Discussion Notifications** — Real-time Pusher alerts for specific order threads, featuring sidebar unread count badges for instant team awareness.
+- 💬 **Enhanced Chat Experience** — Professional communication tools including Message Reactions, Pinned Threads, and personal Saved Messages for capturing important stone details.
+- 📦 **17Track Integration** — Automated shipping timeline extraction with live status updates directly within the order pipeline.
 
 ---
 
 ## 🏢 Overview
 
-This CRM powers the day-to-day operations of a diamond trading business, replacing fragmented tools with a unified, permission-controlled admin panel. It handles everything from stone-level inventory tracking to PDF invoice generation across 7 currencies and 7 international regions.
+This CRM powers the daily operations of a global diamond trading business. It replaces fragmented spreadsheets with a unified, permission-controlled ecosystem that handles stone-level tracking, factory distributions, and PDF invoice generation across **7 currencies** and **7 international regions**.
 
 ---
 
 ## ✨ Modules & Capabilities
 
-📦 Inventory & Products
+### 📦 Inventory & Products
 
-- **Shopify Connected** — Bi-directional sync for products, collections, and orders with automated metafield extraction.
-- **Diamond Inventory** — Full lifecycle: create, import/export (Excel), bulk edit, SKU-based availability, restock sold stones, admin assignment
-- **Melee Diamonds** — Category-based melee tracking with weighted average cost per carat
-- **Gold Tracking** — Gold stock management with factory distribution, returns, and purchase logging
-- **Jewellery Calculator** — Live gold rate fetching and custom jewelry cost calculation
+- **Diamond Inventory** — Full stone lifecycle: bulk import/export (Excel), SKU-based availability, and admin stone assignment.
+- **Melee Diamonds** — Category-based tracking with **Weighted Average Cost (WAC)** per carat.
+- **Jewellery Stock** — [NEW] Track finished rings, necklaces, and findings with automated "Low Stock" and "In Stock" status triggers.
+- **Gold Tracking** — Factory-wide gold distribution, returns tracking, and purchase logging.
+- **Shopify Connected** — Bi-directional sync with automated metafield extraction for stone specs.
 
 ### 🛒 Sales & Orders
 
-- **Orders** — Multi-type pipeline (rough, polished, jewelry) with status tracking, draft auto-save, and overdue detection
-- **Order Cancellation** — Robust cancellation workflow with read-only views and reason tracking
-- **Invoices** — Multi-region PDF invoicing with dynamic tax calculations, amount-in-words, and per-region currency formatting
-- **Sales Dashboards** — Consolidated analytics across all companies with monthly targets, projections, and PDF/CSV export
-- **Shipping Tracker** — Automated API integration (17Track) for live package status, timeline tracking, and syncing
-- **Packages** — Manage and track received / returned packages with permission-based flows
+- **Multi-Pipeline Orders** — Track Rough, Polished, and Jewelry orders with granular status stages and draft auto-save.
+- **Shipping Tracker** — Integrated with **17Track API** for live package timelines and delivery confirmation.
+- **Order Cancellation** — Robust workflow for cancelled stones with read-only history and reason tracking.
+- **Invoices** — Dynamic PDF generation with per-region tax rules, amount-in-words, and multi-currency formatting.
 
-### 💱 Multi-Currency Engine
+### 🌐 Multi-Currency Engine
 
-Centralized currency system supporting **7 currencies** out of the box — extensible by adding a single config entry:
+Centralized system supporting **7 global currencies** with extensible configuration:
+`INR (₹)`, `USD ($)`, `GBP (£)`, `EUR (€)`, `CAD (C$)`, `AUD (A$)`, `AED (د.إ)`
 
-| Currency             | Symbol | Region |
-| -------------------- | ------ | ------ |
-| 🇮🇳 Indian Rupee      | ₹      | IN     |
-| 🇺🇸 US Dollar         | $      | US     |
-| 🇬🇧 British Pound     | £      | UK     |
-| 🇪🇺 Euro              | €      | EU     |
-| 🇨🇦 Canadian Dollar   | C$     | CA     |
-| 🇦🇺 Australian Dollar | A$     | AU     |
-| 🇦🇪 UAE Dirham        | د.إ    | AE     |
+### 👥 CRM & Lead Management
 
-### 👥 CRM & Contacts
+- **Lead Pipeline** — Kanban-style board for lead tracking with assignment analytics and WhatsApp integration.
+- **Shoppers & Vendors** — Unified profiles for clients and suppliers with detailed transaction histories.
+- **Company Profiles** — Multi-entity support with regional bank details and Cloudinary logo storage.
 
-- **Companies** — Company profiles with bank details, logo uploads (Cloudinary), and sales dashboards
-- **Vendors** — Vendor management with categorization for billing and supply chain
-- **Shoppers** — Client profiles with associated order/invoice history
-- **Lead Management** — Kanban-style pipeline with analytics, assignment, notes, and WhatsApp integration
+### 💬 Communication & Teams
 
-### 💬 Communication
+- **Real-time Team Chat** — Slack-like experience with channels, threads, file sharing, reactions, and pinned messages.
+- **Gmail Integration** — Full OAuth2 inbox (read/reply/forward/remove) integrated directly into the admin panel.
+- **WhatsApp API** — Direct lead capture and reply capability via Meta webhooks.
 
-- **Team Chat** — Real-time messaging via Pusher with channels, threads, file sharing, and unread counts
-- **Gmail Integration** — Built-in email inbox with compose, reply, and forward via Google OAuth2
-- **WhatsApp/Meta** — Lead capture via Facebook/WhatsApp webhooks with direct reply capability
-- **Notifications** — In-app bell alerts for overdue orders, draft reminders, and task nudges
+### 🔐 Security & Access [UPDATED]
 
-### 🔧 Operations
-
-- **Purchase Tracker** — Diamond and material procurement with completion workflow and expense auto-linking
-- **Office Expenses** — Cash flow tracking with income/expense categorization
-- **Master Data** — CRUDs for Metal Types, Stone Types, Shapes, Colors, Cuts, Clarities, Ring Sizes, Setting Types, Closure Types
-
-### 🔐 Security & Access
-
-- **Adaptive UI** — Full Dark Mode support with responsive design for mobile and tablet devices.
-- **Role-based Permissions** — Granular per-module control (view/create/edit/delete) with super admin override
-- **IP Security** — Whitelist-based access with GeoIP logging and quick-access shield in navbar.
-- **Admin-only Auth** — No public registration; admin panel with throttled login
+- **Device Trust Management** — Secure session-based authentication. Manage trusted browsers from the "Security & Device" panel.
+- **Granular Permissions** — 50+ permission types controlling View/Create/Edit/Delete access per module.
+- **Audit Logs** — Every sensitive stone or price change is logged with the admin's ID and timestamp.
 
 ---
 
 ## 🏗 Tech Stack
 
-| Layer                   | Technologies                    |
-| ----------------------- | ------------------------------- |
-| **Backend**             | Laravel 12, PHP 8.2+            |
-| **Frontend**            | Blade, Vue.js 3, Vanilla CSS/JS |
-| **Build Tools**         | Vite 7, TailwindCSS 4           |
-| **Database**            | MySQL                           |
-| **Real-time**           | Pusher, Laravel Echo            |
-| **PDF Generation**      | barryvdh/laravel-dompdf         |
-| **Excel Import/Export** | maatwebsite/excel               |
-| **Full-text Search**    | Laravel Scout + TNTSearch       |
-| **Image Storage**       | Cloudinary                      |
-| **Email**               | Google API (Gmail OAuth2)       |
-| **Messaging**           | Meta/WhatsApp Business API      |
-| **Integrations**        | Shopify Admin API, 17Track      |
-| **Queue**               | Laravel Queue (database driver) |
+| Layer                    | Technologies                                                             |
+| :----------------------- | :----------------------------------------------------------------------- |
+| **Backend**        | Laravel 12, PHP 8.2+                                                     |
+| **Frontend**       | Vue.js 3, Blade, Vanilla CSS/JS                                          |
+| **Build Tools**    | Vite 7, TailwindCSS 4                                                    |
+| **Database**       | MySQL (Search: Laravel Scout + TNTSearch)                                |
+| **Real-time**      | Pusher (Channels & Notifications)                                        |
+| **Images/Storage** | Cloudinary & Local Storage                                               |
+| **Integrations**   | Shopify Admin API, 17Track, Google Workspace (OAuth2), Meta/WhatsApp API |
+
+---
+
+## 🛠 Developer & Admin Commands
+
+Use these custom Artisan commands for system maintenance and emergency recovery:
+
+| Command                           | Description                                                               |
+| :-------------------------------- | :------------------------------------------------------------------------ |
+| `php artisan device:approve`    | **Emergency** grant trust to an admin device via phone/email token. |
+| `php artisan ip:reset`          | Flush security whitelists and reset access to default.                    |
+| `php artisan melee:recalculate` | Re-sync inventory weights from transaction logs.                          |
+| `php artisan orders:remind`     | Batch send notifications for overdue石 (stones) or unpaid invoices.       |
+| `php artisan tracking:sync-all` | Trigger a global sync with the 17Track API for all active shipments.      |
 
 ---
 
 ## 📊 Scale
 
-| Metric               | Count |
-| -------------------- | ----- |
-| Controllers          | 37+   |
-| Eloquent Models      | 50+   |
-| View Directories     | 35+   |
-| Route Definitions    | ~250+ |
-| Currencies Supported | 7     |
-| Invoice Regions      | 7     |
-| Permission Types     | 50+   |
-
----
-
-## 📸 Highlights
-
-- 🛍️ **Shopify Connected** — Centralized management of Shopify listings and draft order automation.
-- 🌙 **Modern Adaptive UI** — High-contrast dark mode and mobile-responsive layout for global access.
-- 🎯 **Kanban Lead Board** — Drag-and-drop pipeline for leads with WhatsApp messaging
-- 📊 **Consolidated Analytics** — Visual target tracking across multiple business entities.
-- 📄 **PDF Invoices** — Auto-generated with amount in words, tax breakdowns, and multi-currency
-- 💬 **Threaded Chat** — Slack-like messaging with channels, threads, and file attachments
-- 📧 **Gmail Inbox** — Read, compose, reply, and forward directly from the CRM
-- 📦 **Excel Import/Export** — Bulk diamond operations with error reporting
-- 🔔 **Smart Notifications** — Overdue order alerts and draft completion reminders
+| Metric            | Count |
+| :---------------- | :---- |
+| Eloquent Models   | 58+   |
+| Controllers       | 41+   |
+| Route Definitions | ~250+ |
+| Permission Types  | 50+   |
+| Supported Regions | 7     |
 
 ---
 
 ## 📜 License
 
-**This project is proprietary and confidential.**
-
-This repository is private and is not licensed for public use, modification, or distribution. All rights are reserved. Unauthorized copying, redistribution, or use of this software is strictly prohibited.
-
----
+**Proprietary and Confidential.**
+This repository is private. Unauthorized copying, redistribution, or use of this software is strictly prohibited. All rights reserved.
 
 <p align="center">
-  Built with ❤️ using Laravel
+  Built with ❤️ for the Diamond Industry
 </p>
