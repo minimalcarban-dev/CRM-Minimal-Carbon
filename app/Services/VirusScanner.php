@@ -15,7 +15,7 @@ class VirusScanner
 	 */
 	public function scan(string $absolutePath): array
 	{
-		$shouldScan = filter_var(env('CHAT_VIRUS_SCAN', false), FILTER_VALIDATE_BOOL);
+		$shouldScan = filter_var(config('chat.virus_scan', false), FILTER_VALIDATE_BOOL);
 		if (!$shouldScan) {
 			return ['clean' => true, 'message' => 'Scanning disabled'];
 		}

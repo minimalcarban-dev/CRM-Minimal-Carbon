@@ -276,9 +276,9 @@
                     <span class="badge-info">Max 10 Images</span>
                 </span>
             </label>
-            <input type="file" name="images[]" id="product_images" class="file-input-hidden" accept="image/*" multiple
-                {{ !isset($order) || !$order ? 'required' : '' }}> <label for="product_images" class="file-upload-area"
-                id="imageUploadArea">
+            @include('orders.partials.existing_files', ['type' => 'images'])
+            <input type="file" name="images[]" id="product_images" class="file-input-hidden" accept="image/*" multiple {{ !isset($order) || !$order ? 'required' : '' }}>
+            <label for="product_images" class="file-upload-area" id="imageUploadArea">
                 <div class="file-upload-content">
                     <div class="file-upload-icon diamond">
                         <i class="bi bi-cloud-upload"></i>
@@ -304,8 +304,8 @@
                     <span class="badge-info">Max 5 PDFs</span>
                 </span>
             </label>
-            <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden" accept="application/pdf"
-                multiple>
+            @include('orders.partials.existing_files', ['type' => 'pdfs'])
+            <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden" accept="application/pdf" multiple>
             <label for="order_pdfs" class="file-upload-area pdf" id="pdfUploadArea">
                 <div class="file-upload-content">
                     <div class="file-upload-icon pdf">

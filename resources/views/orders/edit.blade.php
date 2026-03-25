@@ -20,98 +20,6 @@
         </div>
     </div>
 
-    <!-- Currently Uploaded Files Section -->
-    @if($order->images || $order->order_pdfs)
-        <div class="current-files-section mb-4">
-            <div class="card-custom p-lg-4 p-xl-4 p-md-4 p-sm-4 p-2">
-                <h5 class="section-title mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
-                    <i class="bi bi-folder2-open"></i> Currently Uploaded Files
-                </h5>
-
-                <div class="row">
-                    <!-- Current Images -->
-                    @php
-                        $images = $order->images;
-                        if (is_string($images)) {
-                            $images = json_decode($images, true) ?: [];
-                        }
-                        if (is_array($images) && count($images) === 1 && is_string($images[0])) {
-                            $decoded = json_decode($images[0], true);
-                            if (is_array($decoded))
-                                $images = $decoded;
-                        }
-                        $images = is_array($images) ? $images : [];
-                    @endphp
-                    @if(!empty($images))
-                        <div class="col-md-6 mb-lg-4 mb-xl-4 mb-md-4 mb-sm-4 mb-2">
-                            <div class="file-section">
-                                <div class="file-section-header">
-                                    <i class="bi bi-images"></i>
-                                    <span>Product Images ({{ count($images) }})</span>
-                                </div>
-                                <div class="current-images-grid">
-                                    @foreach($images as $index => $image)
-                                        @php
-                                            $url = is_array($image) ? ($image['url'] ?? '') : $image;
-                                        @endphp
-                                        <div class="current-image-item" id="image-{{ $index }}">
-                                            <img src="{{ $url }}" alt="Image {{ $index + 1 }}" onclick="openImageModal(this.src)">
-                                            <button type="button" class="remove-existing-file"
-                                                onclick="removeExistingFile('{{ $url }}', 'image', 'image-{{ $index }}', event)">
-                                                <i class="bi bi-x"></i>
-                                            </button>
-                                            <div class="image-overlay">
-                                                <i class="bi bi-zoom-in"></i>
-                                            </div>
-                                            <div class="image-label">Image {{ $index + 1 }}</div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- Current PDFs -->
-                    @php
-                        $pdfs = (array) $order->order_pdfs;
-                    @endphp
-                    @if(!empty($pdfs))
-                        <div class="col-md-6 mb-3">
-                            <div class="file-section">
-                                <div class="file-section-header">
-                                    <i class="bi bi-file-pdf"></i>
-                                    <span>PDF Documents ({{ count($pdfs) }})</span>
-                                </div>
-                                <div class="current-pdfs-list">
-                                    @foreach($pdfs as $index => $pdf)
-                                        @php
-                                            $path = is_array($pdf) ? $pdf['url'] : $pdf;
-                                            $name = is_array($pdf) ? $pdf['name'] : basename($pdf);
-                                        @endphp
-                                        <div class="current-pdf-wrapper" id="pdf-{{ $index }}">
-                                            <a href="{{ asset($path) }}" target="_blank" class="current-pdf-item">
-                                                <div class="pdf-icon">
-                                                    <i class="bi bi-file-pdf-fill"></i>
-                                                </div>
-                                                <div class="pdf-info">
-                                                    <div class="pdf-name">{{ $name }}</div>
-                                                    <div class="pdf-action">Click to view <i class="bi bi-box-arrow-up-right"></i></div>
-                                                </div>
-                                            </a>
-                                            <button type="button" class="remove-pdf-btn"
-                                                onclick="removeExistingFile('{{ $path }}', 'pdf', 'pdf-{{ $index }}')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    @endif
 
     <div class="card-custom p-0 p-lg-4 p-xl-4 p-md-4 p-sm-4">
         @if(in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
@@ -166,10 +74,31 @@
         </form>
     </div>
 
-    <!-- Image Modal -->
-    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
-        <span class="modal-close">&times;</span>
-        <img class="modal-content" id="modalImage">
+    {{-- ─── IMAGE MODAL (exact match with show.blade.php) ── --}}
+    <div id="imageModal" class="od-modal no-print" onclick="closeImageModal()">
+        <div class="od-modal-box" style="max-width:1000px; height:auto; max-height:92vh;" onclick="event.stopPropagation()">
+            <div class="od-modal-head">
+                <h3 id="imageModalTitle">Image Viewer</h3>
+                <button class="od-modal-close" onclick="closeImageModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="od-modal-body" style="background:#000; display:flex; align-items:center; justify-content:center;">
+                <img id="imageViewer" src="" alt="Image" style="max-width:100%; max-height:80vh; object-fit:contain;">
+            </div>
+        </div>
+    </div>
+
+    {{-- ─── PDF MODAL (exact match with show.blade.php) ── --}}
+    <div id="pdfModal" class="od-modal no-print" onclick="closePDFModal()">
+        <div class="od-modal-box" onclick="event.stopPropagation()">
+            <div class="od-modal-head">
+                <h3 id="pdfModalTitle">Document Viewer</h3>
+                <button class="od-modal-close" onclick="closePDFModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="od-modal-body">
+                <iframe id="pdfViewer" src="" frameborder="0"
+                    style="width:100%; height:100%; min-height:0; flex:1;"></iframe>
+            </div>
+        </div>
     </div>
 
     <style>
@@ -394,47 +323,226 @@
             font-weight: 500;
         }
 
-        /* Image Modal */
-        .image-modal {
+        /* ── Preview Modals (copied from show.blade.php) ── */
+        .od-modal {
             display: none;
             position: fixed;
-            z-index: 9999;
-            padding-top: 60px;
-            left: 0;
-            top: 0;
+            inset: 0;
+            background: rgba(15, 23, 42, .75);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            backdrop-filter: blur(3px);
+        }
+
+        .od-modal.active {
+            display: flex;
+        }
+
+        .od-modal-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            width: 95vw;
+            max-width: 1300px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .od-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1.5px solid var(--border);
+            background: var(--bg);
+            gap: .75rem;
+        }
+
+        .od-modal-head h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .od-modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            color: var(--muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .875rem;
+            transition: var(--transition);
+        }
+
+        .od-modal-close:hover {
+            background: var(--danger-soft);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .od-modal-body {
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .od-modal-body iframe,
+        .od-modal-body img {
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.95);
-        }
-
-        .modal-content {
-            margin: auto;
+            object-fit: contain;
+            border: none;
             display: block;
-            max-width: 90%;
-            max-height: 85%;
-            border-radius: 8px;
         }
 
-        .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-            color: white;
-            font-size: 48px;
-            font-weight: 300;
+        /* ── Images Grid (copied from show.blade.php) ── */
+        .od-img-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: .625rem;
+         padding-bottom: 10px;
+        }
+
+        .od-img-item {
+            aspect-ratio: 1;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
             cursor: pointer;
-            transition: 0.3s;
+            border: 1.5px solid var(--border);
+            position: relative;
+            transition: var(--transition);
+         border-radius: 12px;
         }
 
-        .modal-close:hover {
-            color: #bbb;
+        .od-img-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
         }
 
-        /* File Upload Preview Styles - To be added to your form fields */
+        .od-img-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+            border-radius: 12px;
+        }
+
+        .od-img-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .od-img-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+            color: #fff;
+            font-size: 1.25rem;
+        }
+
+        .od-img-item:hover .od-img-overlay {
+            opacity: 1;
+        }
+
+        .od-pdf-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: .75rem;
+            margin-bottom: 0.75rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .od-pdf-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .od-pdf-icon {
+            width: 42px;
+            height: 42px;
+            background: #fdf2f2;
+            border-radius: .625rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ef4444;
+            font-size: 1.25rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .od-pdf-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .od-pdf-name {
+            font-size: .875rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0 0 .125rem 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .od-pdf-size {
+            font-size: .75rem;
+            color: var(--muted);
+            display: block;
+        }
+
+        .od-pdf-actions {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-left: 1rem;
+        }
+
+        .od-pdf-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: .5rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .875rem;
+            transition: var(--transition);
+        }
+
+        .od-pdf-btn:hover {
         .file-upload-preview {
             margin-top: 1rem;
             display: none;
+            padding: 1.25rem;
+            background: rgba(var(--primary-rgb), 0.02);
+            border: 1.5px dashed var(--border);
+            border-radius: var(--radius);
         }
 
         .file-upload-preview.active {
@@ -443,44 +551,12 @@
 
         .preview-header {
             font-size: 0.875rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--dark);
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .preview-header i {
-            color: var(--primary);
-        }
-
-        .preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 0.75rem;
-        }
-
-        .preview-item {
-            position: relative;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            padding: 0.5rem;
-            background: var(--bg-body);
-            text-align: center;
-        }
-
-        .preview-item img {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
-        }
-
-        .preview-item .file-name {
-            font-size: 0.75rem;
-            color: var(--dark);
             font-weight: 500;
             word-break: break-all;
             line-height: 1.3;
@@ -1066,12 +1142,13 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                                            <div class="preview-header">
-                                                                                <i class="bi bi-images"></i>
-                                                                                <span>Selected Images (${files.length})</span>
-                                                                            </div>
-                                                                            <div class="preview-grid" id="imagePreviewGrid"></div>
-                                                                        `;
+                    <div class="preview-header mb-3 d-flex align-items-center">
+                        <i class="bi bi-images text-primary me-2"></i>
+                        <span class="fw-bold">Selected Images</span>
+                        <span class="od-badge od-badge-images">${files.length}</span>
+                    </div>
+                    <div class="od-img-grid" id="imagePreviewGrid"></div>
+                `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -1080,11 +1157,14 @@
                     const reader = new FileReader();
                     reader.onload = function (e) {
                         const previewItem = document.createElement('div');
-                        previewItem.className = 'preview-item';
+                        previewItem.className = 'od-img-item';
+                        previewItem.onclick = () => viewImage(e.target.result, file.name);
                         previewItem.innerHTML = `
-                                                                                    <img src="${e.target.result}" alt="${file.name}">
-                                                                                    <div class="file-name">${file.name}</div>
-                                                                                `;
+                            <img src="${e.target.result}" alt="${file.name}">
+                            <div class="od-img-overlay">
+                                <i class="bi bi-zoom-in"></i>
+                            </div>
+                        `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -1103,29 +1183,37 @@
                 }
 
                 previewContainer.innerHTML = `
-                                                                            <div class="preview-header">
-                                                                                <i class="bi bi-file-pdf"></i>
-                                                                                <span>Selected PDFs (${files.length})</span>
-                                                                            </div>
-                                                                            <div id="pdfPreviewList"></div>
-                                                                        `;
+                    <div class="preview-header mb-3 d-flex align-items-center">
+                        <i class="bi bi-file-pdf text-danger me-2"></i>
+                        <span class="fw-bold">Selected Documents</span>
+                        <span class="od-badge od-badge-pdfs">${files.length}</span>
+                    </div>
+                    <div id="pdfPreviewList" class="current-pdfs-list"></div>
+                `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
 
                 files.forEach((file, index) => {
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2); // Convert to MB
+                    const fileUrl = URL.createObjectURL(file);
+                    
                     const previewItem = document.createElement('div');
-                    previewItem.className = 'pdf-preview-item';
-                    const fileSize = (file.size / 1024).toFixed(2);
+                    previewItem.className = 'od-pdf-item';
                     previewItem.innerHTML = `
-                                                                                <div class="pdf-preview-icon">
-                                                                                    <i class="bi bi-file-pdf-fill"></i>
-                                                                                </div>
-                                                                                <div class="pdf-preview-info">
-                                                                                    <div class="pdf-preview-name">${file.name}</div>
-                                                                                    <div class="pdf-preview-size">${fileSize} KB</div>
-                                                                                </div>
-                                                                            `;
+                        <div class="od-pdf-icon">
+                            <i class="bi bi-file-pdf"></i>
+                        </div>
+                        <div class="od-pdf-info" style="cursor: pointer;" onclick="viewPDF('${fileUrl}', '${file.name.replace(/'/g, "\\'")}')">
+                            <p class="od-pdf-name">${file.name}</p>
+                            <span class="od-pdf-size">${fileSize} MB</span>
+                        </div>
+                        <div class="od-pdf-actions">
+                            <button type="button" class="od-pdf-btn" title="View" onclick="viewPDF('${fileUrl}', '${file.name.replace(/'/g, "\\'")}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    `;
                     list.appendChild(previewItem);
                 });
             }
@@ -1183,21 +1271,69 @@
                 });
         }
 
-        function openImageModal(src) {
-            const modal = document.getElementById('imageModal');
-            const modalImg = document.getElementById('modalImage');
-            modal.style.display = 'block';
-            modalImg.src = src;
+        /* ── Image viewer (exact match with show.blade.php) ── */
+        function viewImage(url, name) {
+            document.getElementById('imageViewer').src = url;
+            document.getElementById('imageModalTitle').textContent = name || 'Image Viewer';
+            document.getElementById('imageModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
-
         function closeImageModal() {
-            document.getElementById('imageModal').style.display = 'none';
+            document.getElementById('imageModal').classList.remove('active');
+            document.getElementById('imageViewer').src = '';
+            document.body.style.overflow = '';
         }
 
-        // Close modal on Escape key
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                closeImageModal();
+        /* ── PDF viewer (exact match with show.blade.php + blob support) ── */
+        function viewPDF(url, name) {
+            let viewerUrl = url;
+            // Use Google Docs Viewer for remote URLs, but direct for local blobs
+            if (!url.startsWith('blob:')) {
+                viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+            }
+            document.getElementById('pdfViewer').src = viewerUrl;
+            document.getElementById('pdfModalTitle').textContent = name || 'Document Viewer';
+            document.getElementById('pdfModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closePDFModal() {
+            document.getElementById('pdfModal').classList.remove('active');
+            document.getElementById('pdfViewer').src = '';
+            document.body.style.overflow = '';
+        }
+
+        /* ── PDF download (exact match with show.blade.php) ── */
+        async function downloadPDF(url, filename) {
+            const btn = event.target.closest('button');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            btn.disabled = true;
+            try {
+                const res = await fetch(url);
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            } catch (e) {
+                alert('Download failed. Please try again.');
+            } finally {
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }
+        }
+
+        /* ── Legend Compatibility Aliases ── */
+        function openImageModal(src) { viewImage(src, 'Image Viewer'); }
+
+        /* ── Keyboard shortcuts ── */
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { 
+                closeImageModal(); 
+                closePDFModal(); 
             }
         });
     </script>

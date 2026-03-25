@@ -18,30 +18,32 @@ return new class extends Migration {
         });
 
         // Modify the ENUM using raw statement to add the cancel statuses
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN diamond_status ENUM(
-            'r_order_in_process',
-            'r_order_shipped',
-            'r_order_cancelled',
-            'd_diamond_in_discuss',
-            'd_diamond_in_making',
-            'd_diamond_completed',
-            'd_diamond_in_certificate',
-            'd_order_shipped',
-            'd_order_cancelled',
-            'j_diamond_in_progress',
-            'j_diamond_completed',
-            'j_diamond_in_discuss',
-            'j_cad_in_progress',
-            'j_cad_done',
-            'j_order_completed',
-            'j_order_in_qc',
-            'j_qc_done',
-            'j_order_shipped',
-            'j_order_hold',
-            'j_order_cancelled',
-            'processed',
-            'completed'
-        ) NULL COMMENT 'Production progress'");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN diamond_status ENUM(
+                'r_order_in_process',
+                'r_order_shipped',
+                'r_order_cancelled',
+                'd_diamond_in_discuss',
+                'd_diamond_in_making',
+                'd_diamond_completed',
+                'd_diamond_in_certificate',
+                'd_order_shipped',
+                'd_order_cancelled',
+                'j_diamond_in_progress',
+                'j_diamond_completed',
+                'j_diamond_in_discuss',
+                'j_cad_in_progress',
+                'j_cad_done',
+                'j_order_completed',
+                'j_order_in_qc',
+                'j_qc_done',
+                'j_order_shipped',
+                'j_order_hold',
+                'j_order_cancelled',
+                'processed',
+                'completed'
+            ) NULL COMMENT 'Production progress'");
+        }
     }
 
     /**
@@ -58,27 +60,29 @@ return new class extends Migration {
         ");
 
         // Revert the ENUM first
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN diamond_status ENUM(
-            'r_order_in_process',
-            'r_order_shipped',
-            'd_diamond_in_discuss',
-            'd_diamond_in_making',
-            'd_diamond_completed',
-            'd_diamond_in_certificate',
-            'd_order_shipped',
-            'j_diamond_in_progress',
-            'j_diamond_completed',
-            'j_diamond_in_discuss',
-            'j_cad_in_progress',
-            'j_cad_done',
-            'j_order_completed',
-            'j_order_in_qc',
-            'j_qc_done',
-            'j_order_shipped',
-            'j_order_hold',
-            'processed',
-            'completed'
-        ) NULL COMMENT 'Production progress'");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN diamond_status ENUM(
+                'r_order_in_process',
+                'r_order_shipped',
+                'd_diamond_in_discuss',
+                'd_diamond_in_making',
+                'd_diamond_completed',
+                'd_diamond_in_certificate',
+                'd_order_shipped',
+                'j_diamond_in_progress',
+                'j_diamond_completed',
+                'j_diamond_in_discuss',
+                'j_cad_in_progress',
+                'j_cad_done',
+                'j_order_completed',
+                'j_order_in_qc',
+                'j_qc_done',
+                'j_order_shipped',
+                'j_order_hold',
+                'processed',
+                'completed'
+            ) NULL COMMENT 'Production progress'");
+        }
 
         Schema::table('orders', function (Blueprint $table) {
             $table->dropForeign(['cancelled_by']);

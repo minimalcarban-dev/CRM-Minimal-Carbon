@@ -38,7 +38,9 @@ return new class extends Migration {
         }
 
         // Now change column type from JSON to VARCHAR
-        DB::statement('ALTER TABLE orders MODIFY diamond_sku VARCHAR(191) NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE orders MODIFY diamond_sku VARCHAR(191) NULL');
+        }
     }
 
     /**
@@ -47,6 +49,8 @@ return new class extends Migration {
     public function down(): void
     {
         // Revert to JSON type (not recommended but provided for rollback)
-        DB::statement('ALTER TABLE orders MODIFY diamond_sku JSON NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE orders MODIFY diamond_sku JSON NULL');
+        }
     }
 };
