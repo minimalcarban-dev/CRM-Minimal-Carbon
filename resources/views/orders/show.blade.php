@@ -1865,10 +1865,10 @@
                 </div>
             @endif
 
-            @if($order->factory)
+            @if($order->factoryRelation)
                 <div class="od-meta-card">
                     <span class="od-meta-label">Factory</span>
-                    <span class="od-meta-value">{{ $order->factory->name }} ({{ $order->factory->code }})</span>
+                    <span class="od-meta-value">{{ $order->factoryRelation->name }} ({{ $order->factoryRelation->code }})</span>
                 </div>
             @endif
 

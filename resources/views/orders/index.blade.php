@@ -323,6 +323,15 @@
                     </option>
                 </select>
 
+                <select name="factory_id" class="filter-select">
+                    <option value="">All Factories</option>
+                    @foreach($factories ?? [] as $factory)
+                        <option value="{{ $factory->id }}" {{ request('factory_id') == $factory->id ? 'selected' : '' }}>
+                            {{ $factory->name }}
+                        </option>
+                    @endforeach
+                </select>
+
                 <select name="diamond_status" class="filter-select">
                     <option value="">All Diamond Status</option>
 
@@ -503,8 +512,10 @@
                         });
 
                         // Auto-submit on diamond status change
-                        statusSelect.addEventListener('change', function() {
-                            filterForm.submit();
+                        document.querySelectorAll('.filter-select').forEach(select => {
+                            select.addEventListener('change', function() {
+                                filterForm.submit();
+                            });
                         });
 
                         // Debounced auto-submit on search input
@@ -570,6 +581,164 @@
                             });
                         }
                     });
+                </script>
+
+                {{-- Action Dropdown Menu Handler --}}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Portal-based dropdown renderer - renders menu at body level to escape overflow
+                        class ActionDropdownPortal {
+                            constructor(btnElement, menuElement) {
+                                this.btn = btnElement;
+                                this.menu = menuElement;
+                                this.orderId = btnElement.getAttribute('data-order-id');
+                                this.portalElement = null;
+                                this.isOpen = false;
+                                
+                                this.init();
+                            }
+
+                            init() {
+                                // Listen for button clicks
+                                this.btn.addEventListener('click', (e) => this.toggle(e));
+                                
+                                // Close on outside click
+                                document.addEventListener('click', (e) => this.handleOutsideClick(e));
+                                
+                                // Close on escape key
+                                document.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Escape' && this.isOpen) {
+                                        this.close();
+                                    }
+                                });
+                                
+                                // Close on menu item click
+                                this.menu.querySelectorAll('.action-menu-item').forEach(item => {
+                                    item.addEventListener('click', () => this.close());
+                                });
+                            }
+
+                            toggle(e) {
+                                e.stopPropagation();
+                                if (this.isOpen) {
+                                    this.close();
+                                } else {
+                                    this.open();
+                                }
+                            }
+
+                            open() {
+                                // Close all other open dropdowns
+                                document.querySelectorAll('.action-portal-menu').forEach(portal => {
+                                    if (portal !== this.portalElement) {
+                                        portal.remove();
+                                    }
+                                });
+                                document.querySelectorAll('[id^="actionBtn"]').forEach(btn => {
+                                    btn.classList.remove('active');
+                                });
+
+                                // Create portal element
+                                this.portalElement = document.createElement('div');
+                                this.portalElement.className = 'action-portal-menu';
+                                
+                                // Clone menu and position it
+                                const clonedMenu = this.menu.cloneNode(true);
+                                clonedMenu.style.display = 'block';
+                                
+                                // Position menu relative to button
+                                const rect = this.btn.getBoundingClientRect();
+                                this.portalElement.style.position = 'fixed';
+                                this.portalElement.style.top = (rect.bottom + 8) + 'px';
+                                this.portalElement.style.right = (window.innerWidth - rect.right) + 'px';
+                                this.portalElement.style.zIndex = '99999';
+                                
+                                this.portalElement.appendChild(clonedMenu);
+                                document.body.appendChild(this.portalElement);
+
+                                // Re-attach click handlers to cloned items
+                                this.portalElement.querySelectorAll('.action-menu-item').forEach((item, idx) => {
+                                    const originalItem = this.menu.querySelectorAll('.action-menu-item')[idx];
+                                    if (originalItem.href) {
+                                        item.href = originalItem.href;
+                                    }
+                                    item.addEventListener('click', (e) => {
+                                        if (originalItem.hasAttribute('href')) {
+                                            e.preventDefault();
+                                            window.location.href = originalItem.href;
+                                        }
+                                    });
+                                });
+
+                                this.btn.classList.add('active');
+                                this.isOpen = true;
+                            }
+
+                            close() {
+                                if (this.portalElement) {
+                                    this.portalElement.remove();
+                                    this.portalElement = null;
+                                }
+                                this.btn.classList.remove('active');
+                                this.isOpen = false;
+                            }
+
+                            handleOutsideClick(e) {
+                                const isClickOnBtn = e.target.closest(`#actionBtn${this.orderId}`);
+                                const isClickOnPortal = e.target.closest('.action-portal-menu');
+                                
+                                if (!isClickOnBtn && !isClickOnPortal && this.isOpen) {
+                                    this.close();
+                                }
+                            }
+                        }
+
+                        // Initialize all action dropdowns
+                        const actionButtons = document.querySelectorAll('[id^="actionBtn"]');
+                        const dropdowns = new Map();
+
+                        actionButtons.forEach(btn => {
+                            const orderId = btn.getAttribute('data-order-id');
+                            const menu = document.getElementById(`actionMenu${orderId}`);
+                            if (menu) {
+                                dropdowns.set(orderId, new ActionDropdownPortal(btn, menu));
+                            }
+                        });
+
+                        // Close all dropdowns on escape
+                        document.addEventListener('keydown', (e) => {
+                            if (e.key === 'Escape') {
+                                dropdowns.forEach(dropdown => dropdown.close());
+                            }
+                        });
+                    });
+
+                    // Delete order function
+                    function deleteOrder(orderId) {
+                        Swal.fire({
+                            title: 'Delete Order?',
+                            text: 'This action cannot be undone.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: 'Yes, delete it!',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Create and submit a hidden form for delete
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.action = `/admin/orders/${orderId}`;
+                                form.innerHTML = `
+                                    @csrf
+                                    @method('DELETE')
+                                `;
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                    }
                 </script>
 
                 <button type="submit" class="btn-filter">
@@ -671,16 +840,6 @@
                                     <td>
                                         <div class="custom-row">
                                             <span class="order-id-badge mb-2">#{{ $order->id }}</span>
-                                            {{-- Diamond Status --}}
-                                            @php
-                                                $statusKey = $order->diamond_status ?? 'processed';
-                                                $color = $statusColors[$statusKey] ?? 'secondary';
-                                                $icon = $statusIcons[$statusKey] ?? 'bi-circle';
-                                            @endphp
-                                            <span class="badge-item badge-status status-{{ $color }}">
-                                                <i class="bi {{ $icon }}"></i>
-                                                {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}
-                                            </span>
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
                                             @php
@@ -699,19 +858,28 @@
                                                         : []);
                                                 $skuText = !empty($skus) ? implode(', ', $skus) : '—';
                                             @endphp
-
-                                            <div class="thumbnail-container {{ $firstImage ? 'has-image' : '' }}"
-                                                @if ($firstImage) data-preview-src="{{ $firstImage['url'] }}"
-                                                    tabindex="0"
-                                                    role="button"
-                                                    aria-label="Preview product image for order #{{ $order->id }}" @endif>
-                                                @if ($firstImage)
-                                                    <img src="{{ $firstImage['url'] }}" alt="Product">
-                                                @else
-                                                    <div
-                                                        class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
-                                                        <i class="bi bi-image" style="font-size: 1.5rem;"></i>
-                                                    </div>
+                                            <div class="image-with-sku">
+                                                <div class="thumbnail-container {{ $firstImage ? 'has-image' : '' }}"
+                                                    @if ($firstImage) data-preview-src="{{ $firstImage['url'] }}"
+                                                        tabindex="0"
+                                                        role="button"
+                                                        aria-label="Preview product image for order #{{ $order->id }}" @endif>
+                                                    @if ($firstImage)
+                                                        <img src="{{ $firstImage['url'] }}" alt="Product">
+                                                    @else
+                                                        <div
+                                                            class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
+                                                            <i class="bi bi-image" style="font-size: 1.5rem;"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                {{-- SKU --}}
+                                                @if ($skuText !== '—')
+                                                    <span class="badge-item badge-sku mt-2"
+                                                        style="background-color: rgb(253 240 240 / 60%); border-color: rgb(212 45 45 / 50%); color: #ff0101; font-weight: normal;"
+                                                        title="{{ $skuText }}">
+                                                        <i class="bi bi-upc-scan"></i> {{ Str::limit($skuText, 15) }}
+                                                    </span>
                                                 @endif
                                             </div>
 
@@ -737,17 +905,23 @@
                                                         <i class="bi bi-award"></i> Custom Jewellery
                                                     </span>
                                                 @endif
-
-
-
-                                                {{-- SKU --}}
-                                                @if ($skuText !== '—')
-                                                    <span class="badge-item badge-sku"
-                                                        style="background-color: rgb(253 240 240 / 60%); border-color: rgb(212 45 45 / 50%); color: #ff0101; font-weight: normal;"
-                                                        title="{{ $skuText }}">
-                                                        <i class="bi bi-upc-scan"></i> {{ Str::limit($skuText, 15) }}
+                                                {{-- add factory name with these status --}}
+                                                @if ($order->factoryRelation)
+                                                    <span class="badge-item badge-factory">
+                                                        <i class="bi bi-building"></i> {{ $order->factoryRelation->name }}
                                                     </span>
                                                 @endif
+
+                                                {{-- Diamond Status --}}
+                                                @php
+                                                    $statusKey = $order->diamond_status ?? 'processed';
+                                                    $color = $statusColors[$statusKey] ?? 'secondary';
+                                                    $icon = $statusIcons[$statusKey] ?? 'bi-circle';
+                                                @endphp
+                                                <span class="badge-item badge-status status-{{ $color }}">
+                                                    <i class="bi {{ $icon }}"></i>
+                                                    {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -882,43 +1056,50 @@
                                         </div>
                                     </td>
                                     <td class="td-actions">
-                                        <div class="action-buttons">
-                                            <a href="{{ route('orders.show', $order->id) }}"
-                                                class="action-btn action-btn-view" title="View Order">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-
-                                            @if (auth()->guard('admin')->user() &&
-                                                    auth()->guard('admin')->user()->canAccessAny(['orders.edit']))
-                                                <a href="{{ route('orders.edit', $order->id) }}"
-                                                    class="action-btn action-btn-edit" title="Edit Order">
-                                                    <i class="bi bi-pencil"></i>
+                                        <div class="action-dropdown-wrapper">
+                                            <button type="button" class="action-menu-btn" id="actionBtn{{ $order->id }}"
+                                                data-order-id="{{ $order->id }}" title="Actions">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <div class="action-dropdown-menu" id="actionMenu{{ $order->id }}" style="display: none;">
+                                                {{-- View Option --}}
+                                                <a href="{{ route('orders.show', $order->id) }}"
+                                                    class="action-menu-item action-menu-view">
+                                                    <i class="bi bi-eye"></i>
+                                                    <span>View Order</span>
                                                 </a>
-                                            @endif
 
-                                            @if (auth()->guard('admin')->user() &&
-                                                    auth()->guard('admin')->user()->hasPermission('orders.cancel') &&
-                                                    !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
-                                                <button type="button" class="action-btn action-btn-cancel"
-                                                    title="Cancel Order"
-                                                    onclick="openCancelModal({{ $order->id }}, '{{ addslashes($order->client_name) }}')"
-                                                    style="color: #dc3545; background: rgba(220, 53, 69, 0.1);">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            @endif
+                                                {{-- Edit Option --}}
+                                                @if (auth()->guard('admin')->user() &&
+                                                        auth()->guard('admin')->user()->canAccessAny(['orders.edit']))
+                                                    <a href="{{ route('orders.edit', $order->id) }}"
+                                                        class="action-menu-item action-menu-edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                        <span>Edit Order</span>
+                                                    </a>
+                                                @endif
 
-                                            @if (auth()->guard('admin')->user() &&
-                                                    auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
-                                                <form action="{{ route('orders.destroy', $order->id) }}" method="POST"
-                                                    class="d-inline delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="action-btn action-btn-delete"
-                                                        title="Delete Order">
-                                                        <i class="bi bi-trash"></i>
+                                                {{-- Cancel Option --}}
+                                                @if (auth()->guard('admin')->user() &&
+                                                        auth()->guard('admin')->user()->hasPermission('orders.cancel') &&
+                                                        !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
+                                                    <button type="button" class="action-menu-item action-menu-cancel"
+                                                        onclick="openCancelModal({{ $order->id }}, '{{ addslashes($order->client_name) }}')">
+                                                        <i class="bi bi-x-circle"></i>
+                                                        <span>Cancel Order</span>
                                                     </button>
-                                                </form>
-                                            @endif
+                                                @endif
+
+                                                {{-- Delete Option --}}
+                                                @if (auth()->guard('admin')->user() &&
+                                                        auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
+                                                    <button type="button" class="action-menu-item action-menu-delete"
+                                                        onclick="deleteOrder({{ $order->id }})">
+                                                        <i class="bi bi-trash"></i>
+                                                        <span>Delete Order</span>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -1823,6 +2004,73 @@
             background: #dc2626;
         }
 
+        .btn-more-filters {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #64748b;
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-left: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn-more-filters:hover {
+            background: rgba(100, 116, 139, 0.1);
+            color: #475569;
+            border-color: #475569;
+        }
+
+        .btn-more-filters:active,
+        .btn-more-filters[aria-expanded="true"] {
+            background: #64748b;
+            color: white;
+            border-color: #64748b;
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+        }
+
+        /* Dropdown Menu Styling */
+        .dropdown-menu {
+            border: 1px solid var(--border) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+            background: var(--bg-card) !important;
+            min-width: 260px;
+            margin-top: 0.5rem !important;
+        }
+
+        .dropdown-item.filter-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #475569;
+            transition: all 0.15s;
+            border: none;
+        }
+
+        .dropdown-item.filter-menu-item:hover {
+            background: rgba(100, 116, 139, 0.08) !important;
+            color: #64748b;
+        }
+
+        .dropdown-item.filter-menu-item.active {
+            background: rgba(79, 172, 254, 0.1) !important;
+            color: #4facfe !important;
+            font-weight: 600;
+        }
+
+        .dropdown-divider {
+            margin: 8px 0 !important;
+            background: var(--border) !important;
+        }
+
         .filter-info {
             display: flex;
             justify-content: flex-end;
@@ -1841,11 +2089,55 @@
             background: var(--bg-card);
             border-radius: 16px;
             box-shadow: 0 1px 3px var(--shadow);
-            overflow: hidden;
+            overflow: visible; /* allow dropdown to escape if needed */
+            position: relative;
         }
 
         .table-container {
             overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .td-actions {
+            position: relative; /* for absolute dropdown child */
+            z-index: 5;
+        }
+
+        .action-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+            z-index: 5;
+        }
+
+        .action-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            z-index: 9999;
+            overflow: hidden;
+            animation: slideDown 0.2s ease-out;
+            display: none; /* hidden in table, shown via portal */
+        }
+
+        /* Portal menu - rendered at body level to escape overflow */
+        .action-portal-menu {
+            position: fixed;
+            z-index: 99999;
+            background: transparent;
+            pointer-events: auto;
+        }
+
+        .action-portal-menu .action-dropdown-menu {
+            display: block !important;
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
         }
 
         .orders-table {
@@ -2420,6 +2712,132 @@
             border-color: var(--danger);
             color: var(--danger);
             background: rgba(239, 68, 68, 0.05);
+        }
+
+        /* Action Dropdown Menu */
+        .action-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .action-menu-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0;
+            outline: none;
+        }
+
+        .action-menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-md);
+            border-color: var(--info);
+            color: var(--info);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .action-menu-btn:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .action-menu-btn.active {
+            border-color: var(--info);
+            color: var(--info);
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .action-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            z-index: 9999;
+            overflow: hidden;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--dark);
+            text-decoration: none;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+            width: 100%;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .action-menu-item:hover {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .action-menu-item i {
+            font-size: 1rem;
+            width: 18px;
+            text-align: center;
+        }
+
+        .action-menu-view {
+            color: var(--info);
+        }
+
+        .action-menu-view:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .action-menu-edit {
+            color: var(--warning);
+        }
+
+        .action-menu-edit:hover {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .action-menu-cancel {
+            color: #f59e0b;
+        }
+
+        .action-menu-cancel:hover {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .action-menu-delete {
+            color: var(--danger);
+        }
+
+        .action-menu-delete:hover {
+            background: rgba(239, 68, 68, 0.1);
         }
 
         /* Empty State */
@@ -3199,13 +3617,28 @@
                 gap: 0.5rem;
             }
 
+            .action-dropdown-wrapper {
+                position: relative;
+            }
+
+            .action-dropdown-menu {
+                right: 0 !important;
+                left: auto !important;
+                min-width: 160px !important;
+            }
+
+            .action-menu-item {
+                padding: 10px 12px !important;
+                font-size: 0.85rem !important;
+            }
+
             .shipping-info-cell {
                 min-width: 120px;
             }
 
             /* .client-info {
-                                                                                                                                                                                                                                            text-align: start;
-                                                                                                                                                                                                                                        } */
+                text-align: start;
+            } */
         }
 
         /* Print Styles */
@@ -3294,12 +3727,22 @@
             .btn-filter,
             .btn-reset,
             .btn-overdue-filter,
-            .btn-cancelled-filter {
+            .btn-cancelled-filter,
+            .btn-more-filters {
                 min-height: 40px;
                 font-size: 0.8rem !important;
                 padding: 0.5rem 0.7rem !important;
                 border-width: 1.5px !important;
                 border-radius: 9px !important;
+            }
+
+            .dropdown-menu {
+                min-width: 200px !important;
+            }
+
+            .dropdown-item.filter-menu-item {
+                padding: 10px 12px !important;
+                font-size: 0.8rem !important;
             }
 
             .search-box {

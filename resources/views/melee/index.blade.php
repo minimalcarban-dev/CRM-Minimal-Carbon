@@ -1464,6 +1464,132 @@
                 display: table-cell !important;
             }
         }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px var(--shadow-md);
+        }
+
+        .stat-card-primary {
+            border-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .stat-card-primary:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .stat-card-success {
+            border-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .stat-card-success:hover {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-card-info {
+            border-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .stat-card-info:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .stat-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .stat-card-primary .stat-icon {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.05));
+            color: var(--primary);
+        }
+
+        .stat-card-success .stat-icon {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            color: var(--success);
+        }
+
+        .stat-card-info .stat-icon {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            color: var(--info);
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-trend {
+            font-size: 0.875rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat-breakdown {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .breakdown-item {
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .breakdown-success {
+            color: var(--success);
+        }
+
+        .breakdown-danger {
+            color: var(--danger);
+        }
     </style>
 
     <div class="inventory-management-container">
@@ -1493,6 +1619,63 @@
                 </button>
             </div>
         </div>
+
+        <!-- Stats Cards (visible to Super Admin only) -->
+        @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->is_super)
+            <div class="stats-grid">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Diamonds</div>
+                        <div class="stat-value">{{ number_format($allMeleeCount ?? 0) }}</div>
+                        <div class="stat-breakdown">
+                            <span class="breakdown-item breakdown-success" title="In Stock">
+                                <i class="bi bi-check-circle"></i> In: {{ number_format($inStockCount ?? 0) }}
+                            </span>
+                            <span class="breakdown-item text-secondary" title="Out of Stock">
+                                <i class="bi bi-dash-circle"></i> Out: {{ number_format($outOfStockCount ?? 0) }}
+                            </span>
+                            @if (($negativeStockCount ?? 0) > 0)
+                                <span class="breakdown-item breakdown-danger" title="Negative Stock">
+                                    <i class="bi bi-exclamation-triangle"></i> Neg:
+                                    {{ number_format($negativeStockCount ?? 0) }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card stat-card-success">
+                    <div class="stat-icon">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Value</div>
+                        <div class="stat-value">${{ number_format($totalValue ?? 0, 2) }}</div>
+                        <div class="stat-trend">
+                            <i class="bi bi-graph-up"></i> Inventory
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card stat-card-info">
+                    <div class="stat-icon">
+                        <i class="bi bi-tag"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Avg. Value</div>
+                        <div class="stat-value">
+                            ${{ number_format($avgValue ?? 0, 2) }}
+                        </div>
+                        <div class="stat-trend">
+                            <i class="bi bi-calculator"></i> Per Parcel
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Main Content Card -->
         <div class="inventory-card">

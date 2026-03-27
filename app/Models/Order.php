@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\AuditLog;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Order extends Model
 {
@@ -90,10 +91,12 @@ class Order extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function Factory()
+    public function factoryRelation(): BelongsTo
     {
         return $this->belongsTo(Factory::class, 'factory_id');
     }
+
+    
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'submitted_by');

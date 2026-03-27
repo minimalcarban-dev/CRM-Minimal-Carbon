@@ -51,11 +51,23 @@ class MeleeDiamondController extends Controller
             ->get();
 
         // Calculate Totals for Stats Cards
-        $totalParcels = MeleeDiamond::count();
-        $totalCarats = MeleeDiamond::sum('total_carat_weight');
-        $lowStockCount = MeleeDiamond::where('status', 'low_stock')->count();
+        $allMeleeCount = MeleeDiamond::count();
+        $inStockCount = MeleeDiamond::where('available_pieces', '>', 0)->count();
+        $outOfStockCount = MeleeDiamond::where('available_pieces', '=', 0)->count();
+        $negativeStockCount = MeleeDiamond::where('available_pieces', '<', 0)->count();
+        $totalValue = MeleeDiamond::sum('total_price');
+        $avgValue = $allMeleeCount > 0 ? $totalValue / $allMeleeCount : 0;
 
-        return view('melee.index', compact('labGrownCategories', 'naturalCategories', 'totalParcels', 'totalCarats', 'lowStockCount'));
+        return view('melee.index', compact(
+            'labGrownCategories',
+            'naturalCategories',
+            'allMeleeCount',
+            'inStockCount',
+            'outOfStockCount',
+            'negativeStockCount',
+            'totalValue',
+            'avgValue'
+        ));
     }
 
     /**
@@ -79,7 +91,7 @@ class MeleeDiamondController extends Controller
 
             $query->where(function ($q) use ($keywords) {
                 foreach ($keywords as $keyword) {
-                    if (trim($keyword) === '')
+                    if (trim($keyword) === ' ')
                         continue;
 
                     $q->where(function ($subQ) use ($keyword) {
