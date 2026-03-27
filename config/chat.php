@@ -14,4 +14,7 @@ return [
             'text/plain',
         ])
     ))))),
+
+    // Enable or disable virus scanning of attachments using ClamAV
+    'virus_scan' => env('CHAT_VIRUS_SCAN', false),
 ];

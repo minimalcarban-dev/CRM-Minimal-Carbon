@@ -33,7 +33,9 @@ return new class extends Migration {
 
         // Modify payment_mode enum to include bank_transfer and make nullable
         // Using raw SQL as Laravel doesn't support modifying enums directly
-        DB::statement("ALTER TABLE purchases MODIFY COLUMN payment_mode ENUM('upi', 'cash', 'bank_transfer') NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE purchases MODIFY COLUMN payment_mode ENUM('upi', 'cash', 'bank_transfer') NULL");
+        }
     }
 
     /**
@@ -54,6 +56,8 @@ return new class extends Migration {
         });
 
         // Revert payment_mode back to original enum (only if no bank_transfer records exist)
-        DB::statement("ALTER TABLE purchases MODIFY COLUMN payment_mode ENUM('upi', 'cash') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE purchases MODIFY COLUMN payment_mode ENUM('upi', 'cash') NOT NULL");
+        }
     }
 };

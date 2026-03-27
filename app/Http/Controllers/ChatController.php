@@ -943,20 +943,18 @@ class ChatController extends Controller
         }
 
         $user = Auth::guard('admin')->user();
+        $searchTerm = $request->input('query');
 
-        // Get channels the user has access to
-        // Get IDs of channels where the user is a member
-        $query = Message::query()
-            ->whereHas('channel.users', function ($q) use ($user) {
+        $messages = Message::search($searchTerm)->query(function ($query) use ($user, $request) {
+            $query->whereHas('channel.users', function ($q) use ($user) {
                 $q->where('admin_id', $user->id);
-            })
-            ->where('body', 'like', '%' . $request->input('query') . '%');
+            });
 
-        if ($request->channel_id) {
-            $query->where('channel_id', $request->channel_id);
-        }
+            if ($request->channel_id) {
+                $query->where('channel_id', $request->channel_id);
+            }
+        })->get();
 
-        $messages = $query->get();
         $messages->load(['sender', 'attachments', 'channel']);
 
         return response()->json($messages);

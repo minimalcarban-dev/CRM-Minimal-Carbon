@@ -43,7 +43,7 @@ class ShippingTrackingService
             ];
         }
 
-        $trackingData = $this->fetchFrom17Track($trackingNumber, $apiKey);
+        $trackingData = $this->fetchFrom17Track($trackingNumber, $apiKey, $carrierCode);
 
         if ($trackingData['success']) {
             $order->update([
@@ -77,7 +77,7 @@ class ShippingTrackingService
 
         $name = strtolower(trim($companyName));
 
-        if (str_contains($name, 'aramex'))
+        if (str_contains($name, 'aramex') || str_contains($name, 'aramax'))
             return 'aramex';
         if (str_contains($name, 'dhl'))
             return 'dhl';
@@ -127,11 +127,16 @@ class ShippingTrackingService
     /**
      * Call 17Track API
      */
-    private function fetchFrom17Track($number, $apiKey)
+    private function fetchFrom17Track($number, $apiKey, $carrierCode = null)
     {
         try {
+            $payloadObj = ['number' => $number];
+            if ($carrierCode) {
+                $payloadObj['carrier'] = $carrierCode;
+            }
+            
             $postPayload = [
-                ['number' => $number]
+                $payloadObj
             ];
 
             // Step 1: Register Tracking

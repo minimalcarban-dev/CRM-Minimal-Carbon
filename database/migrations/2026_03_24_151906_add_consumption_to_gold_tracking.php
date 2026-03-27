@@ -13,7 +13,9 @@ return new class extends Migration
     {
         // Add the 'consumed' enum value to gold_distributions
         // We use a raw statement because changing ENUMs via Blueprint can be problematic in older Laravel/MySQL
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE gold_distributions MODIFY COLUMN type ENUM('out', 'return', 'consumed') NOT NULL DEFAULT 'out'");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE gold_distributions MODIFY COLUMN type ENUM('out', 'return', 'consumed') NOT NULL DEFAULT 'out'");
+        }
 
         Schema::table('gold_distributions', function (Blueprint $table) {
             if (!Schema::hasColumn('gold_distributions', 'order_id')) {
@@ -48,7 +50,9 @@ return new class extends Migration
         });
 
         // Reverting enum changes requires raw SQL too
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE gold_distributions MODIFY COLUMN type ENUM('out', 'return') NOT NULL DEFAULT 'out'");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE gold_distributions MODIFY COLUMN type ENUM('out', 'return') NOT NULL DEFAULT 'out'");
+        }
         
         \Illuminate\Support\Facades\DB::table('permissions')->where('slug', 'orders.add_gold_weight')->delete();
     }

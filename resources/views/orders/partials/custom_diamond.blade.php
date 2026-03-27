@@ -312,6 +312,7 @@
                 @endif
                 <span class="badge-info">Max 10 images</span>
             </label>
+            @include('orders.partials.existing_files', ['type' => 'images'])
             <input type="file" name="images[]" id="diamond_images" class="file-input-hidden" accept="image/*"
                 multiple {{ !isset($order) || !$order ? 'required' : '' }}>
             <label for="diamond_images" class="file-upload-area diamond">
@@ -338,6 +339,7 @@
                 <span class="optional-badge">Optional</span>
                 <span class="badge-info">Max 5 PDFs</span>
             </label>
+            @include('orders.partials.existing_files', ['type' => 'pdfs'])
             <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden"
                 accept="application/pdf" multiple>
             <label for="order_pdfs" class="file-upload-area pdf">

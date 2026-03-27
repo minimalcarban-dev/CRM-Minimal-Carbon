@@ -16,7 +16,9 @@ return new class extends Migration {
         });
 
         // Backfill existing rows: total_price = available_carat_weight * purchase_price_per_ct
-        DB::statement('UPDATE melee_diamonds SET total_price = available_carat_weight * purchase_price_per_ct');
+        if (DB::table('melee_diamonds')->count() > 0) {
+            DB::statement('UPDATE melee_diamonds SET total_price = available_carat_weight * purchase_price_per_ct');
+        }
     }
 
     /**

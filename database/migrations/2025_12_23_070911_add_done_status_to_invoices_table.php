@@ -12,7 +12,9 @@ return new class extends Migration {
     public function up(): void
     {
         // Modify the status enum to include 'done'
-        DB::statement("ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'done', 'final', 'cancelled') DEFAULT 'draft'");
+        }
     }
 
     /**
@@ -21,6 +23,8 @@ return new class extends Migration {
     public function down(): void
     {
         // Revert back to original enum
-        DB::statement("ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'final', 'cancelled') DEFAULT 'draft'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE invoices MODIFY COLUMN status ENUM('draft', 'final', 'cancelled') DEFAULT 'draft'");
+        }
     }
 };

@@ -1,4 +1,4 @@
-﻿﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Orders Management')
 
@@ -798,16 +798,14 @@
                                                 <div>
                                                     <strong
                                                         style="font-size: 0.7rem; color: #6366f1; display: block;">Jewellery:</strong>
-                                                    <div style="white-space: pre-wrap;">
-                                                        {{ trim($order->jewellery_details) }}</div>
+                                                    <div style="white-space: pre-wrap;">{{ trim($order->jewellery_details) }}</div>
                                                 </div>
                                             @endif
                                             @if ($order->diamond_details)
                                                 <div>
                                                     <strong
                                                         style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
-                                                    <div style="white-space: pre-wrap;">
-                                                        {{ trim($order->diamond_details) }}</div>
+                                                    <div style="white-space: pre-wrap;">{{ trim($order->diamond_details) }}</div>
                                                 </div>
                                             @endif
                                             @if (!$order->jewellery_details && !$order->diamond_details)
@@ -856,7 +854,7 @@
                                                         </a>
                                                     @endif
 
-                                                    @if ($order->tracking_url)
+                                                    @if ($order->tracking_number && ($order->shipping_company_name || $order->tracking_url))
                                                         <button class="btn-sync-inline"
                                                             onclick="syncTracking({{ $order->id }}, this)"
                                                             title="Sync Tracking">
@@ -3737,7 +3735,11 @@
                         // Refresh current page to show updated info
                         window.location.reload();
                     } else {
-                        alert('Error: ' + result.message);
+                        let errorMsg = result.message;
+                        if (errorMsg && (errorMsg.toLowerCase().includes('no tracking') || errorMsg.toLowerCase().includes('information at this time'))) {
+                            errorMsg = "Tracking scan initiated. 17Track is querying the carrier. Please wait 15-30 seconds and click Sync again to see the live status.";
+                        }
+                        alert(errorMsg);
                         btn.classList.remove('spinning');
                         btn.disabled = false;
                     }

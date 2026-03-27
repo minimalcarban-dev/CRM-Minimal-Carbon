@@ -3,6 +3,10 @@
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(TestCase::class, RefreshDatabase::class);
 
 
 
@@ -21,7 +25,7 @@ it('allows admin to login with valid credentials', function () {
         'password' => 'secret123',
     ]);
 
-    $response->assertRedirect(route('admins.index'));
+    $response->assertRedirectContains('/admin/dashboard');
     $this->assertTrue(Auth::guard('admin')->check());
 });
 
