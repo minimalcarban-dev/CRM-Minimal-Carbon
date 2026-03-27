@@ -70,7 +70,7 @@ class OrderController extends Controller
 
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
-        $baseQuery = Order::query()->with(['company', 'creator']);
+        $baseQuery = Order::query()->with(['company', 'creator','factoryRelation']);
 
         // Super admin sees all orders, regular admin sees only their submitted orders
         // Unless they have 'orders.view_team' permission which allows viewing team orders
@@ -82,14 +82,14 @@ class OrderController extends Controller
 
             // Restrict visibility of dispatched orders:
             // Normal admin cannot see shipped orders older than 10 days
-            $baseQuery->where(function ($q) use ($shippedStatuses) {
-                $q->whereNotIn('diamond_status', $shippedStatuses)
-                    ->orWhereNull('diamond_status')
-                    ->orWhere(function ($subQ) use ($shippedStatuses) {
-                        $subQ->whereIn('diamond_status', $shippedStatuses)
-                            ->whereDate('dispatch_date', '>=', now()->subDays(10));
-                    });
-            });
+            // $baseQuery->where(function ($q) use ($shippedStatuses) {
+            //     $q->whereNotIn('diamond_status', $shippedStatuses)
+            //         ->orWhereNull('diamond_status')
+            //         ->orWhere(function ($subQ) use ($shippedStatuses) {
+            //             $subQ->whereIn('diamond_status', $shippedStatuses)
+            //                 ->whereDate('dispatch_date', '>=', now()->subDays(10));
+            //         });
+            // });
         }
 
         if ($request->filled('search')) {
@@ -105,6 +105,10 @@ class OrderController extends Controller
                     $q->where('name', 'like', "%{$search}%");
                 });
             });
+        }
+
+        if ($request->filled('factory_id')){
+            $baseQuery->where('factory_id', $request->factory_id);
         }
 
         // Count shipped orders (before excluding from base)
@@ -251,6 +255,7 @@ class OrderController extends Controller
         }
 
         $orders = $query->latest()->paginate(20);
+        $factories = Factory::orderBy('name')->get();
 
         // Mark all unread order-created notifications as read for this admin
         $admin->unreadNotifications()
@@ -269,7 +274,8 @@ class OrderController extends Controller
             'todaysSales',
             'monthSales',
             'todaysOrderCount',
-            'companySalesStats'
+            'companySalesStats',
+            'factories'
         ));
     }
 
@@ -884,21 +890,14 @@ class OrderController extends Controller
                     $updatedBy = Admin::find($order->last_modified_by);
                     if (!$updatedBy) return;
 
-                    // Determine if any shipping fields were updated
-                    $shippingFields = ['shipping_company_name', 'tracking_number', 'tracking_url', 'dispatch_date', 'tracking_status'];
-                    $shippingChanged = false;
-                    foreach ($shippingFields as $field) {
-                        if (array_key_exists($field, $newValues)) {
-                            $shippingChanged = true;
-                            break;
-                        }
-                    }
-
-                    if ($shippingChanged) {
-                        $adminsToNotify = Admin::where('id', '!=', $updatedBy->id)->get();
-                    } else {
-                        $adminsToNotify = Admin::where('is_super', true)->where('id', '!=', $updatedBy->id)->get();
-                    }
+                    // Notify all admins who have access to orders (excluding the updater)
+                    $adminsToNotify = Admin::where('id', '!=', $updatedBy->id)
+                        ->where(function ($q) {
+                            $q->where('is_super', true)
+                              ->orWhereHas('permissions', function ($pq) {
+                                  $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                              });
+                        })->get();
 
                     if ($adminsToNotify->isNotEmpty()) {
                         Notification::send($adminsToNotify, new OrderUpdatedNotification($order, $updatedBy, $oldValues, $newValues));
