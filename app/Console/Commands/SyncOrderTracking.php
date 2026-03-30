@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Order;
 use Illuminate\Console\Command;
 
 class SyncOrderTracking extends Command
@@ -29,7 +30,7 @@ class SyncOrderTracking extends Command
 
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
 
-        $orders = \App\Models\Order::whereNotNull('tracking_number')
+        $orders = Order::whereNotNull('tracking_number')
             ->where(function ($q) use ($shippedStatuses) {
                 $q->whereIn('diamond_status', $shippedStatuses)
                     ->orWhere('tracking_status', 'In Transit')

@@ -798,7 +798,7 @@ class CompanyController extends BaseResourceController
             ->whereBetween('month', [$startMonth, $endMonth])
             ->sum('target_amount');
 
-        $globalTargetRecord = \App\Models\GlobalMonthlyTarget::where('year', $year)
+        $globalTargetRecord = GlobalMonthlyTarget::where('year', $year)
             ->whereBetween('month', [$startMonth, $endMonth])
             ->sum('target_amount');
 
@@ -840,7 +840,7 @@ class CompanyController extends BaseResourceController
         ];
 
         $companyWiseStats = $filteredOrders->groupBy('company_id')->map(function ($orders, $companyId) use ($filteredTotal, $colors) {
-            $company = \App\Models\Company::find($companyId);
+            $company = Company::find($companyId);
             $revenue = $orders->sum('gross_sell');
             $percentage = $filteredTotal > 0 ? round(($revenue / $filteredTotal) * 100, 1) : 0;
             $colorIndex = $companyId % count($colors);
@@ -858,7 +858,7 @@ class CompanyController extends BaseResourceController
         $monthlySummary = $this->getAllMonthlySummaryFromOrders($year);
 
         // Fetch all active companies and their targets for the targets modal
-        $allCompanies = \App\Models\Company::all();
+        $allCompanies = Company::all();
         $companyTargets = CompanyMonthlyTarget::where('year', $now->year)
             ->where('month', $now->month)
             ->get()

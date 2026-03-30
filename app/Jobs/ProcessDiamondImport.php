@@ -212,7 +212,7 @@ class ProcessDiamondImport implements ShouldQueue
             }
 
             // Send notification to admin
-            $admin = \App\Models\Admin::find($this->adminId);
+            $admin = Admin::find($this->adminId);
             if ($admin) {
                 $admin->notify(new ImportCompleted($jobTrack));
             }
@@ -244,7 +244,7 @@ class ProcessDiamondImport implements ShouldQueue
             ]);
 
             // Send failure notification
-            $admin = \App\Models\Admin::find($this->adminId);
+            $admin = Admin::find($this->adminId);
             if ($admin) {
                 $admin->notify(new ImportCompleted($jobTrack));
             }

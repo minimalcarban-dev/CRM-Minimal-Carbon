@@ -229,8 +229,7 @@
                             style="font-size: 0.7rem; color: var(--gray); margin-top: 4px; border-top: 1px solid rgba(16, 185, 129, 0.1); padding-top: 4px;">
                             <span style="display: flex; justify-content: space-between; align-items: center;">
                                 <span>Month:</span>
-                                <span
-                                    style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
+                                <span style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
                             </span>
                         </div>
                     </div>
@@ -239,9 +238,11 @@
         </div>
 
         {{-- Company Monthly Progress Section (Hidden by default, toggle on Today's Sales click) --}}
-        @if (auth('admin')->user()->hasExplicitPermission('sales.view') &&
+        @if (
+                auth('admin')->user()->hasExplicitPermission('sales.view') &&
                 isset($companySalesStats) &&
-                $companySalesStats->count() > 0)
+                $companySalesStats->count() > 0
+            )
             <div class="company-progress-section" id="companyProgressSection" style="display: none;">
                 <div class="section-header">
                     <h3 class="section-title">
@@ -251,19 +252,16 @@
                 </div>
                 <div class="company-progress-grid">
                     @foreach ($companySalesStats as $company)
-                        <a href="{{ route('companies.sales-dashboard', $company['id']) }}"
-                            class="company-progress-card-simple">
+                        <a href="{{ route('companies.sales-dashboard', $company['id']) }}" class="company-progress-card-simple">
                             <div class="company-name-simple">{{ $company['name'] }}</div>
                             <div class="progress-ring-large">
                                 @if ($company['target_progress'] !== null)
                                     <svg viewBox="0 0 36 36" class="circular-chart-large">
                                         <path class="circle-bg-large"
                                             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path class="circle-large"
-                                            stroke-dasharray="{{ min($company['target_progress'], 100) }}, 100"
+                                        <path class="circle-large" stroke-dasharray="{{ min($company['target_progress'], 100) }}, 100"
                                             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <text x="18" y="20.35"
-                                            class="percentage-large">{{ round($company['target_progress']) }}%</text>
+                                        <text x="18" y="20.35" class="percentage-large">{{ round($company['target_progress']) }}%</text>
                                     </svg>
                                 @else
                                     <div class="no-target-large">
@@ -336,63 +334,43 @@
                     <option value="">All Diamond Status</option>
 
                     {{-- Ready to Ship Statuses --}}
-                    <option value="r_order_in_process" class="status-option ready_to_ship"
-                        {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process
+                    <option value="r_order_in_process" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process
                     </option>
-                    <option value="r_order_shipped" class="status-option ready_to_ship"
-                        {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
-                    <option value="r_order_cancelled" class="status-option ready_to_ship"
-                        {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled
+                    <option value="r_order_shipped" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
+                    <option value="r_order_cancelled" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled
                     </option>
 
                     {{-- Custom Diamond Statuses --}}
-                    <option value="d_diamond_in_discuss" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
+                    <option value="d_diamond_in_discuss" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
                     </option>
-                    <option value="d_diamond_in_making" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making
+                    <option value="d_diamond_in_making" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making
                     </option>
-                    <option value="d_diamond_completed" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed
+                    <option value="d_diamond_completed" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed
                     </option>
-                    <option value="d_diamond_in_certificate" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
+                    <option value="d_diamond_in_certificate" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
                         Certificate</option>
-                    <option value="d_order_shipped" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
-                    <option value="d_order_cancelled" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled
+                    <option value="d_order_shipped" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
+                    <option value="d_order_cancelled" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled
                     </option>
 
                     {{-- Custom Jewellery Statuses --}}
-                    <option value="j_diamond_in_progress" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In
+                    <option value="j_diamond_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In
                         Progress
                     </option>
-                    <option value="j_diamond_completed" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed
+                    <option value="j_diamond_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed
                     </option>
-                    <option value="j_diamond_in_discuss" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
+                    <option value="j_diamond_in_discuss" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
                     </option>
-                    <option value="j_cad_in_progress" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress
+                    <option value="j_cad_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress
                     </option>
-                    <option value="j_cad_done" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
-                    <option value="j_order_completed" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed
+                    <option value="j_cad_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
+                    <option value="j_order_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed
                     </option>
-                    <option value="j_order_in_qc" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
-                    <option value="j_qc_done" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
-                    <option value="j_order_shipped" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
-                    <option value="j_order_hold" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
-                    <option value="j_order_cancelled" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled
+                    <option value="j_order_in_qc" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
+                    <option value="j_qc_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
+                    <option value="j_order_shipped" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
+                    <option value="j_order_hold" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
+                    <option value="j_order_cancelled" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled
                     </option>
                 </select>
 
@@ -402,6 +380,26 @@
                     <input type="hidden" name="date_from" id="orderDateFrom" value="{{ request('date_from') }}">
                     <input type="hidden" name="date_to" id="orderDateTo" value="{{ request('date_to') }}">
                 </div>
+
+                <select name="sort" class="filter-select">
+                    <option value="">Sort: Default</option>
+                    <option value="newest_created" {{ request('sort') == 'newest_created' ? 'selected' : '' }}>Sort:
+                        Newest Created</option>
+                    <option value="oldest_created" {{ request('sort') == 'oldest_created' ? 'selected' : '' }}>Sort:
+                        Oldest Created</option>
+                    <option value="oldest_due" {{ request('sort') == 'oldest_due' ? 'selected' : '' }}>Sort: Oldest
+                        Due First</option>
+                    <option value="newest_due" {{ request('sort') == 'newest_due' ? 'selected' : '' }}>Sort: Newest
+                        Due First</option>
+                    <option value="id_asc" {{ request('sort') == 'id_asc' ? 'selected' : '' }}>Sort: Order ID Low to
+                        High</option>
+                    <option value="id_desc" {{ request('sort') == 'id_desc' ? 'selected' : '' }}>Sort: Order ID High to
+                        Low</option>
+                    <option value="ship_today" {{ request('sort') == 'ship_today' ? 'selected' : '' }}>Sort: Ship
+                        Today ({{ $shipTodayCount ?? 0 }})</option>
+                    <option value="ship_tomorrow" {{ request('sort') == 'ship_tomorrow' ? 'selected' : '' }}>Sort: Ship
+                        Tomorrow ({{ $shipTomorrowCount ?? 0 }})</option>
+                </select>
 
                 {{-- Overdue Filter Toggle --}}
                 @php
@@ -442,7 +440,7 @@
                 </a>
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
+                    document.addEventListener('DOMContentLoaded', function () {
                         const filterForm = document.getElementById('orderFilterForm');
                         const orderTypeSelect = document.querySelector('select[name="order_type"]');
                         const statusSelect = document.querySelector('select[name="diamond_status"]');
@@ -506,22 +504,22 @@
                         updateStatusDropdown();
 
                         // Auto-submit on order type change
-                        orderTypeSelect.addEventListener('change', function() {
+                        orderTypeSelect.addEventListener('change', function () {
                             updateStatusDropdown();
                             filterForm.submit();
                         });
 
                         // Auto-submit on diamond status change
                         document.querySelectorAll('.filter-select').forEach(select => {
-                            select.addEventListener('change', function() {
+                            select.addEventListener('change', function () {
                                 filterForm.submit();
                             });
                         });
 
                         // Debounced auto-submit on search input
-                        searchInput.addEventListener('input', function() {
+                        searchInput.addEventListener('input', function () {
                             const currentValue = searchInput.value.trim();
-                            debounceSearch(function() {
+                            debounceSearch(function () {
                                 // Submit only if search value actually changed
                                 if (currentValue === lastSubmittedSearchValue) {
                                     return;
@@ -532,7 +530,7 @@
                         });
 
                         // Also submit on Enter key for search
-                        searchInput.addEventListener('keypress', function(e) {
+                        searchInput.addEventListener('keypress', function (e) {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
                                 clearTimeout(searchTimeout);
@@ -547,7 +545,7 @@
                         // Sync All Confirm & Loader
                         const btnSyncAll = document.getElementById('btnSyncAll');
                         if (btnSyncAll) {
-                            btnSyncAll.addEventListener('click', function(e) {
+                            btnSyncAll.addEventListener('click', function (e) {
                                 e.preventDefault();
                                 const url = this.getAttribute('href');
 
@@ -585,7 +583,7 @@
 
                 {{-- Action Dropdown Menu Handler --}}
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
+                    document.addEventListener('DOMContentLoaded', function () {
                         // Portal-based dropdown renderer - renders menu at body level to escape overflow
                         class ActionDropdownPortal {
                             constructor(btnElement, menuElement) {
@@ -594,24 +592,24 @@
                                 this.orderId = btnElement.getAttribute('data-order-id');
                                 this.portalElement = null;
                                 this.isOpen = false;
-                                
+
                                 this.init();
                             }
 
                             init() {
                                 // Listen for button clicks
                                 this.btn.addEventListener('click', (e) => this.toggle(e));
-                                
+
                                 // Close on outside click
                                 document.addEventListener('click', (e) => this.handleOutsideClick(e));
-                                
+
                                 // Close on escape key
                                 document.addEventListener('keydown', (e) => {
                                     if (e.key === 'Escape' && this.isOpen) {
                                         this.close();
                                     }
                                 });
-                                
+
                                 // Close on menu item click
                                 this.menu.querySelectorAll('.action-menu-item').forEach(item => {
                                     item.addEventListener('click', () => this.close());
@@ -641,18 +639,18 @@
                                 // Create portal element
                                 this.portalElement = document.createElement('div');
                                 this.portalElement.className = 'action-portal-menu';
-                                
+
                                 // Clone menu and position it
                                 const clonedMenu = this.menu.cloneNode(true);
                                 clonedMenu.style.display = 'block';
-                                
+
                                 // Position menu relative to button
                                 const rect = this.btn.getBoundingClientRect();
                                 this.portalElement.style.position = 'fixed';
                                 this.portalElement.style.top = (rect.bottom + 8) + 'px';
                                 this.portalElement.style.right = (window.innerWidth - rect.right) + 'px';
                                 this.portalElement.style.zIndex = '99999';
-                                
+
                                 this.portalElement.appendChild(clonedMenu);
                                 document.body.appendChild(this.portalElement);
 
@@ -686,7 +684,7 @@
                             handleOutsideClick(e) {
                                 const isClickOnBtn = e.target.closest(`#actionBtn${this.orderId}`);
                                 const isClickOnPortal = e.target.closest('.action-portal-menu');
-                                
+
                                 if (!isClickOnBtn && !isClickOnPortal && this.isOpen) {
                                     this.close();
                                 }
@@ -731,9 +729,9 @@
                                 form.method = 'POST';
                                 form.action = `/admin/orders/${orderId}`;
                                 form.innerHTML = `
-                                    @csrf
-                                    @method('DELETE')
-                                `;
+                                        @csrf
+                                        @method('DELETE')
+                                    `;
                                 document.body.appendChild(form);
                                 form.submit();
                             }
@@ -746,7 +744,19 @@
                     <span>Filter</span>
                 </button>
 
-                @if (request('search') || request('order_type') || request('diamond_status') || request('overdue'))
+                @if (
+                        request('search') ||
+                        request('order_type') ||
+                        request('factory_id') ||
+                        request('diamond_status') ||
+                        request('date_from') ||
+                        request('date_to') ||
+                        request('sort') ||
+                        request('overdue') ||
+                        request('cancelled') ||
+                        request('shipped') ||
+                        request('in_transit')
+                    )
                     <a href="{{ route('orders.index') }}" class="btn-reset">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Reset</span>
@@ -768,11 +778,11 @@
                         <thead>
                             <tr>
                                 <!-- <th class="th-id">
-                                        <div class="th-content">
-                                            <i class="bi bi-hash"></i>
-                                            <span>ID</span>
-                                        </div>
-                                    </th> -->
+                                                <div class="th-content">
+                                                    <i class="bi bi-hash"></i>
+                                                    <span>ID</span>
+                                                </div>
+                                            </th> -->
                                 <th>
                                     <div class="th-content">
                                         <i class="bi bi-image"></i>
@@ -859,11 +869,9 @@
                                                 $skuText = !empty($skus) ? implode(', ', $skus) : '—';
                                             @endphp
                                             <div class="image-with-sku">
-                                                <div class="thumbnail-container {{ $firstImage ? 'has-image' : '' }}"
-                                                    @if ($firstImage) data-preview-src="{{ $firstImage['url'] }}"
-                                                        tabindex="0"
-                                                        role="button"
-                                                        aria-label="Preview product image for order #{{ $order->id }}" @endif>
+                                                <div class="thumbnail-container {{ $firstImage ? 'has-image' : '' }}" @if ($firstImage) data-preview-src="{{ $firstImage['url'] }}" tabindex="0"
+                                                    role="button" aria-label="Preview product image for order #{{ $order->id }}"
+                                                @endif>
                                                     @if ($firstImage)
                                                         <img src="{{ $firstImage['url'] }}" alt="Product">
                                                     @else
@@ -954,8 +962,7 @@
 
                                                 @if ($taxId = $order->display_client_tax_id)
                                                     <div class="d-flex align-items-center text-muted">
-                                                        <span class="text-uppercase me-1"
-                                                            style="font-size: 0.7rem; font-weight: 600;">
+                                                        <span class="text-uppercase me-1" style="font-size: 0.7rem; font-weight: 600;">
                                                             {{ $order->client_tax_id_type ? \App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? $order->client_tax_id_type : 'Tax ID' }}:
                                                         </span>
                                                         {{ $taxId }}
@@ -966,8 +973,7 @@
                                     </td>
 
                                     <td>
-                                        <div class="d-flex flex-column gap-1"
-                                            style="font-size: 0.8rem; max-width: 300px;">
+                                        <div class="d-flex flex-column gap-1" style="font-size: 0.8rem; max-width: 300px;">
                                             @if ($order->jewellery_details)
                                                 <div>
                                                     <strong
@@ -977,8 +983,7 @@
                                             @endif
                                             @if ($order->diamond_details)
                                                 <div>
-                                                    <strong
-                                                        style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
+                                                    <strong style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
                                                     <div style="white-space: pre-wrap;">{{ trim($order->diamond_details) }}</div>
                                                 </div>
                                             @endif
@@ -1018,8 +1023,7 @@
                                         @if ($order->shipping_company_name || $order->tracking_number)
                                             <div class="shipping-info-cell">
                                                 <div class="shipping-main">
-                                                    <span
-                                                        class="shipping-company">{{ $order->shipping_company_name }}</span>
+                                                    <span class="shipping-company">{{ $order->shipping_company_name }}</span>
                                                     @if ($order->tracking_number)
                                                         <a href="javascript:void(0)" class="tracking-number-link"
                                                             onclick="showTrackingHistory({{ $order->id }}, {{ json_encode($order->tracking_number) }}, {{ json_encode($order->shipping_company_name) }}, {{ json_encode($order->tracking_history) }}, {{ json_encode($order->tracking_url) }})"
@@ -1029,8 +1033,7 @@
                                                     @endif
 
                                                     @if ($order->tracking_number && ($order->shipping_company_name || $order->tracking_url))
-                                                        <button class="btn-sync-inline"
-                                                            onclick="syncTracking({{ $order->id }}, this)"
+                                                        <button class="btn-sync-inline" onclick="syncTracking({{ $order->id }}, this)"
                                                             title="Sync Tracking">
                                                             <i class="bi bi-arrow-repeat"></i>
                                                         </button>
@@ -1061,7 +1064,8 @@
                                                 data-order-id="{{ $order->id }}" title="Actions">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
-                                            <div class="action-dropdown-menu" id="actionMenu{{ $order->id }}" style="display: none;">
+                                            <div class="action-dropdown-menu" id="actionMenu{{ $order->id }}"
+                                                style="display: none;">
                                                 {{-- View Option --}}
                                                 <a href="{{ route('orders.show', $order->id) }}"
                                                     class="action-menu-item action-menu-view">
@@ -1070,8 +1074,10 @@
                                                 </a>
 
                                                 {{-- Edit Option --}}
-                                                @if (auth()->guard('admin')->user() &&
-                                                        auth()->guard('admin')->user()->canAccessAny(['orders.edit']))
+                                                @if (
+                                                        auth()->guard('admin')->user() &&
+                                                        auth()->guard('admin')->user()->canAccessAny(['orders.edit'])
+                                                    )
                                                     <a href="{{ route('orders.edit', $order->id) }}"
                                                         class="action-menu-item action-menu-edit">
                                                         <i class="bi bi-pencil"></i>
@@ -1080,9 +1086,11 @@
                                                 @endif
 
                                                 {{-- Cancel Option --}}
-                                                @if (auth()->guard('admin')->user() &&
+                                                @if (
+                                                        auth()->guard('admin')->user() &&
                                                         auth()->guard('admin')->user()->hasPermission('orders.cancel') &&
-                                                        !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
+                                                        !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'])
+                                                    )
                                                     <button type="button" class="action-menu-item action-menu-cancel"
                                                         onclick="openCancelModal({{ $order->id }}, '{{ addslashes($order->client_name) }}')">
                                                         <i class="bi bi-x-circle"></i>
@@ -1091,8 +1099,10 @@
                                                 @endif
 
                                                 {{-- Delete Option --}}
-                                                @if (auth()->guard('admin')->user() &&
-                                                        auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
+                                                @if (
+                                                        auth()->guard('admin')->user() &&
+                                                        auth()->guard('admin')->user()->canAccessAny(['orders.delete'])
+                                                    )
                                                     <button type="button" class="action-menu-item action-menu-delete"
                                                         onclick="deleteOrder({{ $order->id }})">
                                                         <i class="bi bi-trash"></i>
@@ -2089,7 +2099,8 @@
             background: var(--bg-card);
             border-radius: 16px;
             box-shadow: 0 1px 3px var(--shadow);
-            overflow: visible; /* allow dropdown to escape if needed */
+            overflow: visible;
+            /* allow dropdown to escape if needed */
             position: relative;
         }
 
@@ -2099,7 +2110,8 @@
         }
 
         .td-actions {
-            position: relative; /* for absolute dropdown child */
+            position: relative;
+            /* for absolute dropdown child */
             z-index: 5;
         }
 
@@ -2121,7 +2133,8 @@
             z-index: 9999;
             overflow: hidden;
             animation: slideDown 0.2s ease-out;
-            display: none; /* hidden in table, shown via portal */
+            display: none;
+            /* hidden in table, shown via portal */
         }
 
         /* Portal menu - rendered at body level to escape overflow */
@@ -2776,6 +2789,7 @@
                 opacity: 0;
                 transform: translateY(-8px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -3637,8 +3651,8 @@
             }
 
             /* .client-info {
-                text-align: start;
-            } */
+                    text-align: start;
+                } */
         }
 
         /* Print Styles */
@@ -3964,7 +3978,7 @@
     @push('scripts')
         <script>
             // Initialize Date Range Picker for Orders
-            $(document).ready(function() {
+            $(document).ready(function () {
                 var startDate = $('#orderDateFrom').val() ? moment($('#orderDateFrom').val()) : null;
                 var endDate = $('#orderDateTo').val() ? moment($('#orderDateTo').val()) : null;
 
@@ -3987,7 +4001,7 @@
                         applyLabel: 'Apply',
                         format: 'MMM D, YYYY'
                     }
-                }, function(start, end, label) {
+                }, function (start, end, label) {
                     $('#orderDateFrom').val(start.format('YYYY-MM-DD'));
                     $('#orderDateTo').val(end.format('YYYY-MM-DD'));
                     $('#orderDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
@@ -4001,7 +4015,7 @@
                 }
 
                 // Clear dates on cancel and auto-submit
-                $('#orderDateRange').on('cancel.daterangepicker', function(ev, picker) {
+                $('#orderDateRange').on('cancel.daterangepicker', function (ev, picker) {
                     $(this).val('');
                     $('#orderDateFrom').val('');
                     $('#orderDateTo').val('');
@@ -4113,14 +4127,14 @@
             window.dismissOverdueBanner = dismissOverdueBanner;
 
             // Check if banner should be hidden on load
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 if (sessionStorage.getItem('hideOverdueBanner') === 'true') {
                     const banner = document.getElementById('overdueAlertBanner');
                     if (banner) banner.style.display = 'none';
                 }
             });
 
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 // Add stagger animation to table rows
                 const rows = document.querySelectorAll('.table-row');
                 rows.forEach((row, index) => {
@@ -4138,7 +4152,7 @@
 
                 // Handle delete confirmations with SweetAlert2
                 document.querySelectorAll('.delete-form').forEach(form => {
-                    form.addEventListener('submit', async function(e) {
+                    form.addEventListener('submit', async function (e) {
                         e.preventDefault();
 
                         const confirmed = await showConfirm(
@@ -4196,14 +4210,14 @@
 
             function escapeHtml(str) {
                 if (!str) return '';
-                return String(str).replace(/[&<>"']/g, function(m) {
+                return String(str).replace(/[&<>"']/g, function (m) {
                     return {
                         '&': '&amp;',
                         '<': '&lt;',
                         '>': '&gt;',
                         '"': '&quot;',
                         "'": '&#39;'
-                    } [m];
+                    }[m];
                 });
             }
 
@@ -4225,17 +4239,17 @@
                         const historyItem = document.createElement('div');
                         historyItem.className = 'tracking-history-item';
                         historyItem.innerHTML = `
-                                                                        <div class="tracking-history-dot"></div>
-                                                                        <div class="tracking-history-details shadow-sm">
-                                                                            <div class="tracking-history-header">
-                                                                                <span class="tracking-history-status">${escapeHtml(item.status)}</span>
-                                                                                <span class="tracking-history-date">${escapeHtml(item.date)}</span>
-                                                                            </div>
-                                                                            <div class="tracking-history-location">
-                                                                                <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
-                                                                            </div>
-                                                                            ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
-                                                                        </div>`;
+                                                                                <div class="tracking-history-dot"></div>
+                                                                                <div class="tracking-history-details shadow-sm">
+                                                                                    <div class="tracking-history-header">
+                                                                                        <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                                                                        <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                                                                    </div>
+                                                                                    <div class="tracking-history-location">
+                                                                                        <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                                                                    </div>
+                                                                                    ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                                                                                </div>`;
                         container.appendChild(historyItem);
                     });
                 }
@@ -4253,7 +4267,7 @@
                 const syncBtn = document.getElementById('modalSyncBtn');
                 if (syncBtn) {
                     // Creating a fresh onClick handler that captures current orderId
-                    syncBtn.onclick = function() {
+                    syncBtn.onclick = function () {
                         syncTracking(orderId, this);
                     };
                 }

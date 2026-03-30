@@ -14,21 +14,21 @@ class JewelleryStockSeeder extends Seeder
         $statuses = ['in_stock', 'low_stock', 'out_of_stock'];
 
         // Ensure there are some MetalTypes and RingSizes
-        if (\App\Models\MetalType::count() === 0) {
-            \App\Models\MetalType::create(['name' => '14K Gold', 'is_active' => true]);
-            \App\Models\MetalType::create(['name' => 'Platinum', 'is_active' => true]);
+        if (MetalType::count() === 0) {
+            MetalType::create(['name' => '14K Gold', 'is_active' => true]);
+            MetalType::create(['name' => 'Platinum', 'is_active' => true]);
         }
-        if (\App\Models\RingSize::count() === 0) {
-            \App\Models\RingSize::create(['name' => 'US 6', 'is_active' => true]);
-            \App\Models\RingSize::create(['name' => 'US 7', 'is_active' => true]);
+        if (RingSize::count() === 0) {
+            RingSize::create(['name' => 'US 6', 'is_active' => true]);
+            RingSize::create(['name' => 'US 7', 'is_active' => true]);
         }
 
-        $metalTypes = \App\Models\MetalType::pluck('id')->toArray();
-        $ringSizes = \App\Models\RingSize::pluck('id')->toArray();
+        $metalTypes = MetalType::pluck('id')->toArray();
+        $ringSizes = RingSize::pluck('id')->toArray();
 
         for ($i = 0; $i < 100; $i++) {
             $type = $faker->randomElement($types);
-            \App\Models\JewelleryStock::create([
+            JewelleryStock::create([
                 'sku' => strtoupper($faker->unique()->bothify('JS-####-???')),
                 'type' => $type,
                 'name' => $faker->words(3, true),

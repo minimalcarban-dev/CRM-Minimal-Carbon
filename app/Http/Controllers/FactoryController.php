@@ -28,7 +28,7 @@ class FactoryController extends Controller
         $activeFactories = Factory::active()->count();
 
         // Total gold in all factories
-        $totalInFactories = \App\Models\GoldDistribution::getTotalInFactories();
+        $totalInFactories = GoldDistribution::getTotalInFactories();
 
         return view('factories.index', compact(
             'factories',

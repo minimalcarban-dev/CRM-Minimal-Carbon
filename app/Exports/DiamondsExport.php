@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\Admin;
 use App\Models\Diamond;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -38,7 +39,7 @@ class DiamondsExport implements FromCollection, WithHeadings, WithMapping, WithC
         }
 
         if ($adminId) {
-            $this->admin = \App\Models\Admin::find($adminId);
+            $this->admin = Admin::find($adminId);
         } else {
             $this->admin = auth('admin')->user();
         }

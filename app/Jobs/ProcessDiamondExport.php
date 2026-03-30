@@ -86,7 +86,7 @@ class ProcessDiamondExport implements ShouldQueue
             ]);
 
             // Send notification
-            $admin = \App\Models\Admin::find($this->adminId);
+            $admin = Admin::find($this->adminId);
             if ($admin) {
                 $admin->notify(new ExportCompleted($jobTrack));
             }
@@ -108,7 +108,7 @@ class ProcessDiamondExport implements ShouldQueue
                 'completed_at' => now(),
             ]);
 
-            $admin = \App\Models\Admin::find($this->adminId);
+            $admin = Admin::find($this->adminId);
             if ($admin) {
                 $admin->notify(new ExportCompleted($jobTrack));
             }
