@@ -1,45 +1,36 @@
 @extends('layouts.admin')
 @section('title', 'Jewellery Stock Details')
-
 @section('content')
-
-    <div class="diamond-management-container">
-        <!-- Page Header -->
-        <div class="page-header">
+    <div class="tracker-page">
+        {{-- Page Header --}}
             <div class="header-content">
                 <div class="header-left">
-                    <nav class="breadcrumb-nav">
+                    <div class="breadcrumb-nav">
                         <a href="{{ route('admin.dashboard') }}" class="breadcrumb-link">
-                            <i class="bi bi-house-door"></i>
-                            <span>Dashboard</span>
+                            <i class="bi bi-house-door"></i> Dashboard
                         </a>
                         <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                        <a href="{{ route('jewellery-stock.index') }}" class="breadcrumb-link">
-                            <span>Jewellery Stock</span>
-                        </a>
+                        <a href="{{ route('jewellery-stock.index') }}" class="breadcrumb-link">Jewellery Stock</a>
                         <i class="bi bi-chevron-right breadcrumb-separator"></i>
                         <span class="breadcrumb-current">{{ $jewelleryStock->sku }}</span>
-                    </nav>
-                    <div class="d-flex align-items-center gap-3">
-                        <h1 class="page-title mb-0">
-                            <i class="bi bi-gem"></i>
+                    </div>
+                    <div class="d-flex align-items-center gap-3" style="display: flex; align-items: center; gap: 1rem; margin-top: 5px;">
+                        <h1 class="page-title" style="margin: 0;">
+                            <i class="bi bi-gem" style="color: #8b5cf6;"></i>
                             {{ $jewelleryStock->name }}
                         </h1>
-                        <span class="status-pill {{ $jewelleryStock->quantity > 0 ? 'status-active' : 'status-inactive' }}">
-                            <i class="bi bi-{{ $jewelleryStock->quantity > 0 ? 'check-circle' : 'x-circle' }}"></i>
-                            {{ $jewelleryStock->quantity > 0 ? 'In Stock' : 'Out of Stock' }}
-                        </span>
                     </div>
+                    <p class="page-subtitle">SKU: {{ $jewelleryStock->sku }}</p>
                 </div>
                 <div class="header-right">
-                    <a href="{{ route('jewellery-stock.index') }}" class="btn-secondary-custom">
-                        <i class="bi bi-arrow-left"></i>
-                        <span>Back to List</span>
-                    </a>
-                    <a href="{{ route('jewellery-stock.edit', $jewelleryStock) }}" class="btn-primary-custom">
-                        <i class="bi bi-pencil"></i>
-                        <span>Edit Item</span>
-                    </a>
+                    <div class="tracker-actions-row">
+                        <a href="{{ route('jewellery-stock.edit', $jewelleryStock) }}" class="btn-primary-custom">
+                            <i class="bi bi-pencil"></i> Edit Item
+                        </a>
+                        <a href="{{ route('jewellery-stock.index') }}" class="btn-secondary-custom">
+                            <i class="bi bi-arrow-left"></i> Back to List
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -52,246 +43,159 @@
             </div>
         @endif
 
-        @if ($jewelleryStock->quantity <= $jewelleryStock->low_stock_threshold)
-            <div class="alert alert-warning d-flex align-items-center" role="alert">
-                <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2 fs-4 text-warning"></i>
-                <div>
-                    <strong>Low Stock Alert:</strong> This item is running low on stock. Current quantity:
-                    {{ $jewelleryStock->quantity }}
+        {{-- Status Badges --}}
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 0.75rem;">
+            @if ($jewelleryStock->quantity > 0 && $jewelleryStock->quantity > $jewelleryStock->low_stock_threshold)
+                <span class="tracker-badge"
+                    style="background: rgba(16, 185, 129, 0.1); color: #065f46; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <i class="bi bi-check-circle"></i> In Stock ({{ $jewelleryStock->quantity }})
+                </span>
+            @elseif ($jewelleryStock->quantity > 0 && $jewelleryStock->quantity <= $jewelleryStock->low_stock_threshold)
+                <span class="tracker-badge"
+                    style="background: rgba(245, 158, 11, 0.1); color: #b45309; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <i class="bi bi-exclamation-triangle"></i> Low Stock ({{ $jewelleryStock->quantity }})
+                </span>
+            @else
+                <span class="tracker-badge"
+                    style="background: rgba(239, 68, 68, 0.1); color: #991b1b; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <i class="bi bi-x-circle"></i> Out of Stock
+                </span>
+            @endif
+            
+            <span class="tracker-badge" style="background: rgba(99, 102, 241, 0.1); color: #4338ca; padding: 0.5rem 1rem; font-size: 0.9rem; text-transform: capitalize;">
+                <i class="bi bi-collection"></i> {{ str_replace('_', ' ', $jewelleryStock->type) }}
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem;">
+            <div>
+                {{-- Basic Details Card --}}
+                <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                        <i class="bi bi-info-circle" style="color: #6366f1;"></i> Basic Information
+                    </h3>
+                    <div class="detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">SKU</div>
+                            <div class="detail-value" style="font-size: 1.1rem; color: #1e293b; font-weight: 600; font-family: monospace;">{{ $jewelleryStock->sku }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Name</div>
+                            <div class="detail-value" style="font-size: 1.1rem; color: #1e293b; font-weight: 600;">{{ $jewelleryStock->name }}</div>
+                        </div>
+                    </div>
                 </div>
+
+                {{-- Specs Card --}}
+                <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                        <i class="bi bi-sliders" style="color: #6366f1;"></i> Specifications
+                    </h3>
+                    <div class="detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Metal Type</div>
+                            <div class="detail-value" style="font-size: 1rem; color: #1e293b; font-weight: 500;">{{ $jewelleryStock->metalType ? $jewelleryStock->metalType->name : 'N/A' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Ring Size</div>
+                            <div class="detail-value" style="font-size: 1rem; color: #1e293b; font-weight: 500;">{{ $jewelleryStock->ringSize ? $jewelleryStock->ringSize->name : 'N/A' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Weight</div>
+                            <div class="detail-value" style="font-size: 1.1rem; color: #f59e0b; font-weight: 700;">{{ $jewelleryStock->weight ? number_format($jewelleryStock->weight, 3) . ' g' : 'N/A' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Pricing & Inventory --}}
+                <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                        <i class="bi bi-currency-dollar" style="color: #6366f1;"></i> Pricing & Inventory
+                    </h3>
+                    <div class="detail-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Purchase Price</div>
+                            <div class="detail-value" style="font-size: 1.1rem; color: #1e293b; font-weight: 500;">${{ number_format($jewelleryStock->purchase_price, 2) }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Selling Price</div>
+                            <div class="detail-value" style="font-size: 1.25rem; color: #10b981; font-weight: 700;">${{ number_format($jewelleryStock->selling_price, 2) }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Est. Margin</div>
+                            <div class="detail-value" style="font-size: 1.1rem; font-weight: 600;">
+                                @php
+                                    $margin = $jewelleryStock->selling_price - $jewelleryStock->purchase_price;
+                                    $marginPct = $jewelleryStock->purchase_price > 0 ? ($margin / $jewelleryStock->purchase_price) * 100 : 0;
+                                @endphp
+                                <span style="color: {{ $margin >= 0 ? '#10b981' : '#ef4444' }};">
+                                    ${{ number_format($margin, 2) }} ({{ number_format($marginPct, 1) }}%)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Current Stock</div>
+                            <div class="detail-value" style="font-size: 1.25rem; color: #1e293b; font-weight: 700;">{{ $jewelleryStock->quantity }} units</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Low Stock Threshold</div>
+                            <div class="detail-value" style="font-size: 1.1rem; color: #1e293b; font-weight: 500;">{{ $jewelleryStock->low_stock_threshold }} units</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Description --}}
+                @if($jewelleryStock->description)
+                <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 1rem; font-size: 1.1rem; color: #1e293b;">
+                        <i class="bi bi-text-paragraph" style="color: #6366f1;"></i> Description
+                    </h3>
+                    <p style="color: #475569; line-height: 1.6; margin: 0; white-space: pre-wrap;">{{ $jewelleryStock->description }}</p>
+                </div>
+                @endif
             </div>
-        @endif
 
-        <div class="row g-4 mb-4">
-            <!-- Left Column: Image -->
-            <div class="col-12 col-lg-4">
-                <div class="form-section-card h-100">
-                    <div class="section-header">
-                        <div class="section-info">
-                            <div class="section-icon">
-                                <i class="bi bi-image"></i>
-                            </div>
-                            <div>
-                                <h5 class="section-title">Item Image</h5>
-                            </div>
+            {{-- Sidebar --}}
+            <div>
+                {{-- Image Card --}}
+                <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem; text-align: center;">
+                    <h3 style="margin: 0 0 1rem; font-size: 1.1rem; color: #1e293b; text-align: left;">
+                        <i class="bi bi-image" style="color: #6366f1;"></i> Image
+                    </h3>
+                    @if ($jewelleryStock->image_url)
+                        <img src="{{ $jewelleryStock->image_url }}" alt="{{ $jewelleryStock->name }}" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+                        <div style="font-size: 0.8rem; color: #64748b;">
+                            <a href="{{ $jewelleryStock->image_url }}" target="_blank" style="color: #6366f1; text-decoration: none;">
+                                <i class="bi bi-box-arrow-up-right"></i> Open full image
+                            </a>
                         </div>
-                    </div>
-                    <div class="section-body text-center p-4">
-                        @if ($jewelleryStock->image_url)
-                            <img src="{{ $jewelleryStock->image_url }}" alt="{{ $jewelleryStock->name }}"
-                                class="img-fluid rounded shadow-sm" style="max-height: 300px; object-fit: contain;">
-                        @else
-                            <div class="d-flex flex-column align-items-center justify-content-center text-muted"
-                                style="height: 250px; background: var(--bg-body, #f8fafc); border-radius: 0.5rem;">
-                                <i class="bi bi-image" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                                <p class="mb-0">No image available</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Details -->
-            <div class="col-12 col-lg-8">
-                <!-- Basic Details -->
-                <div class="form-section-card mb-4">
-                    <div class="section-header">
-                        <div class="section-info">
-                            <div class="section-icon">
-                                <i class="bi bi-info-circle"></i>
-                            </div>
-                            <div>
-                                <h5 class="section-title">Basic Information</h5>
-                            </div>
+                    @else
+                        <div style="padding: 3rem 1rem; background: #f8fafc; border-radius: 8px; color: #94a3b8; border: 1px dashed #cbd5e1;">
+                            <i class="bi bi-image" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                            <p style="margin: 0;">No image available</p>
                         </div>
-                    </div>
-                    <div class="section-body">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <div class="form-label text-uppercase text-muted small fw-bold">SKU</div>
-                                <div class="form-value font-monospace fw-medium">{{ $jewelleryStock->sku }}</div>
-                            </div>
-                            <div class="form-group">
-                                <div class="form-label text-uppercase text-muted small fw-bold">Type</div>
-                                <div class="form-value text-capitalize">{{ str_replace('_', ' ', $jewelleryStock->type) }}
-                                </div>
-                            </div>
-                            <div class="form-group full-width">
-                                <div class="form-label text-uppercase text-muted small fw-bold">Description</div>
-                                <div class="form-value">{{ $jewelleryStock->description ?: 'No description provided.' }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endif
                 </div>
 
-                <!-- Specifications -->
-                <div class="form-section-card mb-4">
-                    <div class="section-header">
-                        <div class="section-info">
-                            <div class="section-icon">
-                                <i class="bi bi-sliders"></i>
-                            </div>
-                            <div>
-                                <h5 class="section-title">Specifications</h5>
-                            </div>
+                {{-- Record Info --}}
+                <div class="tracker-table-card" style="padding: 1.5rem;">
+                    <h3 style="margin: 0 0 1rem; font-size: 1.1rem; color: #1e293b;">
+                        <i class="bi bi-clock-history" style="color: #6366f1;"></i> Record History
+                    </h3>
+                    <div style="font-size: 0.85rem; color: #64748b; line-height: 1.6;">
+                        <div style="margin-bottom: 0.75rem;">
+                            <strong>Created At:</strong><br>
+                            {{ $jewelleryStock->created_at->format('d M, Y h:i A') }}
                         </div>
-                    </div>
-                    <div class="section-body">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <div class="form-label text-uppercase text-muted small fw-bold">Metal Type</div>
-                                <div class="form-value">
-                                    {{ $jewelleryStock->metalType ? $jewelleryStock->metalType->name : 'N/A' }}</div>
-                            </div>
-                            <div class="form-group">
-                                <div class="form-label text-uppercase text-muted small fw-bold">Ring Size</div>
-                                <div class="form-value">
-                                    {{ $jewelleryStock->ringSize ? $jewelleryStock->ringSize->name : 'N/A' }}</div>
-                            </div>
-                            <div class="form-group">
-                                <div class="form-label text-uppercase text-muted small fw-bold">Weight</div>
-                                <div class="form-value">
-                                    {{ $jewelleryStock->weight ? number_format($jewelleryStock->weight, 3) . ' g' : 'N/A' }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Inventory & Pricing -->
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="form-section-card h-100">
-                            <div class="section-header">
-                                <div class="section-info">
-                                    <div class="section-icon">
-                                        <i class="bi bi-box-seam"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="section-title">Inventory</h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="section-body">
-                                <div class="form-grid" style="grid-template-columns: 1fr;">
-                                    <div class="form-group d-flex justify-content-between align-items-center p-3 rounded"
-                                        style="background: var(--bg-body, #f8fafc);">
-                                        <div class="form-label mb-0 text-uppercase text-muted small fw-bold">Current Stock
-                                        </div>
-                                        <div
-                                            class="form-value fw-bold fs-5 {{ $jewelleryStock->quantity <= $jewelleryStock->low_stock_threshold ? 'text-danger' : 'text-success' }}">
-                                            {{ $jewelleryStock->quantity }} units
-                                        </div>
-                                    </div>
-                                    <div class="form-group d-flex justify-content-between align-items-center p-3 rounded"
-                                        style="background: var(--bg-body, #f8fafc);">
-                                        <div class="form-label mb-0 text-uppercase text-muted small fw-bold">Low Stock
-                                            Threshold</div>
-                                        <div class="form-value">{{ $jewelleryStock->low_stock_threshold }} units</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-section-card h-100">
-                            <div class="section-header">
-                                <div class="section-info">
-                                    <div class="section-icon">
-                                        <i class="bi bi-currency-dollar"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="section-title">Pricing</h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="section-body">
-                                <div class="form-grid" style="grid-template-columns: 1fr;">
-                                    <div class="form-group d-flex justify-content-between align-items-center p-3 rounded"
-                                        style="background: var(--bg-body, #f8fafc);">
-                                        <div class="form-label mb-0 text-uppercase text-muted small fw-bold">Purchase Price
-                                        </div>
-                                        <div class="form-value fw-semibold">
-                                            ${{ number_format($jewelleryStock->purchase_price, 2) }}</div>
-                                    </div>
-                                    <div class="form-group d-flex justify-content-between align-items-center p-3 rounded"
-                                        style="background: var(--bg-body, #f8fafc);">
-                                        <div class="form-label mb-0 text-uppercase text-muted small fw-bold">Selling Price
-                                        </div>
-                                        <div class="form-value fw-bold text-primary fs-5">
-                                            ${{ number_format($jewelleryStock->selling_price, 2) }}</div>
-                                    </div>
-                                    @if ($jewelleryStock->purchase_price > 0)
-                                        @php
-                                            $margin = $jewelleryStock->selling_price - $jewelleryStock->purchase_price;
-                                            $marginPct =
-                                                $jewelleryStock->purchase_price > 0
-                                                    ? ($margin / $jewelleryStock->purchase_price) * 100
-                                                    : 0;
-                                        @endphp
-                                        <div class="form-group d-flex justify-content-between align-items-center p-3 rounded mt-2"
-                                            style="background: var(--bg-body, #f8fafc);">
-                                            <div class="form-label mb-0 text-uppercase text-muted small fw-bold">Margin
-                                            </div>
-                                            <div class="form-value">
-                                                <span class="badge {{ $margin >= 0 ? 'bg-success' : 'bg-danger' }}">
-                                                    ${{ number_format($margin, 2) }} ({{ number_format($marginPct, 1) }}%)
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
+                        <div>
+                            <strong>Last Updated:</strong><br>
+                            {{ $jewelleryStock->updated_at->format('d M, Y h:i A') }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Record Information -->
-        <div class="form-section-card mb-4">
-            <div class="section-header">
-                <div class="section-info">
-                    <div class="section-icon">
-                        <i class="bi bi-clock-history"></i>
-                    </div>
-                    <div>
-                        <h5 class="section-title">Record Information</h5>
-                        <p class="section-description">Audit trail</p>
-                    </div>
-                </div>
-            </div>
-            <div class="section-body">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <div class="form-label text-uppercase text-muted small fw-bold"><i
-                                class="bi bi-calendar-plus me-1"></i> Created At</div>
-                        <div class="form-value">{{ $jewelleryStock->created_at->format('M d, Y h:i A') }}</div>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-label text-uppercase text-muted small fw-bold"><i
-                                class="bi bi-calendar-check me-1"></i> Last Updated</div>
-                        <div class="form-value">{{ $jewelleryStock->updated_at->format('M d, Y h:i A') }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
-    <style>
-        /* Fix pill colors strictly according to diamond theme */
-        [data-theme="dark"] .status-active {
-            background: rgba(16, 185, 129, 0.15) !important;
-            color: #34d399 !important;
-            border-color: rgba(52, 211, 153, 0.3) !important;
-        }
-
-        [data-theme="dark"] .status-inactive {
-            background: rgba(239, 68, 68, 0.15) !important;
-            color: #f87171 !important;
-            border-color: rgba(248, 113, 113, 0.3) !important;
-        }
-    </style>
 @endsection

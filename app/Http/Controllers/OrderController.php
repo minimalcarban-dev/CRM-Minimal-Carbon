@@ -70,7 +70,7 @@ class OrderController extends Controller
 
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
-        $baseQuery = Order::query()->with(['company', 'creator','factoryRelation']);
+        $baseQuery = Order::query()->with(['company', 'creator', 'factoryRelation']);
 
         // Super admin sees all orders, regular admin sees only their submitted orders
         // Unless they have 'orders.view_team' permission which allows viewing team orders
@@ -82,6 +82,7 @@ class OrderController extends Controller
 
             // Restrict visibility of dispatched orders:
             // Normal admin cannot see shipped orders older than 10 days
+
             // $baseQuery->where(function ($q) use ($shippedStatuses) {
             //     $q->whereNotIn('diamond_status', $shippedStatuses)
             //         ->orWhereNull('diamond_status')
@@ -107,7 +108,7 @@ class OrderController extends Controller
             });
         }
 
-        if ($request->filled('factory_id')){
+        if ($request->filled('factory_id')) {
             $baseQuery->where('factory_id', $request->factory_id);
         }
 
@@ -132,8 +133,23 @@ class OrderController extends Controller
             ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
                 $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
                     ->orWhereNull('diamond_status');
-            })
-            ->count();
+            })->count();
+
+        // Count ship-today orders (actionable only)
+        $shipTodayCount = (clone $baseQuery)
+            ->whereDate('dispatch_date', now()->toDateString())
+            ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+                $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
+                    ->orWhereNull('diamond_status');
+            })->count();
+
+        // Count ship-tomorrow orders (actionable only)
+        $shipTomorrowCount = (clone $baseQuery)
+            ->whereDate('dispatch_date', now()->addDay()->toDateString())
+            ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+                $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
+                    ->orWhereNull('diamond_status');
+            })->count();
 
         // Compute totals and breakdowns EXCLUDING shipped and cancelled orders
         $nonShippedQuery = (clone $baseQuery)->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
@@ -192,6 +208,23 @@ class OrderController extends Controller
         // Now apply optional filters for the listing
         $query = clone $baseQuery;
 
+        $statusQuickViewActive = ($request->filled('shipped') && $request->shipped == '1')
+            || ($request->filled('in_transit') && $request->in_transit == '1')
+            || ($request->filled('cancelled') && $request->cancelled == '1');
+
+        $sort = trim((string) $request->input('sort', ''));
+        if ($sort === '') {
+            if ($request->boolean('ship_today')) {
+                $sort = 'ship_today';
+            } elseif ($request->boolean('ship_tomorrow')) {
+                $sort = 'ship_tomorrow';
+            }
+        }
+
+        $allowedSorts = ['newest_created', 'oldest_created', 'oldest_due', 'newest_due', 'id_asc', 'id_desc', 'ship_today', 'ship_tomorrow'];
+        $sort = in_array($sort, $allowedSorts, true) ? $sort : null;
+        $shipDaySortActive = in_array($sort, ['ship_today', 'ship_tomorrow'], true);
+
         // If shipped filter is applied, show only shipped orders
         if ($request->filled('shipped') && $request->shipped == '1') {
             $query->whereIn('diamond_status', $shippedStatuses);
@@ -224,8 +257,23 @@ class OrderController extends Controller
         }
 
         // Overdue filter
-        if ($request->filled('overdue') && $request->overdue == '1') {
+        if ($request->filled('overdue') && $request->overdue == '1' && !$shipDaySortActive) {
             $query->whereDate('dispatch_date', '<', now()->startOfDay())
+                ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+                    $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
+                        ->orWhereNull('diamond_status');
+                });
+        }
+
+        // Ship-day quick filters are now selected from the sort dropdown
+        if (!$statusQuickViewActive && $sort === 'ship_today') {
+            $query->whereDate('dispatch_date', now()->toDateString())
+                ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
+                    $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
+                        ->orWhereNull('diamond_status');
+                });
+        } elseif (!$statusQuickViewActive && $sort === 'ship_tomorrow') {
+            $query->whereDate('dispatch_date', now()->addDay()->toDateString())
                 ->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
                     $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
                         ->orWhereNull('diamond_status');
@@ -254,7 +302,38 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->latest()->paginate(20);
+        if ($sort === 'ship_today' || $sort === 'ship_tomorrow') {
+            // Keep ship-day views focused on latest orders within that day
+            $query->orderBy('created_at', 'desc')->orderBy('id', 'desc');
+        } elseif ($sort === 'newest_created') {
+            $query->orderBy('created_at', 'desc')->orderBy('id', 'desc');
+        } elseif ($sort === 'oldest_created') {
+            $query->orderBy('created_at', 'asc')->orderBy('id', 'asc');
+        } elseif ($sort === 'oldest_due') {
+            $query->orderByRaw('CASE WHEN dispatch_date IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('dispatch_date', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->orderBy('id', 'asc');
+        } elseif ($sort === 'newest_due') {
+            $query->orderByRaw('CASE WHEN dispatch_date IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('dispatch_date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->orderBy('id', 'desc');
+        } elseif ($sort === 'id_asc') {
+            $query->orderBy('id', 'asc');
+        } elseif ($sort === 'id_desc') {
+            $query->orderBy('id', 'desc');
+        } elseif ($request->filled('overdue') && $request->overdue == '1') {
+            // Preserve current default behavior for overdue view
+            $query->orderBy('dispatch_date', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->orderBy('id', 'asc');
+        } else {
+            // Preserve current default behavior for non-overdue views
+            $query->latest();
+        }
+
+        $orders = $query->paginate(20);
         $factories = Factory::orderBy('name')->get();
 
         // Mark all unread order-created notifications as read for this admin
@@ -270,6 +349,8 @@ class OrderController extends Controller
             'shippedOrdersCount',
             'cancelledOrdersCount',
             'overdueOrdersCount',
+            'shipTodayCount',
+            'shipTomorrowCount',
             'inTransitCount',
             'todaysSales',
             'monthSales',
@@ -303,7 +384,7 @@ class OrderController extends Controller
         try {
             $validated = $this->validateOrder($request);
             $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
-            
+
             // ✅ CRITICAL: Extract and validate melee entries BEFORE creating order
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
             $meleeEntriesForStock = $incomingMeleeEntries;
@@ -317,7 +398,7 @@ class OrderController extends Controller
             // ✅ CRITICAL: Extract and validate ALL diamond SKUs BEFORE creating order
             $allSkus = $this->extractValidatedSkus($validated);
             $validatedDiamonds = [];
-            
+
             foreach ($allSkus as $sku) {
                 $skuCheck = $this->checkOrderSkuAvailability($sku);
                 if (!$skuCheck['available']) {
@@ -333,7 +414,7 @@ class OrderController extends Controller
             // This prevents file uploads from blocking database operations
             $images = [];
             $pdfs = [];
-            
+
             try {
                 $images = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
                 $pdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
@@ -379,7 +460,7 @@ class OrderController extends Controller
             // Attach uploaded files
             $order->images = $images;
             $order->order_pdfs = $pdfs;
-            
+
             $order->save();
 
             // ⚡ PERFORMANCE: Bulk update diamonds as sold (instead of loop + controller calls)
@@ -387,7 +468,7 @@ class OrderController extends Controller
                 $diamondPrices = $validated['diamond_prices'] ?? [];
                 $diamondIds = [];
                 $soldDiamonds = [];
-                
+
                 foreach ($validatedDiamonds as $diamond) {
                     $diamondIds[] = $diamond->id;
                     $soldPriceUsd = (float) ($diamondPrices[$diamond->sku] ?? 0);
@@ -446,7 +527,7 @@ class OrderController extends Controller
             }
 
             // ⚡ GOLD TRACING: Auto-log consumption if gold weight is provided on create
-            $newWeight = (float)$order->gold_net_weight;
+            $newWeight = (float) $order->gold_net_weight;
             if ($newWeight > 0 && $order->factory_id) {
                 // ✅ STOCK GUARD: Prevent consuming more gold than factory has
                 $factory = Factory::find($order->factory_id);
@@ -480,15 +561,16 @@ class OrderController extends Controller
             // ⚡ PERFORMANCE: Queue order creation notification instead of sending synchronously
             dispatch(function () use ($order) {
                 $createdBy = Admin::find($order->submitted_by);
-                if (!$createdBy) return;
+                if (!$createdBy)
+                    return;
 
                 // Send to all admins who have access to orders (excluding the creator)
                 $eligibleAdmins = Admin::where('id', '!=', $createdBy->id)
                     ->where(function ($q) {
                         $q->where('is_super', true)
-                          ->orWhereHas('permissions', function ($pq) {
-                              $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
-                          });
+                            ->orWhereHas('permissions', function ($pq) {
+                                $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                            });
                     })->get();
 
                 if ($eligibleAdmins->isNotEmpty()) {
@@ -614,7 +696,7 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
-        
+
         // If order is cancelled, only allow updating 'special_notes' UNLESS user is a super admin
         if (in_array($order->diamond_status, $cancelledStatuses) && !Auth::guard('admin')->user()->is_super) {
             $validated = $request->validate([
@@ -637,11 +719,11 @@ class OrderController extends Controller
 
             return redirect()->route('orders.show', $order->id)->with('success', $message);
         }
-        
+
         try {
             $validated = $this->validateOrder($request);
             $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
-            
+
             // ✅ CRITICAL: Validate melee stock with reservation logic
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
             $this->validateMeleeStockAvailability($incomingMeleeEntries, $order, $allowNegativeMelee);
@@ -840,8 +922,8 @@ class OrderController extends Controller
             }
 
             // ⚡ GOLD TRACING: Auto-log consumption if gold weight changes during update
-            $oldWeight = (float)($oldSnapshot['gold_net_weight'] ?? 0);
-            $newWeight = (float)$order->gold_net_weight;
+            $oldWeight = (float) ($oldSnapshot['gold_net_weight'] ?? 0);
+            $newWeight = (float) $order->gold_net_weight;
             if ($oldWeight !== $newWeight && $order->factory_id) {
                 $difference = $newWeight - $oldWeight;
                 if ($difference != 0) {
@@ -883,20 +965,21 @@ class OrderController extends Controller
                 'new_diamond_sku' => $newDiamondSku,
                 'updated_by' => Auth::guard('admin')->id()
             ]);
-            
+
             // ⚡ PERFORMANCE: Queue update notifications
             if (!empty($newValues)) {
                 dispatch(function () use ($order, $oldValues, $newValues) {
                     $updatedBy = Admin::find($order->last_modified_by);
-                    if (!$updatedBy) return;
+                    if (!$updatedBy)
+                        return;
 
                     // Notify all admins who have access to orders (excluding the updater)
                     $adminsToNotify = Admin::where('id', '!=', $updatedBy->id)
                         ->where(function ($q) {
                             $q->where('is_super', true)
-                              ->orWhereHas('permissions', function ($pq) {
-                                  $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
-                              });
+                                ->orWhereHas('permissions', function ($pq) {
+                                    $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                                });
                         })->get();
 
                     if ($adminsToNotify->isNotEmpty()) {
@@ -1567,7 +1650,7 @@ class OrderController extends Controller
             dispatch(function () use ($order) {
                 $superAdmins = Admin::where('is_super', true)->get();
                 $updatedBy = Admin::find($order->cancelled_by);
-                
+
                 if ($superAdmins->isNotEmpty() && $updatedBy) {
                     Notification::send($superAdmins, new OrderCancelledNotification($order, $updatedBy));
                 }
@@ -1804,7 +1887,7 @@ class OrderController extends Controller
             'melee_entries.*.avg_carat_per_piece' => 'nullable|numeric|min:0',
             'melee_entries.*.price_per_ct' => 'nullable|numeric|min:0',
             'allow_negative_melee' => 'nullable|boolean',
-            
+
             'melee_diamond_id' => 'nullable|exists:melee_diamonds,id',
             'melee_pieces' => 'nullable|integer|min:1',
             'melee_carat' => 'nullable|numeric|min:0',
@@ -1939,14 +2022,16 @@ class OrderController extends Controller
         }
 
         if (empty($entries) && !empty($fallbackDiamondId) && (int) $fallbackPieces > 0) {
-            $entries = [[
-                'melee_diamond_id' => (int) $fallbackDiamondId,
-                'pieces' => (int) $fallbackPieces,
-                'avg_carat_per_piece' => (int) $fallbackPieces > 0
-                    ? round((float) $fallbackCarat / (int) $fallbackPieces, 5)
-                    : 0,
-                'price_per_ct' => (float) ($fallbackPricePerCt ?? 0),
-            ]];
+            $entries = [
+                [
+                    'melee_diamond_id' => (int) $fallbackDiamondId,
+                    'pieces' => (int) $fallbackPieces,
+                    'avg_carat_per_piece' => (int) $fallbackPieces > 0
+                        ? round((float) $fallbackCarat / (int) $fallbackPieces, 5)
+                        : 0,
+                    'price_per_ct' => (float) ($fallbackPricePerCt ?? 0),
+                ]
+            ];
         }
 
         return array_values(array_filter(array_map(function ($entry) {
@@ -2001,8 +2086,7 @@ class OrderController extends Controller
         array $incomingEntries,
         ?Order $existingOrder = null,
         bool $allowNegative = false
-    ): void
-    {
+    ): void {
         if (empty($incomingEntries)) {
             return;
         }
@@ -2147,7 +2231,7 @@ class OrderController extends Controller
         if (!empty($validated['diamond_prices'])) {
             $order->diamond_prices = $validated['diamond_prices'];
         }
-        
+
         $order->product_other = $validated['product_other'] ?? '';
         $order->special_notes = $validated['special_notes'] ?? '';
         $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
@@ -2390,9 +2474,9 @@ class OrderController extends Controller
             $eligibleAdmins = Admin::where('id', '!=', $sender->id)
                 ->where(function ($q) {
                     $q->where('is_super', true)
-                      ->orWhereHas('permissions', function ($pq) {
-                          $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
-                      });
+                        ->orWhereHas('permissions', function ($pq) {
+                            $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                        });
                 })->get();
 
             if ($eligibleAdmins->isNotEmpty()) {

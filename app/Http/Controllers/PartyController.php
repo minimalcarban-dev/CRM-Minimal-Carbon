@@ -67,11 +67,11 @@ class PartyController extends Controller
 
     public function show(Party $party)
     {
-        $invoicesCount = \App\Models\Invoice::where('billed_to_id', $party->id)
+        $invoicesCount = Invoice::where('billed_to_id', $party->id)
             ->orWhere('shipped_to_id', $party->id)
             ->count();
 
-        $recentInvoices = \App\Models\Invoice::with('company')
+        $recentInvoices = Invoice::with('company')
             ->where('billed_to_id', $party->id)
             ->orWhere('shipped_to_id', $party->id)
             ->orderBy('invoice_date', 'desc')

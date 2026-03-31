@@ -780,6 +780,14 @@
                                                     {{ emoji }}
                                                 </button>
                                             </div>
+                                            <!-- Thread Button — beside emoji reaction btn -->
+                                            <button
+                                                class="meta-action"
+                                                title="Reply in Thread"
+                                                @click.stop="openThread(message)"
+                                            >
+                                                <i class="bi bi-chat-text"></i>
+                                            </button>
                                             <button
                                                 class="meta-action"
                                                 title="More actions"
@@ -845,16 +853,6 @@
                                                             : "Pin"
                                                     }}
                                                 </button>
-                                                <button
-                                                    class="message-actions-item"
-                                                    @click.stop="
-                                                        openThread(message);
-                                                        closeMenus();
-                                                    "
-                                                >
-                                                    <i class="bi bi-chat-text"></i>
-                                                    Reply in Thread
-                                                </button>
                                             </div>
                                         </div>
 
@@ -900,163 +898,37 @@
                 ref="inputContainer"
                 v-show="!(isMobile && userInfoOpen)"
             >
-                <!-- Attachment Preview -->
-                <div v-if="attachmentFiles.length" class="attachments-preview">
-                    <div
-                        v-for="(file, index) in attachmentFiles"
-                        :key="index"
-                        class="attachment-preview-item"
-                    >
-                        <i class="bi bi-paperclip"></i>
-                        <span>{{ file.name }}</span>
-                        <button
-                            @click="removeAttachment(index)"
-                            class="remove-attachment"
-                        >
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Input Box: reply (optional) + textarea row — one unified container -->
-                <div
-                    class="input-box-wrapper"
-                    :class="{ 'has-reply': !!replyTo }"
+                <ChatInput
+                    v-model="newMessage"
+                    :placeholder="mobileInputPlaceholder"
+                    :files="attachmentFiles"
+                    :reply-to="replyTo"
+                    :emoji-picker-open="showEmojiPicker"
+                    :sending="isSending"
+                    :can-send="canSendMessage"
+                    :mention-open="mentionOpen"
+                    :mention-items="mentionItems"
+                    :mention-index="mentionIndex"
+                    :order-suggest-open="orderSuggestOpen"
+                    :order-suggest-items="orderSuggestItems"
+                    :order-suggest-index="orderSuggestIndex"
+                    textarea-ref="messageInput"
+                    file-input-ref="fileInput"
+                    @send="sendMessage"
+                    @attach-files="handleFiles"
+                    @remove-file="removeAttachment"
+                    @toggle-emoji="showEmojiPicker = !showEmojiPicker"
+                    @editor-input="onEditorInput"
+                    @editor-keydown="onKeyDownInEditor"
+                    @editor-paste="handlePaste"
+                    @pick-mention="pickMention"
+                    @pick-order="pickOrderSuggest"
+                    @cancel-reply="replyTo = null"
                 >
-                    <!-- Reply Preview (inside the box, top portion) -->
-                    <div v-if="replyTo" class="reply-bar">
-                        <div class="reply-bar-icon">
-                            <i class="bi bi-arrow-return-right"></i>
-                        </div>
-                        <div class="reply-bar-content">
-                            <div class="reply-bar-title">
-                                Replying to
-                                {{ replyTo.sender?.name || "message" }}
-                            </div>
-                            <div class="reply-bar-preview">
-                                "{{
-                                    replyTo.body?.slice(0, 80) || "Attachment"
-                                }}"
-                            </div>
-                        </div>
-                        <button
-                            class="reply-bar-cancel"
-                            @click="replyTo = null"
-                            title="Cancel reply"
-                        >
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-
-                    <!-- Bottom row: attach + textarea + send -->
-                    <div class="input-row">
-                        <input
-                            type="file"
-                            ref="fileInput"
-                            @change="handleFiles"
-                            multiple
-                            style="display: none"
-                        />
-                        <button
-                            @click="$refs.fileInput.click()"
-                            class="btn-attach"
-                            title="Attach files"
-                        >
-                            <i class="bi bi-paperclip"></i>
-                        </button>
-                        <button
-                            @click.stop="showEmojiPicker = !showEmojiPicker"
-                            class="btn-attach"
-                            title="Emoji"
-                        >
-                            <i class="bi bi-emoji-smile"></i>
-                        </button>
-                        <div class="input-with-suggestions" @click.stop>
-                            <div
-                                v-if="showEmojiPicker"
-                                class="emoji-mart-wrapper"
-                                @click.stop
-                            >
-                                <EmojiPicker
-                                    :data="emojiData"
-                                    @emoji-select="appendEmoji"
-                                />
-                            </div>
-                            <textarea
-                                v-model="newMessage"
-                                @keydown="onKeyDownInEditor"
-                                @input="onEditorInput"
-                                @paste="handlePaste"
-                                :placeholder="mobileInputPlaceholder"
-                                ref="messageInput"
-                                class="message-textarea"
-                                style="width: 100%"
-                                rows="1"
-                            ></textarea>
-
-                            <div
-                                v-if="mentionOpen && mentionItems.length"
-                                class="mention-popover"
-                            >
-                                <div
-                                    v-for="(m, i) in mentionItems"
-                                    :key="m.id"
-                                    :class="[
-                                        'mention-item',
-                                        { active: i === mentionIndex },
-                                    ]"
-                                    @mousedown.prevent="pickMention(m)"
-                                >
-                                    <span class="mention-avatar">{{
-                                        avatarInitials(m.name)
-                                    }}</span>
-                                    <div class="mention-info">
-                                        <div class="mention-name">
-                                            {{ m.name }}
-                                        </div>
-                                        <div class="mention-email">
-                                            {{ m.email }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="orderSuggestOpen && orderSuggestItems.length"
-                                class="mention-popover order-suggest-popover"
-                            >
-                                <div
-                                    v-for="(order, i) in orderSuggestItems"
-                                    :key="`order-suggest-${order.id}`"
-                                    :class="[
-                                        'mention-item',
-                                        { active: i === orderSuggestIndex },
-                                    ]"
-                                    @mousedown.prevent="pickOrderSuggest(order)"
-                                >
-                                    <span class="mention-avatar">#</span>
-                                    <div class="mention-info">
-                                        <div class="mention-name">
-                                            #{{ order.id }}
-                                        </div>
-                                        <div class="mention-email">
-                                            {{ order.client_name || "Unknown client" }}
-                                            · {{ order.status_label || "Unknown" }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <button
-                            @click="sendMessage"
-                            :disabled="!canSendMessage"
-                            class="btn-send"
-                            title="Send message"
-                        >
-                            <i class="bi bi-send-fill"></i>
-                        </button>
-                    </div>
-                </div>
+                    <template #emoji-picker>
+                        <EmojiPicker :data="emojiData" @emoji-select="appendEmoji" />
+                    </template>
+                </ChatInput>
             </div>
         </div>
 
@@ -1595,60 +1467,34 @@
 
                 <!-- Thread Input -->
                 <div class="thread-input-area">
-                    <div
-                        v-if="threadReplyFiles.length"
-                        class="attachments-preview"
+                    <ChatInput
+                        v-model="threadEditor.input.value"
+                        placeholder="Reply to thread... Use @ to mention"
+                        :files="threadReplyFiles"
+                        :emoji-picker-open="threadEditor.emojiPickerOpen.value"
+                        :sending="isSendingThread"
+                        :can-send="!!threadEditor.input.value.trim() || threadReplyFiles.length > 0"
+                        :mention-open="threadEditor.mentionOpen.value"
+                        :mention-items="threadEditor.mentionItems.value"
+                        :mention-index="threadEditor.mentionIndex.value"
+                        :order-suggest-open="threadEditor.orderSuggestOpen.value"
+                        :order-suggest-items="threadEditor.orderSuggestItems.value"
+                        :order-suggest-index="threadEditor.orderSuggestIndex.value"
+                        textarea-ref="threadInput"
+                        file-input-ref="threadFileInput"
+                        @send="sendThreadReply"
+                        @attach-files="handleThreadFiles"
+                        @remove-file="removeThreadAttachment"
+                        @toggle-emoji="threadEditor.emojiPickerOpen.value = !threadEditor.emojiPickerOpen.value"
+                        @editor-input="threadEditor.onInput"
+                        @editor-keydown="threadEditor.onKeyDown"
+                        @pick-mention="threadEditor.pickMention"
+                        @pick-order="threadEditor.pickOrderSuggest"
                     >
-                        <div
-                            v-for="(file, index) in threadReplyFiles"
-                            :key="index"
-                            class="attachment-preview-item"
-                        >
-                            <i class="bi bi-paperclip"></i>
-                            <span>{{ file.name }}</span>
-                            <button
-                                @click="removeThreadAttachment(index)"
-                                class="remove-attachment"
-                            >
-                                <i class="bi bi-x"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <input
-                            type="file"
-                            ref="threadFileInput"
-                            @change="handleThreadFiles"
-                            multiple
-                            style="display: none"
-                        />
-                        <button
-                            @click="$refs.threadFileInput.click()"
-                            class="btn-attach-thread"
-                            title="Attach files"
-                        >
-                            <i class="bi bi-paperclip"></i>
-                        </button>
-                        <textarea
-                            v-model="threadReplyInput"
-                            class="thread-textarea"
-                            placeholder="Reply to thread..."
-                            rows="1"
-                            @keydown.enter.prevent="sendThreadReply"
-                        ></textarea>
-                        <button
-                            @click="sendThreadReply"
-                            class="btn-send-thread"
-                            :disabled="
-                                (!threadReplyInput.trim() &&
-                                    !threadReplyFiles.length) ||
-                                isSendingThread
-                            "
-                            title="Send reply"
-                        >
-                            <i class="bi bi-send-fill"></i>
-                        </button>
-                    </div>
+                        <template #emoji-picker>
+                            <EmojiPicker :data="emojiData" @emoji-select="threadEditor.appendEmoji" />
+                        </template>
+                    </ChatInput>
                 </div>
             </div>
 
@@ -2207,9 +2053,11 @@ import { format } from "date-fns";
 import debounce from "lodash/debounce";
 import DOMPurify from "dompurify";
 import MediaGallery from "./MediaGallery.vue";
+import ChatInput from "./ChatInput.vue";
 import { Picker as EmojiMartPicker } from "emoji-mart";
 import emojiData from "@emoji-mart/data";
 import * as pdfjsLib from "pdfjs-dist";
+import { useChatEditor } from "../composables/useChatEditor";
 
 // Set PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -2241,7 +2089,7 @@ const EmojiPicker = defineComponent({
 });
 
 export default {
-    components: { MediaGallery, EmojiPicker },
+    components: { MediaGallery, EmojiPicker, ChatInput },
     props: {
         userId: { type: Number, required: true },
         pusherKey: { type: String, required: true },
@@ -2269,6 +2117,7 @@ export default {
         const pendingMentionIds = ref(new Set());
         const messageContainer = ref(null);
         const messageInput = ref(null);
+        const threadInput = ref(null);
         const inputContainer = ref(null);
         const page = ref(1);
         const hasMoreMessages = ref(true);
@@ -2971,7 +2820,10 @@ export default {
 
         const pickOrderSuggest = (order) => {
             if (!order?.id) return;
-            const textarea = messageInput.value;
+            // Use activeElement since textarea is now inside ChatInput component
+            const textarea = document.activeElement?.tagName === 'TEXTAREA'
+                ? document.activeElement
+                : messageInput.value;
             const val = newMessage.value;
             const caret = textarea?.selectionStart ?? val.length;
             const before = val.slice(0, caret);
@@ -3283,8 +3135,9 @@ export default {
         };
 
         // Auto-resize textarea based on content (WhatsApp style)
-        const autoResizeTextarea = () => {
-            const textarea = messageInput.value;
+        // Accepts optional target element; falls back to messageInput ref or event target
+        const autoResizeTextarea = (el) => {
+            const textarea = el || messageInput.value;
             if (!textarea) return;
 
             // Reset height to auto to get correct scrollHeight
@@ -3318,7 +3171,7 @@ export default {
 
         const onEditorInput = (e) => {
             handleTyping();
-            autoResizeTextarea();
+            autoResizeTextarea(e.target); // Pass element directly — messageInput ref no longer in scope
 
             const val = newMessage.value;
             const caret = e.target.selectionStart;
@@ -3419,7 +3272,10 @@ export default {
 
         const pickMention = (m) => {
             if (!m) return;
-            const textarea = messageInput.value;
+            // Use activeElement since textarea is now inside ChatInput component
+            const textarea = document.activeElement?.tagName === 'TEXTAREA'
+                ? document.activeElement
+                : messageInput.value;
             const val = newMessage.value;
             const caret = textarea?.selectionStart ?? val.length;
             const before = val.slice(0, caret);
@@ -4136,9 +3992,21 @@ export default {
         const threadPanelOpen = ref(false);
         const activeThreadMessage = ref(null);
         const threadReplies = ref([]);
-        const threadReplyInput = ref("");
         const threadLoading = ref(false);
         const threadReplyFiles = ref([]);
+
+        // Thread Editor Composable — isolated state, no sharing with main chat
+        const threadEditor = useChatEditor({
+            type: 'thread',
+            getMembers: currentMembers,
+            onSend: () => sendThreadReply(),
+            onTyping: null, // threads don't broadcast typing indicator
+            textareaRef: threadInput,
+            fetchOrderSuggestions: async (q) => {
+                const { data } = await axios.get('/admin/chat/orders/suggest', { params: { q } });
+                return data?.orders || [];
+            },
+        });
 
         // Thread Panel Resize
         const threadPanelWidth = ref(420); // Default width
@@ -4309,7 +4177,7 @@ export default {
 
         const sendThreadReply = async () => {
             if (
-                !threadReplyInput.value.trim() &&
+                !threadEditor.input.value.trim() &&
                 !threadReplyFiles.value.length
             )
                 return;
@@ -4321,12 +4189,18 @@ export default {
             }
 
             const formData = new FormData();
-            if (threadReplyInput.value.trim()) {
-                formData.append("body", threadReplyInput.value);
+            if (threadEditor.input.value.trim()) {
+                formData.append("body", threadEditor.input.value);
             }
             threadReplyFiles.value.forEach((file) => {
                 formData.append("attachments[]", file);
             });
+            // Forward mention IDs so backend can send mention notifications
+            if (threadEditor.pendingMentionIds.value.size) {
+                Array.from(threadEditor.pendingMentionIds.value).forEach((id) => {
+                    formData.append("metadata[mentions][]", String(id));
+                });
+            }
 
             try {
                 const { data } = await axios.post(
@@ -4349,7 +4223,8 @@ export default {
                         mainMsg.thread_count = data.parent_thread_count;
                     }
 
-                    threadReplyInput.value = "";
+                    // Reset thread editor state cleanly
+                    threadEditor.reset();
                     threadReplyFiles.value = [];
 
                     nextTick(() => {
@@ -5103,10 +4978,12 @@ export default {
             threadPanelOpen,
             activeThreadMessage,
             threadReplies,
-            threadReplyInput,
             threadLoading,
             threadReplyFiles,
             isSendingThread,
+            threadInput,
+            // Thread Editor Composable state & handlers
+            threadEditor,
             threadPanelWidth,
             startResizeThread,
             // Info panel controls
@@ -7805,9 +7682,9 @@ export default {
 .thread-input-area {
     padding: 1rem;
     padding-left: 1.5rem; /* Extra padding for resize handle */
-    border-top: 1px solid var(--gray-200);
+    /* border-top: 1px solid var(--gray-200);
     background: white;
-    width: 100%;
+    width: 100%; */
 }
 .thread-indicator {
     display: flex;
@@ -7912,83 +7789,13 @@ export default {
     margin: 0 1rem;
 }
 
+/* Thread input area — uses same input-box-wrapper and btn-attach/btn-send as main chat */
 .thread-input-area {
-    padding: 1rem;
-    border-top: 1px solid var(--gray-200);
+    padding: 0px 6px 10px 6px;
+    /* border-top: 1px solid var(--gray-200);
     background: white;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.thread-input-area .input-row {
-    display: flex;
-    align-items: center; /* Center align for single line */
-    gap: 0.75rem;
-    background: var(--gray-50);
-    padding: 0.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--gray-200);
-}
-
-.thread-input-area .input-row:focus-within {
-    border-color: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.thread-textarea {
-    flex: 1;
-    border: none;
-    background: transparent;
-    resize: none;
-    padding: 0.5rem;
-    font-family: inherit;
-    font-size: 0.95rem;
-    max-height: 100px;
-}
-
-.thread-textarea:focus {
-    outline: none;
-}
-
-.btn-attach-thread {
-    background: none;
-    border: none;
-    color: var(--gray-500);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0 0.5rem;
-    transition: color 0.2s;
-    height: 40px; /* Match button height */
-    display: flex;
-    align-items: center;
-}
-
-.btn-attach-thread:hover {
-    color: var(--primary);
-}
-
-.btn-send-thread {
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px; /* Square with rounded corners */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-
-.btn-send-thread:hover:not(:disabled) {
-    background: var(--primary-dark);
-}
-
-.btn-send-thread:disabled {
-    background: var(--gray-300);
-    cursor: not-allowed;
-    opacity: 0.7;
+    width: 100%; */
 }
 
 .message-sender .message-time {

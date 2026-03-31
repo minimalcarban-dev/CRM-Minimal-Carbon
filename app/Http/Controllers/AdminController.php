@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
+use App\Models\Permission;
+use App\Models\MessageRead;
+use App\Models\Message;
+use App\Models\Channel;
 
 /**
  * Admin Management Controller
@@ -304,11 +308,11 @@ class AdminController extends Controller
             ];
 
             // Reassign related records to the current admin (or another designated admin)
-            \App\Models\Channel::where('created_by', $admin->id)->update(['created_by' => $current->id]);
-            \App\Models\Message::where('sender_id', $admin->id)->update(['sender_id' => $current->id]);
+            Channel::where('created_by', $admin->id)->update(['created_by' => $current->id]);
+            Message::where('sender_id', $admin->id)->update(['sender_id' => $current->id]);
 
             // Delete non-critical related records
-            \App\Models\MessageRead::where('user_id', $admin->id)->delete();
+            MessageRead::where('user_id', $admin->id)->delete();
 
 
             // Delete associated documents
@@ -406,8 +410,8 @@ class AdminController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $permissionsByCategory = \App\Models\Permission::getGroupedPermissions();
-        $assignedPermissions = \App\Models\Permission::getAdminPermissions($admin->id);
+        $permissionsByCategory = Permission::getGroupedPermissions();
+        $assignedPermissions = Permission::getAdminPermissions($admin->id);
 
         return view('admins.permissions', compact('admin', 'permissionsByCategory', 'assignedPermissions'));
     }

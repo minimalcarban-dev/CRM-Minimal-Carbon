@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\AllowedIp;
 use App\Models\AppSetting;
+use App\Services\AuditLogger;
 use Illuminate\Console\Command;
 
 class IpResetCommand extends Command
@@ -31,11 +32,11 @@ class IpResetCommand extends Command
         $this->info("✅ Cleared {$count} IP(s) from the whitelist.");
 
         // Fetch the setting to log it
-        $setting = \App\Models\AppSetting::where('key', 'ip_restriction_enabled')->first();
+        $setting = AppSetting::where('key', 'ip_restriction_enabled')->first();
 
         // Audit Log entry
         if ($setting) {
-            \App\Services\AuditLogger::log('IP Restriction Reset (CLI)', $setting, null, ['status' => 'potentially_enabled'], ['status' => 'disabled']);
+            AuditLogger::log('IP Restriction Reset (CLI)', $setting, null, ['status' => 'potentially_enabled'], ['status' => 'disabled']);
         }
 
         $this->newLine();

@@ -76,7 +76,7 @@ class JewelleryStockController extends Controller
         $inStockCount = (clone $query)->where('status', 'in_stock')->count();
         $lowStockCount = (clone $query)->where('status', 'low_stock')->count();
         $outOfStockCount = (clone $query)->where('status', 'out_of_stock')->count();
-        $totalValue = (clone $query)->selectRaw('SUM(selling_price * quantity) as total')->value('total') ?? 0;
+        $totalValue = (clone $query)->reorder()->selectRaw('SUM(selling_price * quantity) as total')->value('total') ?? 0;
 
         // Pagination
         $perPage = in_array($request->per_page, [20, 50, 100]) ? $request->per_page : 20;
