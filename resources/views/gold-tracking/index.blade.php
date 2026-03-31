@@ -81,10 +81,10 @@
             <div class="gold-factory-card" style="background: white; border-radius: 12px; padding: 1rem; text-align: center; border: 2px solid #e2e8f0; transition: all 0.3s;">
                 <div style="font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">{{ $factory->name }}</div>
                 <div style="font-size: 1.5rem; font-weight: 700; color: {{ $factory->gold_stock > 0 ? '#f59e0b' : '#94a3b8' }};">
-                    {{ number_format($factory->gold_stock, 1) }} gm
+                    {{ number_format($factory->gold_stock, 3) }} gm
                 </div>
             </div>
-            @endforeach
+            @endforeach 
         </div>
         @endif
 

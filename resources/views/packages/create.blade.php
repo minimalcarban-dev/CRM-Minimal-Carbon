@@ -3,7 +3,7 @@
 @section('title', 'Issue New Package')
 
 @section('content')
-    <div class="packages-management-container">
+    <div class="tracker-page">
         <!-- Page Header -->
         <div class="page-header mb-4">
             <div class="header-content">
@@ -18,7 +18,7 @@
                         <span class="breadcrumb-current">Issue New</span>
                     </div>
                     <h1 class="page-title">
-                        <i class="bi bi-plus-circle-fill"></i>
+                        <i class="bi bi-plus-circle-fill" style="color: #6366f1;"></i>
                         Issue New Package
                     </h1>
                     <p class="page-subtitle">Create a new package handover record</p>
@@ -39,220 +39,145 @@
                 <!-- Left Column: Primary Details -->
                 <div class="col-lg-8">
                     <!-- Package Info Card -->
-                    <div class="form-section-card mb-4">
-                        <div class="section-header">
-                            <div class="section-icon">
-                                <i class="bi bi-box-seam"></i>
-                            </div>
-                            <div class="section-title-wrapper">
-                                <h5 class="section-title">Package Information</h5>
-                                <p class="section-description">Enter the details of the package being issued</p>
-                            </div>
+                    <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-box-seam" style="color: #6366f1;"></i> Package Information
+                        </h3>
+                        <p style="font-size: 0.85rem; color: #64748b; margin-top: -1rem; margin-bottom: 1.5rem;">Enter the details of the package being issued</p>
+                        
+                        <div class="mb-4">
+                            <label for="package_description" class="form-label">Package Description <span class="text-danger">*</span></label>
+                            <textarea name="package_description" id="package_description" rows="4" class="form-control"
+                                placeholder="Describe the contents of the package..." required>{{ old('package_description') }}</textarea>
+                            <div class="form-text text-muted" style="font-size: 0.8rem; margin-top: 0.25rem;"><i class="bi bi-info-circle me-1"></i> Provide a detailed description of items.</div>
                         </div>
-                        <div class="section-body">
-                            <div class="mb-4">
-                                <label for="package_description" class="form-label-custom">Package Description <span
-                                        class="text-danger">*</span></label>
-                                <textarea name="package_description" id="package_description" rows="4" class="form-control form-control-custom"
-                                    placeholder="Describe the contents of the package..." required>{{ old('package_description') }}</textarea>
-                                <div class="form-text text-muted"><i class="bi bi-info-circle me-1"></i> Provide a detailed
-                                    description of items.</div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="party_type" class="form-label">Party Type <span class="text-danger">*</span></label>
+                                <select name="party_type" id="party_type" class="form-control themed-select" required>
+                                    <option value="">Select party type</option>
+                                    <option value="Broker" {{ old('party_type') == 'Broker' ? 'selected' : '' }}>Broker</option>
+                                    <option value="Retailer" {{ old('party_type') == 'Retailer' ? 'selected' : '' }}>Retailer</option>
+                                    <option value="Manufacturer" {{ old('party_type') == 'Manufacturer' ? 'selected' : '' }}>Manufacturer</option>
+                                    <option value="Internal Staff" {{ old('party_type') == 'Internal Staff' ? 'selected' : '' }}>Internal Staff</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="company_name" class="form-label">Company Name <span class="text-danger">*</span></label>
+                                <input type="text" name="company_name" id="company_name" class="form-control" placeholder="Company name" value="{{ old('company_name') }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="gst_number" class="form-label">GST Number</label>
+                                <input type="text" name="gst_number" id="gst_number" class="form-control" placeholder="GST number" value="{{ old('gst_number') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="pan_number" class="form-label">PAN Number</label>
+                                <input type="text" name="pan_number" id="pan_number" class="form-control" placeholder="PAN number" value="{{ old('pan_number') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="slip_id" class="form-label">Slip ID <span class="text-danger">*</span></label>
+                                <div class="position-relative">
+                                    <i class="bi bi-hash position-absolute" style="left: 0.9rem; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                                    <input type="text" name="slip_id" id="slip_id" class="form-control" style="padding-left: 2.25rem;" placeholder="e.g. SLIP-2024-001" value="{{ old('slip_id') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="issue_date" class="form-label">Issue Date <span class="text-danger">*</span></label>
+                                <input type="date" name="issue_date" id="issue_date" class="form-control" value="{{ old('issue_date', date('Y-m-d')) }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="issue_time" class="form-label">Issue Time <span class="text-danger">*</span></label>
+                                <input type="time" name="issue_time" id="issue_time" class="form-control" value="{{ old('issue_time', date('H:i')) }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="return_date" class="form-label">Expected Return Date <span class="text-danger">*</span></label>
+                                <input type="date" name="return_date" id="return_date" class="form-control" value="{{ old('return_date') }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="handover_location" class="form-label">Handover Location <span class="text-danger">*</span></label>
+                                <input type="text" name="handover_location" id="handover_location" class="form-control" placeholder="Office / Surat / Mumbai etc." value="{{ old('handover_location') }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="handover_mode" class="form-label">Handover Mode <span class="text-danger">*</span></label>
+                                <select name="handover_mode" id="handover_mode" class="form-control themed-select" required>
+                                    <option value="">Select mode</option>
+                                    <option value="Hand Delivery" {{ old('handover_mode') == 'Hand Delivery' ? 'selected' : '' }}>Hand Delivery</option>
+                                    <option value="Courier" {{ old('handover_mode') == 'Courier' ? 'selected' : '' }}>Courier</option>
+                                    <option value="Office Pickup" {{ old('handover_mode') == 'Office Pickup' ? 'selected' : '' }}>Office Pickup</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="purpose_of_handover" class="form-label">Purpose of Handover <span class="text-danger">*</span></label>
+                                <textarea name="purpose_of_handover" id="purpose_of_handover" rows="2" class="form-control" placeholder="Approval / Memo / Repair / Recut etc." required>{{ old('purpose_of_handover') }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="stock_id" class="form-label">Diamond Stock ID (SKU)</label>
+                                <div class="d-flex gap-2">
+                                    <input type="text" name="stock_id" id="stock_id" class="form-control" placeholder="Enter stock id" value="{{ old('stock_id') }}">
+                                    <button type="button" class="btn btn-outline-secondary" id="btnLookupStock">Fetch</button>
+                                </div>
+                                <div id="stockLookupMessage" class="form-text text-muted" style="font-size: 0.8rem; margin-top: 0.25rem;"></div>
+                            </div>
+                            <div class="col-md-6"></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Shape</label>
+                                <input type="text" name="diamond_shape" id="diamond_shape" class="form-control" value="{{ old('diamond_shape') }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Size</label>
+                                <input type="text" name="diamond_size" id="diamond_size" class="form-control" value="{{ old('diamond_size') }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Color</label>
+                                <input type="text" name="diamond_color" id="diamond_color" class="form-control" value="{{ old('diamond_color') }}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Clarity</label>
+                                <input type="text" name="diamond_clarity" id="diamond_clarity" class="form-control" value="{{ old('diamond_clarity') }}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Carat</label>
+                                <input type="text" name="diamond_carat" id="diamond_carat" class="form-control" value="{{ old('diamond_carat') }}" readonly>
                             </div>
 
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="party_type" class="form-label-custom">Party Type <span
-                                            class="text-danger">*</span></label>
-                                    <select name="party_type" id="party_type" class="form-control form-control-custom"
-                                        required>
-                                        <option value="">Select party type</option>
-                                        <option value="Broker" {{ old('party_type') == 'Broker' ? 'selected' : '' }}>Broker
-                                        </option>
-                                        <option value="Retailer" {{ old('party_type') == 'Retailer' ? 'selected' : '' }}>
-                                            Retailer</option>
-                                        <option value="Manufacturer"
-                                            {{ old('party_type') == 'Manufacturer' ? 'selected' : '' }}>Manufacturer
-                                        </option>
-                                        <option value="Internal Staff"
-                                            {{ old('party_type') == 'Internal Staff' ? 'selected' : '' }}>Internal Staff
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="company_name" class="form-label-custom">Company Name <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" name="company_name" id="company_name"
-                                        class="form-control form-control-custom" placeholder="Company name"
-                                        value="{{ old('company_name') }}" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="gst_number" class="form-label-custom">GST Number</label>
-                                    <input type="text" name="gst_number" id="gst_number"
-                                        class="form-control form-control-custom" placeholder="GST number"
-                                        value="{{ old('gst_number') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="pan_number" class="form-label-custom">PAN Number</label>
-                                    <input type="text" name="pan_number" id="pan_number"
-                                        class="form-control form-control-custom" placeholder="PAN number"
-                                        value="{{ old('pan_number') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="slip_id" class="form-label-custom">Slip ID <span
-                                            class="text-danger">*</span></label>
-                                    <div class="input-icon-field">
-                                        <i class="bi bi-hash"></i>
-                                        <input type="text" name="slip_id" id="slip_id"
-                                            class="form-control form-control-custom" placeholder="e.g. SLIP-2024-001"
-                                            value="{{ old('slip_id') }}" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="issue_date" class="form-label-custom">Issue Date <span
-                                            class="text-danger">*</span></label>
-                                    <input type="date" name="issue_date" id="issue_date"
-                                        class="form-control form-control-custom"
-                                        value="{{ old('issue_date', date('Y-m-d')) }}" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="issue_time" class="form-label-custom">Issue Time <span
-                                            class="text-danger">*</span></label>
-                                    <input type="time" name="issue_time" id="issue_time"
-                                        class="form-control form-control-custom"
-                                        value="{{ old('issue_time', date('H:i')) }}" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="return_date" class="form-label-custom">Expected Return Date <span
-                                            class="text-danger">*</span></label>
-                                    <input type="date" name="return_date" id="return_date"
-                                        class="form-control form-control-custom" value="{{ old('return_date') }}"
-                                        required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="handover_location" class="form-label-custom">Handover Location <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" name="handover_location" id="handover_location"
-                                        class="form-control form-control-custom"
-                                        placeholder="Office / Surat / Mumbai etc." value="{{ old('handover_location') }}"
-                                        required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="handover_mode" class="form-label-custom">Handover Mode <span
-                                            class="text-danger">*</span></label>
-                                    <select name="handover_mode" id="handover_mode"
-                                        class="form-control form-control-custom" required>
-                                        <option value="">Select mode</option>
-                                        <option value="Hand Delivery"
-                                            {{ old('handover_mode') == 'Hand Delivery' ? 'selected' : '' }}>Hand Delivery
-                                        </option>
-                                        <option value="Courier" {{ old('handover_mode') == 'Courier' ? 'selected' : '' }}>
-                                            Courier</option>
-                                        <option value="Office Pickup"
-                                            {{ old('handover_mode') == 'Office Pickup' ? 'selected' : '' }}>Office Pickup
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label for="purpose_of_handover" class="form-label-custom">Purpose of Handover <span
-                                            class="text-danger">*</span></label>
-                                    <textarea name="purpose_of_handover" id="purpose_of_handover" rows="2"
-                                        class="form-control form-control-custom" placeholder="Approval / Memo / Repair / Recut etc." required>{{ old('purpose_of_handover') }}</textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="stock_id" class="form-label-custom">Diamond Stock ID (SKU)</label>
-                                    <div class="d-flex gap-2">
-                                        <input type="text" name="stock_id" id="stock_id"
-                                            class="form-control form-control-custom" placeholder="Enter stock id"
-                                            value="{{ old('stock_id') }}">
-                                        <button type="button" class="btn-secondary-custom btn-fetch-stock"
-                                            id="btnLookupStock">Fetch</button>
-                                    </div>
-                                    <div id="stockLookupMessage" class="form-text text-muted"></div>
-                                </div>
-                                <div class="col-md-6"></div>
-                                <div class="col-md-4">
-                                    <label class="form-label-custom">Shape</label>
-                                    <input type="text" name="diamond_shape" id="diamond_shape"
-                                        class="form-control form-control-custom" value="{{ old('diamond_shape') }}"
-                                        readonly>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-custom">Size</label>
-                                    <input type="text" name="diamond_size" id="diamond_size"
-                                        class="form-control form-control-custom" value="{{ old('diamond_size') }}"
-                                        readonly>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-custom">Color</label>
-                                    <input type="text" name="diamond_color" id="diamond_color"
-                                        class="form-control form-control-custom" value="{{ old('diamond_color') }}"
-                                        readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-custom">Clarity</label>
-                                    <input type="text" name="diamond_clarity" id="diamond_clarity"
-                                        class="form-control form-control-custom" value="{{ old('diamond_clarity') }}"
-                                        readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-custom">Carat</label>
-                                    <input type="text" name="diamond_carat" id="diamond_carat"
-                                        class="form-control form-control-custom" value="{{ old('diamond_carat') }}"
-                                        readonly>
-                                </div>
-
-                            </div>
                         </div>
                     </div>
 
                     <!-- Recipient Details Card -->
-                    <div class="form-section-card">
-                        <div class="section-header">
-                            <div class="section-icon section-icon-success">
-                                <i class="bi bi-person-badge"></i>
+                    <div class="tracker-table-card" style="padding: 1.5rem;">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-person-badge" style="color: #10b981;"></i> Recipient Details
+                        </h3>
+                        <p style="font-size: 0.85rem; color: #64748b; margin-top: -1rem; margin-bottom: 1.5rem;">Who is receiving this package?</p>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="person_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" name="person_name" id="person_name" class="form-control" placeholder="John Doe" value="{{ old('person_name') }}" required>
                             </div>
-                            <div class="section-title-wrapper">
-                                <h5 class="section-title">Recipient Details</h5>
-                                <p class="section-description">Who is receiving this package?</p>
+                            <div class="col-md-6">
+                                <label for="mobile_number" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                                <input type="tel" name="mobile_number" id="mobile_number" class="form-control" placeholder="+1234567890" value="{{ old('mobile_number') }}" required>
                             </div>
                         </div>
-                        <div class="section-body">
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label for="person_name" class="form-label-custom">Full Name <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" name="person_name" id="person_name"
-                                        class="form-control form-control-custom" placeholder="John Doe"
-                                        value="{{ old('person_name') }}" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="mobile_number" class="form-label-custom">Mobile Number <span
-                                            class="text-danger">*</span></label>
-                                    <input type="tel" name="mobile_number" id="mobile_number"
-                                        class="form-control form-control-custom" placeholder="+1234567890"
-                                        value="{{ old('mobile_number') }}" required>
-                                </div>
-                            </div>
 
-                            <div class="mb-3">
-                                <label for="package_image" class="form-label-custom">Recipient Photo / ID Proof</label>
-                                <div class="file-upload-wrapper">
-                                    <input type="file" name="package_image" id="package_image"
-                                        class="file-upload-input" accept="image/*" onchange="previewImage(this)">
-                                    <div class="file-upload-placeholder" id="uploadPlaceholder">
-                                        <div class="upload-icon">
-                                            <i class="bi bi-cloud-arrow-up"></i>
-                                        </div>
-                                        <p class="upload-text">Click or drag to upload image</p>
-                                        <p class="upload-hint">Supports JPG, PNG, JPEG (Max 2MB)</p>
+                        <div class="mb-3">
+                            <label for="package_image" class="form-label">Recipient Photo / ID Proof</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" name="package_image" id="package_image" class="file-upload-input" accept="image/*" onchange="previewImage(this)">
+                                <div class="file-upload-placeholder" id="uploadPlaceholder">
+                                    <div class="upload-icon">
+                                        <i class="bi bi-cloud-arrow-up"></i>
                                     </div>
-                                    <div class="image-preview-container" id="imagePreviewContainer"
-                                        style="display: none;">
-                                        <img id="imagePreview" src="" alt="Preview">
-                                        <button type="button" class="remove-image-btn" onclick="removeImage()">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                                    <p class="upload-text">Click or drag to upload image</p>
+                                    <p class="upload-hint">Supports JPG, PNG, JPEG (Max 2MB)</p>
+                                </div>
+                                <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                                    <img id="imagePreview" src="" alt="Preview">
+                                    <button type="button" class="remove-image-btn" onclick="removeImage()">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -261,34 +186,26 @@
 
                 <!-- Right Column: Summary & Actions -->
                 <div class="col-lg-4">
-                    <div class="form-section-card sticky-top" style="top: 2rem; z-index: 1;">
-                        <div class="section-header">
-                            <div class="section-icon section-icon-warning">
-                                <i class="bi bi-check2-circle"></i>
-                            </div>
-                            <div class="section-title-wrapper">
-                                <h5 class="section-title">Summary</h5>
+                    <div class="tracker-table-card sticky-top" style="padding: 1.5rem; top: 2rem; z-index: 1;">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-check2-circle" style="color: #f59e0b;"></i> Summary
+                        </h3>
+                        
+                        <div class="alert alert-light border mb-4" style="background: #f8fafc;">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-info-circle-fill text-primary mt-1"></i>
+                                <small class="text-muted">Review all details before submitting. Once issued, a unique slip will be generated.</small>
                             </div>
                         </div>
-                        <div class="section-body">
-                            <div class="alert alert-light border mb-4">
-                                <div class="d-flex gap-2">
-                                    <i class="bi bi-info-circle-fill text-primary mt-1"></i>
-                                    <small class="text-muted">Review all details before submitting. Once issued, a unique
-                                        slip will be generated.</small>
-                                </div>
-                            </div>
 
-                            <button type="submit" class="btn-primary-custom w-100 justify-content-center py-3 mb-3">
-                                <i class="bi bi-check-lg"></i>
-                                <span>Issue Package</span>
-                            </button>
+                        <button type="submit" class="btn-primary-custom w-100 justify-content-center py-2 mb-3">
+                            <i class="bi bi-check-lg"></i>
+                            <span>Issue Package</span>
+                        </button>
 
-                            <a href="{{ route('packages.index') }}"
-                                class="btn-secondary-custom w-100 justify-content-center text-center">
-                                Cancel
-                            </a>
-                        </div>
+                        <a href="{{ route('packages.index') }}" class="btn-secondary-custom w-100 justify-content-center text-center">
+                            Cancel
+                        </a>
                     </div>
                 </div>
             </div>
@@ -297,274 +214,7 @@
 
     @push('styles')
         <style>
-            [data-theme="dark"] .packages-management-container {
-                background: var(--bg-body, #0f172a);
-            }
-
-            [data-theme="dark"] .page-header,
-            [data-theme="dark"] .form-section-card,
-            [data-theme="dark"] .section-header,
-            [data-theme="dark"] .alert {
-                background: var(--bg-card, #1e293b) !important;
-                border-color: rgba(148, 163, 184, 0.34) !important;
-                box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
-            }
-
-            [data-theme="dark"] .page-header {
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.07));
-            }
-
-            [data-theme="dark"] .page-title,
-            [data-theme="dark"] .section-title,
-            [data-theme="dark"] .form-label-custom,
-            [data-theme="dark"] .upload-text {
-                color: var(--text-primary, #f1f5f9);
-            }
-
-            [data-theme="dark"] .page-subtitle,
-            [data-theme="dark"] .breadcrumb-nav,
-            [data-theme="dark"] .breadcrumb-link,
-            [data-theme="dark"] .section-description,
-            [data-theme="dark"] .form-text,
-            [data-theme="dark"] .text-muted,
-            [data-theme="dark"] .upload-hint {
-                color: var(--text-secondary, #94a3b8) !important;
-            }
-
-            [data-theme="dark"] .form-control-custom,
-            [data-theme="dark"] .input-group-text {
-                background: rgba(15, 23, 42, 0.62);
-                border-color: rgba(148, 163, 184, 0.32);
-                color: var(--text-primary, #f1f5f9);
-            }
-
-            [data-theme="dark"] .form-control-custom::placeholder {
-                color: var(--text-secondary, #94a3b8);
-            }
-
-            [data-theme="dark"] .file-upload-wrapper {
-                background: rgba(15, 23, 42, 0.45);
-                border-color: rgba(148, 163, 184, 0.34);
-            }
-
-            [data-theme="dark"] .file-upload-wrapper:hover {
-                background: rgba(99, 102, 241, 0.08);
-                border-color: rgba(129, 140, 248, 0.55);
-            }
-
-            [data-theme="dark"] .btn-secondary-custom {
-                background: rgba(255, 255, 255, 0.04);
-                border-color: rgba(148, 163, 184, 0.35);
-                color: var(--text-secondary, #94a3b8);
-            }
-
-            [data-theme="dark"] .input-icon-field i {
-                color: var(--text-secondary, #94a3b8);
-            }
-
-            [data-theme="dark"] .section-icon {
-                background: rgba(99, 102, 241, 0.2);
-                border-color: rgba(129, 140, 248, 0.4);
-                color: #a5b4fc;
-            }
-
-            [data-theme="dark"] .section-icon-success {
-                background: rgba(16, 185, 129, 0.2);
-                border-color: rgba(52, 211, 153, 0.35);
-                color: #34d399;
-            }
-
-            [data-theme="dark"] .section-icon-warning {
-                background: rgba(245, 158, 11, 0.2);
-                border-color: rgba(251, 191, 36, 0.35);
-                color: #fbbf24;
-            }
-
-            [data-theme="dark"] .form-control-custom[type="date"],
-            [data-theme="dark"] .form-control-custom[type="time"] {
-                color-scheme: dark;
-            }
-
-            .packages-management-container {
-                padding: 2rem;
-                max-width: 1600px;
-                margin: 0 auto;
-                min-height: 100vh;
-                background: #f8fafc;
-            }
-
-            /* Page Header */
-            .page-header {
-                background: white;
-                padding: 2rem;
-                border-radius: 16px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            }
-
-            .header-content {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                gap: 2rem;
-                flex-wrap: wrap;
-            }
-
-            .breadcrumb-nav {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                font-size: 0.85rem;
-                color: var(--gray);
-                margin-bottom: 0.5rem;
-            }
-
-            .breadcrumb-link {
-                color: var(--gray);
-                text-decoration: none;
-                transition: color 0.2s;
-            }
-
-            .breadcrumb-link:hover {
-                color: var(--primary);
-            }
-
-            .breadcrumb-separator {
-                font-size: 0.7rem;
-                color: #cbd5e1;
-            }
-
-            .breadcrumb-current {
-                color: var(--primary);
-                font-weight: 600;
-            }
-
-            .page-title {
-                font-size: 1.75rem;
-                font-weight: 700;
-                color: var(--dark);
-                margin: 0;
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-            }
-
-            .page-title i {
-                color: var(--primary);
-            }
-
-            .page-subtitle {
-                color: var(--gray);
-                font-size: 0.95rem;
-                margin: 0.25rem 0 0 0;
-            }
-
-            /* Form Cards */
-            .form-section-card {
-                background: white;
-                border-radius: 20px;
-                border: 1.5px solid var(--border);
-                overflow: hidden;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
-            }
-
-            .section-header {
-                padding: 1.25rem 1.5rem;
-                background: #f8fafc;
-                border-bottom: 1.5px solid var(--border);
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-            }
-
-            .section-icon {
-                width: 48px;
-                height: 48px;
-                border-radius: 12px;
-                background: rgba(99, 102, 241, 0.14);
-                border: 1px solid rgba(99, 102, 241, 0.25);
-                color: var(--primary);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.5rem;
-                flex-shrink: 0;
-            }
-
-            .section-icon-success {
-                background: rgba(16, 185, 129, 0.14);
-                border-color: rgba(16, 185, 129, 0.28);
-                color: var(--success);
-            }
-
-            .section-icon-warning {
-                background: rgba(245, 158, 11, 0.14);
-                border-color: rgba(245, 158, 11, 0.28);
-                color: var(--warning);
-            }
-
-            .section-title {
-                font-size: 1.1rem;
-                font-weight: 700;
-                color: var(--dark);
-                margin: 0;
-            }
-
-            .section-description {
-                font-size: 0.85rem;
-                color: var(--gray);
-                margin: 0;
-            }
-
-            .section-body {
-                padding: 1.5rem;
-            }
-
-            /* Form Controls */
-            .form-label-custom {
-                font-weight: 600;
-                color: var(--dark);
-                font-size: 0.9rem;
-                margin-bottom: 0.5rem;
-                display: block;
-            }
-
-            .form-control-custom {
-                padding: 0.75rem 1rem;
-                border-radius: 10px;
-                border: 2px solid var(--border);
-                font-size: 0.95rem;
-                transition: all 0.2s;
-            }
-
-            .form-control-custom:focus {
-                border-color: var(--primary);
-                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-            }
-
-            .input-group-text {
-                border: 2px solid var(--border);
-                border-radius: 10px;
-            }
-
-            .input-icon-field {
-                position: relative;
-            }
-
-            .input-icon-field i {
-                position: absolute;
-                left: 0.9rem;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--gray);
-                pointer-events: none;
-                font-size: 0.95rem;
-            }
-
-            .input-icon-field .form-control-custom {
-                padding-left: 2.25rem;
-            }
-
-            /* File Upload */
+            /* File Upload (Create only) */
             .file-upload-wrapper {
                 position: relative;
                 width: 100%;
@@ -610,6 +260,10 @@
                 color: var(--dark);
                 margin-bottom: 0.25rem;
             }
+            .upload-hint {
+                color: #94a3b8;
+                font-size: 0.85rem;
+            }
 
             .image-preview-container {
                 position: relative;
@@ -651,144 +305,24 @@
                 transform: scale(1.1);
             }
 
-            /* Buttons */
-            .btn-primary-custom,
-            .btn-secondary-custom {
-                padding: 0.65rem 1.25rem;
-                border-radius: 12px;
-                font-weight: 600;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                text-decoration: none;
-                transition: all 0.2s;
-                border: none;
-                cursor: pointer;
+            [data-theme="dark"] .file-upload-wrapper {
+                background: rgba(15, 23, 42, 0.45);
+                border-color: rgba(148, 163, 184, 0.34);
             }
 
-            .btn-primary-custom {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                color: white;
-                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            [data-theme="dark"] .file-upload-wrapper:hover {
+                background: rgba(99, 102, 241, 0.08);
+                border-color: rgba(129, 140, 248, 0.55);
             }
-
-            .btn-primary-custom:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
-                color: white;
+            [data-theme="dark"] .upload-text {
+                color: var(--text-primary, #f1f5f9);
             }
-
-            .btn-secondary-custom {
-                background: white;
-                color: var(--gray);
-                border: 2px solid var(--border);
+            [data-theme="dark"] .upload-hint {
+                color: var(--text-secondary, #94a3b8);
             }
-
-            .btn-secondary-custom:hover {
-                border-color: var(--dark);
-                color: var(--dark);
-                background: var(--light-gray);
-            }
-
-            .btn-fetch-stock {
-                min-width: 92px;
-                justify-content: center;
-                white-space: nowrap;
-            }
-
-            /* ===== RESPONSIVE BREAKPOINTS ===== */
-
-            /* Tablet (≤992px) */
-            @media (max-width: 992px) {
-                .packages-management-container {
-                    padding: 1.25rem;
-                }
-
-                .page-header {
-                    padding: 1.5rem;
-                }
-            }
-
-            /* Mobile (≤640px) */
-            @media (max-width: 640px) {
-                .packages-management-container {
-                    padding: 0.875rem;
-                }
-
-                .page-header {
-                    padding: 1.1rem;
-                }
-
-                .header-content {
-                    flex-direction: column;
-                    gap: 0.875rem;
-                    align-items: flex-start;
-                }
-
-                .header-right {
-                    width: 100%;
-                }
-
-                .header-right .btn-secondary-custom {
-                    width: 100%;
-                    justify-content: center;
-                }
-
-                .page-title {
-                    font-size: clamp(1.1rem, 4vw, 1.5rem);
-                }
-
-                .section-header {
-                    padding: 1rem 1.1rem;
-                }
-
-                .section-body {
-                    padding: 1.1rem;
-                }
-
-                .section-icon {
-                    width: 40px;
-                    height: 40px;
-                    font-size: 1.2rem;
-                }
-
-                /* Sticky summary card — unstick on mobile so it flows naturally */
-                .form-section-card.sticky-top {
-                    position: static !important;
-                }
-
-                .btn-primary-custom,
-                .btn-secondary-custom {
-                    width: 100%;
-                    justify-content: center;
-                }
-
-                /* Stock fetch row — keep inline on mobile */
-                .d-flex.gap-2 {
-                    display: flex !important;
-                    flex-wrap: nowrap !important;
-                }
-
-                .btn-fetch-stock {
-                    min-width: 64px;
-                    padding: 0.65rem 0.75rem;
-                    font-size: 0.85rem;
-                }
-
-                .file-upload-wrapper {
-                    min-height: 150px;
-                }
-            }
-
-            /* Extra small (≤380px) */
-            @media (max-width: 380px) {
-                .page-title {
-                    font-size: 1rem;
-                }
-
-                .section-title {
-                    font-size: 0.95rem;
-                }
+            [data-theme="dark"] .alert-light {
+                background: var(--bg-card, #1e293b) !important;
+                border-color: rgba(148, 163, 184, 0.34) !important;
             }
         </style>
     @endpush
@@ -802,96 +336,94 @@
 
                 if (input.files && input.files[0]) {
                     const reader = new FileReader();
-
+                    
                     reader.onload = function(e) {
                         previewImage.src = e.target.result;
-                        placeholder.style.display = 'none';
                         previewContainer.style.display = 'flex';
+                        placeholder.style.display = 'none';
                     }
-
+                    
                     reader.readAsDataURL(input.files[0]);
                 }
             }
 
             function removeImage() {
                 const input = document.getElementById('package_image');
+                const previewContainer = document.getElementById('imagePreviewContainer');
+                const placeholder = document.getElementById('uploadPlaceholder');
+                const previewImage = document.getElementById('imagePreview');
+                
                 input.value = '';
-
-                document.getElementById('imagePreviewContainer').style.display = 'none';
-                document.getElementById('uploadPlaceholder').style.display = 'block';
+                previewImage.src = '';
+                previewContainer.style.display = 'none';
+                placeholder.style.display = 'block';
             }
 
-            async function lookupStock() {
-                const stockIdInput = document.getElementById('stock_id');
+            document.addEventListener('DOMContentLoaded', function () {
+                // Stock Lookup Logic
+                const btnLookup = document.getElementById('btnLookupStock');
+                const stockInput = document.getElementById('stock_id');
                 const messageEl = document.getElementById('stockLookupMessage');
-                const lookupBtn = document.getElementById('btnLookupStock');
-                const stockId = (stockIdInput.value || '').trim();
-
-                const fields = {
-                    shape: document.getElementById('diamond_shape'),
-                    size: document.getElementById('diamond_size'),
-                    color: document.getElementById('diamond_color'),
-                    clarity: document.getElementById('diamond_clarity'),
-                    carat: document.getElementById('diamond_carat'),
-                };
-
-                if (!stockId) {
-                    Object.values(fields).forEach((input) => input.value = '');
-                    messageEl.textContent = 'Enter stock ID first.';
-                    return;
+                
+                if(btnLookup) {
+                    btnLookup.addEventListener('click', function() {
+                        const stockId = stockInput.value.trim();
+                        
+                        if(!stockId) {
+                            messageEl.innerHTML = '<span class="text-danger">Please enter a stock ID</span>';
+                            return;
+                        }
+                        
+                        messageEl.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> Fetching details...</span>';
+                        
+                        // Need the correct endpoint URL here
+                        fetch(`/admin/diamonds/lookup-by-sku/${encodeURIComponent(stockId)}`)
+                            .then(response => {
+                                if(!response.ok) {
+                                    throw new Error('Stock not found');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if(data.success && data.diamond) {
+                                    document.getElementById('diamond_shape').value = data.diamond.shape || '';
+                                    document.getElementById('diamond_size').value = data.diamond.size || '';
+                                    document.getElementById('diamond_color').value = data.diamond.color || '';
+                                    document.getElementById('diamond_clarity').value = data.diamond.clarity || '';
+                                    document.getElementById('diamond_carat').value = data.diamond.carat_weight || '';
+                                    
+                                    messageEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Details fetched successfully</span>';
+                                } else {
+                                    messageEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Stock not found</span>';
+                                    clearDiamondFields();
+                                }
+                            })
+                            .catch(error => {
+                                messageEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ' + error.message + '</span>';
+                                clearDiamondFields();
+                            });
+                    });
                 }
-
-                lookupBtn.disabled = true;
-                lookupBtn.textContent = 'Fetching...';
-                messageEl.textContent = 'Fetching stock details...';
-
-                try {
-                    const response = await fetch(
-                        `{{ route('packages.lookup-stock') }}?stock_id=${encodeURIComponent(stockId)}`, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json'
-                            }
-                        });
-
-                    const result = await response.json();
-
-                    if (!response.ok || !result.success) {
-                        throw new Error(result.message || 'Stock not found.');
-                    }
-
-                    fields.shape.value = result.data.shape || '';
-                    fields.size.value = result.data.size || '';
-                    fields.color.value = result.data.color || '';
-                    fields.clarity.value = result.data.clarity || '';
-                    fields.carat.value = result.data.carat || '';
-                    stockIdInput.value = result.data.stock_id || stockId.toUpperCase();
-                    messageEl.textContent = 'Stock details loaded.';
-                } catch (error) {
-                    Object.values(fields).forEach((input) => input.value = '');
-                    messageEl.textContent = error.message || 'Unable to fetch stock details.';
-                } finally {
-                    lookupBtn.disabled = false;
-                    lookupBtn.textContent = 'Fetch';
+                
+                function clearDiamondFields() {
+                    document.getElementById('diamond_shape').value = '';
+                    document.getElementById('diamond_size').value = '';
+                    document.getElementById('diamond_color').value = '';
+                    document.getElementById('diamond_clarity').value = '';
+                    document.getElementById('diamond_carat').value = '';
                 }
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-                const stockIdInput = document.getElementById('stock_id');
-                const lookupBtn = document.getElementById('btnLookupStock');
-
-                lookupBtn.addEventListener('click', lookupStock);
-                stockIdInput.addEventListener('keydown', function(event) {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        lookupStock();
-                    }
-                });
-                stockIdInput.addEventListener('blur', function() {
-                    if (stockIdInput.value.trim()) {
-                        lookupStock();
-                    }
-                });
+                
+                // Form submission loading state
+                const form = document.getElementById('packageForm');
+                if(form) {
+                    form.addEventListener('submit', function() {
+                        const btn = this.querySelector('button[type="submit"]');
+                        if(btn) {
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
+                            btn.disabled = true;
+                        }
+                    });
+                }
             });
         </script>
     @endpush

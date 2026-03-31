@@ -3,161 +3,197 @@
 @section('title', 'Package Details')
 
 @section('content')
-    <div class="package-details-wrapper">
+    <div class="tracker-page">
         <!-- Header -->
-        <div class="page-header no-print">
-            <div class="header-left">
-                <div class="breadcrumb-nav">
-                    <a href="{{ url('/admin/dashboard') }}" class="breadcrumb-link">
-                        <i class="bi bi-house-door"></i> Dashboard
-                    </a>
-                    <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                    <a href="{{ route('packages.index') }}" class="breadcrumb-link">Packages</a>
-                    <i class="bi bi-chevron-right breadcrumb-separator"></i>
-                    <span class="breadcrumb-current">{{ $package->slip_id }}</span>
-                </div>
-                <h1 class="page-title">
-                    <i class="bi bi-box-seam"></i>
-                    Package #{{ $package->slip_id }}
-                </h1>
-                <p class="page-subtitle">Created on {{ $package->created_at->format('d M Y, h:i A') }}</p>
-            </div>
-            <div class="header-actions">
-                <a href="{{ route('packages.index') }}" class="btn-secondary-custom">
-                    <i class="bi bi-arrow-left"></i> Back
-                </a>
-                <button onclick="window.print()" class="btn-primary-custom">
-                    <i class="bi bi-printer"></i> Print Slip
-                </button>
-            </div>
-        </div>
-
-        <!-- Status Cards -->
-        <div class="status-cards no-print">
-            <div class="status-card">
-                <span class="status-label">Current Status</span>
-                <span class="status-badge status-{{ strtolower($package->status) }}">
-                    {{ $package->status }}
-                </span>
-            </div>
-
-            <div class="status-card">
-                <span class="status-label">Issued Date</span>
-                <div class="status-value">
-                    {{ $package->issue_date->format('d M Y') }}
-                </div>
-                <small class="text-muted">{{ \Carbon\Carbon::parse($package->issue_time)->format('h:i A') }}</small>
-            </div>
-
-            <div class="status-card">
-                <span class="status-label">Return Date</span>
-                <div class="status-value">
-                    {{ $package->return_date->format('d M Y') }}
-                </div>
-                @if ($package->status === 'Issued' && $package->return_date->isPast())
-                    <span class="text-danger small fw-bold"><i class="bi bi-exclamation-circle"></i> Overdue</span>
-                @else
-                    <span class="text-muted small">{{ $package->return_date->diffForHumans() }}</span>
-                @endif
-            </div>
-
-            <div class="status-card">
-                <span class="status-label">Issued By</span>
-                <div class="d-flex align-items-center gap-2 mt-1">
-                    <div class="user-avatar-sm">
-                        {{ strtoupper(substr($package->creator->name ?? 'A', 0, 1)) }}
+        <div class="page-header no-print" style="margin-bottom: 2rem;">
+            <div class="header-content d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="header-left">
+                    <div class="breadcrumb-nav mb-2">
+                        <a href="{{ url('/admin/dashboard') }}" class="breadcrumb-link text-decoration-none text-muted">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                        <i class="bi bi-chevron-right text-muted mx-2" style="font-size: 0.75rem;"></i>
+                        <a href="{{ route('packages.index') }}" class="breadcrumb-link text-decoration-none text-muted">Packages</a>
+                        <i class="bi bi-chevron-right text-muted mx-2" style="font-size: 0.75rem;"></i>
+                        <span class="breadcrumb-current text-primary fw-semibold">{{ $package->slip_id }}</span>
                     </div>
-                    <span class="status-value">{{ $package->creator->name ?? 'Admin' }}</span>
+                    <h1 class="page-title m-0 d-flex align-items-center gap-2" style="font-size: 1.75rem; font-weight: 700; color: #1e293b;">
+                        <i class="bi bi-box-seam" style="color: #6366f1;"></i>
+                        Package #{{ $package->slip_id }}
+                    </h1>
+                    <p class="page-subtitle text-muted mt-1 mb-0" style="font-size: 0.95rem;">Created on {{ $package->created_at->format('d M Y, h:i A') }}</p>
+                </div>
+                <div class="header-actions d-flex gap-2">
+                    <a href="{{ route('packages.index') }}" class="btn btn-light border fw-semibold d-inline-flex align-items-center gap-2" style="padding: 0.65rem 1.25rem; border-radius: 12px;">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary fw-semibold d-inline-flex align-items-center gap-2" style="padding: 0.65rem 1.25rem; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;">
+                        <i class="bi bi-printer"></i> Print Slip
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Main Content Grid -->
-        <div class="content-grid">
-            <!-- Left Column -->
-            <div class="content-column">
+        <!-- Main Content -->
+        <div class="row no-print">
+            <!-- Sidebar -->
+            <div class="col-lg-4 mb-4">
+                <div class="d-flex flex-column gap-4" style="position: sticky; top: 1.5rem;">
+                    
+                    <!-- Status Cards in a Column -->
+                    <div class="tracker-table-card" style="padding: 1.5rem;">
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+                            <i class="bi bi-info-circle text-primary me-2"></i>Status Summary
+                        </h4>
+                        
+                        <div class="d-flex flex-column gap-3">
+                            <div>
+                                <span class="d-block text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Current Status</span>
+                                <div>{!! str_replace('badge', 'tracker-badge', $package->status_badge) !!}</div>
+                            </div>
 
+                            <div>
+                                <span class="d-block text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Issued Date</span>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--dark);">{{ $package->issue_date->format('d M Y') }}</div>
+                                <div class="text-muted small mt-1">{{ \Carbon\Carbon::parse($package->issue_time)->format('h:i A') }}</div>
+                            </div>
+
+                            <div>
+                                <span class="d-block text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Return Due</span>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--dark);">{{ $package->return_date->format('d M Y') }}</div>
+                                @if ($package->status === 'Issued' && $package->return_date->isPast())
+                                    <div class="text-danger small fw-bold mt-1"><i class="bi bi-exclamation-circle"></i> Overdue</div>
+                                @else
+                                    <div class="text-muted small mt-1">{{ $package->return_date->diffForHumans() }}</div>
+                                @endif
+                            </div>
+
+                            <div>
+                                <span class="d-block text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Issued By</span>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">
+                                        {{ strtoupper(substr($package->creator->name ?? 'A', 0, 1)) }}
+                                    </div>
+                                    <span style="font-weight: 600; color: var(--dark);">{{ $package->creator->name ?? 'Admin' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    @if ($package->status === 'Issued' || $package->status === 'Overdue')
+                        <div class="tracker-table-card border-primary" style="padding: 1.5rem; background: rgba(99, 102, 241, 0.03);">
+                            <div class="text-center">
+                                <h4 class="text-primary fw-bold mb-3">Actions</h4>
+                                @if (auth()->guard('admin')->user()->can('packages.return'))
+                                    <form action="{{ route('packages.return', $package->id) }}" method="POST"
+                                        onsubmit="return confirm('Mark this package as returned?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-success w-100 fw-bold mb-2 py-2" style="border-radius: 10px;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Mark as Returned
+                                        </button>
+                                    </form>
+                                @endif
+                                <p class="text-muted small mb-0 mt-2">
+                                    <i class="bi bi-info-circle"></i> This action will update the inventory status.
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($package->status === 'Returned')
+                        <div class="tracker-table-card border-success" style="padding: 1.5rem; background: rgba(16, 185, 129, 0.03);">
+                            <div class="text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-check-lg text-success" style="font-size: 2.5rem;"></i>
+                                </div>
+                                <h4 class="text-success fw-bold mb-2">Package Returned</h4>
+                                <p class="text-muted mb-0 small">This transaction is complete.</p>
+                            </div>
+                        </div>
+                    @endif
+
+                </div>
+            </div>
+
+            <!-- Main Details -->
+            <div class="col-lg-8">
                 <!-- Package Details -->
-                <div class="info-section">
-                    <div class="section-header-simple">
-                        <h3 class="section-title">
-                            <i class="bi bi-box-seam"></i> Package Details
+                <div class="tracker-table-card mb-4" style="padding: 0; overflow: hidden;">
+                    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: #f8fafc;">
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; display: flex; align-items: center; gap: 0.75rem;">
+                            <i class="bi bi-box-seam text-primary"></i> Package Details
                         </h3>
                     </div>
-                    <div class="section-content">
-                        <div class="detail-group">
-                            <label class="detail-label">Description</label>
-                            <div class="detail-value text-pre-wrap">{{ $package->package_description }}</div>
+                    <div style="padding: 1.5rem;">
+                        <div class="mb-4">
+                            <label class="d-block text-muted fw-semibold mb-2" style="font-size: 0.85rem;">Description</label>
+                            <div style="font-size: 1rem; color: var(--dark); line-height: 1.6; white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">{{ $package->package_description }}</div>
                         </div>
-                        <div class="client-info-table mt-2">
-                            <div class="info-row">
-                                <span class="info-label">Party Type</span>
-                                <span class="info-value">{{ $package->party_type ?: '-' }}</span>
+                        
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                <span class="text-muted">Party Type</span>
+                                <span style="color: var(--dark); font-weight: 500;">{{ $package->party_type ?: '-' }}</span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Company</span>
-                                <span class="info-value">{{ $package->company_name ?: '-' }}</span>
+                            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                <span class="text-muted">Company</span>
+                                <span style="color: var(--dark); font-weight: 500;">{{ $package->company_name ?: '-' }}</span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">GST / PAN</span>
-                                <span class="info-value">
+                            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                <span class="text-muted">GST / PAN</span>
+                                <span style="color: var(--dark); font-weight: 500;">
                                     {{ $package->gst_number ?: '-' }} / {{ $package->pan_number ?: '-' }}
                                 </span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Purpose</span>
-                                <span class="info-value">{{ $package->purpose_of_handover ?: '-' }}</span>
+                            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                <span class="text-muted">Purpose</span>
+                                <span style="color: var(--dark); font-weight: 500;">{{ $package->purpose_of_handover ?: '-' }}</span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Handover Location</span>
-                                <span class="info-value">{{ $package->handover_location ?: '-' }}</span>
+                            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                <span class="text-muted">Handover Location</span>
+                                <span style="color: var(--dark); font-weight: 500;">{{ $package->handover_location ?: '-' }}</span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Handover Mode</span>
-                                <span class="info-value">{{ $package->handover_mode ?: '-' }}</span>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Handover Mode</span>
+                                <span style="color: var(--dark); font-weight: 500;">{{ $package->handover_mode ?: '-' }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                @if (
-                    $package->stock_id ||
-                        $package->diamond_shape ||
-                        $package->diamond_size ||
-                        $package->diamond_color ||
-                        $package->diamond_clarity ||
-                        $package->diamond_carat)
-                    <div class="info-section">
-                        <div class="section-header-simple">
-                            <h3 class="section-title">
-                                <i class="bi bi-gem"></i> Diamond Snapshot
+                @if ($package->stock_id || $package->diamond_shape || $package->diamond_size || $package->diamond_color || $package->diamond_clarity || $package->diamond_carat)
+                    <div class="tracker-table-card mb-4" style="padding: 0; overflow: hidden;">
+                        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: #f8fafc;">
+                            <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="bi bi-gem text-info"></i> Diamond Snapshot
                             </h3>
                         </div>
-                        <div class="section-content">
-                            <div class="client-info-table">
-                                <div class="info-row">
-                                    <span class="info-label">Stock ID</span>
-                                    <span class="info-value fw-bold">{{ $package->stock_id ?: '-' }}</span>
+                        <div style="padding: 1.5rem;">
+                            <div class="d-flex flex-column gap-3">
+                                <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                    <span class="text-muted">Stock ID</span>
+                                    <span style="color: var(--dark); font-weight: 700;">{{ $package->stock_id ?: '-' }}</span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Shape</span>
-                                    <span class="info-value">{{ $package->diamond_shape ?: '-' }}</span>
+                                <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                    <span class="text-muted">Shape</span>
+                                    <span style="color: var(--dark); font-weight: 500;">{{ $package->diamond_shape ?: '-' }}</span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Size</span>
-                                    <span class="info-value">{{ $package->diamond_size ?: '-' }}</span>
+                                <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                    <span class="text-muted">Size</span>
+                                    <span style="color: var(--dark); font-weight: 500;">{{ $package->diamond_size ?: '-' }}</span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Color</span>
-                                    <span class="info-value">{{ $package->diamond_color ?: '-' }}</span>
+                                <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                    <span class="text-muted">Color</span>
+                                    <span style="color: var(--dark); font-weight: 500;">{{ $package->diamond_color ?: '-' }}</span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Clarity</span>
-                                    <span class="info-value">{{ $package->diamond_clarity ?: '-' }}</span>
+                                <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                    <span class="text-muted">Clarity</span>
+                                    <span style="color: var(--dark); font-weight: 500;">{{ $package->diamond_clarity ?: '-' }}</span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Carat</span>
-                                    <span class="info-value">{{ $package->diamond_carat ?: '-' }}</span>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">Carat</span>
+                                    <span style="color: var(--dark); font-weight: 500;">{{ $package->diamond_carat ?: '-' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -165,77 +201,42 @@
                 @endif
 
                 <!-- Recipient Info -->
-                <div class="info-section">
-                    <div class="section-header-simple">
-                        <h3 class="section-title">
-                            <i class="bi bi-person-badge"></i> Recipient Information
+                <div class="tracker-table-card" style="padding: 0; overflow: hidden;">
+                    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: #f8fafc;">
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; display: flex; align-items: center; gap: 0.75rem;">
+                            <i class="bi bi-person-badge text-success"></i> Recipient Information
                         </h3>
                     </div>
-                    <div class="section-content">
-                        <div class="recipient-layout">
-                            <div class="recipient-details">
-                                <div class="client-info-table">
-                                    <div class="info-row">
-                                        <span class="info-label">Full Name</span>
-                                        <span class="info-value fw-bold">{{ $package->person_name }}</span>
+                    <div style="padding: 1.5rem;">
+                        <div class="row">
+                            <div class="col-md-{{ $package->package_image_url ? '7' : '12' }}">
+                                <div class="d-flex flex-column gap-3 h-100 justify-content-center">
+                                    <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
+                                        <span class="text-muted">Full Name</span>
+                                        <span style="color: var(--dark); font-weight: 700;">{{ $package->person_name }}</span>
                                     </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Mobile Number</span>
-                                        <span class="info-value">{{ $package->mobile_number }}</span>
+                                    <div class="d-flex justify-content-between align-items-center pb-3">
+                                        <span class="text-muted">Mobile Number</span>
+                                        <span style="color: var(--dark); font-weight: 500;">{{ $package->mobile_number }}</span>
                                     </div>
                                 </div>
                             </div>
 
                             @if ($package->package_image_url)
-                                <div class="recipient-photo-block">
-                                    <label class="detail-label mb-2">ID Proof / Photo</label>
-                                    <div class="id-proof-wrapper">
+                                <div class="col-md-5 d-flex flex-column align-items-center justify-content-center mt-4 mt-md-0 border-start ps-md-4">
+                                    <label class="d-block text-muted fw-semibold mb-2" style="font-size: 0.85rem;">ID Proof / Photo</label>
+                                    <div style="position: relative; border-radius: 12px; overflow: hidden; border: 2px solid var(--border); cursor: pointer; max-width: 200px; transition: border-color 0.2s;" class="image-hover-wrapper">
                                         <img src="{{ $package->package_image_url }}" onerror="this.style.display='none';"
-                                            alt="Recipient ID" class="id-proof-img" onclick="viewImage(this.src)">
-                                        <div class="zoom-hint"><i class="bi bi-zoom-in"></i> Click to enlarge</div>
+                                            alt="Recipient ID" style="width: 100%; display: block;" onclick="viewImage(this.src)">
+                                        <div class="zoom-hint d-flex align-items-center justify-content-center w-100 p-2" style="position: absolute; bottom: 0; background: rgba(0,0,0,0.6); color: white; font-size: 0.75rem; opacity: 0; transition: opacity 0.2s; pointer-events: none;">
+                                            <i class="bi bi-zoom-in me-1"></i> Click to enlarge
+                                        </div>
                                     </div>
                                 </div>
                             @endif
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Right Column -->
-            <div class="content-column no-print">
-                <!-- Actions -->
-                @if ($package->status === 'Issued' || $package->status === 'Overdue')
-                    <div class="info-section bg-light-primary border-primary-light">
-                        <div class="section-content text-center p-4">
-                            <h4 class="text-primary fw-bold mb-3">Actions</h4>
-                            @if (auth()->guard('admin')->user()->can('packages.return'))
-                                <form action="{{ route('packages.return', $package->id) }}" method="POST"
-                                    onsubmit="return confirm('Mark this package as returned?');">
-                                    @csrf
-                                    <button type="submit" class="btn-success-custom w-100 mb-3">
-                                        <i class="bi bi-check-circle-fill"></i> Mark as Returned
-                                    </button>
-                                </form>
-                            @endif
-
-                            <p class="text-muted small mb-0">
-                                <i class="bi bi-info-circle"></i> This actions will update the inventory status.
-                            </p>
-                        </div>
-                    </div>
-                @endif
-
-                @if ($package->status === 'Returned')
-                    <div class="info-section bg-light-success border-success-light">
-                        <div class="section-content text-center p-4">
-                            <div class="success-icon mb-3">
-                                <i class="bi bi-check-lg"></i>
-                            </div>
-                            <h4 class="text-success fw-bold mb-2">Package Returned</h4>
-                            <p class="text-muted mb-0">This transaction is complete.</p>
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
 
@@ -287,8 +288,7 @@
             </div>
 
             <div class="slip-legal">
-                <p>By signing above, the receiver acknowledges receipt of the package in good condition and agrees to return
-                    it by the specified due date.</p>
+                <p>By signing above, the receiver acknowledges receipt of the package in good condition and agrees to return it by the specified due date.</p>
                 <p>Printed on: {{ now()->format('d M Y, h:i A') }}</p>
             </div>
         </div>
@@ -299,13 +299,12 @@
     <div id="imageModal" class="pdf-modal no-print" onclick="closeImageModal()">
         <div class="pdf-modal-content" onclick="event.stopPropagation()">
             <div class="pdf-modal-header">
-                <h3 id="imageModalTitle">Image Viewer</h3>
-                <button class="pdf-modal-close" onclick="closeImageModal()">
+                <h3 id="imageModalTitle" class="m-0 fs-5">Image Viewer</h3>
+                <button class="pdf-modal-close border-0 bg-transparent fs-4" style="color: #64748b;" onclick="closeImageModal()">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <div class="pdf-modal-body"
-                style="background: #000; display:flex; justify-content:center; align-items:center;">
+            <div class="pdf-modal-body" style="background: #000; display:flex; justify-content:center; align-items:center;">
                 <img id="imageViewer" src="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
             </div>
         </div>
@@ -313,443 +312,12 @@
 
     @push('styles')
         <style>
-            [data-theme="dark"] .package-details-wrapper {
-                background: var(--bg-body, #0f172a);
-            }
-
-            [data-theme="dark"] .page-header,
-            [data-theme="dark"] .status-card,
-            [data-theme="dark"] .info-section,
-            [data-theme="dark"] .section-header-simple,
-            [data-theme="dark"] .pdf-modal-header {
-                background: var(--bg-card, #1e293b) !important;
-                border-color: rgba(148, 163, 184, 0.34) !important;
-                box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
-            }
-
-            [data-theme="dark"] .page-header {
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.07));
-            }
-
-            [data-theme="dark"] .page-title,
-            [data-theme="dark"] .status-value,
-            [data-theme="dark"] .section-title,
-            [data-theme="dark"] .detail-value,
-            [data-theme="dark"] .info-row .info-value {
-                color: var(--text-primary, #f1f5f9);
-            }
-
-            [data-theme="dark"] .page-subtitle,
-            [data-theme="dark"] .breadcrumb-nav,
-            [data-theme="dark"] .breadcrumb-link,
-            [data-theme="dark"] .status-label,
-            [data-theme="dark"] .detail-label,
-            [data-theme="dark"] .info-row .info-label,
-            [data-theme="dark"] .text-muted {
-                color: var(--text-secondary, #94a3b8) !important;
-            }
-
-            [data-theme="dark"] .client-info-table .info-row {
-                border-bottom-color: rgba(148, 163, 184, 0.22);
-            }
-
-            [data-theme="dark"] .btn-secondary-custom {
-                background: rgba(255, 255, 255, 0.04);
-                border-color: rgba(148, 163, 184, 0.35);
-                color: var(--text-secondary, #94a3b8);
-            }
-
-            [data-theme="dark"] .bg-light-primary {
-                background: rgba(99, 102, 241, 0.15) !important;
-            }
-
-            [data-theme="dark"] .border-primary-light {
-                border-color: rgba(99, 102, 241, 0.28) !important;
-            }
-
-            [data-theme="dark"] .bg-light-success {
-                background: rgba(16, 185, 129, 0.14) !important;
-            }
-
-            [data-theme="dark"] .border-success-light {
-                border-color: rgba(16, 185, 129, 0.3) !important;
-            }
-
-            [data-theme="dark"] .pdf-modal-content {
-                background: var(--bg-card, #1e293b);
-                border-color: rgba(148, 163, 184, 0.34);
-            }
-
-            [data-theme="dark"] .pdf-modal-close {
-                color: var(--text-secondary, #94a3b8);
-            }
-
-            /* Screen Styles */
-            .package-details-wrapper {
-                max-width: 1600px;
-                margin: 0 auto;
-                padding: 2rem;
-                min-height: 100vh;
-                background: #f8fafc;
-            }
-
-            .page-header {
-                background: white;
-                padding: 2rem;
-                border-radius: 16px;
-                margin-bottom: 2rem;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            }
-
-            .header-content {
-                flex: 1;
-            }
-
-            .breadcrumb-nav {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                font-size: 0.85rem;
-                color: var(--gray);
-                margin-bottom: 0.5rem;
-            }
-
-            .breadcrumb-link {
-                color: var(--gray);
-                text-decoration: none;
-                transition: color 0.2s;
-            }
-
-            .breadcrumb-link:hover {
-                color: var(--primary);
-            }
-
-            .breadcrumb-separator {
-                font-size: 0.7rem;
-                color: #cbd5e1;
-            }
-
-            .breadcrumb-current {
-                color: var(--primary);
-                font-weight: 600;
-            }
-
-            .page-title {
-                font-size: 1.75rem;
-                font-weight: 700;
-                color: var(--dark);
-                margin: 0;
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-            }
-
-            .page-subtitle {
-                color: var(--gray);
-                margin-top: 0.25rem;
-                font-size: 0.95rem;
-            }
-
-            /* Buttons */
-            .btn-primary-custom,
-            .btn-secondary-custom,
-            .btn-success-custom {
-                padding: 0.65rem 1.25rem;
-                border-radius: 12px;
-                font-weight: 600;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                text-decoration: none;
-                transition: all 0.2s;
-                border: none;
-                cursor: pointer;
-                font-size: 0.95rem;
-            }
-
-            .btn-primary-custom {
-                background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                color: white;
-                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
-            }
-
-            .btn-primary-custom:hover {
-                transform: translateY(-2px);
-                color: white;
-            }
-
-            .btn-secondary-custom {
-                background: white;
-                color: var(--gray);
-                border: 2px solid var(--border);
-            }
-
-            .btn-secondary-custom:hover {
-                background: var(--light-gray);
-                color: var(--dark);
-            }
-
-            .btn-success-custom {
-                background: linear-gradient(135deg, var(--success), #059669);
-                color: white;
-                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-            }
-
-            .btn-success-custom:hover {
-                transform: translateY(-2px);
-                color: white;
-            }
-
-            /* Status Cards */
-            .status-cards {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 1.25rem;
-                margin-bottom: 1.75rem;
-            }
-
-            .status-card {
-                background: white;
-                border-radius: 20px;
-                padding: 1.35rem 1.4rem;
-                border: 1.5px solid var(--border);
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
-            }
-
-            .status-label {
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                color: var(--gray);
-                font-weight: 600;
-            }
-
-            .status-value {
-                font-size: 1.1rem;
-                font-weight: 700;
-                color: var(--dark);
-            }
-
-            .status-badge {
-                display: inline-block;
-                padding: 0.35rem 0.75rem;
-                border-radius: 20px;
-                font-size: 0.85rem;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-
-            .status-issued {
-                background: #dbeafe;
-                color: #1e40af;
-            }
-
-            .status-returned {
-                background: #d1fae5;
-                color: #065f46;
-            }
-
-            .status-overdue {
-                background: #fee2e2;
-                color: #991b1b;
-            }
-
-            .user-avatar-sm {
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background: var(--primary);
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 0.7rem;
-                font-weight: bold;
-            }
-
-            /* Content Grid */
-            .content-grid {
-                display: grid;
-                grid-template-columns: 1fr 350px;
-                gap: 1.5rem;
-            }
-
-            @media (max-width: 992px) {
-                .content-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            /* Info Sections */
-            .info-section {
-                background: white;
-                border-radius: 20px;
-                border: 1.5px solid var(--border);
-                overflow: hidden;
-                margin-bottom: 1.5rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(99, 102, 241, 0.05);
-            }
-
-            .section-header-simple {
-                padding: 1.25rem 1.5rem;
-                border-bottom: 1.5px solid var(--border);
-                background: #f8fafc;
-            }
-
-            .section-title {
-                font-size: 1.1rem;
-                font-weight: 700;
-                color: var(--dark);
-                margin: 0;
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-            }
-
-            .section-title i {
-                color: var(--primary);
-            }
-
-            .section-content {
-                padding: 1.5rem;
-            }
-
-            .detail-group {
-                margin-bottom: 1.5rem;
-            }
-
-            .detail-label {
-                font-size: 0.85rem;
-                color: var(--gray);
-                font-weight: 600;
-                margin-bottom: 0.5rem;
-                display: block;
-            }
-
-            .detail-value {
-                font-size: 1rem;
-                color: var(--dark);
-                line-height: 1.6;
-            }
-
-            .text-pre-wrap {
-                white-space: pre-wrap;
-            }
-
-            .client-info-table .info-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 0.75rem 0;
-                border-bottom: 1px solid var(--border);
-            }
-
-            .client-info-table .info-row:last-child {
-                border-bottom: none;
-            }
-
-            .info-row .info-label {
-                color: var(--gray);
-                font-size: 0.95rem;
-            }
-
-            .info-row .info-value {
-                color: var(--dark);
-                font-size: 0.95rem;
-                text-align: right;
-            }
-
-            .id-proof-wrapper {
-                position: relative;
-                border-radius: 12px;
-                overflow: hidden;
-                border: 2px solid var(--border);
-                cursor: pointer;
-                transition: all 0.2s;
-                max-width: 200px;
-            }
-
-            .recipient-layout {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) 240px;
-                gap: 1.5rem;
-                align-items: start;
-            }
-
-            .recipient-photo-block {
-                justify-self: end;
-                width: 100%;
-                max-width: 220px;
-            }
-
-            .id-proof-wrapper:hover {
-                border-color: var(--primary);
-            }
-
-            .id-proof-img {
-                width: 100%;
-                display: block;
-            }
-
-            .zoom-hint {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: rgba(0, 0, 0, 0.6);
-                color: white;
-                font-size: 0.75rem;
-                padding: 0.25rem;
-                text-align: center;
-                opacity: 0;
-                transition: opacity 0.2s;
-            }
-
-            .id-proof-wrapper:hover .zoom-hint {
-                opacity: 1;
-            }
-
-            @media (max-width: 768px) {
-                .recipient-layout {
-                    grid-template-columns: 1fr;
-                }
-
-                .recipient-photo-block {
-                    justify-self: start;
-                    max-width: 200px;
-                }
-            }
-
-            /* Action Box Colors */
-            .bg-light-primary {
-                background: rgba(99, 102, 241, 0.05) !important;
-            }
-
-            .border-primary-light {
-                border-color: rgba(99, 102, 241, 0.2) !important;
-            }
-
-            .bg-light-success {
-                background: rgba(16, 185, 129, 0.05) !important;
-            }
-
-            .border-success-light {
-                border-color: rgba(16, 185, 129, 0.2) !important;
-            }
-
-            .success-icon {
-                font-size: 3rem;
-                color: var(--success);
-            }
-
-            /* Printable Slip (Hidden by Default) */
-            .printable-slip {
-                display: none;
+            /* Hover logic for image */
+            .image-hover-wrapper:hover {
+                border-color: var(--primary) !important;
+            }
+            .image-hover-wrapper:hover .zoom-hint {
+                opacity: 1 !important;
             }
 
             /* Modal Styles */
@@ -782,153 +350,36 @@
 
             .pdf-modal-header {
                 padding: 1rem 1.5rem;
-                border-bottom: 1px solid var(--border);
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 background: #fff;
+                border-bottom: 1px solid var(--border);
                 border-radius: 12px 12px 0 0;
-            }
-
-            .pdf-modal-close {
-                background: none;
-                border: none;
-                font-size: 1.5rem;
-                color: var(--gray);
-                cursor: pointer;
-                transition: color 0.2s;
-            }
-
-            .pdf-modal-close:hover {
-                color: var(--danger);
             }
 
             .pdf-modal-body {
                 flex: 1;
                 overflow: hidden;
                 position: relative;
+                border-radius: 0 0 12px 12px;
             }
 
-            /* ===== RESPONSIVE BREAKPOINTS (Screen only) ===== */
-
-            /* Tablet (≤992px) */
-            @media screen and (max-width: 992px) {
-                .package-details-wrapper {
-                    padding: 1.25rem;
-                }
-
-                .page-header {
-                    padding: 1.5rem;
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 1rem;
-                }
-
-                .header-actions {
-                    width: 100%;
-                    display: flex;
-                    gap: 0.5rem;
-                    flex-wrap: wrap;
-                }
-
-                .header-actions .btn-primary-custom,
-                .header-actions .btn-secondary-custom {
-                    flex: 1;
-                    justify-content: center;
-                    min-width: 120px;
-                }
-
-                .status-cards {
-                    grid-template-columns: repeat(2, 1fr);
-                }
+            .pdf-modal-close:hover {
+                color: #ef4444 !important;
             }
 
-            /* Mobile (≤640px) */
             @media screen and (max-width: 640px) {
-                .package-details-wrapper {
-                    padding: 0.875rem;
-                }
-
-                .page-header {
-                    padding: 1.1rem;
-                    gap: 0.875rem;
-                }
-
-                .page-title {
-                    font-size: clamp(1.1rem, 4vw, 1.5rem);
-                }
-
-                .status-cards {
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 0.75rem;
-                }
-
-                .status-card {
-                    padding: 1rem;
-                }
-
-                .status-value {
-                    font-size: 0.95rem;
-                }
-
-                .section-header-simple {
-                    padding: 1rem 1.1rem;
-                }
-
-                .section-content {
-                    padding: 1.1rem;
-                }
-
-                .section-title {
-                    font-size: 0.95rem;
-                }
-
-                /* Stack info-row label above value on small screens */
-                .client-info-table .info-row {
-                    flex-direction: column;
-                    gap: 0.2rem;
-                    align-items: flex-start;
-                    padding: 0.65rem 0;
-                }
-
-                .info-row .info-value {
-                    text-align: left;
-                    font-weight: 600;
-                    color: var(--dark);
-                }
-
-                /* Modal adapts on mobile */
                 .pdf-modal-content {
                     width: 95%;
                     height: 92%;
-                    margin: 1% auto;
-                }
-
-                .pdf-modal-header {
-                    padding: 0.75rem 1rem;
+                    margin: 4% auto;
                 }
             }
 
-            /* Extra small (≤380px) */
-            @media screen and (max-width: 380px) {
-                .status-cards {
-                    grid-template-columns: 1fr 1fr;
-                    gap: 0.5rem;
-                }
-
-                .status-card {
-                    padding: 0.75rem;
-                }
-
-                .status-label {
-                    font-size: 0.65rem;
-                }
-
-                .header-actions .btn-primary-custom,
-                .header-actions .btn-secondary-custom {
-                    font-size: 0.85rem;
-                    padding: 0.55rem 0.75rem;
-                }
+            /* Printable Slip (Hidden by Default) */
+            .printable-slip {
+                display: none;
             }
 
             @media print {
@@ -945,14 +396,14 @@
                 }
 
                 .content-wrapper {
-                    margin: 0;
-                    padding: 0;
+                    margin: 0 !important;
+                    padding: 0 !important;
                     background: white;
                 }
 
-                .package-details-wrapper {
-                    padding: 0;
-                    margin: 0;
+                .tracker-page {
+                    padding: 0 !important;
+                    margin: 0 !important;
                     max-width: 100%;
                 }
 
@@ -1043,6 +494,24 @@
                     border-top: 1px solid #eee;
                     padding-top: 10px;
                 }
+            }
+
+            /* Dark mode specific for standard card backgrounds if needed */
+            [data-theme="dark"] .tracker-table-card {
+                background: var(--bg-card, #1e293b);
+                border-color: rgba(148, 163, 184, 0.34);
+            }
+            [data-theme="dark"] .tracker-table-card > div.bg-f8fafc, [data-theme="dark"] .tracker-table-card > div[style*="#f8fafc"] {
+                background: rgba(15, 23, 42, 0.4) !important;
+                border-color: rgba(148, 163, 184, 0.22) !important;
+            }
+            [data-theme="dark"] .pdf-modal-content {
+                background: var(--bg-card, #1e293b);
+                border-color: rgba(148, 163, 184, 0.34);
+            }
+            [data-theme="dark"] .pdf-modal-header {
+                background: var(--bg-card, #1e293b);
+                border-color: rgba(148, 163, 184, 0.34);
             }
         </style>
     @endpush

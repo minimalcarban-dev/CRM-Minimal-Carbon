@@ -3,7 +3,7 @@
 @section('title', 'Edit Diamond')
 
 @section('content')
-    <div class="diamond-management-container">
+    <div class="tracker-page">
         <!-- Page Header -->
         <div class="page-header">
             <div class="header-content">

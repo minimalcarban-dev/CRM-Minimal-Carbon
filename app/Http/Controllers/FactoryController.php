@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Factory;
+use App\Models\GoldDistribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\CompanyMonthlyTarget;
+use App\Models\GlobalMonthlyTarget;
 use App\Models\Order;
 use App\Services\CompanySalesReportService;
 use Illuminate\Http\Request;

@@ -552,6 +552,7 @@
         }
 
         [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select,
         [data-theme="dark"] .input-group-text {
             background: rgba(15, 23, 42, 0.62);
             color: var(--text-primary, #f1f5f9);
@@ -2151,7 +2152,6 @@
             <div class="modal-header">
                 <div class="modal-title">
                     <i class="bi bi-bullseye text-primary"></i> Set Targets
-                    ({{ Carbon\Carbon::create()->month($month)->format('F') }} {{ $year }})
                 </div>
                 <button type="button" class="modal-close" onclick="closeAllTargetsModal()">
                     <i class="bi bi-x-lg"></i>
@@ -2160,8 +2160,27 @@
             <div class="modal-body">
                 <form action="{{ route('companies.save-all-targets') }}" method="POST" id="allTargetsForm">
                     @csrf
-                    <input type="hidden" name="year" value="{{ $year }}">
-                    <input type="hidden" name="month" value="{{ $month }}">
+                    
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="flex: 1;">
+                            <label class="form-label" style="font-weight: 600; font-size: 0.9rem; color: var(--dark); margin-bottom: 0.5rem; display: block;">Year</label>
+                            <select name="year" class="form-control form-select" required style="padding: 0.75rem; border: 2px solid var(--border); border-radius: 10px; width: 100%;">
+                                @for($y = now()->year - 2; $y <= now()->year + 2; $y++)
+                                    <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label class="form-label" style="font-weight: 600; font-size: 0.9rem; color: var(--dark); margin-bottom: 0.5rem; display: block;">Month</label>
+                            <select name="month" class="form-control form-select" required style="padding: 0.75rem; border: 2px solid var(--border); border-radius: 10px; width: 100%;">
+                                @foreach(range(1, 12) as $m)
+                                    <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>
+                                        {{ \Carbon\Carbon::create()->month($m)->format('F') }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
 
                     <div
                         style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--light-gray); border-radius: 12px; border: 1px solid var(--border);">
@@ -2198,9 +2217,9 @@
                     @endforeach
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeAllTargetsModal()">Cancel</button>
-                <button type="submit" form="allTargetsForm" class="btn btn-primary">
+            <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" style="padding: 0.75rem 1.5rem; border: 2px solid var(--border); border-radius: 10px; background: white; color: var(--gray); font-weight: 600; cursor: pointer;" onclick="closeAllTargetsModal()" onmouseover="this.style.color='var(--dark)'" onmouseout="this.style.color='var(--gray)'">Cancel</button>
+                <button type="submit" form="allTargetsForm" class="btn-set-target" style="margin: 0;">
                     <i class="bi bi-check-lg"></i> Save Targets
                 </button>
             </div>

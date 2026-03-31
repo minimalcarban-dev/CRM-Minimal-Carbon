@@ -151,20 +151,32 @@ class GoldDistribution extends Model
     }
 
     /**
-     * Get total gold currently in factories (distributed - returned).
+     * Get total gold consumed in production.
      */
-    public static function getTotalInFactories(): float
+    public static function getTotalConsumed(): float
     {
-        return self::getTotalDistributed() - self::getTotalReturned();
+        return (float) self::consumed()->sum('weight_grams');
     }
 
     /**
-     * Get available owner stock (purchased - in factories).
+     * Get total gold currently in factories (distributed - returned - consumed).
+     */
+    public static function getTotalInFactories(): float
+    {
+        return self::getTotalDistributed() - self::getTotalReturned() - self::getTotalConsumed();
+    }
+
+    /**
+     * Get available owner stock.
+     * Formula: purchased - sent_to_factories + returned_from_factories
+     * Consumed gold is permanently gone (used in production), so it does NOT
+     * come back to the owner — we simply don't add it back.
      */
     public static function getAvailableOwnerStock(): float
     {
         $totalPurchased = GoldPurchase::getTotalPurchasedStock();
-        $inFactories = self::getTotalInFactories();
-        return round($totalPurchased - $inFactories, 3);
+        $totalSentOut = self::getTotalDistributed();
+        $totalReturned = self::getTotalReturned();
+        return round($totalPurchased - $totalSentOut + $totalReturned, 3);
     }
 }
