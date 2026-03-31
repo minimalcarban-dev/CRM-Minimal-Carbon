@@ -330,6 +330,15 @@
                     @endforeach
                 </select>
 
+                <select name="company_id" class="filter-select">
+                    <option value="">All Companies</option>
+                    @foreach($companies ?? [] as $company)
+                        <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                            {{ $company->name }}
+                        </option>
+                    @endforeach
+                </select>
+
                 <select name="diamond_status" class="filter-select">
                     <option value="">All Diamond Status</option>
 
@@ -748,6 +757,7 @@
                         request('search') ||
                         request('order_type') ||
                         request('factory_id') ||
+                        request('company_id') ||
                         request('diamond_status') ||
                         request('date_from') ||
                         request('date_to') ||
