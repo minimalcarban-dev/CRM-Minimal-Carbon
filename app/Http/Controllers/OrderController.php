@@ -79,18 +79,6 @@ class OrderController extends Controller
             if (!$admin->hasPermission('orders.view_team')) {
                 $baseQuery->where('submitted_by', $admin->id);
             }
-
-            // Restrict visibility of dispatched orders:
-            // Normal admin cannot see shipped orders older than 10 days
-
-            // $baseQuery->where(function ($q) use ($shippedStatuses) {
-            //     $q->whereNotIn('diamond_status', $shippedStatuses)
-            //         ->orWhereNull('diamond_status')
-            //         ->orWhere(function ($subQ) use ($shippedStatuses) {
-            //             $subQ->whereIn('diamond_status', $shippedStatuses)
-            //                 ->whereDate('dispatch_date', '>=', now()->subDays(10));
-            //         });
-            // });
         }
 
         if ($request->filled('search')) {
@@ -110,6 +98,10 @@ class OrderController extends Controller
 
         if ($request->filled('factory_id')) {
             $baseQuery->where('factory_id', $request->factory_id);
+        }
+
+        if ($request->filled('company_id')) {
+            $baseQuery->where('company_id', $request->company_id);
         }
 
         // Count shipped orders (before excluding from base)
@@ -169,24 +161,30 @@ class OrderController extends Controller
             ->toArray();
 
         // Today's Sales Stats
-        $todaysSales = Order::whereDate('created_at', now()->toDateString())
+        $todaysSalesQuery = Order::whereDate('created_at', now()->toDateString())
             ->where(function ($q) use ($cancelledStatuses) {
                 $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
-            })
-            ->sum('gross_sell');
-        $todaysOrderCount = Order::whereDate('created_at', now()->toDateString())
-            ->where(function ($q) use ($cancelledStatuses) {
-                $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
-            })
-            ->count();
+            });
+        
+        if ($request->filled('company_id')) {
+            $todaysSalesQuery->where('company_id', $request->company_id);
+        }
+        
+        $todaysSales = $todaysSalesQuery->sum('gross_sell');
+        $todaysOrderCount = $todaysSalesQuery->count();
 
         // Month Sales Stats
-        $monthSales = Order::whereMonth('created_at', now()->month)
+        $monthSalesQuery = Order::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->where(function ($q) use ($cancelledStatuses) {
                 $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
-            })
-            ->sum('gross_sell');
+            });
+
+        if ($request->filled('company_id')) {
+            $monthSalesQuery->where('company_id', $request->company_id);
+        }
+
+        $monthSales = $monthSalesQuery->sum('gross_sell');
 
         // Get company sales progress for active companies
         $companySalesStats = Company::where('status', 'active')
@@ -335,6 +333,7 @@ class OrderController extends Controller
 
         $orders = $query->paginate(20);
         $factories = Factory::orderBy('name')->get();
+        $companies = Company::where('status', 'active')->orderBy('name')->get();
 
         // Mark all unread order-created notifications as read for this admin
         $admin->unreadNotifications()
@@ -356,7 +355,8 @@ class OrderController extends Controller
             'monthSales',
             'todaysOrderCount',
             'companySalesStats',
-            'factories'
+            'factories',
+            'companies'
         ));
     }
 
