@@ -70,9 +70,13 @@
             <div class="stat-card stat-card-primary">
                 <div class="stat-icon"><i class="bi bi-wallet"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Cash Balance</div>
+                    <div class="stat-label">Closing Cash Balance (Carry Forward)</div>
                     <div class="stat-value" style="color:{{ $balance >= 0 ? '#10b981' : '#ef4444' }};">
                         ₹{{ number_format($balance, 0) }}</div>
+                    <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.2rem;">
+                        Opening: ₹{{ number_format($openingBalance, 0) }} | This Month:
+                        {{ $monthlyCashflow >= 0 ? '+' : '-' }}₹{{ number_format(abs($monthlyCashflow), 0) }}
+                    </div>
                 </div>
             </div>
         </div>

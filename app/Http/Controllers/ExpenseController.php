@@ -77,18 +77,13 @@ class ExpenseController extends Controller
         // Current month summary (CASH ONLY)
         $currentMonth = now()->month;
         $currentYear = now()->year;
+        $cashSummary = Expense::getCashSummaryForMonth($currentYear, $currentMonth);
 
-        $monthlyIncome = Expense::forMonth($currentYear, $currentMonth)
-            ->income()
-            ->cash()  // ← CASH ONLY
-            ->sum('amount');
-
-        $monthlyExpense = Expense::forMonth($currentYear, $currentMonth)
-            ->expense()
-            ->cash()  // ← CASH ONLY
-            ->sum('amount');
-
-        $monthlyBalance = $monthlyIncome - $monthlyExpense;
+        $monthlyIncome = $cashSummary['monthly_income'];
+        $monthlyExpense = $cashSummary['monthly_expense'];
+        $monthlyCashflow = $cashSummary['monthly_cashflow'];
+        $openingBalance = $cashSummary['opening_balance'];
+        $monthlyBalance = $cashSummary['closing_balance'];
 
         // All time totals (CASH ONLY)
         $totalIncome = Expense::income()
@@ -105,6 +100,8 @@ class ExpenseController extends Controller
             'expenses',
             'monthlyIncome',
             'monthlyExpense',
+            'monthlyCashflow',
+            'openingBalance',
             'monthlyBalance',
             'totalIncome',
             'totalExpense',
@@ -288,21 +285,16 @@ class ExpenseController extends Controller
 
         // Get ALL expenses for display
         $expenses = Expense::forMonth($year, $month)->get();
+        $cashSummary = Expense::getCashSummaryForMonth((int) $year, (int) $month);
 
         // ==========================================
         // SUMMARY CALCULATIONS - CASH ONLY
         // ==========================================
-        $totalIncome = $expenses
-            ->where('transaction_type', 'in')
-            ->where('payment_method', 'cash')  // ← CASH ONLY
-            ->sum('amount');
-
-        $totalExpense = $expenses
-            ->where('transaction_type', 'out')
-            ->where('payment_method', 'cash')  // ← CASH ONLY
-            ->sum('amount');
-
-        $balance = $totalIncome - $totalExpense;
+        $totalIncome = $cashSummary['monthly_income'];
+        $totalExpense = $cashSummary['monthly_expense'];
+        $openingBalance = $cashSummary['opening_balance'];
+        $monthlyCashflow = $cashSummary['monthly_cashflow'];
+        $balance = $cashSummary['closing_balance'];
 
         // Category breakdown for income (CASH ONLY)
         $incomeByCategory = $expenses
@@ -324,6 +316,8 @@ class ExpenseController extends Controller
             'expenses',
             'totalIncome',
             'totalExpense',
+            'openingBalance',
+            'monthlyCashflow',
             'balance',
             'incomeByCategory',
             'expenseByCategory'

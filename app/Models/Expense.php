@@ -209,6 +209,59 @@ class Expense extends Model
     }
 
     /**
+     * Get cash balance before a specific date (opening balance).
+     */
+    public static function getCashBalanceBeforeDate(string $date): float
+    {
+        $income = static::query()
+            ->income()
+            ->cash()
+            ->whereDate('date', '<', $date)
+            ->sum('amount');
+
+        $expense = static::query()
+            ->expense()
+            ->cash()
+            ->whereDate('date', '<', $date)
+            ->sum('amount');
+
+        return (float) $income - (float) $expense;
+    }
+
+    /**
+     * Build cash summary for a month including carry-forward balance.
+     */
+    public static function getCashSummaryForMonth(int $year, int $month): array
+    {
+        $monthStartDate = sprintf('%04d-%02d-01', $year, $month);
+
+        $openingBalance = static::getCashBalanceBeforeDate($monthStartDate);
+
+        $monthlyIncome = (float) static::query()
+            ->forMonth($year, $month)
+            ->income()
+            ->cash()
+            ->sum('amount');
+
+        $monthlyExpense = (float) static::query()
+            ->forMonth($year, $month)
+            ->expense()
+            ->cash()
+            ->sum('amount');
+
+        $monthlyCashflow = $monthlyIncome - $monthlyExpense;
+        $closingBalance = $openingBalance + $monthlyCashflow;
+
+        return [
+            'opening_balance' => $openingBalance,
+            'monthly_income' => $monthlyIncome,
+            'monthly_expense' => $monthlyExpense,
+            'monthly_cashflow' => $monthlyCashflow,
+            'closing_balance' => $closingBalance,
+        ];
+    }
+
+    /**
      * Format date for HTML date input
      */
     public function getDateFormattedAttribute(): ?string
