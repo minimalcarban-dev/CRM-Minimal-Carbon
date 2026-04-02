@@ -131,19 +131,19 @@ class SettingsController extends Controller
         }
 
         $oldValues = ['value' => $currentStatus ? 'true' : 'false'];
+        $trustCookie = null;
 
-        // Safety check: if enabling, auto-add admin's IP
+        // Safety check: if enabling, seed a trusted browser cookie for the current admin session
         if ($newStatus) {
-            $currentIp = $request->ip();
-            if (!AllowedIp::isAllowed($currentIp)) {
-                $newIp = AllowedIp::create([
-                    'ip_address' => $currentIp,
-                    'label' => 'Auto-added (Admin)',
-                    'is_active' => true,
-                    'added_by' => Auth::guard('admin')->id(),
-                ]);
-                AuditLogger::log('IP Whitelisted (Auto)', $newIp, Auth::guard('admin')->id(), [], $newIp->toArray());
-            }
+            [$trustedDevice, $trustCookie] = $this->seedTrustedDeviceForCurrentAdmin($request);
+
+            AuditLogger::log(
+                'Trusted Device Seeded',
+                $trustedDevice,
+                Auth::guard('admin')->id(),
+                [],
+                $this->safeAllowedIpSnapshot($trustedDevice)
+            );
         }
 
         AppSetting::set('ip_restriction_enabled', $newStatus ? 'true' : 'false');
@@ -152,13 +152,19 @@ class SettingsController extends Controller
         // Audit Log entry for the setting toggle
         AuditLogger::log('IP Restriction Setting Toggled', $setting, Auth::guard('admin')->id(), $oldValues, $newValues);
 
-        return response()->json([
+        $response = response()->json([
             'success' => true,
             'enabled' => $newStatus,
             'message' => $newStatus
                 ? 'IP restriction enabled! Only trusted devices can access the site.'
                 : 'IP restriction disabled. Site is accessible from any IP.',
         ]);
+
+        if ($trustCookie) {
+            $response->withCookie($trustCookie);
+        }
+
+        return $response;
     }
 
     /**
@@ -264,7 +270,13 @@ class SettingsController extends Controller
                 'country' => $accessRequest->country,
                 'is_active' => true,
             ]);
-            AuditLogger::log('Device Approved (Updated)', $existing, Auth::guard('admin')->id(), $oldValues, $existing->toArray());
+            AuditLogger::log(
+                'Device Approved (Updated)',
+                $existing,
+                Auth::guard('admin')->id(),
+                $this->safeAllowedIpSnapshotFromArray($oldValues),
+                $this->safeAllowedIpSnapshot($existing)
+            );
         } else {
             $record = AllowedIp::create([
                 'ip_address' => $accessRequest->ip_address,
@@ -279,7 +291,13 @@ class SettingsController extends Controller
                 'is_active' => true,
                 'added_by' => Auth::guard('admin')->id(),
             ]);
-            AuditLogger::log('Device Approved (New)', $record, Auth::guard('admin')->id(), [], $record->toArray());
+            AuditLogger::log(
+                'Device Approved (New)',
+                $record,
+                Auth::guard('admin')->id(),
+                [],
+                $this->safeAllowedIpSnapshot($record)
+            );
         }
 
         return response()->json([
@@ -324,5 +342,84 @@ class SettingsController extends Controller
             'success' => true,
             'message' => 'All monitor logs cleared.',
         ]);
+    }
+
+    /**
+     * Seed a trusted device record and cookie for the current admin session.
+     */
+    protected function seedTrustedDeviceForCurrentAdmin(Request $request): array
+    {
+        $currentIp = $request->ip();
+        $userAgent = substr($request->userAgent() ?? '', 0, 500);
+        $geo = GeoIpService::lookup($currentIp);
+
+        $deviceToken = $request->cookie('device_trust_token') ?: Str::random(64);
+        $device = AllowedIp::findByDeviceToken($deviceToken);
+
+        $payload = [
+            'ip_address' => $currentIp,
+            'device_token' => $deviceToken,
+            'user_agent' => $userAgent ?: null,
+            'last_used_at' => now(),
+            'city' => $geo['city'] ?? null,
+            'country' => $geo['country'] ?? null,
+            'label' => 'Admin Session Device',
+            'is_active' => true,
+            'added_by' => Auth::guard('admin')->id(),
+        ];
+
+        if ($device) {
+            $device->update($payload);
+        } else {
+            $device = AllowedIp::create($payload);
+        }
+
+        $trustCookie = cookie(
+            'device_trust_token',
+            $deviceToken,
+            60 * 24 * 30,
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Lax'
+        );
+
+        return [$device, $trustCookie];
+    }
+
+    /**
+     * Build an audit-safe snapshot without exposing the full token.
+     */
+    protected function safeAllowedIpSnapshot(AllowedIp $device): array
+    {
+        return [
+            'ip_address' => $device->ip_address,
+            'label' => $device->label,
+            'is_active' => $device->is_active,
+            'user_agent' => $device->user_agent,
+            'last_used_at' => optional($device->last_used_at)?->toDateTimeString(),
+            'city' => $device->city,
+            'country' => $device->country,
+            'added_by' => $device->added_by,
+        ];
+    }
+
+    /**
+     * Build a safe snapshot from a raw array payload.
+     */
+    protected function safeAllowedIpSnapshotFromArray(array $payload): array
+    {
+        return [
+            'ip_address' => $payload['ip_address'] ?? null,
+            'label' => $payload['label'] ?? null,
+            'is_active' => $payload['is_active'] ?? null,
+            'user_agent' => $payload['user_agent'] ?? null,
+            'last_used_at' => $payload['last_used_at'] ?? null,
+            'city' => $payload['city'] ?? null,
+            'country' => $payload['country'] ?? null,
+            'added_by' => $payload['added_by'] ?? null,
+        ];
     }
 }
