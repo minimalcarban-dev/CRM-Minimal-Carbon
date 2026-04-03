@@ -53,7 +53,7 @@ class DashboardController extends Controller
                 ->whereBetween('created_at', [$rangeFrom, $rangeTo]);
 
             $todayOrderCount = (clone $orderQBase)->count();
-            $todayRevenue = (clone $orderQBase)->sum('gross_sell');
+            $todayRevenue = (clone $orderQBase)->get()->sum('amount_received_total');
             $monthRevenue = $todayRevenue; // same range
         } else {
             $todayOrderCount = Cache::remember("dash.today_orders.{$today}", 120, function () use ($today) {
@@ -65,14 +65,16 @@ class DashboardController extends Controller
             $todayRevenue = Cache::remember("dash.today_revenue.{$today}", 120, function () use ($today) {
                 return Order::whereDate('created_at', $today)
                     ->whereNotIn('diamond_status', $this->cancelledStatuses)
-                    ->sum('gross_sell');
+                    ->get()
+                    ->sum('amount_received_total');
             });
 
             $monthRevenue = Cache::remember("dash.month_revenue.{$month}.{$year}", 300, function () use ($month, $year) {
                 return Order::whereMonth('created_at', $month)
                     ->whereYear('created_at', $year)
                     ->whereNotIn('diamond_status', $this->cancelledStatuses)
-                    ->sum('gross_sell');
+                    ->get()
+                    ->sum('amount_received_total');
             });
         }
 

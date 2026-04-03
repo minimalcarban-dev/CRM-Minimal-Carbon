@@ -472,7 +472,7 @@ class CompanyController extends BaseResourceController
             $createdDate = Carbon::parse($order->created_at)->startOfDay();
             return $createdDate->eq($today);
         });
-        $todaysSales = $todaysOrders->sum('gross_sell');
+        $todaysSales = $todaysOrders->sum('amount_received_total');
         $todaysOrderCount = $todaysOrders->count();
 
         // Current month stats (month-to-date) - based on created_at
@@ -483,7 +483,7 @@ class CompanyController extends BaseResourceController
         });
         $monthToDate = [
             'order_count' => $monthOrders->count(),
-            'total_revenue' => $monthOrders->sum('gross_sell'),
+            'total_revenue' => $monthOrders->sum('amount_received_total'),
         ];
 
         // ===== FILTERED DATE RANGE STATS (for Sales History section AND top stats) =====
@@ -496,7 +496,7 @@ class CompanyController extends BaseResourceController
         });
 
         // Calculate stats for FILTERED date range
-        $filteredTotal = $filteredOrders->sum('gross_sell');
+        $filteredTotal = $filteredOrders->sum('amount_received_total');
         $filteredOrderCount = $filteredOrders->count();
         $avgOrderValue = $filteredOrderCount > 0 ? round($filteredTotal / $filteredOrderCount, 2) : 0;
 
@@ -523,7 +523,7 @@ class CompanyController extends BaseResourceController
             return (object) [
                 'sales_date' => Carbon::parse($date),
                 'order_count' => $dayOrders->count(),
-                'total_revenue' => $dayOrders->sum('gross_sell'),
+                'total_revenue' => $dayOrders->sum('amount_received_total'),
                 'order_type_breakdown' => $orderTypeBreakdown,
                 'running_total' => 0,
                 'target_percent' => null,
@@ -595,7 +595,7 @@ class CompanyController extends BaseResourceController
                 'month' => $month,
                 'month_name' => Carbon::create()->month($month)->format('M'),
                 'orders' => $monthOrders->count(),
-                'revenue' => $monthOrders->sum('gross_sell'),
+                'revenue' => $monthOrders->sum('amount_received_total'),
                 'target' => (float) ($targets[$month] ?? 0),
             ];
         }
@@ -763,7 +763,7 @@ class CompanyController extends BaseResourceController
             $createdDate = Carbon::parse($order->created_at)->startOfDay();
             return $createdDate->eq($today);
         });
-        $todaysSales = $todaysOrders->sum('gross_sell');
+        $todaysSales = $todaysOrders->sum('amount_received_total');
         $todaysOrderCount = $todaysOrders->count();
 
         // Current month stats (month-to-date) - based on created_at
@@ -774,7 +774,7 @@ class CompanyController extends BaseResourceController
         });
         $monthToDate = [
             'order_count' => $monthOrders->count(),
-            'total_revenue' => $monthOrders->sum('gross_sell'),
+            'total_revenue' => $monthOrders->sum('amount_received_total'),
         ];
 
         // ===== FILTERED DATE RANGE STATS (for Sales History section AND top stats) =====
@@ -787,7 +787,7 @@ class CompanyController extends BaseResourceController
         });
 
         // Calculate stats for FILTERED date range
-        $filteredTotal = $filteredOrders->sum('gross_sell');
+        $filteredTotal = $filteredOrders->sum('amount_received_total');
         $filteredOrderCount = $filteredOrders->count();
         $avgOrderValue = $filteredOrderCount > 0 ? round($filteredTotal / $filteredOrderCount, 2) : 0;
 
@@ -842,7 +842,7 @@ class CompanyController extends BaseResourceController
 
         $companyWiseStats = $filteredOrders->groupBy('company_id')->map(function ($orders, $companyId) use ($filteredTotal, $colors) {
             $company = Company::find($companyId);
-            $revenue = $orders->sum('gross_sell');
+            $revenue = $orders->sum('amount_received_total');
             $percentage = $filteredTotal > 0 ? round(($revenue / $filteredTotal) * 100, 1) : 0;
             $colorIndex = $companyId % count($colors);
             return (object) [
@@ -922,7 +922,7 @@ class CompanyController extends BaseResourceController
                 'month' => $month,
                 'month_name' => Carbon::create()->month($month)->format('M'),
                 'orders' => $monthOrders->count(),
-                'revenue' => $monthOrders->sum('gross_sell'),
+                'revenue' => $monthOrders->sum('amount_received_total'),
                 'target' => (float) ($targets[$month] ?? 0),
             ];
         }

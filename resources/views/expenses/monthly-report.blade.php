@@ -21,31 +21,31 @@
                     </h1>
                 </div>
                 <div class="header-right tracker-report-header-right">
-                    <form method="GET" action="{{ route('expenses.monthly-report') }}" class="tracker-report-filter-form"
-                        style="flex-wrap:nowrap; align-items:center;">
-                        <select name="month" class="tracker-filter-select" style="padding:0.5rem 0.75rem;">
-                            @for ($m = 1; $m <= 12; $m++)
-                                <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                </option>
-                            @endfor
-                        </select>
-                        <select name="year" class="tracker-filter-select" style="padding:0.5rem 0.75rem;">
-                            @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
-                                </option>
-                            @endfor
-                        </select>
-                        <button type="submit" class="btn-primary-custom" style="padding:0.5rem 0.75rem; flex-shrink:0;"><i
-                                class="bi bi-search"></i></button>
-                        <a href="{{ route('expenses.export-monthly', ['year' => $year, 'month' => $month]) }}"
-                            class="btn-secondary-custom" style="padding:0.5rem 1rem; flex-shrink:0;">
-                            <i class="bi bi-download"></i> Excel
-                        </a>
-                        <a href="{{ route('expenses.index') }}" class="btn-secondary-custom"
-                            style="padding:0.5rem 1rem; flex-shrink:0;">
-                            <i class="bi bi-arrow-left"></i> Back
-                        </a>
+                    <form method="GET" action="{{ route('expenses.monthly-report') }}" class="tracker-report-filter-form">
+                        <div class="tracker-report-input-group">
+                            <select name="month" class="tracker-filter-select tracker-report-select">
+                                @for ($m = 1; $m <= 12; $m++)
+                                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
+                                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                    </option>
+                                @endfor
+                            </select>
+                            <select name="year" class="tracker-filter-select tracker-report-select">
+                                @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="tracker-report-actions-group">
+                            <a href="{{ route('expenses.export-monthly', ['year' => $year, 'month' => $month]) }}"
+                                class="btn-secondary-custom tracker-report-action-btn">
+                                <i class="bi bi-download"></i> Excel
+                            </a>
+                            <a href="{{ route('expenses.index') }}" class="btn-secondary-custom tracker-report-action-btn">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -73,7 +73,7 @@
                     <div class="stat-label">Closing Cash Balance (Carry Forward)</div>
                     <div class="stat-value" style="color:{{ $balance >= 0 ? '#10b981' : '#ef4444' }};">
                         ₹{{ number_format($balance, 0) }}</div>
-                    <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.2rem;">
+                    <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.2rem; font-weight: bold;">
                         Opening: ₹{{ number_format($openingBalance, 0) }} | This Month:
                         {{ $monthlyCashflow >= 0 ? '+' : '-' }}₹{{ number_format(abs($monthlyCashflow), 0) }}
                     </div>
@@ -188,7 +188,20 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-..."
             crossorigin="anonymous"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
+                const reportFilterForm = document.querySelector('.tracker-report-filter-form');
+                const reportSelects = reportFilterForm ? reportFilterForm.querySelectorAll('.tracker-report-select') : [];
+                let reportDebounceTimer = null;
+
+                reportSelects.forEach((select) => {
+                    select.addEventListener('change', () => {
+                        clearTimeout(reportDebounceTimer);
+                        reportDebounceTimer = setTimeout(() => {
+                            reportFilterForm.submit();
+                        }, 400);
+                    });
+                });
+
                 const incomeData = @json($incomeByCategory);
                 const expenseData = @json($expenseByCategory);
                 const incomeLabels = @json(\App\Models\Expense::INCOME_CATEGORIES);
@@ -324,4 +337,4 @@
                 });
             });
         </script>
-    @endsection
+@endsection

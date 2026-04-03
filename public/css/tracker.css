@@ -324,6 +324,10 @@
     background: rgba(16, 185, 129, 0.1);
     color: #10b981;
 }
+.tracker-page .tracker-badge-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+}
 .tracker-page .tracker-badge-info {
     background: rgba(59, 130, 246, 0.1);
     color: #3b82f6;
@@ -371,6 +375,15 @@
 }
 .tracker-page .tracker-action-edit:hover {
     background: #6366f1;
+    color: white;
+}
+
+.tracker-page .tracker-action-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+.tracker-page .tracker-action-success:hover {
+    background: #10b981;
     color: white;
 }
 
@@ -659,15 +672,86 @@
 .tracker-page .tracker-report-header-right {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: flex-end;
+    gap: 0.625rem;
     flex-wrap: wrap;
+    margin-left: auto;
 }
 
 .tracker-page .tracker-report-filter-form {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.625rem;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+.tracker-page .tracker-report-input-group,
+.tracker-page .tracker-report-actions-group {
+    display: inline-flex;
     align-items: center;
-    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.625rem;
+    flex-wrap: nowrap;
+}
+
+.tracker-page .tracker-report-actions-group {
+    margin-left: 0;
+}
+
+.tracker-page .tracker-report-filter-form .tracker-report-select,
+.tracker-page .tracker-report-search-btn,
+.tracker-page .tracker-report-action-btn {
+    box-sizing: border-box;
+}
+
+.tracker-page .tracker-report-filter-form .tracker-report-select {
+    width: auto;
+    min-width: 126px;
+    height: 42px;
+    flex: 0 0 auto;
+}
+
+.tracker-page .tracker-report-filter-form .tracker-report-select[name="year"] {
+    min-width: 102px;
+}
+
+.tracker-page .tracker-report-search-btn {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tracker-page .tracker-report-action-btn {
+    min-height: 42px;
+    padding: 0.5rem 1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.tracker-page .tracker-report-action-btn:hover,
+.tracker-page .tracker-report-action-btn:focus {
+    text-decoration: none;
+}
+
+@media (max-width: 1100px) {
+    .tracker-page .tracker-report-filter-form {
+        align-items: flex-end;
+    }
+
+    .tracker-page .tracker-report-input-group,
+    .tracker-page .tracker-report-actions-group {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
 }
 
 /* Cash Flow Row */
@@ -772,29 +856,44 @@
         grid-template-columns: 1fr;
     }
     .tracker-page .tracker-report-header-right {
-        flex-direction: column;
+        flex-direction: row;
         width: 100%;
-        align-items: stretch;
+        align-items: center;
+        justify-content: flex-start;
+        margin-left: 0;
     }
     .tracker-page .tracker-report-filter-form {
-        flex-direction: row;
-        flex-wrap: wrap;
-        width: 100%;
-    }
-    .tracker-page .tracker-report-filter-form select {
-        flex: 1;
-        min-width: 100px;
-    }
-    .tracker-page .tracker-report-filter-form button {
-        flex-shrink: 0;
-    }
-    .tracker-page .tracker-report-filter-form .btn-secondary-custom {
-        flex: 1;
-        justify-content: center;
-    }
-    .tracker-page .tracker-report-header-right .btn-secondary-custom {
+        flex-direction: column;
+        flex-wrap: nowrap;
         width: 100%;
         justify-content: center;
+        align-items: flex-end;
+        gap: 0.5rem;
+    }
+    .tracker-page .tracker-report-input-group,
+    .tracker-page .tracker-report-actions-group {
+        width: auto;
+        max-width: 100%;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    .tracker-page .tracker-report-filter-form .tracker-report-select {
+        flex: 0 0 auto;
+        min-width: 120px;
+    }
+    .tracker-page .tracker-report-search-btn {
+        flex: 0 0 42px;
+        width: 42px;
+        min-width: 42px;
+    }
+    .tracker-page .tracker-report-filter-form .tracker-report-action-btn {
+        flex: 0 0 auto;
+        justify-content: center;
+        min-width: 0;
+    }
+    .tracker-page .tracker-report-filter-form .tracker-report-search-btn,
+    .tracker-page .tracker-report-filter-form .tracker-report-action-btn {
+        width: auto;
     }
     .tracker-page .tracker-report-chart-layout {
         flex-direction: column;

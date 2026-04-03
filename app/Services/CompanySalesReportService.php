@@ -46,12 +46,11 @@ class CompanySalesReportService
                 $q->whereNotIn('diamond_status', $cancelledStatuses)
                     ->orWhereNull('diamond_status');
             })
-            ->selectRaw('COUNT(*) as order_count, COALESCE(SUM(gross_sell), 0) as total_revenue')
-            ->first();
+            ->get();
 
         return [
-            'order_count' => (int) $result->order_count,
-            'total_revenue' => (float) $result->total_revenue,
+            'order_count' => (int) $result->count(),
+            'total_revenue' => (float) $result->sum('amount_received_total'),
         ];
     }
 
@@ -83,7 +82,7 @@ class CompanySalesReportService
 
             if ($todayOrders->count() > 0) {
                 $orderCount = $todayOrders->count();
-                $totalRevenue = $todayOrders->sum('gross_sell');
+                $totalRevenue = $todayOrders->sum('amount_received_total');
                 $breakdown = $todayOrders->groupBy('order_type')
                     ->map(fn($group) => $group->count())
                     ->toArray();
@@ -143,7 +142,7 @@ class CompanySalesReportService
                 ->get();
 
             if ($todayOrders->count() > 0) {
-                $monthlySales[$currentMonth] = ($monthlySales[$currentMonth] ?? 0) + $todayOrders->sum('gross_sell');
+                $monthlySales[$currentMonth] = ($monthlySales[$currentMonth] ?? 0) + $todayOrders->sum('amount_received_total');
                 $monthlyOrders[$currentMonth] = ($monthlyOrders[$currentMonth] ?? 0) + $todayOrders->count();
             }
         }
@@ -231,20 +230,13 @@ class CompanySalesReportService
                 $q->whereNotIn('diamond_status', $cancelledStatuses)
                     ->orWhereNull('diamond_status');
             })
-            ->select('company_id', 'order_type')
-            ->selectRaw('COUNT(*) as order_count, SUM(gross_sell) as total_revenue')
-            ->groupBy('company_id', 'order_type')
-            ->get();
-
+            ->get()
+            ->groupBy('company_id');
         $archived = [];
-
-        // Group by company
-        $byCompany = $companySales->groupBy('company_id');
-
-        foreach ($byCompany as $companyId => $orders) {
-            $orderCount = $orders->sum('order_count');
-            $totalRevenue = $orders->sum('total_revenue');
-            $breakdown = $orders->pluck('order_count', 'order_type')->toArray();
+        foreach ($companySales as $companyId => $orders) {
+            $orderCount = $orders->count();
+            $totalRevenue = $orders->sum('amount_received_total');
+            $breakdown = $orders->groupBy('order_type')->map(fn($group) => $group->count())->toArray();
 
             CompanyDailySales::updateOrCreate(
                 [

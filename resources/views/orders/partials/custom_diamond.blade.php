@@ -18,8 +18,8 @@
                         <span class="label-text">Client Name</span>
                         <span class="required-badge">Required</span>
                     </label>
-                    <input type="text" name="client_name" class="form-control-modern" required
-                        placeholder="Full name" value="{{ old('client_name', $order->client_name ?? '') }}">
+                    <input type="text" name="client_name" class="form-control-modern" required placeholder="Full name"
+                        value="{{ old('client_name', $order->client_name ?? '') }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label-modern">
@@ -59,8 +59,7 @@
                             <select name="client_tax_id_type" class="form-control-modern">
                                 <option value="">Select Type</option>
                                 @foreach (\App\Models\Order::TAX_ID_TYPES as $value => $label)
-                                    <option value="{{ $value }}"
-                                        {{ old('client_tax_id_type', $order->client_tax_id_type ?? '') == $value ? 'selected' : '' }}>
+                                    <option value="{{ $value }}" {{ old('client_tax_id_type', $order->client_tax_id_type ?? '') == $value ? 'selected' : '' }}>
                                         {{ $label }}
                                     </option>
                                 @endforeach
@@ -116,7 +115,7 @@
     </div>
     <div class="section-body">
         <div class="row g-3">
-            <div class="col-12">
+            <div class="col-md-6">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
@@ -128,8 +127,7 @@
                     <select name="company_id" class="form-control-modern" required>
                         <option value="">-- Select Company --</option>
                         @foreach ($companies as $company)
-                            <option value="{{ $company->id }}"
-                                {{ old('company_id', $order->company_id ?? '') == $company->id ? 'selected' : '' }}>
+                            <option value="{{ $company->id }}" {{ old('company_id', $order->company_id ?? '') == $company->id ? 'selected' : '' }}>
                                 {{ $company->name }}
                             </option>
                         @endforeach
@@ -137,7 +135,7 @@
                 </div>
             </div>
 
-            <div class="col-12">
+            <div class="col-md-6">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
@@ -149,8 +147,7 @@
                     <select name="factory_id" class="form-control-modern">
                         <option value="">Select Factory</option>
                         @foreach ($factories as $factory)
-                            <option value="{{ $factory->id }}"
-                                {{ old('factory_id', $order->factory_id ?? '') == $factory->id ? 'selected' : '' }}>
+                            <option value="{{ $factory->id }}" {{ old('factory_id', $order->factory_id ?? '') == $factory->id ? 'selected' : '' }}>
                                 {{ $factory->name }} ({{ $factory->code }})
                             </option>
                         @endforeach
@@ -162,7 +159,7 @@
                 </div>
             </div>
 
-            <div class="col-12">
+            <div class="col-md-6">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
@@ -173,19 +170,17 @@
                     </label>
                     <select name="note" class="form-control-modern">
                         <option value="">-- Select Priority --</option>
-                        <option value="priority"
-                            {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
+                        <option value="priority" {{ old('note', $order->note ?? '') == 'priority' ? 'selected' : '' }}>
                             Priority
                         </option>
-                        <option value="non_priority"
-                            {{ old('note', $order->note ?? '') == 'non_priority' ? 'selected' : '' }}>
+                        <option value="non_priority" {{ old('note', $order->note ?? '') == 'non_priority' ? 'selected' : '' }}>
                             Non Priority
                         </option>
                     </select>
                 </div>
             </div>
 
-            <div class="col-12">
+            <div class="col-md-6">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
@@ -196,24 +191,19 @@
                     </label>
                     <select name="diamond_status" class="form-control-modern" required>
                         <option value="">-- Select Status --</option>
-                        <option value="d_diamond_in_discuss"
-                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_discuss' ? 'selected' : '' }}>
+                        <option value="d_diamond_in_discuss" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_discuss' ? 'selected' : '' }}>
                             CD - Diamond In Discuss
                         </option>
-                        <option value="d_diamond_in_making"
-                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_making' ? 'selected' : '' }}>
+                        <option value="d_diamond_in_making" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_making' ? 'selected' : '' }}>
                             CD - Diamond In Making
                         </option>
-                        <option value="d_diamond_completed"
-                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_completed' ? 'selected' : '' }}>
+                        <option value="d_diamond_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_completed' ? 'selected' : '' }}>
                             CD - Diamond Completed
                         </option>
-                        <option value="d_diamond_in_certificate"
-                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_certificate' ? 'selected' : '' }}>
+                        <option value="d_diamond_in_certificate" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_certificate' ? 'selected' : '' }}>
                             CD - Diamond In Certificate
                         </option>
-                        <option value="d_order_shipped"
-                            {{ old('diamond_status', $order->diamond_status ?? '') == 'd_order_shipped' ? 'selected' : '' }}>
+                        <option value="d_order_shipped" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_order_shipped' ? 'selected' : '' }}>
                             CD - Order Shipped
                         </option>
                     </select>
@@ -224,7 +214,7 @@
                 </div>
             </div>
 
-            <div class="col-12">
+            <div class="col-12 col-md-6">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
@@ -242,28 +232,168 @@
                 </div>
             </div>
 
-            @if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
-            <div class="col-12 mt-3">
+            <div class="col-12 col-md-6">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
-                        <span class="label-icon">
-                            <i class="bi bi-heptagon-half"></i>
+                        <span class="label-content">
+                            <span class="label-icon"><i class="bi bi-signpost-split"></i></span>
+                            <span class="label-text">Payment Status</span>
                         </span>
-                        <span class="label-text">Gold Net Weight (g)</span>
-                        <span class="optional-badge" style="background: linear-gradient(135deg, var(--warning), #d97706); color: white;">Internal</span>
+                        <span class="required-badge">Required</span>
                     </label>
-                    <input type="number" step="0.001" name="gold_net_weight" id="gold_net_weight_input" class="form-control-modern"
-                        placeholder="0.000 (Grams)" value="{{ old('gold_net_weight', $order->gold_net_weight ?? '') }}">
-                    <div class="form-hint">
-                        <i class="bi bi-info-circle"></i>
-                        <span id="gold_stock_text">Auto-deducts from factory stock</span>
+                    <select name="payment_status" class="form-control-modern" id="payment_status_select" required>
+                        <option value="full" {{ old('payment_status', $order->payment_status ?? 'full') === 'full' ? 'selected' : '' }}>Full Paid</option>
+                        <option value="partial" {{ old('payment_status', $order->payment_status ?? 'full') === 'partial' ? 'selected' : '' }}>Partial Paid</option>
+                        <option value="due" {{ old('payment_status', $order->payment_status ?? 'full') === 'due' ? 'selected' : '' }}>Due</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="row g-3 payment-inline-fields">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern h-100">
+                            <label class="form-label-modern">
+                                <span class="label-content">
+                                    <span class="label-icon"><i class="bi bi-cash-coin"></i></span>
+                                    <span class="label-text">Amount Received</span>
+                                </span>
+                            </label>
+                            <input type="number" step="0.01" min="0" inputmode="decimal"
+                                pattern="[0-9]+([.][0-9]{0,2})?" name="amount_received" class="form-control-modern"
+                                id="amount_received_input" placeholder="Amount received"
+                                value="{{ old('amount_received', $order->amount_received ?? '') }}">
+                            <div class="form-hint">
+                                <i class="bi bi-info-circle"></i>
+                                <span>Select Custom Amount to manually enter any numeric value</span>
+                            </div>
+                        </div>
                     </div>
-                    <div id="gold_stock_warning" style="display:none; margin-top:6px; padding:8px 12px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#dc2626; font-size:0.82rem; font-weight:500;">
-                        ⚠️ <span id="gold_stock_warning_text"></span>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern h-100">
+                            <label class="form-label-modern">
+                                <span class="label-content">
+                                    <span class="label-icon"><i class="bi bi-wallet2"></i></span>
+                                    <span class="label-text">Amount Due</span>
+                                </span>
+                            </label>
+                            <input type="number" step="0.01" min="0" name="amount_due" class="form-control-modern"
+                                id="amount_due_input" placeholder="Amount due"
+                                value="{{ old('amount_due', $order->amount_due ?? '') }}" readonly>
+                            <div class="form-hint">
+                                <i class="bi bi-info-circle"></i>
+                                <span>Auto-calculated from gross sell and received amount</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern h-100">
+                            <label class="form-label-modern">
+                                <span class="label-content">
+                                    <span class="label-icon"><i class="bi bi-heptagon-half"></i></span>
+                                    <span class="label-text">Gold Net Weight (g)</span>
+                                </span>
+                                <span class="optional-badge"
+                                    style="background: linear-gradient(135deg, var(--warning), #d97706); color: white;">Internal</span>
+                            </label>
+                            <input type="number" step="0.001" name="gold_net_weight" id="gold_net_weight_input"
+                                class="form-control-modern" placeholder="0.000 (Grams)"
+                                value="{{ old('gold_net_weight', $order->gold_net_weight ?? '') }}">
+                            <div class="form-hint">
+                                <i class="bi bi-info-circle"></i>
+                                <span id="gold_stock_text">Auto-deducts from factory stock</span>
+                            </div>
+                            <div id="gold_stock_warning"
+                                style="display:none; margin-top:6px; padding:8px 12px; border-radius:8px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); color:#dc2626; font-size:0.82rem; font-weight:500;">
+                                <i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i>
+                                <span id="gold_stock_warning_text"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            @endif
+
+            <script>
+                (function () {
+                    const form = document.getElementById('orderForm') || document.getElementById('editOrderForm');
+                    if (!form || form.dataset.paymentSyncBound === '1') return;
+                    form.dataset.paymentSyncBound = '1';
+
+                    const grossInput = form.querySelector('[name="gross_sell"]');
+                    const statusSelect = form.querySelector('[name="payment_status"]');
+                    const receivedInput = form.querySelector('[name="amount_received"]');
+                    const dueInput = form.querySelector('[name="amount_due"]');
+                    if (!grossInput || !statusSelect || !receivedInput || !dueInput) return;
+
+                    const toNumber = (value) => {
+                        const parsed = parseFloat(value);
+                        return Number.isFinite(parsed) ? parsed : 0;
+                    };
+
+                    const formatMoney = (value) => Number(value || 0).toFixed(2);
+                    const normalizeNumericInput = (value) => {
+                        const cleaned = String(value ?? '').replace(/[^\d.]/g, '');
+                        const parts = cleaned.split('.');
+                        if (parts.length <= 1) return cleaned;
+                        return `${parts.shift()}.${parts.join('')}`;
+                    };
+
+                    const syncPaymentFields = ({ fromReceivedInput = false } = {}) => {
+                        const gross = Math.max(0, toNumber(grossInput.value));
+                        const status = statusSelect.value || 'full';
+                        let received = toNumber(receivedInput.value);
+
+                        if (status === 'full') {
+                            received = gross;
+                            receivedInput.value = formatMoney(received);
+                        } else if (status === 'due') {
+                            received = 0;
+                            receivedInput.value = formatMoney(received);
+                        } else {
+                            received = Math.min(Math.max(received, 0), gross);
+                            if (!fromReceivedInput) {
+                                receivedInput.value = formatMoney(received);
+                            }
+                        }
+
+                        const due = Math.max(gross - received, 0);
+                        dueInput.value = formatMoney(due);
+                    };
+
+                    grossInput.addEventListener('input', syncPaymentFields);
+                    statusSelect.addEventListener('change', syncPaymentFields);
+                    receivedInput.addEventListener('keydown', (event) => {
+                        if (['e', 'E', '+', '-'].includes(event.key)) {
+                            event.preventDefault();
+                        }
+                    });
+                    receivedInput.addEventListener('input', () => {
+                        receivedInput.value = normalizeNumericInput(receivedInput.value);
+                        if (statusSelect.value === 'partial' || statusSelect.value === 'custom') {
+                            syncPaymentFields({ fromReceivedInput: true });
+                        }
+                    });
+                    receivedInput.addEventListener('blur', () => {
+                        if (statusSelect.value === 'partial' || statusSelect.value === 'custom') {
+                            syncPaymentFields();
+                        }
+                    });
+
+                    syncPaymentFields();
+                })();
+            </script>
+
+            <style>
+                .payment-inline-fields .form-group-modern {
+                    margin-bottom: 0;
+                }
+
+                .payment-inline-fields .form-hint {
+                    margin-top: 0.5rem;
+                }
+            </style>
 
             <div class="col-12">
                 <div class="form-group-modern">
@@ -313,8 +443,8 @@
                 <span class="badge-info">Max 10 images</span>
             </label>
             @include('orders.partials.existing_files', ['type' => 'images'])
-            <input type="file" name="images[]" id="diamond_images" class="file-input-hidden" accept="image/*"
-                multiple {{ !isset($order) || !$order ? 'required' : '' }}>
+            <input type="file" name="images[]" id="diamond_images" class="file-input-hidden" accept="image/*" multiple
+                {{ !isset($order) || !$order ? 'required' : '' }}>
             <label for="diamond_images" class="file-upload-area diamond">
                 <div class="file-upload-content">
                     <div class="file-upload-icon diamond">
@@ -340,8 +470,8 @@
                 <span class="badge-info">Max 5 PDFs</span>
             </label>
             @include('orders.partials.existing_files', ['type' => 'pdfs'])
-            <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden"
-                accept="application/pdf" multiple>
+            <input type="file" name="order_pdfs[]" id="order_pdfs" class="file-input-hidden" accept="application/pdf"
+                multiple>
             <label for="order_pdfs" class="file-upload-area pdf">
                 <div class="file-upload-content">
                     <div class="file-upload-icon pdf">
@@ -383,34 +513,26 @@
                     </label>
                     <select name="shipping_company_name" class="form-control-modern">
                         <option value="">Select Carrier</option>
-                        <option value="Aramex"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'Aramex' ? 'selected' : '' }}>
+                        <option value="Aramex" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'Aramex' ? 'selected' : '' }}>
                             Aramex</option>
-                        <option value="USPS"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'USPS' ? 'selected' : '' }}>
+                        <option value="USPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'USPS' ? 'selected' : '' }}>
                             USPS</option>
-                        <option value="DHL"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'DHL' ? 'selected' : '' }}>
+                        <option value="DHL" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'DHL' ? 'selected' : '' }}>
                             DHL</option>
-                        <option value="FedEx"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'FedEx' ? 'selected' : '' }}>
+                        <option value="FedEx" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'FedEx' ? 'selected' : '' }}>
                             FedEx</option>
-                        <option value="UPS"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>
+                        <option value="UPS" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS' ? 'selected' : '' }}>
                             UPS</option>
-                        <option value="EMS / Speed Post"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>
+                        <option value="EMS / Speed Post" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'EMS / Speed Post' ? 'selected' : '' }}>
                             EMS / Speed Post</option>
-                        <option value="UPS - Ground"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - Ground' ? 'selected' : '' }}>
+                        <option value="UPS - Ground" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - Ground' ? 'selected' : '' }}>
                             UPS - Ground</option>
-                        <option value="UPS - DDP"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - DDP' ? 'selected' : '' }}>
+                        <option value="UPS - DDP" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'UPS - DDP' ? 'selected' : '' }}>
                             UPS - DDP</option>
-                        <option value="LP Service"
-                            {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'LP Service' ? 'selected' : '' }}>
+                        <option value="LP Service" {{ old('shipping_company_name', $order->shipping_company_name ?? '') == 'LP Service' ? 'selected' : '' }}>
                             LP Service</option>
-                        @if (isset($order) &&
+                        @if (
+                                isset($order) &&
                                 !empty($order->shipping_company_name) &&
                                 !in_array($order->shipping_company_name, [
                                     'Aramex',
@@ -422,7 +544,8 @@
                                     'UPS - Ground',
                                     'UPS - DDP',
                                     'LP Service',
-                                ]))
+                                ])
+                            )
                             <option value="{{ $order->shipping_company_name }}" selected>
                                 {{ $order->shipping_company_name }}
                             </option>
@@ -1104,19 +1227,19 @@
 </style>
 
 <script>
-    (function() {
+    (function () {
         // Image upload preview
         const imageInput = document.getElementById('diamond_images');
         const imagePreview = document.getElementById('preview_diamond_images');
 
         if (imageInput && imagePreview) {
-            imageInput.addEventListener('change', function(e) {
+            imageInput.addEventListener('change', function (e) {
                 const files = Array.from(e.target.files);
                 imagePreview.innerHTML = '';
 
                 files.slice(0, 10).forEach((file, index) => {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         const div = document.createElement('div');
                         div.className = 'file-preview-item';
                         div.innerHTML = `
@@ -1137,7 +1260,7 @@
         const pdfPreview = document.getElementById('preview_order_pdfs');
 
         if (pdfInput && pdfPreview) {
-            pdfInput.addEventListener('change', function(e) {
+            pdfInput.addEventListener('change', function (e) {
                 const files = Array.from(e.target.files);
                 pdfPreview.innerHTML = '';
 
@@ -1190,7 +1313,7 @@
     }
 
     // Diamond SKU Real-time Validation
-    (function() {
+    (function () {
         const skuInput = document.getElementById('diamond_sku_input');
         const validationIcon = document.getElementById('sku_validation_icon');
         const validationMessage = document.getElementById('sku_validation_message');
@@ -1199,7 +1322,7 @@
 
         let debounceTimer;
 
-        skuInput.addEventListener('input', function() {
+        skuInput.addEventListener('input', function () {
             const sku = this.value.trim();
 
             // Clear previous validation
@@ -1246,7 +1369,7 @@
     })();
 
     // Client Autocomplete
-    (function() {
+    (function () {
         const clientNameInput = document.querySelector('input[name="client_name"]');
         if (!clientNameInput) return;
 
@@ -1265,7 +1388,7 @@
 
         createAutocompleteList();
 
-        clientNameInput.addEventListener('input', function() {
+        clientNameInput.addEventListener('input', function () {
             clearTimeout(debounceTimer);
             const term = this.value.trim();
 
@@ -1298,40 +1421,40 @@
                         autocompleteList.style.display = 'block';
 
                         autocompleteList.querySelectorAll('.autocomplete-item').forEach(
-                        item => {
-                            item.addEventListener('mouseenter', () => item.style
-                                .background = '#f8fafc');
-                            item.addEventListener('mouseleave', () => item.style
-                                .background = '#fff');
-                            item.addEventListener('click', () => {
-                                clientNameInput.value = item.dataset.name;
+                            item => {
+                                item.addEventListener('mouseenter', () => item.style
+                                    .background = '#f8fafc');
+                                item.addEventListener('mouseleave', () => item.style
+                                    .background = '#fff');
+                                item.addEventListener('click', () => {
+                                    clientNameInput.value = item.dataset.name;
 
-                                const emailInput = document.querySelector(
-                                    'input[name="client_email"]');
-                                const mobileInput = document.querySelector(
-                                    'input[name="client_mobile"]');
-                                const addressInput = document.querySelector(
-                                    'textarea[name="client_address"]');
-                                const taxInput = document.querySelector(
-                                    'input[name="client_tax_id"]');
+                                    const emailInput = document.querySelector(
+                                        'input[name="client_email"]');
+                                    const mobileInput = document.querySelector(
+                                        'input[name="client_mobile"]');
+                                    const addressInput = document.querySelector(
+                                        'textarea[name="client_address"]');
+                                    const taxInput = document.querySelector(
+                                        'input[name="client_tax_id"]');
 
-                                if (emailInput) emailInput.value = item.dataset
-                                    .email;
-                                if (mobileInput) mobileInput.value = item
-                                    .dataset.mobile;
-                                if (addressInput) addressInput.value = item
-                                    .dataset.address;
-                                if (taxInput) taxInput.value = item.dataset.tax;
+                                    if (emailInput) emailInput.value = item.dataset
+                                        .email;
+                                    if (mobileInput) mobileInput.value = item
+                                        .dataset.mobile;
+                                    if (addressInput) addressInput.value = item
+                                        .dataset.address;
+                                    if (taxInput) taxInput.value = item.dataset.tax;
 
-                                autocompleteList.style.display = 'none';
+                                    autocompleteList.style.display = 'none';
+                                });
                             });
-                        });
                     })
                     .catch(() => autocompleteList.style.display = 'none');
             }, 300);
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!clientNameInput.contains(e.target) && !autocompleteList.contains(e.target)) {
                 autocompleteList.style.display = 'none';
             }
@@ -1343,66 +1466,66 @@
 
 {{-- Gold Stock Real-time Validation --}}
 @if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
-<script>
-(function() {
-    const factorySelect = document.querySelector('select[name="factory_id"]');
-    const goldInput = document.getElementById('gold_net_weight_input');
-    const stockText = document.getElementById('gold_stock_text');
-    const stockWarning = document.getElementById('gold_stock_warning');
-    const stockWarningText = document.getElementById('gold_stock_warning_text');
+    <script>
+        (function () {
+            const factorySelect = document.querySelector('select[name="factory_id"]');
+            const goldInput = document.getElementById('gold_net_weight_input');
+            const stockText = document.getElementById('gold_stock_text');
+            const stockWarning = document.getElementById('gold_stock_warning');
+            const stockWarningText = document.getElementById('gold_stock_warning_text');
 
-    if (!factorySelect || !goldInput) return;
+            if (!factorySelect || !goldInput) return;
 
-    const existingGoldWeight = parseFloat('{{ $order->gold_net_weight ?? 0 }}') || 0;
-    let currentFactoryStock = null;
+            const existingGoldWeight = parseFloat('{{ $order->gold_net_weight ?? 0 }}') || 0;
+            let currentFactoryStock = null;
 
-    function fetchFactoryStock(factoryId) {
-        if (!factoryId) { resetStockDisplay(); return; }
-        fetch(`/admin/gold-tracking/factory/${factoryId}/stock`, {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            currentFactoryStock = parseFloat(data.current_stock);
-            const maxAllowed = currentFactoryStock + existingGoldWeight;
-            stockText.innerHTML = `Available: <strong style="color:#f59e0b;">${currentFactoryStock.toFixed(3)} gm</strong> in ${data.factory_name}` +
-                (existingGoldWeight > 0 ? ` (max: ${maxAllowed.toFixed(3)} gm incl. current order)` : '');
-            goldInput.setAttribute('max', maxAllowed.toFixed(3));
-            validateGoldWeight();
-        })
-        .catch(() => { resetStockDisplay(); });
-    }
+            function fetchFactoryStock(factoryId) {
+                if (!factoryId) { resetStockDisplay(); return; }
+                fetch(`/admin/gold-tracking/factory/${factoryId}/stock`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        currentFactoryStock = parseFloat(data.current_stock);
+                        const maxAllowed = currentFactoryStock + existingGoldWeight;
+                        stockText.innerHTML = `Available: <strong style="color:#f59e0b;">${currentFactoryStock.toFixed(3)} gm</strong> in ${data.factory_name}` +
+                            (existingGoldWeight > 0 ? ` (max: ${maxAllowed.toFixed(3)} gm incl. current order)` : '');
+                        goldInput.setAttribute('max', maxAllowed.toFixed(3));
+                        validateGoldWeight();
+                    })
+                    .catch(() => { resetStockDisplay(); });
+            }
 
-    function resetStockDisplay() {
-        currentFactoryStock = null;
-        stockText.textContent = 'Auto-deducts from factory stock';
-        goldInput.removeAttribute('max');
-        stockWarning.style.display = 'none';
-        goldInput.style.borderColor = '';
-    }
+            function resetStockDisplay() {
+                currentFactoryStock = null;
+                stockText.textContent = 'Auto-deducts from factory stock';
+                goldInput.removeAttribute('max');
+                stockWarning.style.display = 'none';
+                goldInput.style.borderColor = '';
+            }
 
-    function validateGoldWeight() {
-        if (currentFactoryStock === null) return;
-        const enteredWeight = parseFloat(goldInput.value) || 0;
-        const maxAllowed = currentFactoryStock + existingGoldWeight;
-        if (enteredWeight > 0 && enteredWeight > maxAllowed) {
-            const excess = (enteredWeight - maxAllowed).toFixed(3);
-            stockWarningText.textContent = `Exceeds available stock by ${excess}g! Factory has ${currentFactoryStock.toFixed(3)}g available.`;
-            stockWarning.style.display = 'block';
-            goldInput.style.borderColor = '#dc2626';
-        } else {
-            stockWarning.style.display = 'none';
-            goldInput.style.borderColor = '';
-        }
-    }
+            function validateGoldWeight() {
+                if (currentFactoryStock === null) return;
+                const enteredWeight = parseFloat(goldInput.value) || 0;
+                const maxAllowed = currentFactoryStock + existingGoldWeight;
+                if (enteredWeight > 0 && enteredWeight > maxAllowed) {
+                    const excess = (enteredWeight - maxAllowed).toFixed(3);
+                    stockWarningText.textContent = `Exceeds available stock by ${excess}g! Factory has ${currentFactoryStock.toFixed(3)}g available.`;
+                    stockWarning.style.display = 'block';
+                    goldInput.style.borderColor = '#dc2626';
+                } else {
+                    stockWarning.style.display = 'none';
+                    goldInput.style.borderColor = '';
+                }
+            }
 
-    factorySelect.addEventListener('change', function() { fetchFactoryStock(this.value); });
-    if (typeof $ !== 'undefined' && $.fn.select2) {
-        $(factorySelect).on('select2:select select2:unselect', function() { fetchFactoryStock(this.value); });
-    }
-    goldInput.addEventListener('input', validateGoldWeight);
-    goldInput.addEventListener('change', validateGoldWeight);
-    if (factorySelect.value) { fetchFactoryStock(factorySelect.value); }
-})();
-</script>
+            factorySelect.addEventListener('change', function () { fetchFactoryStock(this.value); });
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(factorySelect).on('select2:select select2:unselect', function () { fetchFactoryStock(this.value); });
+            }
+            goldInput.addEventListener('input', validateGoldWeight);
+            goldInput.addEventListener('change', validateGoldWeight);
+            if (factorySelect.value) { fetchFactoryStock(factorySelect.value); }
+        })();
+    </script>
 @endif

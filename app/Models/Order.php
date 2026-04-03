@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\AuditLog;
+use App\Models\OrderPayment;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
@@ -48,6 +50,9 @@ class Order extends Model
         'factory_id',
         'diamond_status',
         'gross_sell',
+        'payment_status',
+        'amount_received',
+        'amount_due',
         'note',
         'shipping_company_name',
         'tracking_number',
@@ -75,6 +80,8 @@ class Order extends Model
         'dispatch_date' => 'date',
         'cancelled_at' => 'datetime',
         'gross_sell' => 'decimal:2',
+        'amount_received' => 'decimal:2',
+        'amount_due' => 'decimal:2',
     ];
 
     /**
@@ -143,6 +150,160 @@ class Order extends Model
     public function editHistory()
     {
         return $this->morphMany(AuditLog::class, 'auditable')->orderByDesc('created_at');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OrderPayment::class)->orderByDesc('received_at')->orderByDesc('id');
+    }
+
+    public function getPaymentStatusLabelAttribute(): string
+    {
+        $summary = $this->resolvePaymentSummary(null, null, null, false);
+
+        return [
+            'full' => 'Full Paid',
+            'partial' => 'Partial Paid',
+            'due' => 'Due',
+        ][$summary['payment_status'] ?? 'due'] ?? strtoupper((string) ($summary['payment_status'] ?? 'N/A'));
+    }
+
+    public function getAmountReceivedTotalAttribute(): float
+    {
+        return $this->resolvePaymentSummary(null, null, null, false)['amount_received'];
+    }
+
+    public function getAmountDueTotalAttribute(): float
+    {
+        return $this->resolvePaymentSummary(null, null, null, false)['amount_due'];
+    }
+
+    public function getRemainingBalanceAttribute(): float
+    {
+        return $this->amount_due_total;
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->resolvePaymentSummary(null, null, null, false)['payment_status'] === 'full';
+    }
+
+    public function isPartiallyPaid(): bool
+    {
+        return $this->resolvePaymentSummary(null, null, null, false)['payment_status'] === 'partial';
+    }
+
+    public function isDue(): bool
+    {
+        return $this->resolvePaymentSummary(null, null, null, false)['payment_status'] === 'due';
+    }
+
+    public function getPaymentSummaryAttribute(): array
+    {
+        return $this->resolvePaymentSummary(null, null, null, false);
+    }
+
+    public function syncPaymentSummary(?float $amountReceived = null, ?string $status = null, ?float $amountDue = null): array
+    {
+        $summary = $this->resolvePaymentSummary($amountReceived, $status, $amountDue, false);
+
+        $this->forceFill([
+            'payment_status' => $summary['payment_status'],
+            'amount_received' => $summary['amount_received'],
+            'amount_due' => $summary['amount_due'],
+        ])->saveQuietly();
+
+        return $summary;
+    }
+
+    public function refreshPaymentSummaryFromPayments(): array
+    {
+        $summary = $this->resolvePaymentSummary(null, null, null, true);
+
+        $this->forceFill([
+            'payment_status' => $summary['payment_status'],
+            'amount_received' => $summary['amount_received'],
+            'amount_due' => $summary['amount_due'],
+        ])->saveQuietly();
+
+        return $summary;
+    }
+
+    private function resolvePaymentSummary(?float $overrideAmountReceived = null, ?string $overrideStatus = null, ?float $overrideAmountDue = null, bool $usePayments = true): array
+    {
+        $grossSell = round((float) ($this->gross_sell ?? 0), 2);
+        $paymentStatus = $overrideStatus ?? ($this->payment_status ?: null);
+        $ledgerAmount = $usePayments ? round((float) $this->payments()->sum('amount'), 2) : null;
+        $hasLedgerPayments = $usePayments ? $this->payments()->exists() : false;
+
+        if ($hasLedgerPayments) {
+            $amountReceived = min($grossSell, max(0, $ledgerAmount ?? 0));
+            $amountDue = round(max($grossSell - $amountReceived, 0), 2);
+            $paymentStatus = $amountReceived <= 0
+                ? 'due'
+                : ($amountDue > 0 ? 'partial' : 'full');
+
+            return [
+                'payment_status' => $paymentStatus,
+                'amount_received' => $amountReceived,
+                'amount_due' => $amountDue,
+            ];
+        }
+
+        $storedAmountReceived = $overrideAmountReceived ?? ($this->amount_received !== null ? (float) $this->amount_received : null);
+        $storedAmountDue = $overrideAmountDue ?? ($this->amount_due !== null ? (float) $this->amount_due : null);
+
+        if ($paymentStatus === null && $storedAmountReceived === null && $storedAmountDue === null && $grossSell > 0) {
+            $paymentStatus = 'full';
+        }
+
+        if ($paymentStatus === 'due') {
+            $amountReceived = 0.0;
+            $amountDue = $storedAmountDue !== null ? round(max(0, $storedAmountDue), 2) : $grossSell;
+        } elseif ($paymentStatus === 'partial') {
+            $amountReceived = round(max(0, (float) ($storedAmountReceived ?? 0)), 2);
+            if ($storedAmountDue !== null) {
+                $amountDue = round(max(0, $storedAmountDue), 2);
+            } else {
+                $amountDue = round(max($grossSell - $amountReceived, 0), 2);
+            }
+        } elseif ($paymentStatus === 'full') {
+            $amountReceived = $storedAmountReceived !== null ? round(max(0, $storedAmountReceived), 2) : $grossSell;
+            $amountDue = 0.0;
+        } else {
+            if ($storedAmountReceived === null && $storedAmountDue === null) {
+                $amountReceived = $grossSell;
+                $amountDue = 0.0;
+                $paymentStatus = $grossSell > 0 ? 'full' : 'due';
+            } else {
+                $amountReceived = round(max(0, (float) ($storedAmountReceived ?? 0)), 2);
+                $amountDue = round(max(0, (float) ($storedAmountDue ?? max($grossSell - $amountReceived, 0))), 2);
+                $paymentStatus = $amountDue > 0
+                    ? ($amountReceived > 0 ? 'partial' : 'due')
+                    : 'full';
+            }
+        }
+
+        if ($grossSell <= 0) {
+            $paymentStatus = 'full';
+            $amountReceived = 0.0;
+            $amountDue = 0.0;
+        }
+
+        if ($amountReceived > $grossSell && $grossSell > 0) {
+            $amountReceived = $grossSell;
+        }
+
+        $amountDue = round(max($grossSell - $amountReceived, 0), 2);
+        if ($paymentStatus === 'due' && $amountReceived <= 0 && $grossSell > 0) {
+            $amountDue = $storedAmountDue !== null ? round(max(0, $storedAmountDue), 2) : $grossSell;
+        }
+
+        return [
+            'payment_status' => $paymentStatus,
+            'amount_received' => round($amountReceived, 2),
+            'amount_due' => round($amountDue, 2),
+        ];
     }
 
     /**

@@ -531,7 +531,7 @@
      * Manages multiple melee diamond entries with per-entry pieces and price.
      * Uses Select2 AJAX for searching melee inventory.
      */
-    (function() {
+    (function () {
         'use strict';
 
         const MultiMeleeManager = {
@@ -585,16 +585,16 @@
                         url: '{{ route('melee.search') }}',
                         dataType: 'json',
                         delay: 300,
-                        data: function(params) {
+                        data: function (params) {
                             return {
                                 term: params.term || '',
                                 limit: 10
                             };
                         },
-                        processResults: function(data) {
+                        processResults: function (data) {
                             const rows = Array.isArray(data) ? data : [];
                             return {
-                                results: rows.map(function(item) {
+                                results: rows.map(function (item) {
                                     return {
                                         id: item.id,
                                         text: item.text,
@@ -671,7 +671,7 @@
 
                 // Add on select2 selection (Enter key or click in dropdown)
                 if (this.$jq && this.$jq.fn && this.$jq.fn.select2) {
-                    this.$jq(this.searchSelect).on('select2:select', function(e) {
+                    this.$jq(this.searchSelect).on('select2:select', function (e) {
                         self.addFromSelect2(e && e.params ? e.params.data : null);
                     });
                 }
@@ -1089,7 +1089,7 @@
         }
 
         // Expose for re-initialization from AJAX partial loads
-        window.initMultiMeleeManager = function() {
+        window.initMultiMeleeManager = function () {
             MultiMeleeManager.entries = [];
             MultiMeleeManager.select2Initialized = false;
             MultiMeleeManager.init();

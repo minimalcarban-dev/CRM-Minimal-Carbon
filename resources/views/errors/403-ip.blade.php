@@ -960,8 +960,8 @@
                 <!-- Error Message -->
                 <div class="error-msg">
                     <span class="label">&gt; ERROR_LOG_DUMP:</span>
-                    Your connection footprint matches an unauthorized pattern. Security firewall has actively
-                    intercepted this request to protect sensitive resources.
+                    This browser does not currently have a trusted device token. If your IP changed after a router
+                    restart, request access again or use the approved device trust flow.
                 </div>
 
                 <!-- Terminal -->
@@ -978,12 +978,12 @@
                     </div>
                     <div class="terminal-line">
                         <span class="blue">&gt;</span>
-                        <span class="label-text"> Target IP: </span>
+                        <span class="label-text"> Client IP: </span>
                         <span class="ip-value">{{ $ip ?? 'Unknown' }}</span>
                         <span class="cursor-blink"></span>
                     </div>
                     <div class="terminal-line">
-                        <span class="error-text">[!] Access credentials not found.</span>
+                        <span class="error-text">[!] Trusted device token not found or expired.</span>
                     </div>
                     <div class="terminal-scan"></div>
                 </div>

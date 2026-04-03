@@ -39,7 +39,16 @@ class DeviceApproveCommand extends Command
         ]);
 
         // Audit Log entry
-        \App\Services\AuditLogger::log('Device Approved (CLI)', $record, $admin->id, [], $record->toArray());
+        \App\Services\AuditLogger::log('Device Approved (CLI)', $record, $admin->id, [], [
+            'ip_address' => $record->ip_address,
+            'label' => $record->label,
+            'is_active' => $record->is_active,
+            'user_agent' => $record->user_agent,
+            'last_used_at' => optional($record->last_used_at)?->toDateTimeString(),
+            'city' => $record->city,
+            'country' => $record->country,
+            'added_by' => $record->added_by,
+        ]);
 
         $this->newLine();
         $this->info('✅ Device trust token generated successfully!');
@@ -57,7 +66,7 @@ class DeviceApproveCommand extends Command
         $this->line("   Cookie Value: {$deviceToken}");
         $this->newLine();
         $this->info('💡 Tip: Use browser DevTools → Application → Cookies → Add the cookie above.');
-        $this->info('   On the first request, the middleware will learn the User-Agent & geo location.');
+        $this->info('   On the first request, the middleware will record browser and geo details for audit only.');
 
         return 0;
     }

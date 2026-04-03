@@ -559,7 +559,7 @@
                         <i class="bi bi-shield-lock"></i>
                         Security & Device Management
                     </h1>
-                    <p class="page-subtitle">Manage device-based access control with IP, browser fingerprint, and geo-fencing</p>
+                    <p class="page-subtitle">Manage trusted device access with session cookies, device tokens, and audit logs</p>
                 </div>
             </div>
         </div>
@@ -569,12 +569,12 @@
             <div class="settings-card-header">
                 <h2 class="settings-card-title">
                     <i class="bi bi-shield-check shield"></i>
-                    IP Restriction
+                    Trusted Device Access
                 </h2>
                 <span class="status-badge {{ $ipRestrictionEnabled ? 'restriction-on' : 'restriction-off' }}"
                     id="restrictionBadge">
                     <i class="bi bi-{{ $ipRestrictionEnabled ? 'lock' : 'unlock' }}"></i>
-                    {{ $ipRestrictionEnabled ? 'ACTIVE — Only whitelisted IPs allowed' : 'INACTIVE — All IPs allowed' }}
+                    {{ $ipRestrictionEnabled ? 'ACTIVE — Trusted devices only' : 'INACTIVE — All trusted devices allowed' }}
                 </span>
             </div>
 
@@ -584,8 +584,8 @@
                     <span class="toggle-slider"></span>
                 </label>
                 <div>
-                    <div class="toggle-label">Enable IP Restriction</div>
-                    <div class="toggle-desc">When enabled, only whitelisted IP addresses can access the site</div>
+                    <div class="toggle-label">Enable Trusted Device Access</div>
+                    <div class="toggle-desc">When enabled, only browsers with a valid device token can access the site</div>
                 </div>
             </div>
 
@@ -593,18 +593,18 @@
                 <div class="config-alert info" style="margin-top: 1.25rem;">
                     <i class="bi bi-info-circle-fill"></i>
                     <div class="config-alert-content">
-                        <h6>IP Restriction is Currently Off</h6>
-                        <p>The site is accessible from any IP address. Add your IP to the whitelist below, then enable
-                            restriction to secure your site.</p>
+                        <h6>Trusted Device Access is Currently Off</h6>
+                        <p>The site is accessible without the device token gate. You can still seed or review trusted
+                            devices below before turning it on.</p>
                     </div>
                 </div>
             @else
                 <div class="config-alert warning" style="margin-top: 1.25rem;">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <div class="config-alert-content">
-                        <h6>IP Restriction is Active</h6>
-                        <p>Only trusted devices can access the site. If locked out, use <code>php artisan device:approve {email}</code> via
-                            SSH.</p>
+                        <h6>Trusted Device Access is Active</h6>
+                        <p>Only browsers with a valid trusted device token can access the site. If locked out, use
+                            <code>php artisan device:approve {email}</code> via SSH.</p>
                     </div>
                 </div>
             @endif
@@ -630,7 +630,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn-primary-custom" onclick="addMyIp()">
-                    <i class="bi bi-plus-circle"></i> Add My IP to Whitelist
+                    <i class="bi bi-plus-circle"></i> Trust This Browser
                 </button>
             </div>
         </div>
@@ -942,7 +942,7 @@
                 <div class="empty-state">
                     <i class="bi bi-shield-check"></i>
                     <p>No blocked attempts recorded</p>
-                    <p style="font-size: 0.85rem;">Blocked IP access attempts will appear here when IP restriction is active</p>
+                    <p style="font-size: 0.85rem;">Blocked access attempts will appear here when trusted device access is active</p>
                 </div>
             @endif
         </div>
@@ -973,7 +973,7 @@
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: data.enabled ? 'IP Restriction Enabled' : 'IP Restriction Disabled',
+                        title: data.enabled ? 'Trusted Device Access Enabled' : 'Trusted Device Access Disabled',
                         text: data.message,
                         confirmButtonColor: '#6366f1',
                     }).then(() => {
@@ -1000,18 +1000,18 @@
             }
         });
 
-        // Add My IP
+        // Trust This Browser
         function addMyIp() {
             const currentIp = document.getElementById('currentIpDisplay').textContent.trim();
             document.getElementById('ip_address').value = currentIp;
-            document.getElementById('label').value = 'My IP (Auto-added)';
+            document.getElementById('label').value = 'Trusted Browser Session';
 
             Swal.fire({
                 icon: 'question',
-                title: 'Add Your IP?',
-                html: `Add <strong>${currentIp}</strong> to the whitelist?`,
+                title: 'Trust This Browser?',
+                html: `Trust the current browser session for <strong>${currentIp}</strong>?`,
                 showCancelButton: true,
-                confirmButtonText: 'Add IP',
+                confirmButtonText: 'Trust Browser',
                 confirmButtonColor: '#6366f1',
                 cancelButtonColor: '#64748b',
             }).then((result) => {
@@ -1053,7 +1053,7 @@
             Swal.fire({
                 icon: 'warning',
                 title: 'Remove IP?',
-                html: `Are you sure you want to remove <strong>${ipAddress}</strong> from the whitelist?`,
+                html: `Are you sure you want to remove <strong>${ipAddress}</strong> from the trusted device list?`,
                 showCancelButton: true,
                 confirmButtonText: 'Remove',
                 confirmButtonColor: '#ef4444',
@@ -1096,7 +1096,7 @@
             Swal.fire({
                 icon: 'question',
                 title: 'Approve Request?',
-                html: `Approve access for <strong>${ipAddress}</strong> and add to whitelist?`,
+                html: `Approve access for <strong>${ipAddress}</strong> and add it to the trusted device list?`,
                 showCancelButton: true,
                 confirmButtonText: 'Approve',
                 confirmButtonColor: '#10b981',

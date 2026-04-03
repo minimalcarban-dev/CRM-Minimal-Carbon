@@ -412,7 +412,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: .625rem;
-         padding-bottom: 10px;
+            padding-bottom: 10px;
         }
 
         .od-img-item {
@@ -423,7 +423,7 @@
             border: 1.5px solid var(--border);
             position: relative;
             transition: var(--transition);
-         border-radius: 12px;
+            border-radius: 12px;
         }
 
         .od-img-item:hover {
@@ -536,278 +536,279 @@
         }
 
         .od-pdf-btn:hover {
-        .file-upload-preview {
-            margin-top: 1rem;
-            display: none;
-            padding: 1.25rem;
-            background: rgba(var(--primary-rgb), 0.02);
-            border: 1.5px dashed var(--border);
-            border-radius: var(--radius);
-        }
-
-        .file-upload-preview.active {
-            display: block;
-        }
-
-        .preview-header {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            word-break: break-all;
-            line-height: 1.3;
-        }
-
-        .preview-item .remove-file {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--danger);
-            color: white;
-            border: 2px solid white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-        }
-
-        .preview-item .remove-file:hover {
-            background: #dc2626;
-            transform: scale(1.1);
-        }
-
-        .pdf-preview-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-        }
-
-        .pdf-preview-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-            color: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.125rem;
-            flex-shrink: 0;
-        }
-
-        .pdf-preview-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .pdf-preview-name {
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: var(--dark);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pdf-preview-size {
-            font-size: 0.75rem;
-            color: var(--gray);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .current-images-grid {
-                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            .file-upload-preview {
+                margin-top: 1rem;
+                display: none;
+                padding: 1.25rem;
+                background: rgba(var(--primary-rgb), 0.02);
+                border: 1.5px dashed var(--border);
+                border-radius: var(--radius);
             }
 
-            .row>div {
+            .file-upload-preview.active {
+                display: block;
+            }
+
+            .preview-header {
+                font-size: 0.875rem;
+                font-weight: 700;
+                color: var(--dark);
                 margin-bottom: 1rem;
-            }
-        }
-
-        @media (max-width: 575px) {
-            #mainContent {
-                margin-top: 83px;
-            }
-
-            .btn-primary-custom {
-                padding: 5px 7px;
-                border-radius: 7px;
-                font-size: 11px;
-            }
-
-            .file-section {
-                padding: 7px;
-            }
-
-            .file-section-header {
-                font-size: 14px;
-                gap: 5px;
-                margin-bottom: 7px;
-                padding-bottom: 6px;
-            }
-
-            .section-header {
-                padding: 7px;
-            }
-
-            .section-icon {
-                width: 34px;
-                height: 34px;
-                font-size: 15px;
-            }
-
-            p.section-description {
-                font-size: 12px;
-            }
-
-            .form-group-modern .form-label-modern {
-                font-size: 12px;
-                flex-direction: row;
+                display: flex;
                 align-items: center;
-                justify-content: space-between;
-                margin-bottom: 7px;
+                gap: 0.5rem;
+                font-weight: 500;
+                word-break: break-all;
+                line-height: 1.3;
             }
 
-            .section-body,
-            .order-type-label,
-            #orderFormFields .section-body {
-                padding: 10px;
+            .preview-item .remove-file {
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: var(--danger);
+                color: white;
+                border: 2px solid white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 0.875rem;
+                transition: all 0.2s;
             }
 
-            .form-control-modern {
-                padding: 3px 5px;
-                border-radius: 7px;
-                font-size: 11px;
+            .preview-item .remove-file:hover {
+                background: #dc2626;
+                transform: scale(1.1);
             }
 
-            #orderFormFields .row>div {
-                margin-bottom: 0;
+            .pdf-preview-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem;
+                background: var(--bg-card);
+                border: 2px solid var(--border);
+                border-radius: 8px;
+                margin-bottom: 0.5rem;
             }
 
-            #orderFormFields .required-badge,
-            #orderFormFields .form-group-modern .optional-badge {
-                font-size: 8px;
-                padding: 1px 2px;
+            .pdf-preview-icon {
+                width: 36px;
+                height: 36px;
+                background: linear-gradient(135deg, var(--danger), #dc2626);
+                color: white;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.125rem;
+                flex-shrink: 0;
             }
 
-            #orderFormFields .badge-info,
-            #orderFormFields .optional-badge {
-                padding: 1px 4px;
-                border-radius: 2px;
-                font-size: 10px;
+            .pdf-preview-info {
+                flex: 1;
+                min-width: 0;
             }
 
-            .section-content .price-display {
-                padding: 0.5rem;
-                border-radius: 5px;
+            .pdf-preview-name {
+                font-size: 0.8125rem;
+                font-weight: 600;
+                color: var(--dark);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .section-content .price-value {
-                font-size: 15px;
+            .pdf-preview-size {
+                font-size: 0.75rem;
+                color: var(--gray);
             }
-        }
 
-        /* Existing File Removal Buttons */
-        .remove-existing-file {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            border: 1px solid white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 10;
-            transition: all 0.2s;
-            padding: 0;
-            line-height: 1;
-        }
+            /* Responsive */
+            @media (max-width: 768px) {
+                .current-images-grid {
+                    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                }
 
-        .remove-existing-file:hover {
-            background: #ef4444;
-            transform: scale(1.1);
-        }
+                .row>div {
+                    margin-bottom: 1rem;
+                }
+            }
 
-        .current-pdf-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+            @media (max-width: 575px) {
+                #mainContent {
+                    margin-top: 83px;
+                }
 
-        .current-pdf-item {
-            flex: 1;
-        }
+                .btn-primary-custom {
+                    padding: 5px 7px;
+                    border-radius: 7px;
+                    font-size: 11px;
+                }
 
-        .remove-pdf-btn {
-            background: rgba(239,68,68,0.08);
-            color: #ef4444;
-            border: 1px solid rgba(239,68,68,0.2);
-            width: 36px;
-            height: 48px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+                .file-section {
+                    padding: 7px;
+                }
 
-        .remove-pdf-btn:hover {
-            background: #ef4444;
-            color: white;
-            border-color: #ef4444;
-        }
-        /* ── Dark Mode Overrides ── */
-        [data-theme="dark"] .card-custom {
-            background: var(--bg-card) !important;
-            border-color: var(--border) !important;
-            color: var(--dark);
-        }
+                .file-section-header {
+                    font-size: 14px;
+                    gap: 5px;
+                    margin-bottom: 7px;
+                    padding-bottom: 6px;
+                }
 
-        [data-theme="dark"] .page-header {
-            background: var(--bg-card) !important;
-            border-color: var(--border) !important;
-        }
+                .section-header {
+                    padding: 7px;
+                }
 
-        [data-theme="dark"] .page-title,
-        [data-theme="dark"] .page-subtitle {
-            color: var(--dark) !important;
-        }
+                .section-icon {
+                    width: 34px;
+                    height: 34px;
+                    font-size: 15px;
+                }
 
-        [data-theme="dark"] .form-select-custom,
-        [data-theme="dark"] .form-control,
-        [data-theme="dark"] .form-select {
-            background: var(--bg-card) !important;
-            border-color: var(--border) !important;
-            color: var(--dark) !important;
-        }
+                p.section-description {
+                    font-size: 12px;
+                }
 
-        [data-theme="dark"] .alert-danger {
-            background: rgba(239,68,68,0.1) !important;
-            border-color: rgba(239,68,68,0.3) !important;
-            color: #fca5a5 !important;
-        }
+                .form-group-modern .form-label-modern {
+                    font-size: 12px;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 7px;
+                }
+
+                .section-body,
+                .order-type-label,
+                #orderFormFields .section-body {
+                    padding: 10px;
+                }
+
+                .form-control-modern {
+                    padding: 3px 5px;
+                    border-radius: 7px;
+                    font-size: 11px;
+                }
+
+                #orderFormFields .row>div {
+                    margin-bottom: 0;
+                }
+
+                #orderFormFields .required-badge,
+                #orderFormFields .form-group-modern .optional-badge {
+                    font-size: 8px;
+                    padding: 1px 2px;
+                }
+
+                #orderFormFields .badge-info,
+                #orderFormFields .optional-badge {
+                    padding: 1px 4px;
+                    border-radius: 2px;
+                    font-size: 10px;
+                }
+
+                .section-content .price-display {
+                    padding: 0.5rem;
+                    border-radius: 5px;
+                }
+
+                .section-content .price-value {
+                    font-size: 15px;
+                }
+            }
+
+            /* Existing File Removal Buttons */
+            .remove-existing-file {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: rgba(239, 68, 68, 0.9);
+                color: white;
+                border: 1px solid white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 10;
+                transition: all 0.2s;
+                padding: 0;
+                line-height: 1;
+            }
+
+            .remove-existing-file:hover {
+                background: #ef4444;
+                transform: scale(1.1);
+            }
+
+            .current-pdf-wrapper {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .current-pdf-item {
+                flex: 1;
+            }
+
+            .remove-pdf-btn {
+                background: rgba(239, 68, 68, 0.08);
+                color: #ef4444;
+                border: 1px solid rgba(239, 68, 68, 0.2);
+                width: 36px;
+                height: 48px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .remove-pdf-btn:hover {
+                background: #ef4444;
+                color: white;
+                border-color: #ef4444;
+            }
+
+            /* ── Dark Mode Overrides ── */
+            [data-theme="dark"] .card-custom {
+                background: var(--bg-card) !important;
+                border-color: var(--border) !important;
+                color: var(--dark);
+            }
+
+            [data-theme="dark"] .page-header {
+                background: var(--bg-card) !important;
+                border-color: var(--border) !important;
+            }
+
+            [data-theme="dark"] .page-title,
+            [data-theme="dark"] .page-subtitle {
+                color: var(--dark) !important;
+            }
+
+            [data-theme="dark"] .form-select-custom,
+            [data-theme="dark"] .form-control,
+            [data-theme="dark"] .form-select {
+                background: var(--bg-card) !important;
+                border-color: var(--border) !important;
+                color: var(--dark) !important;
+            }
+
+            [data-theme="dark"] .alert-danger {
+                background: rgba(239, 68, 68, 0.1) !important;
+                border-color: rgba(239, 68, 68, 0.3) !important;
+                color: #fca5a5 !important;
+            }
     </style>
 
 
@@ -892,7 +893,7 @@
                         fileInputs.forEach(el => el.disabled = true);
                     }
                 @endif
-                            }
+                                    }
 
             function setupAjaxEditSubmission() {
                 const form = document.getElementById('editOrderForm');
@@ -1142,13 +1143,13 @@
                 }
 
                 previewContainer.innerHTML = `
-                    <div class="preview-header mb-3 d-flex align-items-center">
-                        <i class="bi bi-images text-primary me-2"></i>
-                        <span class="fw-bold">Selected Images</span>
-                        <span class="od-badge od-badge-images">${files.length}</span>
-                    </div>
-                    <div class="od-img-grid" id="imagePreviewGrid"></div>
-                `;
+                            <div class="preview-header mb-3 d-flex align-items-center">
+                                <i class="bi bi-images text-primary me-2"></i>
+                                <span class="fw-bold">Selected Images</span>
+                                <span class="od-badge od-badge-images">${files.length}</span>
+                            </div>
+                            <div class="od-img-grid" id="imagePreviewGrid"></div>
+                        `;
                 previewContainer.classList.add('active');
 
                 const grid = previewContainer.querySelector('#imagePreviewGrid');
@@ -1160,11 +1161,11 @@
                         previewItem.className = 'od-img-item';
                         previewItem.onclick = () => viewImage(e.target.result, file.name);
                         previewItem.innerHTML = `
-                            <img src="${e.target.result}" alt="${file.name}">
-                            <div class="od-img-overlay">
-                                <i class="bi bi-zoom-in"></i>
-                            </div>
-                        `;
+                                    <img src="${e.target.result}" alt="${file.name}">
+                                    <div class="od-img-overlay">
+                                        <i class="bi bi-zoom-in"></i>
+                                    </div>
+                                `;
                         grid.appendChild(previewItem);
                     };
                     reader.readAsDataURL(file);
@@ -1183,13 +1184,13 @@
                 }
 
                 previewContainer.innerHTML = `
-                    <div class="preview-header mb-3 d-flex align-items-center">
-                        <i class="bi bi-file-pdf text-danger me-2"></i>
-                        <span class="fw-bold">Selected Documents</span>
-                        <span class="od-badge od-badge-pdfs">${files.length}</span>
-                    </div>
-                    <div id="pdfPreviewList" class="current-pdfs-list"></div>
-                `;
+                            <div class="preview-header mb-3 d-flex align-items-center">
+                                <i class="bi bi-file-pdf text-danger me-2"></i>
+                                <span class="fw-bold">Selected Documents</span>
+                                <span class="od-badge od-badge-pdfs">${files.length}</span>
+                            </div>
+                            <div id="pdfPreviewList" class="current-pdfs-list"></div>
+                        `;
                 previewContainer.classList.add('active');
 
                 const list = previewContainer.querySelector('#pdfPreviewList');
@@ -1197,23 +1198,23 @@
                 files.forEach((file, index) => {
                     const fileSize = (file.size / 1024 / 1024).toFixed(2); // Convert to MB
                     const fileUrl = URL.createObjectURL(file);
-                    
+
                     const previewItem = document.createElement('div');
                     previewItem.className = 'od-pdf-item';
                     previewItem.innerHTML = `
-                        <div class="od-pdf-icon">
-                            <i class="bi bi-file-pdf"></i>
-                        </div>
-                        <div class="od-pdf-info" style="cursor: pointer;" onclick="viewPDF('${fileUrl}', '${file.name.replace(/'/g, "\\'")}')">
-                            <p class="od-pdf-name">${file.name}</p>
-                            <span class="od-pdf-size">${fileSize} MB</span>
-                        </div>
-                        <div class="od-pdf-actions">
-                            <button type="button" class="od-pdf-btn" title="View" onclick="viewPDF('${fileUrl}', '${file.name.replace(/'/g, "\\'")}')">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                    `;
+                                <div class="od-pdf-icon">
+                                    <i class="bi bi-file-pdf"></i>
+                                </div>
+                                <div class="od-pdf-info" style="cursor: pointer;" onclick="viewPDF('${fileUrl}', '${file.name.replace(/'/g, "\\'")}')">
+                                    <p class="od-pdf-name">${file.name}</p>
+                                    <span class="od-pdf-size">${fileSize} MB</span>
+                                </div>
+                                <div class="od-pdf-actions">
+                                    <button type="button" class="od-pdf-btn" title="View" onclick="viewPDF('${fileUrl}', '${file.name.replace(/'/g, "\\'")}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            `;
                     list.appendChild(previewItem);
                 });
             }
@@ -1331,9 +1332,9 @@
 
         /* ── Keyboard shortcuts ── */
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') { 
-                closeImageModal(); 
-                closePDFModal(); 
+            if (e.key === 'Escape') {
+                closeImageModal();
+                closePDFModal();
             }
         });
     </script>

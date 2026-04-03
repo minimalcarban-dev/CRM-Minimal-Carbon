@@ -97,37 +97,46 @@
             </div>
         </div>
 
-        <div class="form-group-modern">
-            <label class="form-label-modern">
-                <span class="label-icon">
-                    <i class="bi bi-gem"></i>
-                </span>
-                <span class="label-text">Jewellery Details</span>
-                <span class="required-badge">Required</span>
-            </label>
-            <textarea name="jewellery_details" class="form-control-modern" rows="4"
-                placeholder="Enter jewellery specifications, design details, and features..."
-                required>{{ old('jewellery_details', $order->jewellery_details ?? '') }}</textarea>
-            <div class="form-hint">
-                <i class="bi bi-info-circle"></i>
-                Include type, weight, dimensions, and design specifications
+        <div class="mt-3 row">
+            <!-- Jewellery Details -->
+            <div class="col-md-6">
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <span class="label-icon">
+                            <i class="bi bi-gem"></i>
+                        </span>
+                        <span class="label-text">Jewellery Details</span>
+                        <span class="required-badge">Required</span>
+                    </label>
+                    <textarea name="jewellery_details" class="form-control-modern" rows="4"
+                        placeholder="Enter jewellery specifications, design details, and features..."
+                        required>{{ old('jewellery_details', $order->jewellery_details ?? '') }}</textarea>
+                    <div class="form-hint">
+                        <i class="bi bi-info-circle"></i>
+                        Include type, weight, dimensions, and design specifications
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group-modern">
-            <label class="form-label-modern">
-                <span class="label-icon">
-                    <i class="bi bi-stars"></i>
-                </span>
-                <span class="label-text">Diamond Details</span>
-                <span class="optional-badge">Optional</span>
-            </label>
-            <textarea name="diamond_details" class="form-control-modern" rows="3"
-                placeholder="Enter diamond specifications (carat, cut, clarity, color)...">{{ old('diamond_details', $order->diamond_details ?? '') }}</textarea>
-            <div class="form-hint">
-                <i class="bi bi-info-circle"></i>
-                Include carat weight, cut grade, clarity, and color specifications
+            <!-- Diamond Details -->
+            <div class="col-md-6">
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <span class="label-icon">
+                            <i class="bi bi-stars"></i>
+                        </span>
+                        <span class="label-text">Diamond Details</span>
+                        <span class="optional-badge">Optional</span>
+                    </label>
+                    <textarea name="diamond_details" class="form-control-modern" rows="4"
+                        placeholder="Enter diamond specifications (carat, cut, clarity, color)...">{{ old('diamond_details', $order->diamond_details ?? '') }}</textarea>
+                    <div class="form-hint">
+                        <i class="bi bi-info-circle"></i>
+                        Include carat weight, cut grade, clarity, and color specifications
+                    </div>
+                </div>
             </div>
+
         </div>
         <div class="mt-3">
             @include('orders.partials.multi_sku_selector')
@@ -307,7 +316,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
@@ -352,49 +361,217 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <div class="form-group-modern">
-                    <label class="form-label-modern">
-                        <span class="label-icon">
-                            <i class="bi bi-currency-dollar"></i>
-                        </span>
-                        <span class="label-text">Gross Sell ($)</span>
-                        <span class="required-badge">Required</span>
-                    </label>
-                    <input type="number" step="0.01" name="gross_sell" class="form-control-modern" required
-                        placeholder="0.00" value="{{ old('gross_sell', $order->gross_sell ?? '') }}">
-                    <div class="form-hint">
-                        <i class="bi bi-info-circle"></i>
-                        <span>Enter the total selling price</span>
+            <div class="col-12">
+                <div class="payment-summary-grid">
+                    <div class="payment-summary-top">
+                        <div class="payment-summary-cell">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <span class="label-content">
+                                        <span class="label-icon"><i class="bi bi-currency-dollar"></i></span>
+                                        <span class="label-text">Gross Sell ($)</span>
+                                    </span>
+                                    <span class="required-badge">Required</span>
+                                </label>
+                                <input type="number" step="0.01" name="gross_sell" class="form-control-modern" required
+                                    placeholder="0.00" value="{{ old('gross_sell', $order->gross_sell ?? '') }}">
+                                <div class="form-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span>Enter the total selling price</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-summary-cell">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    <span class="label-content">
+                                        <span class="label-icon"><i class="bi bi-signpost-split"></i></span>
+                                        <span class="label-text">Payment Status</span>
+                                    </span>
+                                    <span class="required-badge">Required</span>
+                                </label>
+                                <select name="payment_status" class="form-control-modern" id="payment_status_select"
+                                    required>
+                                    <option value="full" {{ old('payment_status', $order->payment_status ?? 'full') === 'full' ? 'selected' : '' }}>Full Paid</option>
+                                    <option value="partial" {{ old('payment_status', $order->payment_status ?? 'full') === 'partial' ? 'selected' : '' }}>Partial Paid</option>
+                                    <option value="due" {{ old('payment_status', $order->payment_status ?? 'full') === 'due' ? 'selected' : '' }}>Due</option>
+                                    <option value="custom" {{ old('payment_status', $order->payment_status ?? 'full') === 'custom' ? 'selected' : '' }}>Custom Amount</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-summary-bottom">
+                        <div class="payment-summary-cell">
+                            <div class="form-group-modern h-100">
+                                <label class="form-label-modern">
+                                    <span class="label-content">
+                                        <span class="label-icon"><i class="bi bi-cash-coin"></i></span>
+                                        <span class="label-text">Amount Received</span>
+                                    </span>
+                                </label>
+                                <input type="number" step="0.01" min="0" inputmode="decimal"
+                                    pattern="[0-9]+([.][0-9]{0,2})?" name="amount_received" class="form-control-modern"
+                                    id="amount_received_input" placeholder="Amount received"
+                                    value="{{ old('amount_received', $order->amount_received ?? '') }}">
+                                <div class="form-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span>Select Custom Amount to manually enter any numeric value</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-summary-cell">
+                            <div class="form-group-modern h-100">
+                                <label class="form-label-modern">
+                                    <span class="label-content">
+                                        <span class="label-icon"><i class="bi bi-wallet2"></i></span>
+                                        <span class="label-text">Amount Due</span>
+                                    </span>
+                                </label>
+                                <input type="number" step="0.01" min="0" name="amount_due" class="form-control-modern"
+                                    id="amount_due_input" placeholder="Amount due"
+                                    value="{{ old('amount_due', $order->amount_due ?? '') }}" readonly>
+                                <div class="form-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span>Auto-calculated from gross sell and received amount</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-summary-cell">
+                            <div class="form-group-modern h-100">
+                                <label class="form-label-modern">
+                                    <span class="label-content">
+                                        <span class="label-icon"><i class="bi bi-heptagon-half"></i></span>
+                                        <span class="label-text">Gold Net Weight (g)</span>
+                                    </span>
+                                    <span class="optional-badge"
+                                        style="background: linear-gradient(135deg, var(--warning), #d97706); color: white;">Internal</span>
+                                </label>
+                                <input type="number" step="0.001" name="gold_net_weight" id="gold_net_weight_input"
+                                    class="form-control-modern" placeholder="0.000 (Grams)"
+                                    value="{{ old('gold_net_weight', $order->gold_net_weight ?? '') }}">
+                                <div class="form-hint" id="gold_stock_hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span id="gold_stock_text">Auto-deducts from factory stock</span>
+                                </div>
+                                <div id="gold_stock_warning"
+                                    style="display:none; margin-top:6px; padding:8px 12px; border-radius:8px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); color:#dc2626; font-size:0.82rem; font-weight:500;">
+                                    <i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i>
+                                    <span id="gold_stock_warning_text"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+            <script>
+                (function () {
+                    const form = document.getElementById('orderForm') || document.getElementById('editOrderForm');
+                    if (!form || form.dataset.paymentSyncBound === '1') return;
+                    form.dataset.paymentSyncBound = '1';
 
-            @if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
-            <div class="col-md-6">
-                <div class="form-group-modern">
-                    <label class="form-label-modern">
-                        <span class="label-icon">
-                            <i class="bi bi-heptagon-half"></i>
-                        </span>
-                        <span class="label-text">Gold Net Weight (g)</span>
-                        <span class="optional-badge" style="background: linear-gradient(135deg, var(--warning), #d97706); color: white;">Internal</span>
-                    </label>
-                    <input type="number" step="0.001" name="gold_net_weight" id="gold_net_weight_input" class="form-control-modern"
-                        placeholder="0.000 (Grams)" value="{{ old('gold_net_weight', $order->gold_net_weight ?? '') }}">
-                    <div class="form-hint" id="gold_stock_hint">
-                        <i class="bi bi-info-circle"></i>
-                        <span id="gold_stock_text">Auto-deducts from factory stock</span>
-                    </div>
-                    <div id="gold_stock_warning" style="display:none; margin-top:6px; padding:8px 12px; border-radius:8px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); color:#dc2626; font-size:0.82rem; font-weight:500;">
-                        <i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i>
-                        <span id="gold_stock_warning_text"></span>
-                    </div>
-                </div>
-            </div>
-            @endif
+                    const grossInput = form.querySelector('[name="gross_sell"]');
+                    const statusSelect = form.querySelector('[name="payment_status"]');
+                    const receivedInput = form.querySelector('[name="amount_received"]');
+                    const dueInput = form.querySelector('[name="amount_due"]');
+                    if (!grossInput || !statusSelect || !receivedInput || !dueInput) return;
 
-            <div class="col-md-6">
+                    const toNumber = (value) => {
+                        const parsed = parseFloat(value);
+                        return Number.isFinite(parsed) ? parsed : 0;
+                    };
+
+                    const formatMoney = (value) => Number(value || 0).toFixed(2);
+                    const normalizeNumericInput = (value) => {
+                        const cleaned = String(value ?? '').replace(/[^\d.]/g, '');
+                        const parts = cleaned.split('.');
+                        if (parts.length <= 1) return cleaned;
+                        return `${parts.shift()}.${parts.join('')}`;
+                    };
+
+                    const syncPaymentFields = ({ fromReceivedInput = false } = {}) => {
+                        const gross = Math.max(0, toNumber(grossInput.value));
+                        const status = statusSelect.value || 'full';
+                        let received = toNumber(receivedInput.value);
+
+                        if (status === 'full') {
+                            received = gross;
+                            receivedInput.value = formatMoney(received);
+                        } else if (status === 'due') {
+                            received = 0;
+                            receivedInput.value = formatMoney(received);
+                        } else {
+                            received = Math.min(Math.max(received, 0), gross);
+                            if (!fromReceivedInput) {
+                                receivedInput.value = formatMoney(received);
+                            }
+                        }
+
+                        const due = Math.max(gross - received, 0);
+                        dueInput.value = formatMoney(due);
+                    };
+
+                    grossInput.addEventListener('input', syncPaymentFields);
+                    statusSelect.addEventListener('change', syncPaymentFields);
+                    receivedInput.addEventListener('keydown', (event) => {
+                        if (['e', 'E', '+', '-'].includes(event.key)) {
+                            event.preventDefault();
+                        }
+                    });
+                    receivedInput.addEventListener('input', () => {
+                        receivedInput.value = normalizeNumericInput(receivedInput.value);
+                        if (statusSelect.value === 'partial' || statusSelect.value === 'custom') {
+                            syncPaymentFields({ fromReceivedInput: true });
+                        }
+                    });
+                    receivedInput.addEventListener('blur', () => {
+                        if (statusSelect.value === 'partial' || statusSelect.value === 'custom') {
+                            syncPaymentFields();
+                        }
+                    });
+
+                    syncPaymentFields();
+                })();
+            </script>
+
+            <style>
+                .payment-summary-grid {
+                    display: grid;
+                    gap: 1rem;
+                }
+
+                .payment-summary-top,
+                .payment-summary-bottom {
+                    display: grid;
+                    gap: 1rem;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .payment-summary-bottom {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                .payment-summary-cell .form-group-modern {
+                    margin-bottom: 0;
+                }
+
+                .payment-summary-cell .form-hint {
+                    margin-top: 0.5rem;
+                }
+
+                @media (max-width: 991.98px) {
+
+                    .payment-summary-top,
+                    .payment-summary-bottom {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+
+            <div class="col-md-12">
                 <div class="form-group-modern">
                     <label class="form-label-modern">
                         <span class="label-icon">
@@ -643,7 +820,7 @@
     }
 
     [data-theme="dark"] .file-upload-area {
-        background: rgba(255,255,255,0.04) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
         border-color: var(--border) !important;
     }
 
@@ -1392,90 +1569,89 @@
 
 {{-- Gold Stock Real-time Validation --}}
 @if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
-<script>
-(function() {
-    const factorySelect = document.querySelector('select[name="factory_id"]');
-    const goldInput = document.getElementById('gold_net_weight_input');
-    const stockText = document.getElementById('gold_stock_text');
-    const stockWarning = document.getElementById('gold_stock_warning');
-    const stockWarningText = document.getElementById('gold_stock_warning_text');
+    <script>
+        (function () {
+            const factorySelect = document.querySelector('select[name="factory_id"]');
+            const goldInput = document.getElementById('gold_net_weight_input');
+            const stockText = document.getElementById('gold_stock_text');
+            const stockWarning = document.getElementById('gold_stock_warning');
+            const stockWarningText = document.getElementById('gold_stock_warning_text');
 
-    if (!factorySelect || !goldInput) return;
+            if (!factorySelect || !goldInput) return;
 
-    // The order's existing gold weight (on edit, this is already consumed from factory stock)
-    const existingGoldWeight = parseFloat('{{ $order->gold_net_weight ?? 0 }}') || 0;
-    let currentFactoryStock = null;
+            // The order's existing gold weight (on edit, this is already consumed from factory stock)
+            const existingGoldWeight = parseFloat('{{ $order->gold_net_weight ?? 0 }}') || 0;
+            let currentFactoryStock = null;
 
-    function fetchFactoryStock(factoryId) {
-        if (!factoryId) {
-            resetStockDisplay();
-            return;
-        }
+            function fetchFactoryStock(factoryId) {
+                if (!factoryId) {
+                    resetStockDisplay();
+                    return;
+                }
 
-        fetch(`/admin/gold-tracking/factory/${factoryId}/stock`, {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            currentFactoryStock = parseFloat(data.current_stock);
-            // On edit: the max the user can enter = factory stock + existing order weight
-            const maxAllowed = currentFactoryStock + existingGoldWeight;
-            stockText.innerHTML = `Available: <strong style="color:#f59e0b;">${currentFactoryStock.toFixed(3)} gm</strong> in ${data.factory_name}` +
-                (existingGoldWeight > 0 ? ` (max: ${maxAllowed.toFixed(3)} gm incl. current order)` : '');
-            goldInput.setAttribute('max', maxAllowed.toFixed(3));
-            validateGoldWeight();
-        })
-        .catch(() => {
-            resetStockDisplay();
-        });
-    }
+                fetch(`/admin/gold-tracking/factory/${factoryId}/stock`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        currentFactoryStock = parseFloat(data.current_stock);
+                        // On edit: the max the user can enter = factory stock + existing order weight
+                        const maxAllowed = currentFactoryStock + existingGoldWeight;
+                        stockText.innerHTML = `Available: <strong style="color:#f59e0b;">${currentFactoryStock.toFixed(3)} gm</strong> in ${data.factory_name}` +
+                            (existingGoldWeight > 0 ? ` (max: ${maxAllowed.toFixed(3)} gm incl. current order)` : '');
+                        goldInput.setAttribute('max', maxAllowed.toFixed(3));
+                        validateGoldWeight();
+                    })
+                    .catch(() => {
+                        resetStockDisplay();
+                    });
+            }
 
-    function resetStockDisplay() {
-        currentFactoryStock = null;
-        stockText.textContent = 'Auto-deducts from factory stock';
-        goldInput.removeAttribute('max');
-        stockWarning.style.display = 'none';
-        goldInput.style.borderColor = '';
-    }
+            function resetStockDisplay() {
+                currentFactoryStock = null;
+                stockText.textContent = 'Auto-deducts from factory stock';
+                goldInput.removeAttribute('max');
+                stockWarning.style.display = 'none';
+                goldInput.style.borderColor = '';
+            }
 
-    function validateGoldWeight() {
-        if (currentFactoryStock === null) return;
+            function validateGoldWeight() {
+                if (currentFactoryStock === null) return;
 
-        const enteredWeight = parseFloat(goldInput.value) || 0;
-        const maxAllowed = currentFactoryStock + existingGoldWeight;
+                const enteredWeight = parseFloat(goldInput.value) || 0;
+                const maxAllowed = currentFactoryStock + existingGoldWeight;
 
-        if (enteredWeight > 0 && enteredWeight > maxAllowed) {
-            const excess = (enteredWeight - maxAllowed).toFixed(3);
-            stockWarningText.textContent = `Exceeds available stock by ${excess}g! Factory has ${currentFactoryStock.toFixed(3)}g available.`;
-            stockWarning.style.display = 'block';
-            goldInput.style.borderColor = '#dc2626';
-        } else {
-            stockWarning.style.display = 'none';
-            goldInput.style.borderColor = '';
-        }
-    }
+                if (enteredWeight > 0 && enteredWeight > maxAllowed) {
+                    const excess = (enteredWeight - maxAllowed).toFixed(3);
+                    stockWarningText.textContent = `Exceeds available stock by ${excess}g! Factory has ${currentFactoryStock.toFixed(3)}g available.`;
+                    stockWarning.style.display = 'block';
+                    goldInput.style.borderColor = '#dc2626';
+                } else {
+                    stockWarning.style.display = 'none';
+                    goldInput.style.borderColor = '';
+                }
+            }
 
-    // Listen for factory change
-    factorySelect.addEventListener('change', function() {
-        fetchFactoryStock(this.value);
-    });
+            // Listen for factory change
+            factorySelect.addEventListener('change', function () {
+                fetchFactoryStock(this.value);
+            });
 
-    // Also listen if Select2 is used (common in this project)
-    if (typeof $ !== 'undefined' && $.fn.select2) {
-        $(factorySelect).on('select2:select select2:unselect', function() {
-            fetchFactoryStock(this.value);
-        });
-    }
+            // Also listen if Select2 is used (common in this project)
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(factorySelect).on('select2:select select2:unselect', function () {
+                    fetchFactoryStock(this.value);
+                });
+            }
 
-    // Listen for gold weight input
-    goldInput.addEventListener('input', validateGoldWeight);
-    goldInput.addEventListener('change', validateGoldWeight);
+            // Listen for gold weight input
+            goldInput.addEventListener('input', validateGoldWeight);
+            goldInput.addEventListener('change', validateGoldWeight);
 
-    // Fetch on page load if factory already selected (e.g., edit mode)
-    if (factorySelect.value) {
-        fetchFactoryStock(factorySelect.value);
-    }
-})();
-</script>
+            // Fetch on page load if factory already selected (e.g., edit mode)
+            if (factorySelect.value) {
+                fetchFactoryStock(factorySelect.value);
+            }
+        })();
+    </script>
 @endif
-

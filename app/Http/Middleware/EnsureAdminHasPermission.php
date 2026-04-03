@@ -17,35 +17,37 @@ class EnsureAdminHasPermission
         /** @var Admin|null $admin */
         $admin = Auth::guard('admin')->user();
 
-        // Agar Admin logged in nahi hai, toh seedha 403 (ya login page par bhej sakte hain)
         if (!$admin) {
-            // Agar aapki admin login route 'admin.login' hai
             return redirect()->route('admin.login');
         }
 
-        // 1. Super Admin hamesha allowed hai
+        // Super admin is always allowed.
         if ($admin->is_super) {
             return $next($request);
         }
 
-        // 2. Permission check
+        // Permission check for normal admins.
         if ($permission && $admin->hasPermission($permission)) {
             return $next($request);
         }
 
-        // 3. 🛑 PERMISSION FAIL HONE PAR (The FIX)
-
-        // Permission slug se module ka naam nikalte hain (e.g., 'orders.view' -> 'Orders')
         $moduleName = 'this module';
         if ($permission) {
             $parts = explode('.', $permission);
             $moduleName = ucfirst($parts[0]);
         }
 
-        // User ko dashboard par redirect karein aur error message dein
-        return redirect()->route('admin.dashboard') // 🚨 Apna sahi dashboard route name use karein
-            ->with('error', "🚨 Your permission to access the <strong>$moduleName</strong> module may have changed or been revoked, so you have been redirected here.");
+        // For AJAX/API requests, return JSON instead of HTML redirect.
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => "You do not have permission to access the {$moduleName} module.",
+                'error' => 'forbidden',
+                'permission' => $permission,
+            ], 403);
+        }
 
-        // Old Code: abort(403, 'Unauthorized');
+        // For normal page requests, keep redirect behavior.
+        return redirect()->route('admin.dashboard')
+            ->with('error', "Your permission to access the <strong>$moduleName</strong> module may have changed or been revoked, so you have been redirected here.");
     }
 }
