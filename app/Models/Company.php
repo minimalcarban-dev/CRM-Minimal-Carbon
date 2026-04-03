@@ -102,7 +102,7 @@ class Company extends Model
         $today = Carbon::today();
         return (float) $this->getAllOrdersForSales()->filter(function ($order) use ($today) {
             return Carbon::parse($order->created_at)->startOfDay()->eq($today);
-        })->sum('gross_sell');
+        })->sum('amount_received_total');
     }
 
     /**
@@ -130,7 +130,7 @@ class Company extends Model
 
         return [
             'order_count' => $monthOrders->count(),
-            'total_revenue' => $monthOrders->sum('gross_sell'),
+            'total_revenue' => $monthOrders->sum('amount_received_total'),
         ];
     }
 

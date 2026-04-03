@@ -21,24 +21,24 @@
                     </h1>
                 </div>
                 <div class="header-right tracker-report-header-right">
-                    <form method="GET" action="{{ route('expenses.annual-report') }}" class="tracker-report-filter-form"
-                        style="flex-wrap:nowrap; align-items:center;">
-                        <select name="year" class="tracker-filter-select" style="padding:0.5rem 0.75rem;">
-                            @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
-                                </option>
-                            @endfor
-                        </select>
-                        <button type="submit" class="btn-primary-custom" style="padding:0.5rem 0.75rem; flex-shrink:0;"><i
-                                class="bi bi-search"></i></button>
-                        <a href="{{ route('expenses.export-annual', ['year' => $year]) }}" class="btn-secondary-custom"
-                            style="padding:0.5rem 1rem; flex-shrink:0;">
-                            <i class="bi bi-download"></i> Excel
-                        </a>
-                        <a href="{{ route('expenses.index') }}" class="btn-secondary-custom"
-                            style="padding:0.5rem 1rem; flex-shrink:0;">
-                            <i class="bi bi-arrow-left"></i> Back
-                        </a>
+                    <form method="GET" action="{{ route('expenses.annual-report') }}" class="tracker-report-filter-form">
+                        <div class="tracker-report-input-group">
+                            <select name="year" class="tracker-filter-select tracker-report-select">
+                                @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="tracker-report-actions-group">
+                            <a href="{{ route('expenses.export-annual', ['year' => $year]) }}"
+                                class="btn-secondary-custom tracker-report-action-btn">
+                                <i class="bi bi-download"></i> Excel
+                            </a>
+                            <a href="{{ route('expenses.index') }}" class="btn-secondary-custom tracker-report-action-btn">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -161,6 +161,19 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const reportFilterForm = document.querySelector('.tracker-report-filter-form');
+            const reportSelects = reportFilterForm ? reportFilterForm.querySelectorAll('.tracker-report-select') : [];
+            let reportDebounceTimer = null;
+
+            reportSelects.forEach((select) => {
+                select.addEventListener('change', () => {
+                    clearTimeout(reportDebounceTimer);
+                    reportDebounceTimer = setTimeout(() => {
+                        reportFilterForm.submit();
+                    }, 400);
+                });
+            });
+
             const monthlyData = @json($monthlyData);
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

@@ -6,8 +6,8 @@
 
     <style>
         /* =============================================
-                        THEME VARIABLES — matches project palette
-                    ============================================= */
+                            THEME VARIABLES — matches project palette
+                        ============================================= */
         /* Bridge local vars to theme vars so dark mode works automatically */
         :root {
             --primary: var(--bs-primary, #4f46e5);
@@ -626,6 +626,117 @@
         }
 
         /* ── Notes ───────────────────────────────── */
+        /* Payment Section */
+        .od-payment-table-wrap {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: var(--surface);
+        }
+
+        .od-payment-table {
+            margin: 0;
+            min-width: 680px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .od-payment-table thead th {
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+            padding: .7rem .85rem;
+            white-space: nowrap;
+        }
+
+        .od-payment-table tbody td {
+            border-bottom: 1px solid var(--border);
+            color: var(--dark);
+            font-size: .875rem;
+            padding: .75rem .85rem;
+            vertical-align: middle;
+        }
+
+        .od-payment-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .od-payment-date {
+            color: var(--body);
+        }
+
+        .od-payment-amount {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .od-payment-ref {
+            color: var(--body);
+            font-family: var(--font-mono);
+            font-size: .8125rem;
+            letter-spacing: .15px;
+        }
+
+        .od-payment-form {
+            margin-top: .35rem;
+        }
+
+        .od-payment-field {
+            display: flex;
+            flex-direction: column;
+            gap: .45rem;
+        }
+
+        .od-payment-label {
+            color: var(--muted);
+            font-size: .8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+            line-height: 1.2;
+        }
+
+        .od-payment-input {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--dark);
+            font-size: .92rem;
+            font-weight: 500;
+            line-height: 1.35;
+            padding: .7rem .85rem;
+            transition: var(--transition);
+        }
+
+        .od-payment-input::placeholder {
+            color: var(--muted);
+        }
+
+        .od-payment-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+            outline: none;
+        }
+
+        .od-payment-empty {
+            background: var(--bg);
+            border: 1.5px dashed var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--muted);
+            font-size: .9rem;
+            margin-bottom: .85rem;
+            padding: .75rem .9rem;
+        }
+
+        .od-payment-submit i {
+            font-size: .9rem;
+        }
+
+        /* Notes */
         .od-notes-text {
             font-size: .9375rem;
             line-height: 1.7;
@@ -1511,6 +1622,14 @@
             .od-meta-card {
                 min-width: 100px;
             }
+
+            .od-payment-table {
+                min-width: 560px;
+            }
+
+            .od-payment-label {
+                font-size: .75rem;
+            }
         }
 
         /* ── Dark Mode: reduce contrast to match project theme ── */
@@ -1615,6 +1734,40 @@
         [data-theme="dark"] .od-stepper-latest {
             background: rgba(99, 102, 241, 0.07);
             border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        [data-theme="dark"] .od-payment-table-wrap {
+            border-color: rgba(255, 255, 255, 0.09);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        [data-theme="dark"] .od-payment-table thead th {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom-color: rgba(255, 255, 255, 0.09);
+        }
+
+        [data-theme="dark"] .od-payment-table tbody td {
+            border-bottom-color: rgba(255, 255, 255, 0.06);
+        }
+
+        [data-theme="dark"] .od-payment-input {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .od-payment-input::placeholder {
+            color: rgba(148, 163, 184, 0.8);
+        }
+
+        [data-theme="dark"] .od-payment-input:focus {
+            border-color: rgba(129, 140, 248, 0.7);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+        }
+
+        [data-theme="dark"] .od-payment-empty {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.13);
         }
 
         [data-theme="dark"] .od-timeline-title::after {
@@ -2144,9 +2297,13 @@
                                     </div>
                                 @endif
                                 @if($canSeeGoldWeight && $order->gold_net_weight)
-                                    <div class="od-spec" style="border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05);">
-                                        <span class="od-spec-label" style="color: #d97706;"><i class="bi bi-heptagon-half"></i> Gold Consumed</span>
-                                        <span class="od-spec-val" style="color: #b45309;">{{ number_format((float) $order->gold_net_weight, 3) }} gm</span>
+                                    <div class="od-spec"
+                                        style="border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05);">
+                                        <span class="od-spec-label" style="color: #d97706;"><i class="bi bi-heptagon-half"></i> Gold
+                                            Consumed</span>
+                                        <span class="od-spec-val"
+                                            style="color: #b45309;">{{ number_format((float) $order->gold_net_weight, 3) }}
+                                            gm</span>
                                     </div>
                                 @endif
                             </div>
@@ -2168,6 +2325,125 @@
                         </div>
                     </div>
                 @endif
+
+                {{-- Payment Tracking --}}
+                @php
+                    $paymentSummary = $order->payment_summary ?? [
+                        'payment_status' => $order->payment_status ?? 'full',
+                        'amount_received' => (float) ($order->amount_received ?? 0),
+                        'amount_due' => (float) ($order->amount_due ?? 0),
+                    ];
+                    $isOrderFullyPaid = ($paymentSummary['payment_status'] ?? 'full') === 'full';
+                    $paymentBadgeClass = match (($paymentSummary['payment_status'] ?? 'full')) {
+                        'partial' => 'status-factory_making',
+                        'due' => 'status-r_order_cancelled',
+                        default => 'status-completed',
+                    };
+                    $orderPayments = $order->relationLoaded('payments') ? $order->payments : collect();
+                @endphp
+                <div class="od-card">
+                    <div class="od-card-head">
+                        <h3 class="od-card-title"><i class="bi bi-cash-coin"></i> Payment Status</h3>
+                        <span
+                            class="s-badge {{ $paymentBadgeClass }}">{{ $order->payment_status_label ?? ucfirst($paymentSummary['payment_status'] ?? 'full') }}</span>
+                    </div>
+                    <div class="od-card-body">
+                        @if(($paymentSummary['payment_status'] ?? 'full') !== 'full')
+                            <div class="od-meta-strip" style="margin-bottom:1rem;">
+                                <div class="od-meta-card">
+                                    <span class="od-meta-label">Amount Received</span>
+                                    <span class="od-meta-value">$
+                                        {{ number_format((float) ($paymentSummary['amount_received'] ?? 0), 2) }}</span>
+                                </div>
+                                <div class="od-meta-card">
+                                    <span class="od-meta-label">Amount Due</span>
+                                    <span class="od-meta-value">$
+                                        {{ number_format((float) ($paymentSummary['amount_due'] ?? 0), 2) }}</span>
+                                </div>
+                                <div class="od-meta-card">
+                                    <span class="od-meta-label">Remaining Balance</span>
+                                    <span class="od-meta-value">$
+                                        {{ number_format((float) $order->remaining_balance, 2) }}</span>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($orderPayments->isNotEmpty())
+                            <div class="table-responsive od-payment-table-wrap mb-3">
+                                <table class="table od-payment-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                            <th>Reference</th>
+                                            <th>Recorded By</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($orderPayments as $payment)
+                                            <tr>
+                                                <td class="od-payment-date">
+                                                    {{ optional($payment->received_at)->format('d M Y, h:i A') ?? optional($payment->created_at)->format('d M Y, h:i A') }}
+                                                </td>
+                                                <td class="od-payment-amount">$ {{ number_format((float) $payment->amount, 2) }}
+                                                </td>
+                                                <td>{{ $payment->payment_method ? ucfirst(str_replace('_', ' ', $payment->payment_method)) : 'N/A' }}
+                                                </td>
+                                                <td class="od-payment-ref">{{ $payment->reference_number ?? 'N/A' }}</td>
+                                                <td>{{ optional($payment->recordedBy)->name ?? 'System' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @elseif(!$isOrderFullyPaid)
+                            <p class="od-payment-empty">No payment receipts have been recorded yet.</p>
+                        @endif
+
+                        @if($canManagePayments && !$isOrderFullyPaid)
+                            <form action="{{ route('orders.payments.store', $order->id) }}" method="POST"
+                                class="row g-3 od-payment-form" id="orderPaymentForm" data-payment-confirm="1"
+                                data-current-status="{{ strtolower((string) ($paymentSummary['payment_status'] ?? 'due')) }}"
+                                data-current-due="{{ number_format((float) ($paymentSummary['amount_due'] ?? 0), 2, '.', '') }}">
+                                @csrf
+                                <div class="col-md-4">
+                                    <div class="od-payment-field">
+                                        <label class="od-payment-label">New Receipt Amount</label>
+                                        <input type="number" step="0.01" min="0.01" name="amount"
+                                            class="form-control od-payment-input" placeholder="0.00" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="od-payment-field">
+                                        <label class="od-payment-label">Payment Method</label>
+                                        <input type="text" name="payment_method" class="form-control od-payment-input"
+                                            placeholder="Cash, UPI, Bank Transfer">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="od-payment-field">
+                                        <label class="od-payment-label">Reference Number</label>
+                                        <input type="text" name="reference_number" class="form-control od-payment-input"
+                                            placeholder="Txn / receipt no.">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="od-payment-field">
+                                        <label class="od-payment-label">Notes</label>
+                                        <textarea name="notes" class="form-control od-payment-input" rows="2"
+                                            placeholder="Optional payment notes"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn-od btn-od-primary od-payment-submit">
+                                        <i class="bi bi-plus-circle"></i> Add Payment
+                                    </button>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
+                </div>
 
                 {{-- Special Notes --}}
                 @if($order->special_notes)
@@ -2494,19 +2770,23 @@
                         <div class="od-discussion-meta">
                             <div>
                                 <small>Context</small>
-                                <strong>Order #{{ $order->id }} | {{ $order->display_client_name ?? $order->client_name ?? 'N/A' }}</strong>
+                                <strong>Order #{{ $order->id }} |
+                                    {{ $order->display_client_name ?? $order->client_name ?? 'N/A' }}</strong>
                             </div>
                             @if(Auth::guard('admin')->user()?->hasPermission('chat.access'))
-                                <a href="{{ route('chat.index', ['channel_id' => $discussionChannel->id, 'message_id' => $discussionRootMessage->id, 'open_thread' => 1]) }}" class="btn-od no-print" style="padding:.5rem .75rem;">
+                                <a href="{{ route('chat.index', ['channel_id' => $discussionChannel->id, 'message_id' => $discussionRootMessage->id, 'open_thread' => 1]) }}"
+                                    class="btn-od no-print" style="padding:.5rem .75rem;">
                                     <i class="bi bi-box-arrow-up-right"></i> Open in Chat
                                 </a>
                             @endif
                         </div>
 
-                        <form method="GET" action="{{ route('orders.show', $order->id) }}" class="od-discussion-search no-print">
+                        <form method="GET" action="{{ route('orders.show', $order->id) }}"
+                            class="od-discussion-search no-print">
                             <input type="text" name="discussion_search" value="{{ $discussionSearch }}"
                                 placeholder="Search old message by text or admin name...">
-                            <button type="submit" class="btn-od" style="padding:.5rem .8rem;"><i class="bi bi-search"></i></button>
+                            <button type="submit" class="btn-od" style="padding:.5rem .8rem;"><i
+                                    class="bi bi-search"></i></button>
                         </form>
 
                         @if($canPostDiscussion)
@@ -2565,50 +2845,66 @@
                                             default => 'background: rgba(148,163,184,.14); color:var(--gray-600);',
                                         };
                                     @endphp
-                                    <div style="margin-top:.5rem; border:1px solid rgba(99,102,241,.18); border-radius:18px; background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(247,249,255,.9)); box-shadow:0 12px 28px rgba(15,23,42,.08); overflow:hidden;">
-                                        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; padding:1rem 1rem .85rem;">
+                                    <div
+                                        style="margin-top:.5rem; border:1px solid rgba(99,102,241,.18); border-radius:18px; background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(247,249,255,.9)); box-shadow:0 12px 28px rgba(15,23,42,.08); overflow:hidden;">
+                                        <div
+                                            style="display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; padding:1rem 1rem .85rem;">
                                             <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:.45rem;">
-                                                <span style="font-size:1rem; font-weight:800; color:var(--primary);">#{{ $order->id }}</span>
+                                                <span
+                                                    style="font-size:1rem; font-weight:800; color:var(--primary);">#{{ $order->id }}</span>
                                                 <span style="font-size:.92rem; font-weight:700; color:var(--gray-700);">Order</span>
                                             </div>
-                                            <span class="badge" style="{{ $statusStyle }} border:1px solid transparent; padding:.35rem .75rem; border-radius:999px; font-size:.78rem; font-weight:700;">
+                                            <span class="badge"
+                                                style="{{ $statusStyle }} border:1px solid transparent; padding:.35rem .75rem; border-radius:999px; font-size:.78rem; font-weight:700;">
                                                 {{ $statusLabel }}
                                             </span>
                                         </div>
-                                        <div style="border-top:1px solid rgba(148,163,184,.18); padding: .85rem 1rem 1rem; display:grid; gap:.75rem;">
+                                        <div
+                                            style="border-top:1px solid rgba(148,163,184,.18); padding: .85rem 1rem 1rem; display:grid; gap:.75rem;">
                                             <div style="display:flex; gap:.7rem; align-items:flex-start;">
-                                                <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
+                                                <div
+                                                    style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
                                                     <i class="bi bi-person-badge"></i>
                                                 </div>
                                                 <div style="min-width:0; display:flex; flex-direction:column; gap:.15rem;">
-                                                    <span style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Client</span>
-                                                    <span style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $clientName }}</span>
+                                                    <span
+                                                        style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Client</span>
+                                                    <span
+                                                        style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $clientName }}</span>
                                                 </div>
                                             </div>
 
                                             <div style="display:flex; gap:.7rem; align-items:flex-start;">
-                                                <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
+                                                <div
+                                                    style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
                                                     <i class="bi bi-calendar3"></i>
                                                 </div>
                                                 <div style="min-width:0; display:flex; flex-direction:column; gap:.15rem;">
-                                                    <span style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Created</span>
-                                                    <span style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d M Y, h:i A') : 'Not available' }}</span>
+                                                    <span
+                                                        style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Created</span>
+                                                    <span
+                                                        style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d M Y, h:i A') : 'Not available' }}</span>
                                                 </div>
                                             </div>
 
                                             @if($shippingLabel || $trackingNumber || $trackingStatus || $dispatchDate)
                                                 <div style="display:flex; gap:.7rem; align-items:flex-start;">
-                                                    <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
+                                                    <div
+                                                        style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(99,102,241,.1); color:var(--primary);">
                                                         <i class="bi bi-truck"></i>
                                                     </div>
                                                     <div style="min-width:0; display:flex; flex-direction:column; gap:.15rem;">
-                                                        <span style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Shipping</span>
-                                                        <span style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $shippingLabel ?: $trackingStatus ?: 'Tracking ready' }}</span>
+                                                        <span
+                                                            style="font-size:.76rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.04em;">Shipping</span>
+                                                        <span
+                                                            style="font-size:.94rem; font-weight:700; color:var(--gray-900); word-break:break-word;">{{ $shippingLabel ?: $trackingStatus ?: 'Tracking ready' }}</span>
                                                         @if($trackingNumber)
-                                                            <span style="font-size:.8rem; color:var(--gray-600);">Tracking: {{ $trackingNumber }}</span>
+                                                            <span style="font-size:.8rem; color:var(--gray-600);">Tracking:
+                                                                {{ $trackingNumber }}</span>
                                                         @endif
                                                         @if($dispatchDate)
-                                                            <span style="font-size:.8rem; color:var(--gray-600);">Dispatch: {{ \Carbon\Carbon::parse($dispatchDate)->format('d M Y, h:i A') }}</span>
+                                                            <span style="font-size:.8rem; color:var(--gray-600);">Dispatch:
+                                                                {{ \Carbon\Carbon::parse($dispatchDate)->format('d M Y, h:i A') }}</span>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -2622,15 +2918,18 @@
                                 <details class="od-thread-wrap">
                                     <summary class="od-thread-summary">
                                         <span><i class="bi bi-chat-left-dots"></i> View Thread</span>
-                                        <span>{{ (int) $discussionMessage->thread_count }} repl{{ (int) $discussionMessage->thread_count === 1 ? 'y' : 'ies' }}</span>
+                                        <span>{{ (int) $discussionMessage->thread_count }}
+                                            repl{{ (int) $discussionMessage->thread_count === 1 ? 'y' : 'ies' }}</span>
                                     </summary>
 
                                     <div class="od-thread-list">
                                         @forelse($discussionMessage->replies as $reply)
                                             <div class="od-thread-item">
                                                 <div class="od-discussion-head" style="margin-bottom:0;">
-                                                    <span class="od-discussion-author">{{ $reply->sender->name ?? 'Unknown' }}</span>
-                                                    <span class="od-discussion-time">{{ $reply->created_at->diffForHumans() }}</span>
+                                                    <span
+                                                        class="od-discussion-author">{{ $reply->sender->name ?? 'Unknown' }}</span>
+                                                    <span
+                                                        class="od-discussion-time">{{ $reply->created_at->diffForHumans() }}</span>
                                                 </div>
                                                 <p>{!! nl2br(e($reply->body ?? '')) !!}</p>
                                             </div>
@@ -2643,7 +2942,8 @@
                                                 action="{{ route('orders.discussion.messages.reply', ['order' => $order->id, 'message' => $discussionMessage->id]) }}"
                                                 class="od-thread-reply no-print">
                                                 @csrf
-                                                <textarea name="body" rows="2" placeholder="Reply in this thread..." required></textarea>
+                                                <textarea name="body" rows="2" placeholder="Reply in this thread..."
+                                                    required></textarea>
                                                 <div class="od-discussion-actions">
                                                     <button type="submit" class="btn-od" style="padding:.45rem .85rem;">
                                                         <i class="bi bi-reply"></i> Post Reply
@@ -2888,6 +3188,78 @@
             document.getElementById('cancelModalContainer').classList.remove('active');
             document.body.style.overflow = '';
         }
+
+        /* Payment confirmation for accidental status change prevention */
+        (function () {
+            const paymentForm = document.querySelector('form[data-payment-confirm="1"]');
+            if (!paymentForm) return;
+
+            const statusLabel = (status) => {
+                const normalized = String(status || '').toLowerCase();
+                if (normalized === 'full') return 'Full Paid';
+                if (normalized === 'partial') return 'Partial Paid';
+                if (normalized === 'due') return 'Due';
+                return normalized ? normalized.replace(/_/g, ' ') : 'Unknown';
+            };
+
+            paymentForm.addEventListener('submit', function (event) {
+                if (paymentForm.dataset.confirmed === '1') return;
+
+                event.preventDefault();
+
+                const amountInput = paymentForm.querySelector('input[name="amount"]');
+                const enteredAmount = parseFloat(amountInput ? amountInput.value : '0');
+                const currentDue = parseFloat(paymentForm.dataset.currentDue || '0');
+                const currentStatus = String(paymentForm.dataset.currentStatus || 'due').toLowerCase();
+
+                if (!Number.isFinite(enteredAmount) || enteredAmount <= 0) {
+                    paymentForm.dataset.confirmed = '1';
+                    paymentForm.submit();
+                    return;
+                }
+
+                const normalizedDue = Number.isFinite(currentDue) ? currentDue : 0;
+                const projectedDue = Math.max(normalizedDue - enteredAmount, 0);
+                let projectedStatus = currentStatus;
+
+                if (projectedDue <= 0.009) {
+                    projectedStatus = 'full';
+                } else if (enteredAmount > 0) {
+                    projectedStatus = 'partial';
+                }
+
+                const statusWillChange = projectedStatus !== currentStatus;
+                const title = statusWillChange ? 'Confirm Payment Status Change' : 'Confirm Add Payment';
+                const html = statusWillChange
+                    ? `This payment can change status from <b>${statusLabel(currentStatus)}</b> to <b>${statusLabel(projectedStatus)}</b>.<br><br>Do you want to continue?`
+                    : `You are about to record <b>$ ${enteredAmount.toFixed(2)}</b> for this order.<br><br>Do you want to continue?`;
+
+                if (typeof Swal === 'undefined') {
+                    const confirmed = window.confirm('Are you sure you want to record this payment?');
+                    if (confirmed) {
+                        paymentForm.dataset.confirmed = '1';
+                        paymentForm.submit();
+                    }
+                    return;
+                }
+
+                Swal.fire({
+                    title,
+                    html,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Add Payment',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    focusCancel: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        paymentForm.dataset.confirmed = '1';
+                        paymentForm.submit();
+                    }
+                });
+            });
+        })();
     </script>
 
     <!-- Cancel Order Modal (Custom) -->

@@ -1,4 +1,9 @@
 @csrf
+@php
+    $currentAdmin = auth()->guard('admin')->user();
+    $canCreatePartyInline = $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('parties.create'));
+    $canViewPartyDetails = $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('parties.view'));
+@endphp
 <div class="form-section-card">
     <div class="section-header">
         <div class="section-info">
@@ -82,7 +87,9 @@
                                 <option value="{{ $p->id }}" {{ (old('billed_to_id', $invoice->billed_to_id ?? '') == $p->id) ? 'selected' : '' }}>{{ $p->name }}</option>
                             @endforeach
                         </select>
-                        <button type="button" id="btn_add_billed" class="btn btn-outline-secondary">Add</button>
+                        @if($canCreatePartyInline)
+                            <button type="button" id="btn_add_billed" class="btn btn-outline-secondary">Add</button>
+                        @endif
                     </div>
                 </div>
                 <div class="form-group">
@@ -96,7 +103,9 @@
                                 <option value="{{ $p->id }}" {{ (old('shipped_to_id', $invoice->shipped_to_id ?? '') == $p->id) ? 'selected' : '' }}>{{ $p->name }}</option>
                             @endforeach
                         </select>
-                        <button type="button" id="btn_add_shipped" class="btn btn-outline-secondary">Add</button>
+                        @if($canCreatePartyInline)
+                            <button type="button" id="btn_add_shipped" class="btn btn-outline-secondary">Add</button>
+                        @endif
                     </div>
                 </div>
                 <div class="form-group">
@@ -381,8 +390,43 @@
         let currentTargetSelect = null;
         const modal = document.getElementById('party_modal');
         const formWrap = document.getElementById('party_form');
+        const canCreatePartyInline = @json($canCreatePartyInline);
+        const canViewPartyDetails = @json($canViewPartyDetails);
+
+        function fetchJson(url, options) {
+            return fetch(url, options).then(function (response) {
+                return response.text().then(function (text) {
+                    let data = null;
+
+                    if (text) {
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            data = null;
+                        }
+                    }
+
+                    if (!response.ok) {
+                        const message = (data && data.message)
+                            ? data.message
+                            : 'Request failed with status ' + response.status;
+                        throw { status: response.status, message: message, data: data, raw: text };
+                    }
+
+                    if (!data) {
+                        throw { status: response.status, message: 'Server returned invalid JSON response.', raw: text };
+                    }
+
+                    return data;
+                });
+            });
+        }
 
         function openPartyModal(targetSelectId) {
+            if (!canCreatePartyInline) {
+                alert('You do not have permission to create parties.');
+                return;
+            }
             currentTargetSelect = targetSelectId;
             // enable inputs
             formWrap.querySelectorAll('input,textarea,select').forEach(i => i.removeAttribute('disabled'));
@@ -415,6 +459,11 @@
         const btnSave = document.getElementById('party_save');
         if (btnSave) {
             btnSave.addEventListener('click', function (e) {
+                if (!canCreatePartyInline) {
+                    alert('You do not have permission to create parties.');
+                    return;
+                }
+
                 const nameInput = formWrap.querySelector('[name="name"]');
                 if (!nameInput || !nameInput.value.trim()) {
                     alert('Please enter party name');
@@ -439,7 +488,7 @@
                 const tokenInput = document.querySelector('input[name="_token"]');
                 const token = tokenInput ? tokenInput.value : null;
 
-                fetch('/admin/parties', {
+                fetchJson('/admin/parties', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -447,11 +496,6 @@
                         'X-CSRF-TOKEN': token || ''
                     },
                     body: JSON.stringify(payload)
-                }).then(r => {
-                    if (!r.ok) {
-                        return r.json().then(err => { throw err; });
-                    }
-                    return r.json();
                 })
                     .then(data => {
                         if (data && data.id) {
@@ -484,9 +528,16 @@
         }
 
         // close modal when clicking outside content
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) closePartyModal();
-        });
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closePartyModal();
+            });
+        }
+
+        window.invoicePartyDetailsFetcher = {
+            canViewPartyDetails: canViewPartyDetails,
+            fetchJson: fetchJson
+        };
     })();
 </script>
 <style>
@@ -1302,20 +1353,21 @@
         }
 
         // Handle billed party change - check if foreign party
+        var partyFetchHelpers = window.invoicePartyDetailsFetcher || {};
+        var canViewPartyDetails = !!partyFetchHelpers.canViewPartyDetails;
+        var fetchPartyJson = partyFetchHelpers.fetchJson;
         var billedSelect = document.getElementById('billed_select');
         if (billedSelect) {
-            billedSelect.addEventListener('change', function () {
-                var partyId = this.value;
-                if (!partyId) {
+            var loadBilledParty = function (partyId) {
+                if (!partyId || !canViewPartyDetails || typeof fetchPartyJson !== 'function') {
                     billedPartyIsForeign = false;
                     recalcAll();
                     return;
                 }
-                // Fetch party details to check is_foreign
-                fetch('/admin/parties/' + partyId, {
+
+                fetchPartyJson('/admin/parties/' + partyId, {
                     headers: { 'Accept': 'application/json' }
                 })
-                    .then(function (r) { return r.json(); })
                     .then(function (data) {
                         billedPartyIsForeign = data.is_foreign == 1 || data.is_foreign === true;
                         recalcAll();
@@ -1325,19 +1377,15 @@
                         billedPartyIsForeign = false;
                         recalcAll();
                     });
+            };
+
+            billedSelect.addEventListener('change', function () {
+                loadBilledParty(this.value);
             });
 
             // Check initial billed party on page load
             if (billedSelect.value) {
-                fetch('/admin/parties/' + billedSelect.value, {
-                    headers: { 'Accept': 'application/json' }
-                })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        billedPartyIsForeign = data.is_foreign == 1 || data.is_foreign === true;
-                        recalcAll();
-                    })
-                    .catch(function () { });
+                loadBilledParty(billedSelect.value);
             }
         }
     })();

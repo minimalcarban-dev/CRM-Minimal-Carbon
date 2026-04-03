@@ -42,6 +42,6 @@ class Client extends Model
         return $this->orders()->where(function ($q) {
             $q->whereNotIn('diamond_status', ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'])
                 ->orWhereNull('diamond_status');
-        })->sum('gross_sell');
+        })->get()->sum('amount_received_total');
     }
 }

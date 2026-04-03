@@ -738,9 +738,9 @@
                                 form.method = 'POST';
                                 form.action = `/admin/orders/${orderId}`;
                                 form.innerHTML = `
-                                        @csrf
-                                        @method('DELETE')
-                                    `;
+                                                    @csrf
+                                                    @method('DELETE')
+                                                `;
                                 document.body.appendChild(form);
                                 form.submit();
                             }
@@ -902,6 +902,18 @@
                                             </div>
 
                                             <div class="order-details-column">
+
+                                                {{-- Diamond Status --}}
+                                                @php
+                                                    $statusKey = $order->diamond_status ?? 'processed';
+                                                    $color = $statusColors[$statusKey] ?? 'secondary';
+                                                    $icon = $statusIcons[$statusKey] ?? 'bi-circle';
+                                                @endphp
+                                                <span class="badge-item badge-status status-{{ $color }}">
+                                                    <i class="bi {{ $icon }}"></i>
+                                                    {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}
+                                                </span>
+
                                                 {{-- Company --}}
                                                 @if ($order->company)
                                                     <span class="badge-item badge-company">
@@ -930,16 +942,6 @@
                                                     </span>
                                                 @endif
 
-                                                {{-- Diamond Status --}}
-                                                @php
-                                                    $statusKey = $order->diamond_status ?? 'processed';
-                                                    $color = $statusColors[$statusKey] ?? 'secondary';
-                                                    $icon = $statusIcons[$statusKey] ?? 'bi-circle';
-                                                @endphp
-                                                <span class="badge-item badge-status status-{{ $color }}">
-                                                    <i class="bi {{ $icon }}"></i>
-                                                    {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}
-                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -1011,6 +1013,26 @@
                                                 <span class="text-muted">&mdash;</span>
                                             @endif
                                         </span>
+                                        @if($order->payment_status)
+                                            <div class="mt-1">
+                                                <span
+                                                    class="s-badge {{ $order->payment_status === 'full' ? 'status-completed' : ($order->payment_status === 'partial' ? 'status-factory_making' : 'status-r_order_cancelled') }}">
+                                                    {{ $order->payment_status_label }}
+                                                </span>
+                                                @if(in_array($order->payment_status, ['partial', 'due'], true))
+                                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                                        <span class="badge rounded-pill px-3 py-2"
+                                                            style="{{ $order->payment_status === 'partial' ? 'background: rgba(245, 158, 11, 0.15); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.25);' : 'background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.18);' }}">
+                                                            Received ${{ number_format((float) $order->amount_received_total, 2) }}
+                                                        </span>
+                                                        <span class="badge rounded-pill px-3 py-2"
+                                                            style="{{ $order->payment_status === 'partial' ? 'background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.2);' : 'background: rgba(148, 163, 184, 0.12); color: #475569; border: 1px solid rgba(148, 163, 184, 0.18);' }}">
+                                                            Due ${{ number_format((float) $order->amount_due_total, 2) }}
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="date-card">
@@ -3207,7 +3229,7 @@
             padding: 5px 12px 5px 8px;
             border-radius: 6px;
             font-size: 11.5px;
-            font-weight: 600;
+            font-weight: 700;
             line-height: 1;
             white-space: nowrap;
             background: rgba(255, 255, 255, 0.82);
@@ -3270,10 +3292,10 @@
             padding: 5px 12px 5px 8px;
             border-radius: 6px;
             font-size: 11.5px;
-            font-weight: 600;
+            font-weight: 700;
             line-height: 1;
             white-space: nowrap;
-            background: rgba(255, 255, 255, 0.82);
+            background: rgb(29 63 173);
             backdrop-filter: blur(4px);
             border: 1.5px solid;
         }
@@ -3285,82 +3307,82 @@
 
         /* In Process - blue */
         .badge-status.status-info {
-            color: #1e40af;
+            color: #fff;
             border-color: rgba(59, 130, 246, 0.4);
         }
 
         .badge-status.status-info i {
-            color: #3b82f6;
+            color: #fff;
         }
 
         /* Shipped / Done - green */
         .badge-status.status-success {
-            color: #065f46;
+            color: #fff;
             border-color: rgba(16, 185, 129, 0.4);
         }
 
         .badge-status.status-success i {
-            color: #10b981;
+            color: #fff;
         }
 
         /* In Progress / Making - amber */
         .badge-status.status-warning {
-            color: #78350f;
+            color: #fff;
             border-color: rgba(245, 158, 11, 0.4);
         }
 
         .badge-status.status-warning i {
-            color: #f59e0b;
+            color: #fff;
         }
 
         /* Hold / Danger - red */
         .badge-status.status-danger {
-            color: #9f1239;
+            color: #fff;
             border-color: rgba(239, 68, 68, 0.4);
         }
 
         .badge-status.status-danger i {
-            color: #ef4444;
+            color: #fff;
         }
 
         /* Certificate / Purple */
         .badge-status.status-purple {
-            color: #4c1d95;
+            color: #fff;
             border-color: rgba(168, 85, 247, 0.35);
         }
 
         .badge-status.status-purple i {
-            color: #a855f7;
+            color: #fff;
         }
 
         /* Shipped dark */
         .badge-status.status-dark {
-            color: #1e293b;
+            color: #fff;
             border-color: rgba(30, 41, 59, 0.3);
         }
 
         .badge-status.status-dark i {
-            color: #475569;
+            color: #fff;
         }
 
         /* Secondary / fallback */
         .badge-status.status-secondary {
-            color: #374151;
+            color: #fff;
             border-color: rgba(107, 114, 128, 0.35);
         }
 
         .badge-status.status-secondary i {
-            color: #6b7280;
+            color: #fff;
         }
 
         /* Cyan / teal */
         .badge-status.status-cyan {
-            color: #164e63;
+            color: #fff;
             border-color: rgba(6, 182, 212, 0.4);
         }
 
         .badge-status.status-cyan i {
-            color: #06b6d4;
+            color: #fff;
         }
 
 
@@ -3376,8 +3398,8 @@
         }
 
         .thumbnail-container {
-            width: 100px;
-            height: 100px;
+            width: 140px;
+            height: 140px;
             position: relative;
             border-radius: 8px;
             border: 1px solid var(--border);
@@ -3661,8 +3683,8 @@
             }
 
             /* .client-info {
-                    text-align: start;
-                } */
+                                text-align: start;
+                            } */
         }
 
         /* Print Styles */
@@ -4249,17 +4271,17 @@
                         const historyItem = document.createElement('div');
                         historyItem.className = 'tracking-history-item';
                         historyItem.innerHTML = `
-                                                                                <div class="tracking-history-dot"></div>
-                                                                                <div class="tracking-history-details shadow-sm">
-                                                                                    <div class="tracking-history-header">
-                                                                                        <span class="tracking-history-status">${escapeHtml(item.status)}</span>
-                                                                                        <span class="tracking-history-date">${escapeHtml(item.date)}</span>
-                                                                                    </div>
-                                                                                    <div class="tracking-history-location">
-                                                                                        <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
-                                                                                    </div>
-                                                                                    ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
-                                                                                </div>`;
+                                                                                                        <div class="tracking-history-dot"></div>
+                                                                                                        <div class="tracking-history-details shadow-sm">
+                                                                                                            <div class="tracking-history-header">
+                                                                                                                <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                                                                                                <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                                                                                            </div>
+                                                                                                            <div class="tracking-history-location">
+                                                                                                                <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                                                                                            </div>
+                                                                                                            ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                                                                                                        </div>`;
                         container.appendChild(historyItem);
                     });
                 }

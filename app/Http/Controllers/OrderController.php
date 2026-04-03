@@ -30,6 +30,7 @@ use App\Notifications\DiamondSoldNotification;
 use App\Models\MeleeDiamond;
 use App\Models\Channel;
 use App\Models\Message;
+use App\Models\OrderPayment;
 use App\Events\MessageSent;
 use App\Services\ShippingTrackingService;
 use App\Notifications\OrderCreatedNotification;
@@ -170,7 +171,7 @@ class OrderController extends Controller
             $todaysSalesQuery->where('company_id', $request->company_id);
         }
         
-        $todaysSales = $todaysSalesQuery->sum('gross_sell');
+        $todaysSales = $todaysSalesQuery->get()->sum('amount_received_total');
         $todaysOrderCount = $todaysSalesQuery->count();
 
         // Month Sales Stats
@@ -184,7 +185,7 @@ class OrderController extends Controller
             $monthSalesQuery->where('company_id', $request->company_id);
         }
 
-        $monthSales = $monthSalesQuery->sum('gross_sell');
+        $monthSales = $monthSalesQuery->get()->sum('amount_received_total');
 
         // Get company sales progress for active companies
         $companySalesStats = Company::where('status', 'active')
@@ -384,6 +385,10 @@ class OrderController extends Controller
         try {
             $validated = $this->validateOrder($request);
             $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
+            $paymentSummary = $this->normalizePaymentSummary(
+                $validated,
+                (float) ($validated['gross_sell'] ?? 0)
+            );
 
             // ✅ CRITICAL: Extract and validate melee entries BEFORE creating order
             $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
@@ -432,6 +437,9 @@ class OrderController extends Controller
             $order = new Order();
             $this->assignOrderFields($order, $validated);
             $order->submitted_by = Auth::guard('admin')->id();
+            $order->payment_status = $paymentSummary['payment_status'];
+            $order->amount_received = $paymentSummary['amount_received'];
+            $order->amount_due = $paymentSummary['amount_due'];
 
             // Auto-create or reuse client
             $clientId = null;
@@ -462,6 +470,20 @@ class OrderController extends Controller
             $order->order_pdfs = $pdfs;
 
             $order->save();
+
+            if ($paymentSummary['amount_received'] > 0) {
+                OrderPayment::create([
+                    'order_id' => $order->id,
+                    'amount' => $paymentSummary['amount_received'],
+                    'payment_method' => null,
+                    'reference_number' => null,
+                    'notes' => 'Initial payment captured during order creation.',
+                    'received_at' => now(),
+                    'recorded_by' => Auth::guard('admin')->id(),
+                ]);
+            }
+
+            $order->refreshPaymentSummaryFromPayments();
 
             // ⚡ PERFORMANCE: Bulk update diamonds as sold (instead of loop + controller calls)
             if (!empty($validatedDiamonds)) {
@@ -585,6 +607,9 @@ class OrderController extends Controller
                 'pdfs_count' => count($pdfs),
                 'diamond_sku' => $validated['diamond_sku'] ?? null,
                 'melee_stock_id' => $order->melee_diamond_id,
+                'payment_status' => $order->payment_status,
+                'amount_received' => $order->amount_received,
+                'amount_due' => $order->amount_due,
                 'created_by' => Auth::guard('admin')->id()
             ]);
 
@@ -607,6 +632,7 @@ class OrderController extends Controller
                     'message' => $successMsg,
                     'redirect' => route('orders.index'),
                     'order_id' => $order->id,
+                    'payment_summary' => $order->payment_summary,
                     'melee_stock_summary' => $meleeStockSummary,
                 ]);
             }
@@ -647,6 +673,126 @@ class OrderController extends Controller
 
             return back()->withInput()->with('error', $errorMsg);
         }
+    }
+
+    public function storePayment(Request $request, Order $order)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if (!$admin->is_super && !$admin->hasPermission('orders.edit')) {
+            abort(403, 'You do not have permission to record payments for this order.');
+        }
+
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+        if (in_array($order->diamond_status, $cancelledStatuses, true)) {
+            return back()->with('error', 'Cancelled orders cannot receive payments.');
+        }
+
+        $paymentSummary = $order->payment_summary;
+        if (($paymentSummary['payment_status'] ?? null) === 'full') {
+            return back()->with('error', 'This order is already fully paid. Additional payments are not allowed.');
+        }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'nullable|string|max:50',
+            'reference_number' => 'nullable|string|max:191',
+            'notes' => 'nullable|string|max:2000',
+            'received_at' => 'nullable|date',
+        ]);
+
+        $grossSell = (float) ($order->gross_sell ?? 0);
+        $existingReceived = (float) $order->payments()->sum('amount');
+        $remainingBalance = round(max($grossSell - $existingReceived, 0), 2);
+        $paymentAmount = round((float) $validated['amount'], 2);
+
+        if ($remainingBalance <= 0) {
+            return back()->with('error', 'No remaining balance found for this order.');
+        }
+
+        if ($paymentAmount > $remainingBalance) {
+            return back()
+                ->withInput()
+                ->with('error', 'Payment amount exceeds the remaining balance of ' . number_format($remainingBalance, 2) . '.');
+        }
+
+        $statusLabel = static function (?string $status): string {
+            return match ($status) {
+                'full' => 'Full Paid',
+                'partial' => 'Partial Paid',
+                'due' => 'Due',
+                default => ucfirst(str_replace('_', ' ', (string) $status)),
+            };
+        };
+
+        $formatAmount = static fn($value): string => number_format((float) $value, 2, '.', '');
+
+        $oldSummary = [
+            'payment_status' => (string) ($paymentSummary['payment_status'] ?? 'due'),
+            'amount_received' => round((float) ($paymentSummary['amount_received'] ?? 0), 2),
+            'amount_due' => round((float) ($paymentSummary['amount_due'] ?? 0), 2),
+        ];
+
+        $recordedPayment = null;
+        $newSummary = $oldSummary;
+
+        DB::transaction(function () use ($order, $validated, $paymentAmount, $admin, &$recordedPayment, &$newSummary) {
+            $recordedPayment = OrderPayment::create([
+                'order_id' => $order->id,
+                'amount' => $paymentAmount,
+                'payment_method' => $validated['payment_method'] ?? null,
+                'reference_number' => $validated['reference_number'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'received_at' => !empty($validated['received_at']) ? $validated['received_at'] : now(),
+                'recorded_by' => $admin->id,
+            ]);
+
+            $newSummary = $order->refreshPaymentSummaryFromPayments();
+        });
+
+        $oldValues = [];
+        $newValues = [];
+
+        if ($oldSummary['payment_status'] !== (string) ($newSummary['payment_status'] ?? '')) {
+            $oldValues['Payment Status'] = $statusLabel($oldSummary['payment_status']);
+            $newValues['Payment Status'] = $statusLabel((string) ($newSummary['payment_status'] ?? ''));
+        }
+
+        if ((float) $oldSummary['amount_received'] !== (float) ($newSummary['amount_received'] ?? 0)) {
+            $oldValues['Amount Received'] = $formatAmount($oldSummary['amount_received']);
+            $newValues['Amount Received'] = $formatAmount($newSummary['amount_received'] ?? 0);
+        }
+
+        if ((float) $oldSummary['amount_due'] !== (float) ($newSummary['amount_due'] ?? 0)) {
+            $oldValues['Amount Due'] = $formatAmount($oldSummary['amount_due']);
+            $newValues['Amount Due'] = $formatAmount($newSummary['amount_due'] ?? 0);
+        }
+
+        if ($recordedPayment) {
+            $paymentMethod = $recordedPayment->payment_method
+                ? ucfirst(str_replace('_', ' ', $recordedPayment->payment_method))
+                : 'N/A';
+            $entrySummary = '$ ' . $formatAmount($recordedPayment->amount) . ' via ' . $paymentMethod;
+
+            $oldValues['Payment Entry'] = 'N/A';
+            $newValues['Payment Entry'] = $entrySummary;
+
+            if (!empty($recordedPayment->reference_number)) {
+                $oldValues['Reference Number'] = 'N/A';
+                $newValues['Reference Number'] = (string) $recordedPayment->reference_number;
+            }
+
+            if (!empty($recordedPayment->notes)) {
+                $oldValues['Payment Notes'] = 'N/A';
+                $newValues['Payment Notes'] = (string) $recordedPayment->notes;
+            }
+        }
+
+        if (!empty($newValues)) {
+            AuditLogger::log('updated', $order, $admin->id, $oldValues, $newValues);
+        }
+
+        return redirect()->route('orders.show', $order->id)->with('success', 'Payment recorded successfully.');
     }
 
     /**
@@ -802,6 +948,9 @@ class OrderController extends Controller
                 'diamond_status' => 'Diamond Status',
                 'note' => 'Priority',
                 'gross_sell' => 'Gross Sell',
+                'payment_status' => 'Payment Status',
+                'amount_received' => 'Amount Received',
+                'amount_due' => 'Amount Due',
                 'dispatch_date' => 'Dispatch Date',
                 'company_id' => 'Company',
                 'factory_id' => 'Factory',
@@ -824,6 +973,54 @@ class OrderController extends Controller
             // Update fields
             $this->assignOrderFields($order, $validated);
             $order->last_modified_by = Auth::guard('admin')->id();
+            $paymentSummary = $this->normalizePaymentSummary($validated, (float) ($order->gross_sell ?? 0));
+            $existingRecordedTotal = (float) $order->payments()->sum('amount');
+            $hasPayments = $order->payments()->exists();
+
+            if ($hasPayments) {
+                $desiredReceived = (float) $paymentSummary['amount_received'];
+                $delta = round($desiredReceived - $existingRecordedTotal, 2);
+
+                if ($delta < -0.01) {
+                    throw ValidationException::withMessages([
+                        'amount_received' => 'Amount received cannot be lower than the payments already recorded for this order.',
+                    ]);
+                }
+
+                if ($delta > 0.01) {
+                    OrderPayment::create([
+                        'order_id' => $order->id,
+                        'amount' => $delta,
+                        'payment_method' => null,
+                        'reference_number' => null,
+                        'notes' => 'Payment added during order edit.',
+                        'received_at' => now(),
+                        'recorded_by' => Auth::guard('admin')->id(),
+                    ]);
+                }
+
+                $order->refreshPaymentSummaryFromPayments();
+            } else {
+                $order->syncPaymentSummary(
+                    $paymentSummary['amount_received'],
+                    $paymentSummary['payment_status'],
+                    $paymentSummary['amount_due']
+                );
+
+                if ($paymentSummary['amount_received'] > 0) {
+                    OrderPayment::create([
+                        'order_id' => $order->id,
+                        'amount' => $paymentSummary['amount_received'],
+                        'payment_method' => null,
+                        'reference_number' => null,
+                        'notes' => 'Initial payment recorded during order edit.',
+                        'received_at' => now(),
+                        'recorded_by' => Auth::guard('admin')->id(),
+                    ]);
+
+                    $order->refreshPaymentSummaryFromPayments();
+                }
+            }
 
             // Compute diff and log audit entry
             $oldValues = [];
@@ -996,6 +1193,7 @@ class OrderController extends Controller
                     'message' => $successMessage,
                     'redirect' => route('orders.index'),
                     'order_id' => $order->id,
+                    'payment_summary' => $order->payment_summary,
                     'melee_stock_summary' => $meleeStockSummary,
                 ]);
             }
@@ -1029,7 +1227,7 @@ class OrderController extends Controller
 
         $this->enforceOrderViewAccess($order, $admin);
 
-        $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator', 'lastModifier']);
+        $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator', 'lastModifier', 'payments.recordedBy']);
 
         $editHistory = collect();
         $metalTypes = MetalType::all();
@@ -1042,6 +1240,7 @@ class OrderController extends Controller
         $discussionChannel = $this->getOrCreateOrderDiscussionChannel();
         $discussionRootMessage = $this->getOrCreateOrderDiscussionRootMessage($order, $discussionChannel, $admin);
         $canPostDiscussion = $admin->is_super || $admin->hasPermission('orders.edit');
+        $canManagePayments = $admin->is_super || $admin->hasPermission('orders.edit');
         $discussionSearch = trim((string) request()->query('discussion_search', ''));
         $discussionRootMessage->load([
             'sender:id,name',
@@ -1086,7 +1285,8 @@ class OrderController extends Controller
             'discussionMessages',
             'discussionSearch',
             'canPostDiscussion',
-            'discussionRootMessage'
+            'discussionRootMessage',
+            'canManagePayments'
         ));
     }
 
@@ -1408,6 +1608,11 @@ class OrderController extends Controller
                 'value' => number_format((float) ($order->melee_total_value ?? 0), 2)
             ] : null,
             'gross_sell' => number_format((float) ($order->gross_sell ?? 0), 2),
+            'payment_status' => $order->payment_status,
+            'payment_status_label' => $order->payment_status_label,
+            'amount_received' => number_format((float) $order->amount_received_total, 2),
+            'amount_due' => number_format((float) $order->amount_due_total, 2),
+            'remaining_balance' => number_format((float) $order->remaining_balance, 2),
             'status' => $order->diamond_status,
             'created_at' => $order->created_at->format('d M Y'),
             'submitted_by' => $order->creator->name ?? 'Unknown',
@@ -1867,6 +2072,9 @@ class OrderController extends Controller
             'company_id' => 'required|exists:companies,id',
             'factory_id' => 'nullable|exists:factories,id',
             'gross_sell' => 'nullable|numeric|min:0',
+            'payment_status' => 'nullable|in:full,partial,due,custom',
+            'amount_received' => 'nullable|numeric|min:0',
+            'amount_due' => 'nullable|numeric|min:0',
             'gold_net_weight' => 'nullable|numeric|min:0',
             'dispatch_date' => 'nullable|date',
             'note' => 'nullable|in:priority,non_priority',
@@ -2299,6 +2507,87 @@ class OrderController extends Controller
         }
 
         $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
+    }
+
+    /**
+     * Normalize payment fields into a consistent summary.
+     */
+    private function normalizePaymentSummary(array $validated, float $grossSell): array
+    {
+        $status = $validated['payment_status'] ?? null;
+        $received = array_key_exists('amount_received', $validated) && $validated['amount_received'] !== ''
+            ? round((float) $validated['amount_received'], 2)
+            : null;
+        $due = array_key_exists('amount_due', $validated) && $validated['amount_due'] !== ''
+            ? round((float) $validated['amount_due'], 2)
+            : null;
+
+        if ($grossSell <= 0) {
+            return [
+                'payment_status' => 'full',
+                'amount_received' => 0.0,
+                'amount_due' => 0.0,
+            ];
+        }
+
+        if ($status === null) {
+            if ($received === null && $due === null) {
+                $status = 'full';
+            } elseif (($received ?? 0) <= 0 && ($due ?? 0) > 0) {
+                $status = 'due';
+            } elseif (($received ?? 0) > 0 && ($received ?? 0) < $grossSell) {
+                $status = 'partial';
+            } else {
+                $status = 'full';
+            }
+        }
+
+        if ($status === 'full') {
+            $received = $grossSell;
+            $due = 0.0;
+        } elseif ($status === 'due') {
+            $received = 0.0;
+            $due = $due !== null ? max(0, $due) : $grossSell;
+        } elseif ($status === 'custom') {
+            if ($received === null) {
+                throw ValidationException::withMessages([
+                    'amount_received' => 'Amount received is required when payment status is custom.',
+                ]);
+            }
+
+            $received = max(0, min($received, $grossSell));
+            $due = round(max($grossSell - $received, 0), 2);
+            $status = $received <= 0
+                ? 'due'
+                : ($due > 0 ? 'partial' : 'full');
+        } else {
+            if ($received === null) {
+                throw ValidationException::withMessages([
+                    'amount_received' => 'Amount received is required when payment status is partial.',
+                ]);
+            }
+
+            if ($received <= 0 || $received >= $grossSell) {
+                throw ValidationException::withMessages([
+                    'amount_received' => 'Partial payment must be greater than 0 and less than the gross sell amount.',
+                ]);
+            }
+
+            $received = max(0, min($received, $grossSell));
+            $computedDue = round(max($grossSell - $received, 0), 2);
+            if ($due !== null && abs($due - $computedDue) > 0.01) {
+                throw ValidationException::withMessages([
+                    'amount_due' => 'Amount due must equal gross sell minus amount received.',
+                ]);
+            }
+            $due = $computedDue;
+        }
+
+        return [
+            'payment_status' => $status,
+            'amount_received' => round((float) $received, 2),
+            'amount_due' => round((float) $due, 2),
+        ];
     }
 
     /**
