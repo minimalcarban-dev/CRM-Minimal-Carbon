@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\GoldRateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -9,6 +10,13 @@ use Illuminate\Support\Facades\Log;
 
 class JewelleryCalculatorController extends Controller
 {
+    private const GOLD_RATE_CACHE_SECONDS = 30;
+
+    public function __construct(
+        protected GoldRateService $goldRateService
+    ) {
+    }
+
     /**
      * Display the calculator page.
      *
@@ -22,7 +30,7 @@ class JewelleryCalculatorController extends Controller
     /**
      * Fetch live gold rates and currency exchange rates.
      * Returns a JSON response with the calculated gold rate per gram in USD.
-     * Cached for 60 seconds to prevent rate limiting and improve performance.
+     * Cached for 30 seconds to prevent rate limiting and improve performance.
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -47,42 +55,13 @@ class JewelleryCalculatorController extends Controller
                 return 0.0118;
             });
 
-            // --- 2. Gold Rate via Cloudflare Worker Proxy → Navkar MCX ---
-            $goldUsdPerGram = Cache::remember('gold_rate_usd_gram_v5', 1, function () use ($usdRate) {
-
-                // ── PRIMARY: Navkar via Cloudflare Worker (Indian MCX rate) ────
-                try {
-                    $r = Http::withoutVerifying()->timeout(10)
-                        ->withHeaders(['X-Proxy-Key' => 'navkar-proxy-xK9mP2024'])
-                        ->get('https://navkar-gold-proxy.minimalcarbonstore.workers.dev');
-
-                    if ($r->successful()) {
-                        $content = trim($r->body());
-                        $inrPer10g = 0;
-
-                        // TSV format parsing
-                        foreach (explode("\n", $content) as $line) {
-                            $line = trim($line);
-                            if (strpos($line, 'GOLD 999 IMP') !== false || strpos($line, 'GOLD 999 10GM') !== false) {
-                                $parts = preg_split('/\s+|\t/', $line);
-                                foreach ($parts as $part) {
-                                    $part = str_replace(',', '', trim($part));
-                                    if (is_numeric($part) && floatval($part) > 50000) {
-                                        $inrPer10g = floatval($part);
-                                        break 2;
-                                    }
-                                }
-                            }
-                        }
-
-                        if ($inrPer10g > 50000) {
-                            $perGram = ($inrPer10g / 10) * $usdRate;
-                            Log::info('Gold via Navkar Proxy: ₹' . ($inrPer10g / 10) . '/g = $' . round($perGram, 2));
-                            return $perGram;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    Log::warning('Navkar Proxy failed: ' . $e->getMessage());
+            // --- 2. Gold Rate via GoldRateService (Navkar INR -> USD conversion) ---
+            $goldUsdPerGram = Cache::remember('gold_rate_usd_gram_v5', self::GOLD_RATE_CACHE_SECONDS, function () use ($usdRate) {
+                $todayRate = $this->goldRateService->getRateForDate(now()->toDateString());
+                if (($todayRate['is_available'] ?? false) && ($todayRate['rate_inr_per_gram'] ?? 0) > 0) {
+                    $perGram = (float) $todayRate['rate_inr_per_gram'] * $usdRate;
+                    Log::info('Gold via GoldRateService: ₹' . $todayRate['rate_inr_per_gram'] . '/g = $' . round($perGram, 2));
+                    return $perGram;
                 }
 
                 // ── FALLBACK: Coinbase + India premium 8.5% ────────────────────

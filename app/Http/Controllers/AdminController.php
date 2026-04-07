@@ -522,10 +522,21 @@ class AdminController extends Controller
                 $q->where('data', 'like', '%update%')
                     ->orWhere('data', 'like', '%updated%');
             });
+        } elseif ($filter === 'sold') {
+            $query->where(function ($q) {
+                $q->where('data', 'like', '%sold%')
+                    ->orWhere('data', 'like', '%sold out%')
+                    ->orWhere('data', 'like', '%is_sold_out%')
+                    ->orWhere('type', 'like', '%DiamondSoldNotification%');
+            });
         } elseif ($filter === 'other') {
             $query->where('data', 'not like', '%cancel%')
                 ->where('data', 'not like', '%update%')
                 ->where('data', 'not like', '%updated%')
+                ->where('data', 'not like', '%sold%')
+                ->where('data', 'not like', '%sold out%')
+                ->where('data', 'not like', '%is_sold_out%')
+                ->where('type', 'not like', '%DiamondSoldNotification%')
                 ->where('data', 'not like', '%created%')
                 ->where('data', 'not like', '%was created%');
         }

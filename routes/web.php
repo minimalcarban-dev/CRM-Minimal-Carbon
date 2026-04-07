@@ -943,6 +943,13 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             Route::get('/return', [GoldTrackingController::class, 'returnGold'])->name('return');
             Route::post('/return', [GoldTrackingController::class, 'storeReturn'])->name('return.store');
 
+            // Date-wise gold rate API and suspicious review
+            Route::get('/rate', [GoldTrackingController::class, 'rate'])->name('rate');
+            Route::get('/suspicious-rates', [GoldTrackingController::class, 'suspiciousRates'])->name('suspicious-rates');
+            Route::post('/purchases/{purchase}/correct-rate', [GoldTrackingController::class, 'correctSuspiciousRate'])
+                ->name('purchases.correct-rate')
+                ->middleware('admin.permission:gold_tracking.edit');
+
             // Factory Gold Stock API (for order form real-time validation)
             Route::get('/factory/{factory}/stock', [GoldTrackingController::class, 'factoryStock'])->name('factory.stock');
         }

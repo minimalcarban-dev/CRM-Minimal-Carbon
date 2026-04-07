@@ -2263,7 +2263,7 @@
 
                 {{-- Specifications --}}
                 @php
-                    $canSeeGoldWeight = Auth::guard('admin')->user()->is_super_admin || Auth::guard('admin')->user()->can('orders.add_gold_weight');
+                    $canSeeGoldWeight = Auth::guard('admin')->user()->is_super || Auth::guard('admin')->user()->can('orders.add_gold_weight');
                 @endphp
                 @if($order->goldDetail || $order->ringSize || $order->settingType || $order->earringDetail || ($canSeeGoldWeight && $order->gold_net_weight))
                     <div class="od-card">
