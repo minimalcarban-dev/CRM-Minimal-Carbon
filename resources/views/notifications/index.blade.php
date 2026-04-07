@@ -32,6 +32,8 @@
                         class="filter-pill {{ ($filter ?? 'all') === 'cancelled' ? 'active' : '' }}">Cancelled</a>
                     <a href="{{ route('notifications.index', ['filter' => 'updated']) }}"
                         class="filter-pill {{ ($filter ?? 'all') === 'updated' ? 'active' : '' }}">Updated</a>
+                    <a href="{{ route('notifications.index', ['filter' => 'sold']) }}"
+                        class="filter-pill {{ ($filter ?? 'all') === 'sold' ? 'active' : '' }}">Sold</a>
                     <a href="{{ route('notifications.index', ['filter' => 'other']) }}"
                         class="filter-pill {{ ($filter ?? 'all') === 'other' ? 'active' : '' }}">Other</a>
                 </div>

@@ -5,16 +5,30 @@ namespace App\Http\Controllers;
 use App\Models\Factory;
 use App\Models\GoldPurchase;
 use App\Models\GoldDistribution;
+use App\Models\GoldRateSnapshot;
 use App\Models\Expense;
 use App\Models\Party;
+use App\Services\AuditLogger;
+use App\Services\GoldRateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class GoldTrackingController extends Controller
 {
+    private const OUTLIER_MIN_FACTOR = 0.70;
+    private const OUTLIER_MAX_FACTOR = 1.30;
+    private const ABSOLUTE_MIN_RATE = 1000.00;
+    private const ABSOLUTE_MAX_RATE = 20000.00;
+
+    public function __construct(
+        protected GoldRateService $goldRateService
+    ) {
+    }
+
     /**
      * Display the main gold tracking dashboard.
      */
@@ -147,9 +161,11 @@ class GoldTrackingController extends Controller
         // Stats
         $ownerStock = GoldDistribution::getAvailableOwnerStock();
         $inFactories = GoldDistribution::getTotalInFactories();
-        $totalPurchased = GoldPurchase::getTotalPurchasedStock();
-        $totalValue = GoldPurchase::completed()->sum('total_amount');
+        $historicalSpend = (float) GoldPurchase::completed()->sum('total_amount');
         $thisMonth = GoldPurchase::getThisMonthPurchases();
+        $liveRateResponse = $this->goldRateService->getRateForDate(now()->toDateString());
+        $liveRatePerGram = (float) ($liveRateResponse['rate_inr_per_gram'] ?? 0);
+        $totalValue = round($ownerStock * $liveRatePerGram, 2);
 
         // Factories for filter and factory cards
         $factories = Factory::active()->orderBy('name')->get();
@@ -162,9 +178,30 @@ class GoldTrackingController extends Controller
             'ownerStock',
             'inFactories',
             'totalValue',
+            'historicalSpend',
             'thisMonth',
-            'factories'
+            'factories',
+            'liveRateResponse'
         ));
+    }
+
+    /**
+     * Get INR gold rate for selected date.
+     */
+    public function rate(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $payload = $this->goldRateService->getRateForDate($validated['date']);
+
+        $status = 200;
+        if (($payload['success'] ?? false) === false) {
+            $status = 422;
+        }
+
+        return response()->json($payload, $status);
     }
 
     /**
@@ -189,6 +226,7 @@ class GoldTrackingController extends Controller
             'purchase_date' => 'required|date',
             'weight_grams' => 'required|numeric|min:0.001',
             'rate_per_gram' => 'required|numeric|min:0',
+            'confirm_outlier_rate' => 'nullable|boolean',
             'party_id' => 'nullable|exists:parties,id',
             'supplier_name' => 'required|string|max:255',
             'supplier_mobile' => 'nullable|string|max:20',
@@ -201,6 +239,13 @@ class GoldTrackingController extends Controller
             'notes' => 'nullable|string',
             'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
         ]);
+
+        $this->ensureOutlierRateConfirmation(
+            $validated['purchase_date'],
+            (float) $validated['rate_per_gram'],
+            (bool) ($validated['confirm_outlier_rate'] ?? false)
+        );
+        unset($validated['confirm_outlier_rate']);
 
         $validated['admin_id'] = Auth::guard('admin')->id();
 
@@ -284,6 +329,7 @@ class GoldTrackingController extends Controller
             'purchase_date' => 'required|date',
             'weight_grams' => 'required|numeric|min:0.001',
             'rate_per_gram' => 'required|numeric|min:0',
+            'confirm_outlier_rate' => 'nullable|boolean',
             'party_id' => 'nullable|exists:parties,id',
             'supplier_name' => 'required|string|max:255',
             'supplier_mobile' => 'nullable|string|max:20',
@@ -297,6 +343,13 @@ class GoldTrackingController extends Controller
             'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
             'remove_invoice_image' => 'nullable|boolean',
         ]);
+
+        $this->ensureOutlierRateConfirmation(
+            $validated['purchase_date'],
+            (float) $validated['rate_per_gram'],
+            (bool) ($validated['confirm_outlier_rate'] ?? false)
+        );
+        unset($validated['confirm_outlier_rate']);
 
         // Handle invoice image
         if ($request->input('remove_invoice_image') && $purchase->invoice_image_public_id) {
@@ -511,6 +564,113 @@ class GoldTrackingController extends Controller
     }
 
     /**
+     * Show suspicious gold purchase rates for manual review.
+     */
+    public function suspiciousRates()
+    {
+        $todayRatePayload = $this->goldRateService->getRateForDate(now()->toDateString());
+        $todayRate = (float) ($todayRatePayload['rate_inr_per_gram'] ?? 0);
+
+        $snapshotsByDate = GoldRateSnapshot::query()
+            ->pluck('inr_per_gram', 'rate_date')
+            ->map(fn($rate) => (float) $rate);
+
+        $items = GoldPurchase::query()
+            ->completed()
+            ->with('admin')
+            ->latest('purchase_date')
+            ->get()
+            ->map(function (GoldPurchase $purchase) use ($snapshotsByDate, $todayRate) {
+                $purchaseDate = $purchase->purchase_date?->toDateString();
+                $snapshotRate = $purchaseDate ? ($snapshotsByDate[$purchaseDate] ?? null) : null;
+                $referenceRate = $snapshotRate ?? ($todayRate > 0 ? $todayRate : null);
+                $referenceSource = $snapshotRate ? 'date_snapshot' : ($todayRate > 0 ? 'today_reference' : null);
+
+                $reason = [];
+                $deviationPercent = null;
+
+                $currentRate = (float) $purchase->rate_per_gram;
+                if ($currentRate < self::ABSOLUTE_MIN_RATE || $currentRate > self::ABSOLUTE_MAX_RATE) {
+                    $reason[] = sprintf('Outside absolute range ₹%.0f–₹%.0f/g', self::ABSOLUTE_MIN_RATE, self::ABSOLUTE_MAX_RATE);
+                }
+
+                if ($referenceRate) {
+                    $deviationPercent = round((($currentRate - $referenceRate) / $referenceRate) * 100, 2);
+                    if ($this->goldRateService->isOutlierRate($currentRate, $referenceRate, self::OUTLIER_MIN_FACTOR, self::OUTLIER_MAX_FACTOR)) {
+                        $reason[] = sprintf('Deviation from reference rate (%.2f%%)', $deviationPercent);
+                    }
+                }
+
+                if (empty($reason)) {
+                    return null;
+                }
+
+                return [
+                    'purchase' => $purchase,
+                    'reference_rate' => $referenceRate,
+                    'reference_source' => $referenceSource,
+                    'deviation_percent' => $deviationPercent,
+                    'reason' => implode(' | ', $reason),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return view('gold-tracking.suspicious-rates', [
+            'suspiciousItems' => $items,
+            'todayRatePayload' => $todayRatePayload,
+            'outlierMinFactor' => self::OUTLIER_MIN_FACTOR,
+            'outlierMaxFactor' => self::OUTLIER_MAX_FACTOR,
+        ]);
+    }
+
+    /**
+     * Manually correct suspicious purchase rate with audit trail.
+     */
+    public function correctSuspiciousRate(Request $request, GoldPurchase $purchase)
+    {
+        $validated = $request->validate([
+            'new_rate_per_gram' => 'required|numeric|min:0.01',
+            'correction_note' => 'required|string|min:5|max:500',
+        ]);
+
+        $adminId = Auth::guard('admin')->id();
+
+        DB::transaction(function () use ($purchase, $validated, $adminId) {
+            $oldValues = [
+                'rate_per_gram' => (float) $purchase->rate_per_gram,
+                'total_amount' => (float) $purchase->total_amount,
+            ];
+
+            $purchase->rate_per_gram = (float) $validated['new_rate_per_gram'];
+            $purchase->save();
+            $purchase->refresh();
+
+            if ($purchase->isCompleted() && $purchase->expense_id) {
+                $this->syncExpenseWithGoldPurchase($purchase);
+            }
+
+            $newValues = [
+                'rate_per_gram' => (float) $purchase->rate_per_gram,
+                'total_amount' => (float) $purchase->total_amount,
+                'correction_note' => $validated['correction_note'],
+            ];
+
+            AuditLogger::log(
+                'gold_purchase_rate_corrected',
+                $purchase,
+                $adminId,
+                $oldValues,
+                $newValues
+            );
+        });
+
+        return redirect()
+            ->route('gold-tracking.suspicious-rates')
+            ->with('success', 'Purchase rate corrected and audit log recorded.');
+    }
+
+    /**
      * Create an expense entry from a completed gold purchase.
      */
     protected function createExpenseFromGoldPurchase(GoldPurchase $purchase): void
@@ -578,5 +738,37 @@ class GoldTrackingController extends Controller
             'factory_name' => $factory->name,
             'current_stock' => round($factory->current_stock, 3),
         ]);
+    }
+
+    protected function ensureOutlierRateConfirmation(string $purchaseDate, float $enteredRate, bool $confirmed): void
+    {
+        $ratePayload = $this->goldRateService->getRateForDate($purchaseDate);
+        if (!(bool) ($ratePayload['is_available'] ?? false)) {
+            return;
+        }
+
+        $expectedRate = (float) ($ratePayload['rate_inr_per_gram'] ?? 0);
+        if ($expectedRate <= 0) {
+            return;
+        }
+
+        $isOutlier = $this->goldRateService->isOutlierRate(
+            $enteredRate,
+            $expectedRate,
+            self::OUTLIER_MIN_FACTOR,
+            self::OUTLIER_MAX_FACTOR
+        );
+
+        if ($isOutlier && !$confirmed) {
+            throw ValidationException::withMessages([
+                'rate_per_gram' => sprintf(
+                    'Entered rate ₹%.2f/g is far from expected rate ₹%.2f/g for %s. Confirm to continue.',
+                    $enteredRate,
+                    $expectedRate,
+                    $purchaseDate
+                ),
+                'confirm_outlier_rate' => 'Please confirm outlier rate before saving.',
+            ]);
+        }
     }
 }

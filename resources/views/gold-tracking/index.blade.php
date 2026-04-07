@@ -34,6 +34,9 @@
                             <a href="{{ route('gold-tracking.return') }}" class="btn-secondary-custom">
                                 <i class="bi bi-arrow-left-circle"></i> Return
                             </a>
+                            <a href="{{ route('gold-tracking.suspicious-rates') }}" class="btn-secondary-custom">
+                                <i class="bi bi-exclamation-triangle"></i> Review Rates
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -61,8 +64,24 @@
             <div class="stat-card stat-card-success">
                 <div class="stat-icon"><i class="bi bi-currency-rupee"></i></div>
                 <div class="stat-content">
-                    <div class="stat-label">Total Value</div>
-                    <div class="stat-value">₹{{ number_format($totalValue, 0) }}</div>
+                    <div class="stat-label">Total Value (Live)</div>
+                    <div class="stat-value">&#8377;{{ number_format($totalValue, 0) }}</div>
+                    <small style="color:#64748b;">
+                        @if(($liveRateResponse['is_available'] ?? false))
+                            Rate: &#8377;{{ number_format((float) ($liveRateResponse['rate_inr_per_gram'] ?? 0), 2) }}/gm
+                        @else
+                            Live rate unavailable
+                        @endif
+                    </small>
+                </div>
+            </div>
+            <div class="stat-card" style="border-left-color: #0ea5e9;">
+                <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Historical Spend</div>
+                    <div class="stat-value" style="color:#0ea5e9;">&#8377;{{ number_format($historicalSpend, 0) }}</div>
                 </div>
             </div>
             <div class="stat-card stat-card-info">

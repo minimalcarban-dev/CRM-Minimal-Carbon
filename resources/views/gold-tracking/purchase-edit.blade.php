@@ -42,9 +42,10 @@
             </div>
         @endif
 
-        <form action="{{ route('gold-tracking.purchases.update', $purchase) }}" method="POST" enctype="multipart/form-data">
+        <form id="goldPurchaseEditForm" action="{{ route('gold-tracking.purchases.update', $purchase) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <input type="hidden" name="confirm_outlier_rate" id="confirm_outlier_rate" value="{{ old('confirm_outlier_rate') }}">
 
             <!-- Purchase Details -->
             <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
@@ -55,7 +56,7 @@
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
                     <div class="form-group">
                         <label class="form-label">Purchase Date <span style="color: #ef4444;">*</span></label>
-                        <input type="date" name="purchase_date"
+                        <input type="date" id="purchase_date" name="purchase_date"
                             class="form-control @error('purchase_date') is-invalid @enderror"
                             value="{{ old('purchase_date', $purchase->purchase_date->format('Y-m-d')) }}" required>
                         @error('purchase_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -68,17 +69,19 @@
                         @error('weight_grams') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Rate per Gram (₹) <span style="color: #ef4444;">*</span></label>
+                        <label class="form-label">Rate per Gram (&#8377;) <span style="color: #ef4444;">*</span></label>
                         <input type="number" name="rate_per_gram" id="rate_per_gram"
                             class="form-control @error('rate_per_gram') is-invalid @enderror"
                             value="{{ old('rate_per_gram', $purchase->rate_per_gram) }}" step="0.01" min="0" required>
                         @error('rate_per_gram') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @error('confirm_outlier_rate') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <small id="rate_source_info" style="display:block; margin-top:0.35rem; color:#64748b;">Checking selected date rate...</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Total Amount (Auto-calculated)</label>
                         <div id="total_amount_display"
                             style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; font-weight: 700; font-size: 1.1rem; color: #10b981;">
-                            ₹{{ number_format($purchase->total_amount, 2) }}
+                            &#8377;{{ number_format($purchase->total_amount, 2) }}
                         </div>
                     </div>
                 </div>
@@ -374,6 +377,132 @@
                     }
                 });
             }
+        </script>
+        <script>
+            (function () {
+                const OUTLIER_MIN_FACTOR = 0.70;
+                const OUTLIER_MAX_FACTOR = 1.30;
+                const goldRateEndpoint = "{{ route('gold-tracking.rate') }}";
+
+                const purchaseForm = document.getElementById('goldPurchaseEditForm');
+                const purchaseDateInput = document.getElementById('purchase_date');
+                const rateInput = document.getElementById('rate_per_gram');
+                const confirmOutlierInput = document.getElementById('confirm_outlier_rate');
+                const rateSourceInfo = document.getElementById('rate_source_info');
+                const totalAmountDisplay = document.getElementById('total_amount_display');
+                const weightInput = document.getElementById('weight_grams');
+
+                if (!purchaseForm || !purchaseDateInput || !rateInput || !confirmOutlierInput || !rateSourceInfo) {
+                    return;
+                }
+
+                let latestRatePayload = null;
+                let hasManualRateOverride = !!(rateInput.value && rateInput.value.trim() !== '');
+
+                const updateTotalAmount = () => {
+                    const weight = parseFloat(weightInput?.value || '0') || 0;
+                    const rate = parseFloat(rateInput.value || '0') || 0;
+                    const total = weight * rate;
+                    if (totalAmountDisplay) {
+                        totalAmountDisplay.textContent = '₹' + total.toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                };
+
+                const fetchRateForDate = async (date, shouldAutofill = true) => {
+                    latestRatePayload = null;
+
+                    if (!date) {
+                        rateSourceInfo.style.color = '#64748b';
+                        rateSourceInfo.textContent = 'Select purchase date to load suggested rate.';
+                        return;
+                    }
+
+                    rateSourceInfo.style.color = '#64748b';
+                    rateSourceInfo.textContent = 'Fetching rate for selected date...';
+
+                    try {
+                        const response = await fetch(`${goldRateEndpoint}?date=${encodeURIComponent(date)}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const payload = await response.json();
+                        latestRatePayload = payload;
+
+                        if (payload.success && payload.is_available) {
+                            const suggested = parseFloat(payload.rate_inr_per_gram || 0);
+                            if (shouldAutofill && !hasManualRateOverride && suggested > 0) {
+                                rateInput.value = suggested.toFixed(2);
+                                updateTotalAmount();
+                            }
+
+                            rateSourceInfo.style.color = '#0f766e';
+                            rateSourceInfo.textContent =
+                                `Suggested for ${payload.date}: ₹${suggested.toFixed(2)}/gm (${payload.source}${payload.is_live ? ', live' : ''})`;
+                            return;
+                        }
+
+                        if (shouldAutofill && !hasManualRateOverride) {
+                            rateInput.value = '';
+                            updateTotalAmount();
+                        }
+
+                        rateSourceInfo.style.color = '#b45309';
+                        rateSourceInfo.textContent = payload.message || 'No stored rate for selected date. Enter manually.';
+                    } catch (error) {
+                        if (shouldAutofill && !hasManualRateOverride) {
+                            rateInput.value = '';
+                            updateTotalAmount();
+                        }
+
+                        rateSourceInfo.style.color = '#dc2626';
+                        rateSourceInfo.textContent = 'Unable to fetch rate right now. Enter rate manually.';
+                    }
+                };
+
+                weightInput?.addEventListener('input', updateTotalAmount);
+                rateInput.addEventListener('input', () => {
+                    hasManualRateOverride = true;
+                    updateTotalAmount();
+                });
+
+                purchaseDateInput.addEventListener('change', () => {
+                    hasManualRateOverride = false;
+                    fetchRateForDate(purchaseDateInput.value, true);
+                });
+
+                purchaseForm.addEventListener('submit', function (e) {
+                    confirmOutlierInput.value = '';
+
+                    const enteredRate = parseFloat(rateInput.value || '0') || 0;
+                    const expectedRate = parseFloat(latestRatePayload?.rate_inr_per_gram || '0') || 0;
+
+                    if (!latestRatePayload?.is_available || enteredRate <= 0 || expectedRate <= 0) {
+                        return;
+                    }
+
+                    const isOutlier = enteredRate < (expectedRate * OUTLIER_MIN_FACTOR)
+                        || enteredRate > (expectedRate * OUTLIER_MAX_FACTOR);
+
+                    if (!isOutlier) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    const msg = `Entered rate ₹${enteredRate.toFixed(2)}/gm differs from expected ₹${expectedRate.toFixed(2)}/gm for selected date. Continue?`;
+                    if (window.confirm(msg)) {
+                        confirmOutlierInput.value = '1';
+                        purchaseForm.submit();
+                    }
+                });
+
+                updateTotalAmount();
+                fetchRateForDate(purchaseDateInput.value, !hasManualRateOverride);
+            })();
         </script>
     @endpush
 @endsection

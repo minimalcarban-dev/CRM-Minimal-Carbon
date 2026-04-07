@@ -983,7 +983,11 @@
             });
 
             // Rate fetch
+            const RATE_REFRESH_MS = 30000; // 30s
+            let isFetchingRates = false;
+            let lastRateFetchAt = 0;
             const fetchRates = async () => {
+                if (isFetchingRates) return;
                 const rateEl = $('display-live-rate');
                 const tsEl = $('display-timestamp');
                 const errEl = $('display-error');
@@ -991,6 +995,7 @@
                 const dot2 = $('rate-dot');
 
                 try {
+                    isFetchingRates = true;
                     const res = await fetch("{{ route('tools.gold-rate') }}");
                     if (!res.ok) throw new Error('Network error');
                     const data = await res.json();
@@ -1011,6 +1016,7 @@
                         dot2.className = 'jpc-live-dot';
                         errEl.style.display = 'none';
                         state.isLoading = false;
+                        lastRateFetchAt = Date.now();
                         calculate();
                     } else {
                         throw new Error(data.message || 'Invalid data');
@@ -1027,12 +1033,22 @@
                     errEl.style.display = 'inline';
                     // Use error message if it's not a network error
                     errEl.textContent = '· ' + (err.message && err.message !== 'Network error' ? err.message : 'Connection lost');
+                } finally {
+                    isFetchingRates = false;
                 }
             };
 
             // Init
             fetchRates(); // Immediate
-            setInterval(fetchRates, 1000); // Every 1s for real-time updates
+            setInterval(fetchRates, RATE_REFRESH_MS); // Every 30s
+
+            // If user returns to the tab after a while, refresh immediately.
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState !== 'visible') return;
+                if (Date.now() - lastRateFetchAt >= RATE_REFRESH_MS) {
+                    fetchRates();
+                }
+            });
         });
     </script>
 @endpush
