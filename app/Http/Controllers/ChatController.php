@@ -204,38 +204,9 @@ class ChatController extends Controller
 
             $channel->last_message = $lastMessage;
 
-            // --- LOGIC START: Dynamic Naming for Personal Chats ---
             if ($channel->type === 'personal') {
-                // Get everyone in the chat except the current logged-in user
-                $otherParticipants = $channel->users->filter(function ($u) use ($user) {
-                    return $u->id !== $user->id;
-                });
-
-                if ($user->is_super) {
-                    // IF SUPER ADMIN:
-                    // Join the names of the other participants.
-                    // Example: If watching Pari and Shreya, result is "Pari - Shreya"
-                    $names = $otherParticipants->pluck('name')->toArray();
-                    // If array is empty (talking to self), use own name, otherwise join with " - "
-                    $channel->name = !empty($names) ? implode(' - ', $names) : $user->name;
-                } else {
-                    // IF NORMAL USER:
-                    // Find the partner. Filter out Super Admins (silent monitors) unless talking directly to one.
-                    $partner = $otherParticipants->first(function ($u) {
-                        return !$u->is_super;
-                    });
-
-                    // Fallback: If chatting directly WITH a super admin, show them.
-                    if (!$partner) {
-                        $partner = $otherParticipants->first();
-                    }
-
-                    if ($partner) {
-                        $channel->name = $partner->name;
-                    }
-                }
+                $channel->name = $this->resolvePersonalDisplayName($channel->users, $user);
             }
-            // --- LOGIC END ---
         });
 
         return response()->json($channels);
@@ -263,18 +234,35 @@ class ChatController extends Controller
             return response()->json(['errors' => ['target_admin_id' => ['Cannot create a DM with yourself']]], 422);
         }
 
-        // Try to find existing personal channel involving exactly these two users
-        $existing = Channel::where('type', 'personal')
+        $target = Admin::select('id', 'name', 'is_super')->findOrFail($targetId);
+
+        // Try to find existing personal channel:
+        // - Always must contain both current + target
+        // - If both are regular admins, allow extra super-admin observers
+        // - Otherwise (super involved), keep the channel strictly between these two
+        $existingQuery = Channel::where('type', 'personal')
             ->whereHas('users', function ($q) use ($current) {
                 $q->where('admin_id', $current->id);
             })
             ->whereHas('users', function ($q) use ($targetId) {
                 $q->where('admin_id', $targetId);
-            })
-            ->whereDoesntHave('users', function ($q) use ($current, $targetId) {
-                $q->whereNotIn('admin_id', [$current->id, $targetId]);
-            })
-            ->first();
+            });
+
+        if (!$current->is_super && !$target->is_super) {
+            // For observed DMs, ensure there are no extra non-super participants.
+            // Additional super admins are treated as silent observers.
+            $existingQuery->whereDoesntHave('users', function ($q) use ($current, $targetId) {
+                $q->where('admins.is_super', false)
+                    ->whereNotIn('admins.id', [$current->id, $targetId]);
+            });
+        } else {
+            // For strict 1:1 chats that include a super admin, do not allow extra members.
+            $existingQuery->whereDoesntHave('users', function ($q) use ($current, $targetId) {
+                $q->whereNotIn('admins.id', [$current->id, $targetId]);
+            });
+        }
+
+        $existing = $existingQuery->first();
 
         if ($existing) {
             return response()->json($existing->load('users'));
@@ -284,7 +272,6 @@ class ChatController extends Controller
             DB::beginTransaction();
 
             // Create new personal channel (auto-add super admins for oversight when neither party is super)
-            $target = Admin::findOrFail($targetId);
             $channel = Channel::create([
                 'name' => $target->name,
                 'type' => 'personal',
@@ -296,7 +283,16 @@ class ChatController extends Controller
                 $superIds = Admin::where('is_super', true)->pluck('id')->all();
                 $members = array_unique(array_merge($members, $superIds));
             }
-            $channel->users()->attach($members);
+
+            $memberPayload = [];
+            foreach ($members as $memberId) {
+                $memberPayload[$memberId] = [
+                    'role' => in_array((int) $memberId, [(int) $current->id, (int) $targetId], true)
+                        ? 'participant'
+                        : 'observer',
+                ];
+            }
+            $channel->users()->attach($memberPayload);
 
             AuditLogger::log(
                 event: 'channel.direct.created',
@@ -842,35 +838,12 @@ class ChatController extends Controller
 
         // Channel info
         $creator = Admin::select('id', 'name', 'email')->find($channel->created_by);
-        $members = $channel->users()->select('admins.id', 'admins.name', 'admins.email')->get();
+        $members = $channel->users()->select('admins.id', 'admins.name', 'admins.email', 'admins.is_super')->get();
 
         // For personal channels, determine the display name (the other person's name)
         $displayName = $channel->name;
-        // if ($channel->type === 'personal') {
-        //     $otherUser = $members->firstWhere('id', '!=', $user->id);
-        //     if ($otherUser) {
-        //         $displayName = $otherUser->name;
-        //     }
-        // }
-
         if ($channel->type === 'personal') {
-            // Re-fetch users to be sure we have is_super data if needed, 
-            // or use the $members collection we already fetched in your code:
-            // $members = $channel->users()->select(...)->get();
-
-            // Using the $members collection created in your existing code:
-            $others = $members->filter(fn($m) => $m->id !== $user->id);
-
-            if ($user->is_super) {
-                $names = $others->pluck('name')->toArray();
-                $displayName = !empty($names) ? implode(' - ', $names) : $user->name;
-            } else {
-                // Note: You might need to ensure 'is_super' is selected in your $members query in the original file
-                // If not available, just pick the first other person:
-                $partner = $others->first();
-                if ($partner)
-                    $displayName = $partner->name;
-            }
+            $displayName = $this->resolvePersonalDisplayName($members, $user);
         }
 
         // Attachments
@@ -1536,6 +1509,55 @@ class ChatController extends Controller
         return response()->json([
             'orders' => $orders->map(fn(Order $order) => $this->buildOrderSuggestPayload($order))->values(),
         ]);
+    }
+
+    /**
+     * Resolve personal channel title for the currently authenticated viewer.
+     *
+     * Rules:
+     * - If pivot role marks explicit participants, prefer those names.
+     * - For super admins monitoring a DM, show participant names (not observer supers).
+     * - For regular admins, show the other participant.
+     */
+    private function resolvePersonalDisplayName($members, Admin $viewer): string
+    {
+        $others = collect($members)
+            ->filter(fn($member) => (int) $member->id !== (int) $viewer->id)
+            ->values();
+
+        if ($others->isEmpty()) {
+            return (string) $viewer->name;
+        }
+
+        $participantsByRole = $others
+            ->filter(fn($member) => (string) data_get($member, 'pivot.role') === 'participant')
+            ->values();
+
+        $nonSuperOthers = $others
+            ->filter(fn($member) => !(bool) data_get($member, 'is_super', false))
+            ->values();
+
+        if ($viewer->is_super) {
+            // Super admin should see who is actually talking, not observer names.
+            $visible = $participantsByRole->isNotEmpty()
+                ? $participantsByRole
+                : ($nonSuperOthers->isNotEmpty() ? $nonSuperOthers : $others);
+
+            $names = $visible
+                ->take(2)
+                ->pluck('name')
+                ->filter(fn($name) => is_string($name) && $name !== '')
+                ->unique()
+                ->values()
+                ->all();
+
+            return !empty($names) ? implode(' - ', $names) : (string) $viewer->name;
+        }
+
+        // For normal admins, show the other direct participant first.
+        $partner = $participantsByRole->first() ?? $nonSuperOthers->first() ?? $others->first();
+
+        return $partner ? (string) $partner->name : (string) $viewer->name;
     }
 
     /**
