@@ -1,4 +1,4 @@
-# Jewellery Admin Panel
+# Jewellery Admin Panel 
 
 A full-featured back-office admin panel built with **Laravel 11** for a jewellery and diamond trading business. The system handles order lifecycle management, real-time admin-to-admin chat, role-based access control, and product catalogue configuration.
 
