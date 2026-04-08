@@ -15,3 +15,8 @@ Schedule::command('orders:sync-tracking')->hourly();
 Schedule::command(sprintf('email:sync --limit=%d', (int) config('gmail.sync.per_page', 50)))
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+// Keep duration snapshots aligned for reports while dynamic accessors stay real-time accurate.
+Schedule::command('diamonds:sync-duration --chunk=500')
+    ->dailyAt('02:15')
+    ->withoutOverlapping();
