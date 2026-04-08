@@ -165,7 +165,8 @@ class GoldTrackingController extends Controller
         $thisMonth = GoldPurchase::getThisMonthPurchases();
         $liveRateResponse = $this->goldRateService->getRateForDate(now()->toDateString());
         $liveRatePerGram = (float) ($liveRateResponse['rate_inr_per_gram'] ?? 0);
-        $totalValue = round($ownerStock * $liveRatePerGram, 2);
+        $totalGold = $ownerStock + $inFactories;
+        $totalValue = round($totalGold * $liveRatePerGram, 2);
 
         // Factories for filter and factory cards
         $factories = Factory::active()->orderBy('name')->get();
