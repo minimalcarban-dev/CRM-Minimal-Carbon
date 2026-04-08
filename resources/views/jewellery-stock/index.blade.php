@@ -3,6 +3,11 @@
 @section('title', 'Jewellery Stock')
 
 @section('content')
+    @php
+        $currentAdmin = auth()->guard('admin')->user();
+        $canViewPricing = $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_pricing'));
+    @endphp
+
     <div class="tracker-page">
         {{-- Page Header --}}
         <div class="page-header">
@@ -171,7 +176,11 @@
                                 <td>{{ number_format($item->weight, 3) }} g</td>
                                 <td style="font-weight: 700;">{{ $item->quantity }}</td>
                                 <td>
-                                    <strong style="color: #10b981;">${{ number_format($item->purchase_price, 2) }}</strong>
+                                    @if ($canViewPricing)
+                                        <strong style="color: #10b981;">${{ number_format($item->purchase_price, 2) }}</strong>
+                                    @else
+                                        <span class="text-muted" title="Restricted">Restricted</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <strong style="color: #6366f1;">${{ number_format($item->selling_price, 2) }}</strong>

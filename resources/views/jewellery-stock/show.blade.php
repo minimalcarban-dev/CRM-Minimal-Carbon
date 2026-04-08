@@ -1,8 +1,14 @@
 @extends('layouts.admin')
 @section('title', 'Jewellery Stock Details')
 @section('content')
+    @php
+        $currentAdmin = auth()->guard('admin')->user();
+        $canViewPricing = $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_pricing'));
+    @endphp
+
     <div class="tracker-page">
         {{-- Page Header --}}
+        <div class="page-header">
             <div class="header-content">
                 <div class="header-left">
                     <div class="breadcrumb-nav">
@@ -115,7 +121,13 @@
                     <div class="detail-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
                         <div class="detail-item">
                             <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Purchase Price</div>
-                            <div class="detail-value" style="font-size: 1.1rem; color: #1e293b; font-weight: 500;">${{ number_format($jewelleryStock->purchase_price, 2) }}</div>
+                            <div class="detail-value" style="font-size: 1.1rem; color: #1e293b; font-weight: 500;">
+                                @if ($canViewPricing)
+                                    ${{ number_format($jewelleryStock->purchase_price, 2) }}
+                                @else
+                                    <span class="text-muted" title="Restricted">Restricted</span>
+                                @endif
+                            </div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Selling Price</div>
@@ -124,13 +136,17 @@
                         <div class="detail-item">
                             <div class="detail-label" style="font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase;">Est. Margin</div>
                             <div class="detail-value" style="font-size: 1.1rem; font-weight: 600;">
-                                @php
-                                    $margin = $jewelleryStock->selling_price - $jewelleryStock->purchase_price;
-                                    $marginPct = $jewelleryStock->purchase_price > 0 ? ($margin / $jewelleryStock->purchase_price) * 100 : 0;
-                                @endphp
-                                <span style="color: {{ $margin >= 0 ? '#10b981' : '#ef4444' }};">
-                                    ${{ number_format($margin, 2) }} ({{ number_format($marginPct, 1) }}%)
-                                </span>
+                                @if ($canViewPricing)
+                                    @php
+                                        $margin = $jewelleryStock->selling_price - $jewelleryStock->purchase_price;
+                                        $marginPct = $jewelleryStock->purchase_price > 0 ? ($margin / $jewelleryStock->purchase_price) * 100 : 0;
+                                    @endphp
+                                    <span style="color: {{ $margin >= 0 ? '#10b981' : '#ef4444' }};">
+                                        ${{ number_format($margin, 2) }} ({{ number_format($marginPct, 1) }}%)
+                                    </span>
+                                @else
+                                    <span class="text-muted" title="Restricted">Restricted</span>
+                                @endif
                             </div>
                         </div>
                     </div>
