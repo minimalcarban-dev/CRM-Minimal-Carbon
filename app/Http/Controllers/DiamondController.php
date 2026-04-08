@@ -312,12 +312,7 @@ class DiamondController extends Controller
                 'shipping_price' => $validated['shipping_price'] ?? 0,
                 'purchase_date' => $validated['purchase_date'] ?? null,
                 'sold_out_date' => $validated['sold_out_date'] ?? null,
-                'is_sold_out' => $validated['is_sold_out'] ?? 'IN Stock',
-                'duration_days' => $validated['duration_days'] ?? 0,
-                'duration_price' => $validated['duration_price'] ?? 0,
                 'sold_out_price' => $validated['sold_out_price'] ?? null,
-                'profit' => $validated['profit'] ?? null,
-                'sold_out_month' => $validated['sold_out_month'] ?? null,
                 'barcode_number' => $barcodeNumber,
                 'barcode_image_url' => $dataUri,
                 'description' => $validated['description'] ?? null,
@@ -477,12 +472,7 @@ class DiamondController extends Controller
             $diamond->shipping_price = $validated['shipping_price'] ?? 0;
             $diamond->purchase_date = $validated['purchase_date'] ?? null;
             $diamond->sold_out_date = $validated['sold_out_date'] ?? null;
-            $diamond->is_sold_out = $validated['is_sold_out'] ?? $diamond->is_sold_out;
-            $diamond->duration_days = $validated['duration_days'] ?? $diamond->duration_days;
-            $diamond->duration_price = $validated['duration_price'] ?? $diamond->duration_price;
             $diamond->sold_out_price = $validated['sold_out_price'] ?? $diamond->sold_out_price;
-            $diamond->profit = $validated['profit'] ?? $diamond->profit;
-            $diamond->sold_out_month = $validated['sold_out_month'] ?? $diamond->sold_out_month;
             $diamond->description = $validated['description'] ?? null;
             $diamond->current_location = $validated['current_location'] ?? null;
             $diamond->note = $validated['note'] ?? null;
@@ -825,19 +815,15 @@ class DiamondController extends Controller
             $diamond->sold_out_date = $soldAt->toDateString();
         }
         $diamond->is_sold_out = 'Sold';
-        $diamond->sold_out_month = $diamond->sold_out_date
-            ? \Carbon\Carbon::parse($diamond->sold_out_date)->format('Y-m')
-            : $soldAt->format('Y-m');
-        if ($diamond->purchase_date) {
-            $pd = \Carbon\Carbon::parse($diamond->purchase_date);
-            $diamond->duration_days = max(0, $pd->diffInDays($diamond->sold_out_date ? \Carbon\Carbon::parse($diamond->sold_out_date) : $soldAt));
-        }
+        $snapshot = $diamond->deriveDurationSnapshot($soldAt);
+        $diamond->is_sold_out = $snapshot['is_sold_out'];
+        $diamond->sold_out_month = $snapshot['sold_out_month'];
+        $diamond->duration_days = $snapshot['duration_days'];
+        $diamond->duration_price = $snapshot['duration_price'];
+
         $baseOriginal = (float) ($diamond->purchase_price ?? 0);
-        $shipping = (float) ($diamond->shipping_price ?? 0);
-        $days = (int) ($diamond->duration_days ?? 0);
-        $dailyRate = 0.0005; // 0.05% per day
-        $diamond->duration_price = round($baseOriginal * pow(1 + $dailyRate, $days), 2);
         if (!empty($diamond->sold_out_price) && $baseOriginal > 0) {
+            $shipping = (float) ($diamond->shipping_price ?? 0);
             $diamond->profit = round(($diamond->sold_out_price ?? 0) - $baseOriginal - $shipping, 2);
         }
         $diamond->save();

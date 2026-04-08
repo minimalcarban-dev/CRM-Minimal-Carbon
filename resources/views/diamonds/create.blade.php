@@ -615,15 +615,24 @@
                     }
                 }
 
+                function parseDateInputToUtcDay(value) {
+                    if (!value) return null;
+                    const [year, month, day] = value.split('-').map(Number);
+                    if (!year || !month || !day) return null;
+                    return Date.UTC(year, month - 1, day);
+                }
+
                 function computeDerived() {
-                    const today = new Date();
                     const purchaseDateVal = purchaseDateEl.value;
-                    const endDate = soldOutDateEl.value ? new Date(soldOutDateEl.value) : today;
+                    const purchaseUtcDay = parseDateInputToUtcDay(purchaseDateVal);
+                    const soldUtcDay = parseDateInputToUtcDay(soldOutDateEl.value);
+                    const today = new Date();
+                    const todayUtcDay = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+                    const endUtcDay = soldUtcDay ?? todayUtcDay;
 
                     // --- DURATION DAYS ---
-                    if (purchaseDateVal) {
-                        const pd = new Date(purchaseDateVal);
-                        const ms = endDate - pd;
+                    if (purchaseUtcDay !== null) {
+                        const ms = endUtcDay - purchaseUtcDay;
                         const days = Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
                         durationDaysEl.value = days;
 
@@ -640,8 +649,8 @@
                     // --- SOLD OUT MONTH & STATUS ---
                     const statusEl = document.getElementById('is_sold_out');
                     if (soldOutDateEl.value) {
-                        const d = new Date(soldOutDateEl.value);
-                        soldOutMonthEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                        const [year, month] = soldOutDateEl.value.split('-');
+                        soldOutMonthEl.value = `${year}-${String(month).padStart(2, '0')}`;
                         // Auto-set status to Sold when date is set
                         if (statusEl) statusEl.value = 'Sold';
                     } else {

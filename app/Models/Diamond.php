@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Diamond extends Model
 {
     use HasFactory, SoftDeletes;
+
+    private const DAILY_DURATION_RATE = 0.0005;
 
     protected $fillable = [
         'lot_no',
@@ -123,38 +127,94 @@ class Diamond extends Model
         }
 
         // 1. STATUS: Derived from sold_out_date presence
-        $this->is_sold_out = !empty($this->sold_out_date) ? 'Sold' : 'IN Stock';
-
-        // 2. SOLD OUT MONTH: From sold_out_date
-        if (!empty($this->sold_out_date)) {
-            $soldDate = \Carbon\Carbon::parse($this->sold_out_date);
-            $this->sold_out_month = $soldDate->format('Y-m');
-        } else {
-            $this->sold_out_month = null;
-        }
-
-        // 3. DURATION DAYS: From purchase_date to sold_out_date (or today if in stock)
-        if (!empty($this->purchase_date)) {
-            $purchaseDate = \Carbon\Carbon::parse($this->purchase_date);
-            $endDate = !empty($this->sold_out_date)
-                ? \Carbon\Carbon::parse($this->sold_out_date)
-                : now();
-            $this->duration_days = max(0, $purchaseDate->diffInDays($endDate));
-        } else {
-            $this->duration_days = 0;
-        }
-
-        // 4. DURATION PRICE: Compound interest formula
-        // Formula: purchase_price x (1 + 0.0005)^days where 0.0005 = 0.05% daily rate
-        $days = (int) ($this->duration_days ?? 0);
-        $dailyRate = 0.0005;
-        $this->duration_price = round($base * pow(1 + $dailyRate, $days), 2);
+        $snapshot = $this->deriveDurationSnapshot();
+        $this->is_sold_out = $snapshot['is_sold_out'];
+        $this->sold_out_month = $snapshot['sold_out_month'];
+        $this->setAttribute('duration_days', $snapshot['duration_days']);
+        $this->setAttribute('duration_price', $snapshot['duration_price']);
 
         // 5. PROFIT: Only calculate if sold with price
         if (!empty($this->sold_out_date) && !empty($this->sold_out_price)) {
             $shipping = (float) ($this->shipping_price ?? 0);
             $this->profit = round($this->sold_out_price - $base - $shipping, 2);
         }
+    }
+
+    /**
+     * Duration snapshot that can be persisted in DB.
+     */
+    public function deriveDurationSnapshot(?CarbonInterface $asOf = null): array
+    {
+        $soldDate = $this->normalizeToAppDate($this->sold_out_date);
+        $durationDays = $this->calculateDurationDays($asOf);
+
+        return [
+            'is_sold_out' => $soldDate ? 'Sold' : 'IN Stock',
+            'sold_out_month' => $soldDate ? $soldDate->format('Y-m') : null,
+            'duration_days' => $durationDays,
+            'duration_price' => $this->calculateDurationPrice($durationDays),
+        ];
+    }
+
+    /**
+     * Calculate duration days using date-only arithmetic in app timezone.
+     */
+    public function calculateDurationDays(?CarbonInterface $asOf = null): int
+    {
+        $purchaseDate = $this->normalizeToAppDate($this->purchase_date);
+        if (!$purchaseDate) {
+            return 0;
+        }
+
+        $endDate = $this->normalizeToAppDate($this->sold_out_date);
+        if (!$endDate) {
+            $endDate = $asOf
+                ? $this->normalizeToAppDate($asOf)
+                : Carbon::now($this->durationTimezone())->startOfDay();
+        }
+
+        return max(0, $purchaseDate->diffInDays($endDate));
+    }
+
+    /**
+     * Calculate duration price using daily compound rate.
+     */
+    public function calculateDurationPrice(?int $days = null): float
+    {
+        $base = (float) ($this->purchase_price ?? 0);
+        $effectiveDays = max(0, (int) ($days ?? $this->calculateDurationDays()));
+
+        return round($base * pow(1 + self::DAILY_DURATION_RATE, $effectiveDays), 2);
+    }
+
+    public function getDurationDaysAttribute($value): int
+    {
+        return $this->calculateDurationDays();
+    }
+
+    public function getDurationPriceAttribute($value): float
+    {
+        return $this->calculateDurationPrice($this->calculateDurationDays());
+    }
+
+    protected function durationTimezone(): string
+    {
+        return config('app.timezone', 'UTC');
+    }
+
+    protected function normalizeToAppDate($value): ?Carbon
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        $timezone = $this->durationTimezone();
+
+        if ($value instanceof CarbonInterface) {
+            return Carbon::instance($value)->setTimezone($timezone)->startOfDay();
+        }
+
+        return Carbon::parse($value, $timezone)->startOfDay();
     }
 
     /**
@@ -215,7 +275,7 @@ class Diamond extends Model
      */
     public function markAsSold(float $soldOutPrice): void
     {
-        $today = now();
+        $today = Carbon::now($this->durationTimezone())->startOfDay();
 
         // Set sold status and date
         $this->is_sold_out = 'Sold';
@@ -226,24 +286,15 @@ class Diamond extends Model
         }
 
         // Use sold_out_date for month calculation
-        $soldDate = \Carbon\Carbon::parse($this->sold_out_date);
+        $soldDate = $this->normalizeToAppDate($this->sold_out_date);
         $this->sold_out_month = $soldDate->format('Y-m');
 
-        // Calculate duration days from purchase_date to sold_out_date
-        if ($this->purchase_date) {
-            $purchaseDate = \Carbon\Carbon::parse($this->purchase_date);
-            $this->duration_days = max(0, $purchaseDate->diffInDays($soldDate));
-        }
-
-        // Calculate duration price using daily compound interest formula:
-        // Final Cost = purchase_price x (1 + 0.0005)^days
-        // where 0.0005 = 0.05% daily rate
-        $base = (float) ($this->purchase_price ?? 0);
-        $days = (int) ($this->duration_days ?? 0);
-        $dailyRate = 0.0005; // 0.05% per day
-        $this->duration_price = round($base * pow(1 + $dailyRate, $days), 2);
+        $durationDays = $this->calculateDurationDays($soldDate);
+        $this->setAttribute('duration_days', $durationDays);
+        $this->setAttribute('duration_price', $this->calculateDurationPrice($durationDays));
 
         // Calculate profit: sold_price - purchase_price - shipping_price
+        $base = (float) ($this->purchase_price ?? 0);
         $shipping = (float) ($this->shipping_price ?? 0);
         $this->profit = round($soldOutPrice - $base - $shipping, 2);
 

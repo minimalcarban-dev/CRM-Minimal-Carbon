@@ -633,14 +633,23 @@
                     }
                 }
 
-                function computeDerived() {
-                    const today = new Date();
-                    const purchaseDateVal = purchaseDateEl.value;
-                    const endDate = soldOutDateEl.value ? new Date(soldOutDateEl.value) : today;
+                function parseDateInputToUtcDay(value) {
+                    if (!value) return null;
+                    const [year, month, day] = value.split('-').map(Number);
+                    if (!year || !month || !day) return null;
+                    return Date.UTC(year, month - 1, day);
+                }
 
-                    if (purchaseDateVal) {
-                        const pd = new Date(purchaseDateVal);
-                        const ms = endDate - pd;
+                function computeDerived() {
+                    const purchaseDateVal = purchaseDateEl.value;
+                    const purchaseUtcDay = parseDateInputToUtcDay(purchaseDateVal);
+                    const soldUtcDay = parseDateInputToUtcDay(soldOutDateEl.value);
+                    const today = new Date();
+                    const todayUtcDay = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+                    const endUtcDay = soldUtcDay ?? todayUtcDay;
+
+                    if (purchaseUtcDay !== null) {
+                        const ms = endUtcDay - purchaseUtcDay;
                         const days = Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
                         durationDaysEl.value = days;
                         const base = parseFloat(purchasePriceEl.value || '0');
@@ -654,8 +663,8 @@
 
                     // --- SOLD OUT MONTH ---
                     if (soldOutDateEl.value) {
-                        const d = new Date(soldOutDateEl.value);
-                        soldOutMonthEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                        const [year, month] = soldOutDateEl.value.split('-');
+                        soldOutMonthEl.value = `${year}-${String(month).padStart(2, '0')}`;
                     } else {
                         soldOutMonthEl.value = '';
                     }
