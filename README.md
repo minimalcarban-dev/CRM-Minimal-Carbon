@@ -207,17 +207,6 @@ npm run build      # production
 php artisan queue:work --queue=default --tries=3
 ```
 
-### Default Super Admin
-
-The seeder reads credentials from your `.env`:
-
-```env
-SUPER_ADMIN_EMAIL=superadmin@example.com
-SUPER_ADMIN_PASSWORD=Password!123!
-```
-
-Login at `/admin/login`.
-
 ### Optional: Virus Scanning
 
 Set `CHAT_VIRUS_SCAN=true` in `.env` and ensure `clamscan` is available on your PATH. If ClamAV is not found but scanning is enabled, the system logs a warning and allows the file through.
