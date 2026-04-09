@@ -3125,6 +3125,26 @@
                                 'permissions.create',
                                 'meta_leads.settings',
                                 'settings.manage',
+                                'companies.view',
+                                'companies.create',
+                                'metal_types.view',
+                                'metal_types.create',
+                                'setting_types.view',
+                                'setting_types.create',
+                                'closure_types.view',
+                                'closure_types.create',
+                                'ring_sizes.view',
+                                'ring_sizes.create',
+                                'stone_types.view',
+                                'stone_types.create',
+                                'stone_shapes.view',
+                                'stone_shapes.create',
+                                'stone_colors.view',
+                                'stone_colors.create',
+                                'diamond_clarities.view',
+                                'diamond_clarities.create',
+                                'diamond_cuts.view',
+                                'diamond_cuts.create',
                             ]))
                     <div class="nav-section-label">System</div>
                 @endif
@@ -3308,7 +3328,7 @@
 
                 @php
                     $attributesActive = request()->routeIs([
-                        'companies.*',
+                        'attributes.*',
                         'metal_types.*',
                         'setting_types.*',
                         'closure_types.*',
@@ -3322,8 +3342,6 @@
                 @endphp
                 @if (auth()->guard('admin')->user() &&
                         auth()->guard('admin')->user()->canAccessAny([
-                                'companies.view',
-                                'companies.create',
                                 'metal_types.view',
                                 'metal_types.create',
                                 'setting_types.view',
@@ -3343,132 +3361,24 @@
                                 'diamond_cuts.view',
                                 'diamond_cuts.create',
                             ]))
-                    <div class="nav-dropdown">
-                        <button class="dropdown-toggle-link {{ $attributesActive ? 'active' : '' }}"
-                            id="attributesDropdown" data-tooltip="Attributes"
-                            data-initial-open="{{ $attributesActive ? '1' : '0' }}" type="button"
-                            aria-expanded="false" style="padding-left: 23px;">
-                            <div class="left-content">
-                                <i class="bi bi-grid main-icon"></i>
-                                <span style="padding-left: 15px">Attributes</span>
-                            </div>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </button>
-                        <div class="dropdown-menu-custom {{ $attributesActive ? 'show' : '' }}" id="attributesMenu">
-                            <ul class="nav">
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['companies.view', 'companies.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}"
-                                            href="{{ route('companies.index') }}" data-tooltip="Companies">
-                                            <i class="bi bi-buildings"></i>
-                                            <span>Company</span>
-                                        </a>
-                                    </li>
-                                @endif
+                    <li>
+                        <a class="nav-link {{ $attributesActive ? 'active cat-system' : '' }}"
+                            href="{{ route('attributes.index') }}" data-tooltip="Attributes Hub">
+                            <i class="bi bi-grid-1x2"></i>
+                            <span>Attributes Hub</span>
+                        </a>
+                    </li>
+                @endif
 
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['metal_types.view', 'metal_types.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('metal_types.*') ? 'active' : '' }}"
-                                            href="{{ route('metal_types.index') }}" data-tooltip="Metal Types">
-                                            <i class="bi bi-award"></i>
-                                            <span>Metal Types</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['setting_types.view', 'setting_types.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('setting_types.*') ? 'active' : '' }}"
-                                            href="{{ route('setting_types.index') }}" data-tooltip="Setting Types">
-                                            <i class="bi bi-gear"></i>
-                                            <span>Setting Types</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['closure_types.view', 'closure_types.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('closure_types.*') ? 'active' : '' }}"
-                                            href="{{ route('closure_types.index') }}" data-tooltip="Closure Types">
-                                            <i class="bi bi-link-45deg"></i>
-                                            <span>Closure Types</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['ring_sizes.view', 'ring_sizes.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('ring_sizes.*') ? 'active' : '' }}"
-                                            href="{{ route('ring_sizes.index') }}" data-tooltip="Ring Sizes">
-                                            <i class="bi bi-circle"></i>
-                                            <span>Ring Sizes</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['stone_types.view', 'stone_types.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('stone_types.*') ? 'active' : '' }}"
-                                            href="{{ route('stone_types.index') }}" data-tooltip="Stone Types">
-                                            <i class="bi bi-gem"></i>
-                                            <span>Stone Types</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['stone_shapes.view', 'stone_shapes.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('stone_shapes.*') ? 'active' : '' }}"
-                                            href="{{ route('stone_shapes.index') }}" data-tooltip="Stone Shapes">
-                                            <i class="bi bi-square"></i>
-                                            <span>Stone Shapes</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['stone_colors.view', 'stone_colors.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('stone_colors.*') ? 'active' : '' }}"
-                                            href="{{ route('stone_colors.index') }}" data-tooltip="Stone Colors">
-                                            <i class="bi bi-droplet"></i>
-                                            <span>Stone Colors</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['diamond_clarities.view', 'diamond_clarities.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('diamond_clarities.*') ? 'active' : '' }}"
-                                            href="{{ route('diamond_clarities.index') }}"
-                                            data-tooltip="Diamond Clarities">
-                                            <i class="bi bi-card-list"></i>
-                                            <span>Diamond Clarities</span>
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if (auth()->guard('admin')->user() &&
-                                        auth()->guard('admin')->user()->canAccessAny(['diamond_cuts.view', 'diamond_cuts.create']))
-                                    <li>
-                                        <a class="nav-link {{ request()->routeIs('diamond_cuts.*') ? 'active' : '' }}"
-                                            href="{{ route('diamond_cuts.index') }}" data-tooltip="Diamond Cuts">
-                                            <i class="bi bi-scissors"></i>
-                                            <span>Diamond Cuts</span>
-                                        </a>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                    </div>
+                @if (auth()->guard('admin')->user() &&
+                        auth()->guard('admin')->user()->canAccessAny(['companies.view', 'companies.create']))
+                    <li>
+                        <a class="nav-link {{ request()->routeIs('companies.*') ? 'active cat-system' : '' }}"
+                            href="{{ route('companies.index') }}" data-tooltip="Company">
+                            <i class="bi bi-buildings"></i>
+                            <span>Company</span>
+                        </a>
+                    </li>
                 @endif
 
             </ul>

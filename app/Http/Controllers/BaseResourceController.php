@@ -109,7 +109,7 @@ abstract class BaseResourceController extends Controller
             $query->where('name', 'like', "%{$q}%");
         }
 
-        $items = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+        $items = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
 
         return view($this->getViewPath() . '.index', compact('items'));
     }
@@ -148,10 +148,25 @@ abstract class BaseResourceController extends Controller
                 'created_by' => auth('admin')->id()
             ]);
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $this->getResourceName() . ' created successfully',
+                    'redirect' => route($this->getRouteName() . '.index'),
+                ]);
+            }
+
             return redirect()->route($this->getRouteName() . '.index')
                 ->with('success', $this->getResourceName() . ' created successfully');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
             throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -159,6 +174,12 @@ abstract class BaseResourceController extends Controller
                 'error' => $e->getMessage(),
                 'admin_id' => auth('admin')->id()
             ]);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create ' . $this->getResourceName(),
+                ], 500);
+            }
             return back()->withInput()->with('error', 'Failed to create ' . $this->getResourceName());
         }
     }
@@ -169,6 +190,13 @@ abstract class BaseResourceController extends Controller
     public function show($id)
     {
         $this->checkPermission('view');
+
+        if ($this->shouldRedirectShowToHub()) {
+            return redirect()->route('attributes.index', [
+                'module' => $this->getRouteName(),
+                'detail' => $id,
+            ]);
+        }
 
         $modelClass = $this->getModelClass();
         $item = $modelClass::findOrFail($id);
@@ -216,10 +244,25 @@ abstract class BaseResourceController extends Controller
                 'updated_by' => auth('admin')->id()
             ]);
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $this->getResourceName() . ' updated successfully',
+                    'redirect' => route($this->getRouteName() . '.index'),
+                ]);
+            }
+
             return redirect()->route($this->getRouteName() . '.index')
                 ->with('success', $this->getResourceName() . ' updated successfully');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
             throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -228,6 +271,12 @@ abstract class BaseResourceController extends Controller
                 'error' => $e->getMessage(),
                 'admin_id' => auth('admin')->id()
             ]);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update ' . $this->getResourceName(),
+                ], 500);
+            }
             return back()->withInput()->with('error', 'Failed to update ' . $this->getResourceName());
         }
     }
@@ -255,6 +304,13 @@ abstract class BaseResourceController extends Controller
                 'deleted_by' => auth('admin')->id()
             ]);
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $this->getResourceName() . ' deleted successfully',
+                ]);
+            }
+
             return redirect()->route($this->getRouteName() . '.index')
                 ->with('success', $this->getResourceName() . ' deleted successfully');
 
@@ -265,8 +321,32 @@ abstract class BaseResourceController extends Controller
                 'error' => $e->getMessage(),
                 'admin_id' => auth('admin')->id()
             ]);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete ' . $this->getResourceName(),
+                ], 500);
+            }
             return back()->with('error', 'Failed to delete ' . $this->getResourceName());
         }
+    }
+
+    /**
+     * Attribute masters redirect their show actions into the hub.
+     */
+    protected function shouldRedirectShowToHub(): bool
+    {
+        return in_array($this->getRouteName(), [
+            'metal_types',
+            'setting_types',
+            'closure_types',
+            'ring_sizes',
+            'stone_types',
+            'stone_shapes',
+            'stone_colors',
+            'diamond_clarities',
+            'diamond_cuts',
+        ], true);
     }
 
     /**

@@ -36,6 +36,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\AttributeHubController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Broadcast;
@@ -69,6 +70,12 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])
         ->name('admin.dashboard');
+
+    // Attributes Hub
+    Route::get('attributes', [AttributeHubController::class, 'index'])
+        ->name('attributes.index');
+    Route::get('attributes/fragment', [AttributeHubController::class, 'fragment'])
+        ->name('attributes.fragment');
 
     // Chat routes with middleware
     Route::get('chat', [ChatController::class, 'index'])

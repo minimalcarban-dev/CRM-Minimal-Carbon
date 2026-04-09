@@ -160,7 +160,7 @@
                                 <th>
                                     <div class="th-content">
                                         <i class="bi bi-envelope"></i>
-                                        <span>Email</span>
+                                        <span>Email / GST</span>
                                     </div>
                                 </th>
                                 <th>
@@ -200,7 +200,8 @@
                                             <div class="company-avatar" onclick="showCompanyModal({{ $company->id }})"
                                                 style="cursor: pointer;">
                                                 @if($company->logo)
-                                                    <img src="{{ str_starts_with($company->logo, 'http') ? $company->logo : asset($company->logo) }}" alt="{{ $company->name }}">
+                                                    <img src="{{ str_starts_with($company->logo, 'http') ? $company->logo : asset($company->logo) }}"
+                                                        alt="{{ $company->name }}">
                                                 @else
                                                     {{ strtoupper(substr($company->name, 0, 2)) }}
                                                 @endif
@@ -210,6 +211,14 @@
                                         </div>
                                     </td>
                                     <td>
+                                        @if($company->gst_no)
+                                            <div class="contact-info pb-1">
+                                                <i class="bi bi-receipt contact-icon"></i>
+                                                <span>{{ $company->gst_no }}</span>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
                                         @if($company->email)
                                             <div class="contact-info">
                                                 <i class="bi bi-envelope-fill contact-icon"></i>
@@ -1130,7 +1139,7 @@
                     showAlert('{{ session('success') }}', 'success', 'Success');
                 }
             @endif
-                });
+                            });
     </script>
 
     <!-- Include Company Details Modal -->
