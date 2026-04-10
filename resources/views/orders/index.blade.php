@@ -581,8 +581,21 @@
                                             }
                                         });
 
-                                        // Redirect to sync route
-                                        window.location.href = url;
+                                        // Perform POST request instead of GET
+                                        const form = document.createElement('form');
+                                        form.method = 'POST';
+                                        form.action = url;
+
+                                        // Add CSRF token
+                                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                                        const csrfInput = document.createElement('input');
+                                        csrfInput.type = 'hidden';
+                                        csrfInput.name = '_token';
+                                        csrfInput.value = csrfToken;
+                                        form.appendChild(csrfInput);
+
+                                        document.body.appendChild(form);
+                                        form.submit();
                                     }
                                 });
                             });
