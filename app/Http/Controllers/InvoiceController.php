@@ -52,24 +52,9 @@ class InvoiceController extends Controller
         return view('invoices.create', compact('companies', 'parties'));
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\StoreInvoiceRequest $request)
     {
-        $request->validate([
-            'invoice_no' => 'required|string|unique:invoices,invoice_no',
-            'invoice_date' => 'required|date',
-            'company_id' => 'required|exists:companies,id',
-            'invoice_type' => 'required|in:proforma,tax',
-            'copy_type' => 'nullable|in:original,duplicate,triplicate',
-            'place_of_supply' => 'nullable|string',
-            'payment_terms' => 'nullable|string',
-            'billed_to_id' => 'nullable|exists:parties,id',
-            'shipped_to_id' => 'nullable|exists:parties,id',
-            'items' => 'required|array|min:1',
-            'items.*.quantity' => 'nullable|numeric',
-            'items.*.unit' => 'nullable|in:pieces,carats',
-            'items.*.rate' => 'nullable|numeric',
-            'items.*.amount' => 'nullable|numeric',
-        ]);
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
@@ -89,58 +74,8 @@ class InvoiceController extends Controller
             // Auto-set status based on invoice type
             $invoice->status = ($request->invoice_type === 'tax') ? 'done' : 'draft';
 
-            $taxable = 0;
-            foreach ($request->input('items') as $it) {
-                $quantity = (float) ($it['quantity'] ?? 0);
-                $rate = (float) ($it['rate'] ?? 0);
-                $unit = $it['unit'] ?? 'pieces';
-
-                $amount = isset($it['amount']) ? $it['amount'] : ($quantity * $rate);
-                $taxable += $amount;
-
-                $invoice->items()->create([
-                    'description_of_goods' => $it['description_of_goods'] ?? null,
-                    'hsn_code' => $it['hsn_code'] ?? null,
-                    'pieces' => ($unit === 'pieces') ? $quantity : null,
-                    'carats' => ($unit === 'carats') ? $quantity : null,
-                    'rate' => $rate,
-                    'amount' => $amount,
-                ]);
-            }
-
-            // Simple tax calculation - rates can be passed in request or default to 0
-            $cgst_rate = (float) $request->input('cgst_rate', 0);
-            $sgst_rate = (float) $request->input('sgst_rate', 0);
-            $igst_rate = (float) $request->input('igst_rate', 0);
-            $express_shipping = (float) $request->input('express_shipping', 0);
-
-            $company = Company::find($invoice->company_id);
-
-            // Check if billed party is foreign - no GST applies
-            $billedParty = $invoice->billed_to_id ? Party::find($invoice->billed_to_id) : null;
-            $isForeignParty = $billedParty && $billedParty->is_foreign;
-
-            $igst = 0;
-            $cgst = 0;
-            $sgst = 0;
-
-            // Skip tax calculation for foreign parties
-            if (!$isForeignParty) {
-                if ($company && $company->state_code && $company->state_code == $invoice->place_of_supply) {
-                    $cgst = round($taxable * ($cgst_rate / 100), 2);
-                    $sgst = round($taxable * ($sgst_rate / 100), 2);
-                } else {
-                    $igst = round($taxable * ($igst_rate / 100), 2);
-                }
-            }
-
-            $invoice->taxable_amount = $taxable;
-            $invoice->igst_amount = $igst;
-            $invoice->cgst_amount = $cgst;
-            $invoice->sgst_amount = $sgst;
-            $invoice->express_shipping = $express_shipping;
-            $invoice->total_invoice_value = $taxable + $igst + $cgst + $sgst + $express_shipping;
-            $invoice->save();
+            $taxable = $this->syncInvoiceItems($invoice, $request->input('items'));
+            $this->calculateAndApplyTax($invoice, $request, $taxable);
 
             DB::commit();
 
@@ -165,22 +100,10 @@ class InvoiceController extends Controller
         return view('invoices.edit', compact('invoice', 'companies', 'parties'));
     }
 
-    public function update(Request $request, $id)
+    public function update(\App\Http\Requests\UpdateInvoiceRequest $request, $id)
     {
         $invoice = Invoice::findOrFail($id);
-
-        $request->validate([
-            'invoice_no' => 'required|string|unique:invoices,invoice_no,' . $invoice->id,
-            'invoice_date' => 'required|date',
-            'company_id' => 'required|exists:companies,id',
-            'invoice_type' => 'required|in:proforma,tax',
-            'copy_type' => 'nullable|in:original,duplicate,triplicate',
-            'items' => 'required|array|min:1',
-            'items.*.quantity' => 'nullable|numeric',
-            'items.*.unit' => 'nullable|in:pieces,carats',
-            'items.*.rate' => 'nullable|numeric',
-            'items.*.amount' => 'nullable|numeric',
-        ]);
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
@@ -193,7 +116,6 @@ class InvoiceController extends Controller
                 'place_of_supply',
                 'payment_terms',
                 'billed_to_id',
-                'billed_to_id',
                 'shipped_to_id',
                 'copy_type',
                 'express_shipping'
@@ -204,54 +126,8 @@ class InvoiceController extends Controller
 
             // remove old items and re-create
             $invoice->items()->delete();
-            $taxable = 0;
-            foreach ($request->input('items') as $it) {
-                $quantity = (float) ($it['quantity'] ?? 0);
-                $rate = (float) ($it['rate'] ?? 0);
-                $unit = $it['unit'] ?? 'pieces';
-
-                $amount = isset($it['amount']) ? $it['amount'] : ($quantity * $rate);
-                $taxable += $amount;
-
-                $invoice->items()->create([
-                    'description_of_goods' => $it['description_of_goods'] ?? null,
-                    'hsn_code' => $it['hsn_code'] ?? null,
-                    'pieces' => ($unit === 'pieces') ? $quantity : null,
-                    'carats' => ($unit === 'carats') ? $quantity : null,
-                    'rate' => $rate,
-                    'amount' => $amount,
-                ]);
-            }
-            // Recalculate tax
-            $cgst_rate = (float) $request->input('cgst_rate', 0);
-            $sgst_rate = (float) $request->input('sgst_rate', 0);
-            $igst_rate = (float) $request->input('igst_rate', 0);
-            $express_shipping = (float) $request->input('express_shipping', 0);
-
-            $company = Company::find($invoice->company_id);
-            $billedParty = $invoice->billed_to_id ? Party::find($invoice->billed_to_id) : null;
-            $isForeignParty = $billedParty && $billedParty->is_foreign;
-
-            $igst = 0;
-            $cgst = 0;
-            $sgst = 0;
-
-            if (!$isForeignParty) {
-                if ($company && $company->state_code && $company->state_code == $invoice->place_of_supply) {
-                    $cgst = round($taxable * ($cgst_rate / 100), 2);
-                    $sgst = round($taxable * ($sgst_rate / 100), 2);
-                } else {
-                    $igst = round($taxable * ($igst_rate / 100), 2);
-                }
-            }
-
-            $invoice->taxable_amount = $taxable;
-            $invoice->igst_amount = $igst;
-            $invoice->cgst_amount = $cgst;
-            $invoice->sgst_amount = $sgst;
-            $invoice->express_shipping = $express_shipping;
-            $invoice->total_invoice_value = $taxable + $igst + $cgst + $sgst + $express_shipping;
-            $invoice->save();
+            $taxable = $this->syncInvoiceItems($invoice, $request->input('items'));
+            $this->calculateAndApplyTax($invoice, $request, $taxable);
 
             DB::commit();
 
@@ -284,5 +160,70 @@ class InvoiceController extends Controller
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to delete invoice: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Create invoice line items and return the taxable total.
+     */
+    private function syncInvoiceItems(Invoice $invoice, array $items): float
+    {
+        $taxable = 0;
+
+        foreach ($items as $it) {
+            $quantity = (float) ($it['quantity'] ?? 0);
+            $rate = (float) ($it['rate'] ?? 0);
+            $unit = $it['unit'] ?? 'pieces';
+
+            $amount = isset($it['amount']) ? $it['amount'] : ($quantity * $rate);
+            $taxable += $amount;
+
+            $invoice->items()->create([
+                'description_of_goods' => $it['description_of_goods'] ?? null,
+                'hsn_code'             => $it['hsn_code'] ?? null,
+                'pieces'               => ($unit === 'pieces') ? $quantity : null,
+                'carats'               => ($unit === 'carats') ? $quantity : null,
+                'rate'                 => $rate,
+                'amount'               => $amount,
+            ]);
+        }
+
+        return $taxable;
+    }
+
+    /**
+     * Calculate GST/IGST taxes and update the invoice totals.
+     */
+    private function calculateAndApplyTax(Invoice $invoice, Request $request, float $taxable): void
+    {
+        $cgstRate        = (float) $request->input('cgst_rate', 0);
+        $sgstRate        = (float) $request->input('sgst_rate', 0);
+        $igstRate        = (float) $request->input('igst_rate', 0);
+        $expressShipping = (float) $request->input('express_shipping', 0);
+
+        $company       = Company::find($invoice->company_id);
+        $billedParty   = $invoice->billed_to_id ? Party::find($invoice->billed_to_id) : null;
+        $isForeignParty = $billedParty && $billedParty->is_foreign;
+
+        $igst = 0;
+        $cgst = 0;
+        $sgst = 0;
+
+        // Skip tax calculation for foreign parties
+        if (!$isForeignParty) {
+            if ($company && $company->state_code && $company->state_code == $invoice->place_of_supply) {
+                $cgst = round($taxable * ($cgstRate / 100), 2);
+                $sgst = round($taxable * ($sgstRate / 100), 2);
+            } else {
+                $igst = round($taxable * ($igstRate / 100), 2);
+            }
+        }
+
+        $invoice->taxable_amount     = $taxable;
+        $invoice->igst_amount        = $igst;
+        $invoice->cgst_amount        = $cgst;
+        $invoice->sgst_amount        = $sgst;
+        $invoice->express_shipping   = $expressShipping;
+        $invoice->total_invoice_value = $taxable + $igst + $cgst + $sgst + $expressShipping;
+        $invoice->save();
     }
 }

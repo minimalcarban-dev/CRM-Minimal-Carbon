@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreOrderRequest;
+use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Admin;
 use App\Models\ClosureType;
 use App\Models\Company;
@@ -18,8 +20,6 @@ use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Cloudinary\Cloudinary;
-use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Services\CurrencyService;
@@ -42,24 +42,21 @@ use App\Models\GoldDistribution;
 
 class OrderController extends Controller
 {
-    private $cloudinary;
     private MeleeStockService $meleeStockService;
+    private \App\Services\PaymentService $paymentService;
+    private \App\Services\CloudinaryUploadService $uploadService;
+    private \App\Services\OrderService $orderService;
 
-    public function __construct(MeleeStockService $meleeStockService)
-    {
+    public function __construct(
+        MeleeStockService $meleeStockService,
+        \App\Services\PaymentService $paymentService,
+        \App\Services\CloudinaryUploadService $uploadService,
+        \App\Services\OrderService $orderService
+    ) {
         $this->meleeStockService = $meleeStockService;
-
-        // Initialize Cloudinary with direct configuration
-        $this->cloudinary = new Cloudinary([
-            'cloud' => [
-                'cloud_name' => config('cloudinary.cloud_name'),
-                'api_key' => config('cloudinary.api_key'),
-                'api_secret' => config('cloudinary.api_secret'),
-            ],
-            'url' => [
-                'secure' => true
-            ]
-        ]);
+        $this->paymentService = $paymentService;
+        $this->uploadService = $uploadService;
+        $this->orderService = $orderService;
     }
 
     /**
@@ -171,7 +168,7 @@ class OrderController extends Controller
             $todaysSalesQuery->where('company_id', $request->company_id);
         }
 
-        $todaysSales = $todaysSalesQuery->get()->sum('amount_received_total');
+        $todaysSales = $todaysSalesQuery->sum('amount_received');
         $todaysOrderCount = $todaysSalesQuery->count();
 
         // Month Sales Stats
@@ -185,7 +182,7 @@ class OrderController extends Controller
             $monthSalesQuery->where('company_id', $request->company_id);
         }
 
-        $monthSales = $monthSalesQuery->get()->sum('amount_received_total');
+        $monthSales = $monthSalesQuery->sum('amount_received');
 
         // Get company sales progress for active companies
         $companySalesStats = Company::where('status', 'active')
@@ -388,18 +385,18 @@ class OrderController extends Controller
     /**
      * ⚡ OPTIMIZED: Store method with performance improvements
      */
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
         try {
-            $validated = $this->validateOrder($request);
+            $validated = $request->validated();
             $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
-            $paymentSummary = $this->normalizePaymentSummary(
+            $paymentSummary = $this->paymentService->normalizePaymentSummary(
                 $validated,
                 (float) ($validated['gross_sell'] ?? 0)
             );
 
             // ✅ CRITICAL: Extract and validate melee entries BEFORE creating order
-            $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
+            $incomingMeleeEntries = $this->orderService->extractValidatedMeleeEntries($validated);
             $meleeEntriesForStock = $incomingMeleeEntries;
             $validationResult = $this->meleeStockService->validateAvailability($incomingMeleeEntries, [
                 'allow_negative' => $allowNegativeMelee,
@@ -409,11 +406,11 @@ class OrderController extends Controller
             }
 
             // ✅ CRITICAL: Extract and validate ALL diamond SKUs BEFORE creating order
-            $allSkus = $this->extractValidatedSkus($validated);
+            $allSkus = $this->orderService->extractValidatedSkus($validated);
             $validatedDiamonds = [];
 
             foreach ($allSkus as $sku) {
-                $skuCheck = $this->checkOrderSkuAvailability($sku);
+                $skuCheck = $this->orderService->checkOrderSkuAvailability($sku);
                 if (!$skuCheck['available']) {
                     return $this->orderErrorResponse($request, $skuCheck['message']);
                 }
@@ -429,8 +426,8 @@ class OrderController extends Controller
             $pdfs = [];
 
             try {
-                $images = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
-                $pdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
+                $images = $this->uploadService->uploadFromRequest($request, 'images', 'orders/images', 10);
+                $pdfs = $this->uploadService->uploadFromRequest($request, 'order_pdfs', 'orders/pdfs', 5, true);
             } catch (\Exception $e) {
                 Log::error('File upload failed before order creation', [
                     'error' => $e->getMessage()
@@ -443,14 +440,10 @@ class OrderController extends Controller
 
             // Create the order
             $order = new Order();
-            $this->assignOrderFields($order, $validated);
+            $this->orderService->assignOrderFields($order, $validated);
             $order->submitted_by = Auth::guard('admin')->id();
-            $order->payment_status = $paymentSummary['payment_status'];
-            $order->amount_received = $paymentSummary['amount_received'];
-            $order->amount_due = $paymentSummary['amount_due'];
 
             // Auto-create or reuse client
-            $clientId = null;
             if (!empty($validated['client_email']) || !empty($validated['client_name'])) {
                 $client = Client::firstOrCreate(
                     ['email' => $validated['client_email'] ?? null],
@@ -469,26 +462,42 @@ class OrderController extends Controller
                     'mobile' => $validated['client_mobile'] ?? $client->mobile,
                     'tax_id' => $validated['client_tax_id'] ?? $client->tax_id,
                 ]);
-                $clientId = $client->id;
+                $order->client_id = $client->id;
             }
-            $order->client_id = $clientId;
 
             // Attach uploaded files
             $order->images = $images;
             $order->order_pdfs = $pdfs;
 
+            // Handle payment logic
+            $order->syncPaymentSummary(
+                $paymentSummary['amount_received'],
+                $paymentSummary['payment_status'],
+                $paymentSummary['amount_due']
+            );
+
             $order->save();
 
-            if ($paymentSummary['amount_received'] > 0) {
+            // Record initial payment entry
+            if ((float) $paymentSummary['amount_received'] > 0) {
                 OrderPayment::create([
                     'order_id' => $order->id,
                     'amount' => $paymentSummary['amount_received'],
-                    'payment_method' => null,
+                    'payment_method' => null, // Default
                     'reference_number' => null,
-                    'notes' => 'Initial payment captured during order creation.',
+                    'notes' => 'Initial payment recorded on creation.',
                     'received_at' => now(),
                     'recorded_by' => Auth::guard('admin')->id(),
                 ]);
+            }
+
+            // Reserve stock Lot wise
+            if (!empty($meleeEntriesForStock)) {
+                $stockResult = $this->meleeStockService->reserveForOrder($order->id, $meleeEntriesForStock);
+                if (!$stockResult['success']) {
+                    DB::rollBack();
+                    return $this->orderErrorResponse($request, 'Failed to reserve melee stock: ' . $stockResult['message']);
+                }
             }
 
             $order->refreshPaymentSummaryFromPayments();
@@ -806,6 +815,26 @@ class OrderController extends Controller
     /**
      * Save order data as draft when an error occurs.
      */
+    /**
+     * Unified error responder for store/update operations.
+     */
+    private function orderErrorResponse(Request $request, string $message, ?OrderDraft $draft = null, int $status = 422)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'draft_id' => $draft?->id
+            ], $status);
+        }
+
+        if ($draft) {
+            return redirect()->route('orders.drafts.resume', $draft->id)
+                ->with('error', $message);
+        }
+
+        return redirect()->back()->withInput()->with('error', $message);
+    }
     private function saveDraftOnError(Request $request, string $errorMessage): ?OrderDraft
     {
         try {
@@ -847,15 +876,13 @@ class OrderController extends Controller
     /**
      * Update an existing order in storage.
      */
-    public function update(Request $request, Order $order)
+    public function update(UpdateOrderRequest $request, Order $order)
     {
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
 
         // If order is cancelled, only allow updating 'special_notes' UNLESS user is a super admin
         if (in_array($order->diamond_status, $cancelledStatuses) && !Auth::guard('admin')->user()->is_super) {
-            $validated = $request->validate([
-                'special_notes' => 'nullable|string|max:2000',
-            ]);
+            $validated = $request->validated();
             $order->update([
                 'special_notes' => $validated['special_notes'] ?? null
             ]);
@@ -875,21 +902,21 @@ class OrderController extends Controller
         }
 
         try {
-            $validated = $this->validateOrder($request);
+            $validated = $request->validated();
             $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
 
             // ✅ CRITICAL: Validate melee stock with reservation logic
-            $incomingMeleeEntries = $this->extractValidatedMeleeEntries($validated);
-            $this->validateMeleeStockAvailability($incomingMeleeEntries, $order, $allowNegativeMelee);
+            $incomingMeleeEntries = $this->orderService->extractValidatedMeleeEntries($validated);
+            $this->orderService->validateMeleeStockAvailability($incomingMeleeEntries, $order, $allowNegativeMelee);
 
             // ✅ CRITICAL: Validate only NEWLY ADDED SKUs (existing ones are already reserved)
-            $submittedSkus = $this->extractValidatedSkus($validated);
-            $existingOrderSkus = $this->extractOrderSkus($order);
+            $submittedSkus = $this->orderService->extractValidatedSkus($validated);
+            $existingOrderSkus = $this->orderService->extractOrderSkus($order);
             $newlyAddedSkus = array_values(array_diff($submittedSkus, $existingOrderSkus));
             $newlyAddedDiamonds = [];
 
             foreach ($newlyAddedSkus as $sku) {
-                $skuCheck = $this->checkOrderSkuAvailability($sku);
+                $skuCheck = $this->orderService->checkOrderSkuAvailability($sku);
                 if (!$skuCheck['available']) {
                     return $this->orderErrorResponse($request, $skuCheck['message']);
                 }
@@ -900,8 +927,8 @@ class OrderController extends Controller
             }
 
             // ⚡ PERFORMANCE: Upload files BEFORE transaction
-            $newImages = $this->uploadToCloudinary($request, 'images', 'orders/images', 10);
-            $newPdfs = $this->uploadToCloudinary($request, 'order_pdfs', 'orders/pdfs', 5, true);
+            $newImages = $this->uploadService->uploadFromRequest($request, 'images', 'orders/images', 10);
+            $newPdfs = $this->uploadService->uploadFromRequest($request, 'order_pdfs', 'orders/pdfs', 5, true);
 
             DB::beginTransaction();
 
@@ -979,9 +1006,9 @@ class OrderController extends Controller
             }
 
             // Update fields
-            $this->assignOrderFields($order, $validated);
+            $this->orderService->assignOrderFields($order, $validated);
             $order->last_modified_by = Auth::guard('admin')->id();
-            $paymentSummary = $this->normalizePaymentSummary($validated, (float) ($order->gross_sell ?? 0));
+            $paymentSummary = $this->paymentService->normalizePaymentSummary($validated, (float) ($order->gross_sell ?? 0));
             $existingRecordedTotal = (float) $order->payments()->sum('amount');
             $hasPayments = $order->payments()->exists();
 
@@ -1059,8 +1086,8 @@ class OrderController extends Controller
             $order->save();
 
             // Melee Stock Change Detection using service
-            $oldMeleeEntries = $this->extractSnapshotMeleeEntries($oldSnapshot);
-            $newMeleeEntries = $this->normalizeStoredMeleeEntries(
+            $oldMeleeEntries = $this->orderService->extractSnapshotMeleeEntries($oldSnapshot);
+            $newMeleeEntries = $this->orderService->normalizeStoredMeleeEntries(
                 $order->melee_entries,
                 $order->melee_diamond_id,
                 $order->melee_pieces,
@@ -1669,7 +1696,7 @@ class OrderController extends Controller
         if ($targetFile) {
             if (is_array($targetFile) && isset($targetFile['public_id'])) {
                 $resourceType = ($type === 'pdf') ? 'raw' : 'image';
-                $this->deleteFromCloudinary($targetFile['public_id'], $resourceType);
+                $this->uploadService->delete($targetFile['public_id'], $resourceType);
             }
 
             $order->$field = $remainingFiles;
@@ -1702,9 +1729,8 @@ class OrderController extends Controller
             $images = is_string($imagesRaw) ? json_decode($imagesRaw, true) : (is_array($imagesRaw) ? $imagesRaw : []);
             foreach ($images as $image) {
                 if (isset($image['public_id'])) {
-                    if ($this->deleteFromCloudinary($image['public_id'], 'image')) {
-                        $deletedImages++;
-                    }
+                    $this->uploadService->delete($image['public_id'], 'image');
+                    $deletedImages++;
                 }
             }
 
@@ -1713,9 +1739,8 @@ class OrderController extends Controller
             $pdfs = is_string($pdfsRaw) ? json_decode($pdfsRaw, true) : (is_array($pdfsRaw) ? $pdfsRaw : []);
             foreach ($pdfs as $pdf) {
                 if (isset($pdf['public_id'])) {
-                    if ($this->deleteFromCloudinary($pdf['public_id'], 'raw')) {
-                        $deletedPdfs++;
-                    }
+                    $this->uploadService->delete($pdf['public_id'], 'raw');
+                    $deletedPdfs++;
                 }
             }
 
@@ -1724,7 +1749,7 @@ class OrderController extends Controller
             // Reverse Stock on Delete (if not already cancelled)
             $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
             if (!in_array($order->diamond_status, $cancelledStatuses)) {
-                $meleeEntries = $this->extractStoredMeleeEntries($order);
+                $meleeEntries = $this->orderService->extractStoredMeleeEntries($order);
                 if (!empty($meleeEntries)) {
                     $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
                     if (!$returnResult['success']) {
@@ -1826,7 +1851,7 @@ class OrderController extends Controller
             $order->save();
 
             // Reverse melee diamond stock
-            $meleeEntries = $this->extractStoredMeleeEntries($order);
+            $meleeEntries = $this->orderService->extractStoredMeleeEntries($order);
             if (!empty($meleeEntries)) {
                 $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
                 if (!$returnResult['success']) {
@@ -1943,7 +1968,7 @@ class OrderController extends Controller
             ], 400);
         }
 
-        $result = $this->checkOrderSkuAvailability($sku);
+        $result = $this->orderService->checkOrderSkuAvailability($sku);
         $itemPayload = $result['details'] ?? $result['item'] ?? null;
         $payload = [
             'available' => $result['available'],
@@ -1960,754 +1985,11 @@ class OrderController extends Controller
         return response()->json($payload, $result['available'] ? 200 : 422);
     }
 
-    /**
-     * ✅ CRITICAL HELPER: Check order SKU availability across diamonds and jewellery stock.
-     */
-    private function checkOrderSkuAvailability(string $sku): array
-    {
-        $sku = strtoupper(trim($sku));
 
-        if ($sku === '') {
-            return [
-                'available' => false,
-                'type' => null,
-                'item' => null,
-                'details' => null,
-                'message' => 'SKU is required',
-            ];
-        }
 
-        $diamond = Diamond::where('sku', $sku)->first();
-        if ($diamond) {
-            if ($diamond->is_sold_out === 'Sold') {
-                return [
-                    'available' => false,
-                    'type' => 'diamond',
-                    'item' => $diamond,
-                    'details' => [
-                        'sku' => $diamond->sku,
-                        'display_details' => trim(($diamond->weight ?? '?') . 'ct ' . ($diamond->shape ?? '')),
-                        'carat' => $diamond->weight,
-                        'shape' => $diamond->shape,
-                        'clarity' => $diamond->clarity,
-                        'color' => $diamond->color,
-                        'listing_price' => $diamond->listing_price,
-                        'stock_status' => 'sold',
-                    ],
-                    'message' => 'Diamond "' . $sku . '" is already sold. Please remove it and select a different SKU.',
-                ];
-            }
 
-            return [
-                'available' => true,
-                'type' => 'diamond',
-                'item' => $diamond,
-                'message' => 'Diamond SKU available',
-                'details' => [
-                    'sku' => $diamond->sku,
-                    'display_details' => trim(($diamond->weight ?? '?') . 'ct ' . ($diamond->shape ?? '')),
-                    'carat' => $diamond->weight,
-                    'shape' => $diamond->shape,
-                    'clarity' => $diamond->clarity,
-                    'color' => $diamond->color,
-                    'listing_price' => $diamond->listing_price,
-                ],
-            ];
-        }
 
-        $jewellery = JewelleryStock::where('sku', $sku)->first();
-        if ($jewellery) {
-            if ((int) $jewellery->quantity <= 0 || $jewellery->status === 'out_of_stock') {
-                return [
-                    'available' => false,
-                    'type' => 'jewellery',
-                    'item' => $jewellery,
-                    'details' => [
-                        'sku' => $jewellery->sku,
-                        'display_details' => trim(($jewellery->name ?? 'Jewellery') . ' ' . (!empty($jewellery->type) ? '(' . $jewellery->type . ')' : '')),
-                        'name' => $jewellery->name,
-                        'type' => $jewellery->type,
-                        'quantity' => (int) $jewellery->quantity,
-                        'selling_price' => $jewellery->selling_price,
-                        'stock_status' => 'out_of_stock',
-                    ],
-                    'message' => 'Jewellery SKU "' . $sku . '" is out of stock.',
-                ];
-            }
 
-            return [
-                'available' => true,
-                'type' => 'jewellery',
-                'item' => $jewellery,
-                'message' => 'Jewellery SKU available',
-                'details' => [
-                    'sku' => $jewellery->sku,
-                    'display_details' => trim(($jewellery->name ?? 'Jewellery') . ' ' . (!empty($jewellery->type) ? '(' . $jewellery->type . ')' : '')),
-                    'name' => $jewellery->name,
-                    'type' => $jewellery->type,
-                    'quantity' => (int) $jewellery->quantity,
-                    'selling_price' => $jewellery->selling_price,
-                ],
-            ];
-        }
-
-        return [
-            'available' => false,
-            'type' => null,
-            'item' => null,
-            'details' => null,
-            'message' => 'SKU "' . $sku . '" not found in diamond or jewellery stock.',
-        ];
-    }
-
-    /**
-     * Validate form input for all order types.
-     */
-    private function validateOrder(Request $request): array
-    {
-        $rules = [
-            'order_type' => 'required|in:ready_to_ship,custom_diamond,custom_jewellery',
-            'client_name' => 'required|string|max:191',
-            'client_address' => 'required|string',
-            'client_mobile' => 'nullable|string|max:40',
-            'client_tax_id' => 'nullable|string|max:100',
-            'client_tax_id_type' => 'nullable|in:tax_id,vat_id,ioss_no,uid_vat_no,other',
-            'client_email' => 'required|email|max:191',
-            'diamond_sku' => 'nullable|string|max:191',
-            'diamond_skus' => 'nullable|array',
-            'diamond_skus.*' => 'nullable|string|max:191',
-            'diamond_status' => 'nullable|string|in:r_order_in_process,r_order_shipped,d_diamond_in_discuss,d_diamond_in_making,d_diamond_completed,d_diamond_in_certificate,d_order_shipped,j_diamond_in_progress,j_diamond_completed,j_diamond_in_discuss,j_cad_in_progress,j_cad_done,j_order_completed,j_order_in_qc,j_qc_done,j_order_shipped,j_order_hold',
-            'company_id' => 'required|exists:companies,id',
-            'factory_id' => 'nullable|exists:factories,id',
-            'gross_sell' => 'nullable|numeric|min:0',
-            'payment_status' => 'nullable|in:full,partial,due,custom',
-            'amount_received' => 'nullable|numeric|min:0',
-            'amount_due' => 'nullable|numeric|min:0',
-            'gold_net_weight' => 'nullable|numeric|min:0',
-            'dispatch_date' => 'nullable|date',
-            'note' => 'nullable|in:priority,non_priority',
-            'special_notes' => 'nullable|string|max:2000',
-            'shipping_company_name' => 'nullable|string',
-            'tracking_number' => 'nullable|string',
-            'tracking_url' => 'nullable|url',
-            'images.*' => 'nullable|image|mimes:jpg,jpeg,png,avif,gif,webp|max:10240',
-            'order_pdfs.*' => 'nullable|mimes:pdf|max:10240',
-            'diamond_prices' => 'nullable|array',
-            'diamond_prices.*' => 'nullable|numeric|min:0',
-
-            // Melee Fields
-            'melee_entries_json' => 'nullable|string',
-            'melee_entries' => 'nullable|array',
-            'melee_entries.*.melee_diamond_id' => 'required|exists:melee_diamonds,id',
-            'melee_entries.*.pieces' => 'required|integer|min:1',
-            'melee_entries.*.avg_carat_per_piece' => 'nullable|numeric|min:0',
-            'melee_entries.*.price_per_ct' => 'nullable|numeric|min:0',
-            'allow_negative_melee' => 'nullable|boolean',
-
-            'melee_diamond_id' => 'nullable|exists:melee_diamonds,id',
-            'melee_pieces' => 'nullable|integer|min:1',
-            'melee_carat' => 'nullable|numeric|min:0',
-            'melee_price_per_ct' => 'nullable|numeric|min:0',
-        ];
-
-        switch ($request->order_type) {
-            case 'ready_to_ship':
-                $rules += [
-                    'jewellery_details' => 'nullable|string',
-                    'diamond_details' => 'nullable|string',
-                    'product_other' => 'nullable|string|max:191',
-                    'gold_detail_id' => 'nullable|exists:metal_types,id',
-                    'ring_size_id' => 'nullable|exists:ring_sizes,id',
-                    'setting_type_id' => 'nullable|exists:setting_types,id',
-                    'earring_type_id' => 'nullable|exists:closure_types,id',
-                ];
-                break;
-
-            case 'custom_diamond':
-                $rules += [
-                    'diamond_details' => 'required|string',
-                ];
-                break;
-
-            case 'custom_jewellery':
-                $rules += [
-                    'jewellery_details' => 'required|string',
-                    'diamond_details' => 'nullable|string',
-                    'product_other' => 'nullable|string|max:191',
-                    'gold_detail_id' => 'nullable|exists:metal_types,id',
-                    'ring_size_id' => 'nullable|exists:ring_sizes,id',
-                    'setting_type_id' => 'nullable|exists:setting_types,id',
-                    'earring_type_id' => 'nullable|exists:closure_types,id',
-                ];
-                break;
-        }
-
-        return $request->validate($rules);
-    }
-
-    /**
-     * ✅ CRITICAL HELPER: Extract normalized SKU list from validated payload.
-     */
-    private function extractValidatedSkus(array $validated): array
-    {
-        $rawSkus = [];
-
-        if (!empty($validated['diamond_skus']) && is_array($validated['diamond_skus'])) {
-            $rawSkus = array_merge($rawSkus, $validated['diamond_skus']);
-        }
-
-        if (!empty($validated['diamond_sku'])) {
-            $rawSkus[] = $validated['diamond_sku'];
-        }
-
-        $normalized = array_map(
-            static fn($sku) => strtoupper(trim((string) $sku)),
-            $rawSkus
-        );
-
-        return array_values(array_unique(array_filter($normalized)));
-    }
-
-    /**
-     * ✅ CRITICAL HELPER: Extract normalized SKU list from existing order.
-     */
-    private function extractOrderSkus(Order $order): array
-    {
-        $rawSkus = [];
-
-        if (!empty($order->diamond_skus) && is_array($order->diamond_skus)) {
-            $rawSkus = array_merge($rawSkus, $order->diamond_skus);
-        }
-
-        if (!empty($order->diamond_sku)) {
-            $rawSkus[] = $order->diamond_sku;
-        }
-
-        $normalized = array_map(
-            static fn($sku) => strtoupper(trim((string) $sku)),
-            $rawSkus
-        );
-
-        return array_values(array_unique(array_filter($normalized)));
-    }
-
-    /**
-     * ✅ CRITICAL HELPER: Normalize incoming melee payload.
-     */
-    private function extractValidatedMeleeEntries(array $validated): array
-    {
-        $entries = [];
-
-        if (!empty($validated['melee_entries']) && is_array($validated['melee_entries'])) {
-            $entries = $validated['melee_entries'];
-        } elseif (!empty($validated['melee_entries_json'])) {
-            $decoded = json_decode($validated['melee_entries_json'], true);
-            if (is_array($decoded)) {
-                $entries = $decoded;
-            }
-        } elseif (!empty($validated['melee_diamond_id']) && !empty($validated['melee_pieces'])) {
-            $entries = [
-                [
-                    'melee_diamond_id' => $validated['melee_diamond_id'],
-                    'pieces' => $validated['melee_pieces'],
-                ]
-            ];
-        }
-
-        return array_values(array_filter($entries, function ($entry) {
-            return !empty($entry['melee_diamond_id']) && (int) ($entry['pieces'] ?? 0) > 0;
-        }));
-    }
-
-    /**
-     * Normalize melee entries stored on an order or snapshot, with legacy fallback support.
-     *
-     * @param mixed $entries
-     * @return array<int, array<string, mixed>>
-     */
-    private function normalizeStoredMeleeEntries(
-        $entries,
-        $fallbackDiamondId = null,
-        $fallbackPieces = null,
-        $fallbackCarat = null,
-        $fallbackPricePerCt = null
-    ): array {
-        if (is_string($entries)) {
-            $decoded = json_decode($entries, true);
-            $entries = is_array($decoded) ? $decoded : [];
-        }
-
-        if (empty($entries) && !empty($fallbackDiamondId) && (int) $fallbackPieces > 0) {
-            $entries = [
-                [
-                    'melee_diamond_id' => (int) $fallbackDiamondId,
-                    'pieces' => (int) $fallbackPieces,
-                    'avg_carat_per_piece' => (int) $fallbackPieces > 0
-                        ? round((float) $fallbackCarat / (int) $fallbackPieces, 5)
-                        : 0,
-                    'price_per_ct' => (float) ($fallbackPricePerCt ?? 0),
-                ]
-            ];
-        }
-
-        return array_values(array_filter(array_map(function ($entry) {
-            return [
-                'melee_diamond_id' => (int) ($entry['melee_diamond_id'] ?? 0),
-                'pieces' => (int) ($entry['pieces'] ?? 0),
-                'avg_carat_per_piece' => round((float) ($entry['avg_carat_per_piece'] ?? 0), 5),
-                'price_per_ct' => (float) ($entry['price_per_ct'] ?? 0),
-            ];
-        }, (array) $entries), function ($entry) {
-            return $entry['melee_diamond_id'] > 0 && $entry['pieces'] > 0;
-        }));
-    }
-
-    /**
-     * Normalize melee entries directly from the persisted order record.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function extractStoredMeleeEntries(Order $order): array
-    {
-        return $this->normalizeStoredMeleeEntries(
-            $order->melee_entries,
-            $order->melee_diamond_id,
-            $order->melee_pieces,
-            $order->melee_carat,
-            $order->melee_price_per_ct
-        );
-    }
-
-    /**
-     * Normalize melee entries from an old audit snapshot.
-     *
-     * @param array<string, mixed> $snapshot
-     * @return array<int, array<string, mixed>>
-     */
-    private function extractSnapshotMeleeEntries(array $snapshot): array
-    {
-        return $this->normalizeStoredMeleeEntries(
-            $snapshot['melee_entries'] ?? [],
-            $snapshot['melee_diamond_id'] ?? null,
-            $snapshot['melee_pieces'] ?? null,
-            $snapshot['melee_carat'] ?? null,
-            $snapshot['melee_price_per_ct'] ?? null
-        );
-    }
-
-    /**
-     * ✅ CRITICAL HELPER: Validate requested melee pieces against live stock.
-     */
-    private function validateMeleeStockAvailability(
-        array $incomingEntries,
-        ?Order $existingOrder = null,
-        bool $allowNegative = false
-    ): void {
-        if (empty($incomingEntries)) {
-            return;
-        }
-
-        $requestedByMeleeId = [];
-        $entryIndexesByMeleeId = [];
-
-        foreach ($incomingEntries as $index => $entry) {
-            $meleeId = (int) ($entry['melee_diamond_id'] ?? 0);
-            $pieces = (int) ($entry['pieces'] ?? 0);
-
-            if ($meleeId <= 0 || $pieces <= 0) {
-                continue;
-            }
-
-            $requestedByMeleeId[$meleeId] = ($requestedByMeleeId[$meleeId] ?? 0) + $pieces;
-            $entryIndexesByMeleeId[$meleeId][] = $index;
-        }
-
-        if (empty($requestedByMeleeId)) {
-            return;
-        }
-
-        $reservedByMeleeId = $this->getReservedMeleePiecesFromOrder($existingOrder);
-        $diamonds = MeleeDiamond::with('category')
-            ->whereIn('id', array_keys($requestedByMeleeId))
-            ->get()
-            ->keyBy('id');
-
-        $errors = [];
-
-        foreach ($requestedByMeleeId as $meleeId => $requestedPieces) {
-            $diamond = $diamonds->get($meleeId);
-            $affectedIndexes = $entryIndexesByMeleeId[$meleeId] ?? [];
-
-            if (!$diamond) {
-                foreach ($affectedIndexes as $index) {
-                    $errors["melee_entries.$index.melee_diamond_id"] = 'Selected melee stock lot was not found.';
-                }
-                continue;
-            }
-
-            $allowedPieces = (int) $diamond->available_pieces + (int) ($reservedByMeleeId[$meleeId] ?? 0);
-
-            if (!$allowNegative && $requestedPieces > $allowedPieces) {
-                $label = $this->buildMeleeStockLabel($diamond);
-                $message = "{$label} has only {$allowedPieces} pieces available in stock.";
-
-                foreach ($affectedIndexes as $index) {
-                    $errors["melee_entries.$index.pieces"] = $message;
-                }
-
-                $errors['melee_entries_json'] = $message;
-            }
-        }
-
-        if (!empty($errors)) {
-            throw ValidationException::withMessages($errors);
-        }
-    }
-
-    /**
-     * ✅ CRITICAL HELPER: Get existing order reservation.
-     */
-    private function getReservedMeleePiecesFromOrder(?Order $order): array
-    {
-        if (!$order) {
-            return [];
-        }
-
-        $entries = $this->extractStoredMeleeEntries($order);
-
-        $reserved = [];
-        foreach ($entries as $entry) {
-            $meleeId = (int) ($entry['melee_diamond_id'] ?? 0);
-            $pieces = (int) ($entry['pieces'] ?? 0);
-
-            if ($meleeId <= 0 || $pieces <= 0) {
-                continue;
-            }
-
-            $reserved[$meleeId] = ($reserved[$meleeId] ?? 0) + $pieces;
-        }
-
-        return $reserved;
-    }
-
-    private function orderErrorResponse(Request $request, string $message, int $status = 422)
-    {
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => $message,
-            ], $status);
-        }
-
-        return back()->withInput()->with('error', $message);
-    }
-
-    /**
-     * ✅ CRITICAL HELPER: Build melee stock label.
-     */
-    private function buildMeleeStockLabel(MeleeDiamond $diamond): string
-    {
-        $category = optional($diamond->category)->name ?? 'Melee';
-        $shape = trim((string) $diamond->shape);
-        $size = trim((string) $diamond->size_label);
-
-        return trim("{$category} - {$shape} {$size}");
-    }
-
-    /**
-     * Assign common validated fields to Order model.
-     */
-    private function assignOrderFields(Order $order, array $validated): void
-    {
-        $order->order_type = $validated['order_type'];
-        $order->company_id = $validated['company_id'];
-        $order->factory_id = !empty($validated['factory_id']) ? $validated['factory_id'] : null;
-
-        $order->client_name = $validated['client_name'] ?? '';
-        $order->client_address = $validated['client_address'] ?? '';
-        $order->client_mobile = $validated['client_mobile'] ?? '';
-        $order->client_tax_id = $validated['client_tax_id'] ?? '';
-        $order->client_tax_id_type = $validated['client_tax_id_type'] ?? null;
-        $order->client_email = $validated['client_email'] ?? '';
-        $order->jewellery_details = $validated['jewellery_details'] ?? '';
-        $order->diamond_details = $validated['diamond_details'] ?? '';
-        $order->diamond_sku = $validated['diamond_sku'] ?? '';
-
-        // Handle multiple diamond SKUs
-        if (!empty($validated['diamond_skus'])) {
-            $skus = array_filter(array_unique($validated['diamond_skus']));
-            $order->diamond_skus = $skus;
-            if (empty($order->diamond_sku) && !empty($skus)) {
-                $order->diamond_sku = $skus[0];
-            }
-        } elseif (!empty($validated['diamond_sku'])) {
-            $order->diamond_skus = [$validated['diamond_sku']];
-        }
-
-        if (!empty($validated['diamond_prices'])) {
-            $order->diamond_prices = $validated['diamond_prices'];
-        }
-
-        $order->product_other = $validated['product_other'] ?? '';
-        $order->special_notes = $validated['special_notes'] ?? '';
-        $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
-        $order->tracking_number = $validated['tracking_number'] ?? '';
-
-        $trackingUrl = $validated['tracking_url'] ?? '';
-        if (empty($trackingUrl) && !empty($order->tracking_number) && !empty($order->shipping_company_name)) {
-            $trackingService = new ShippingTrackingService();
-            $trackingUrl = $trackingService->generateTrackingUrl($order->shipping_company_name, $order->tracking_number);
-        }
-        $order->tracking_url = $trackingUrl;
-
-        $order->gold_detail_id = !empty($validated['gold_detail_id']) ? $validated['gold_detail_id'] : null;
-        $order->ring_size_id = !empty($validated['ring_size_id']) ? $validated['ring_size_id'] : null;
-        $order->setting_type_id = !empty($validated['setting_type_id']) ? $validated['setting_type_id'] : null;
-        $order->earring_type_id = !empty($validated['earring_type_id']) ? $validated['earring_type_id'] : null;
-
-        // Melee Fields
-        $meleeEntries = [];
-        if (!empty($validated['melee_entries'])) {
-            $meleeEntries = $validated['melee_entries'];
-        } elseif (!empty($validated['melee_entries_json'])) {
-            $decoded = json_decode($validated['melee_entries_json'], true);
-            if (is_array($decoded)) {
-                $meleeEntries = $decoded;
-            }
-        }
-
-        $order->melee_entries = !empty($meleeEntries) ? $meleeEntries : null;
-
-        if (!empty($meleeEntries)) {
-            $first = $meleeEntries[0];
-            $totalPieces = array_sum(array_column($meleeEntries, 'pieces'));
-            $totalCarat = 0;
-            foreach ($meleeEntries as $entry) {
-                $totalCarat += ($entry['pieces'] ?? 0) * ($entry['avg_carat_per_piece'] ?? 0);
-            }
-            $order->melee_diamond_id = $first['melee_diamond_id'] ?? null;
-            $order->melee_pieces = $totalPieces;
-            $order->melee_carat = round($totalCarat, 3);
-            $order->melee_price_per_ct = $first['price_per_ct'] ?? null;
-        } else {
-            $order->melee_diamond_id = !empty($validated['melee_diamond_id']) ? $validated['melee_diamond_id'] : null;
-            $order->melee_pieces = !empty($validated['melee_pieces']) ? $validated['melee_pieces'] : null;
-            $order->melee_carat = !empty($validated['melee_carat']) ? $validated['melee_carat'] : null;
-            $order->melee_price_per_ct = !empty($validated['melee_price_per_ct']) ? $validated['melee_price_per_ct'] : null;
-        }
-
-        if ($order->melee_carat && $order->melee_price_per_ct) {
-            $order->melee_total_value = $order->melee_carat * $order->melee_price_per_ct;
-        } else {
-            $order->melee_total_value = 0;
-        }
-
-        $order->diamond_status = !empty($validated['diamond_status']) ? $validated['diamond_status'] : null;
-        $order->note = !empty($validated['note']) ? $validated['note'] : null;
-
-        $order->gross_sell = $validated['gross_sell'] ?? 0;
-
-        $admin = Auth::guard('admin')->user();
-        if (array_key_exists('gold_net_weight', $validated)) {
-            if ($admin->is_super || $admin->hasPermission('orders.add_gold_weight')) {
-                $order->gold_net_weight = $validated['gold_net_weight'];
-            }
-        }
-
-        $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
-    }
-
-    /**
-     * Normalize payment fields into a consistent summary.
-     */
-    private function normalizePaymentSummary(array $validated, float $grossSell): array
-    {
-        $status = $validated['payment_status'] ?? null;
-        $received = array_key_exists('amount_received', $validated) && $validated['amount_received'] !== ''
-            ? round((float) $validated['amount_received'], 2)
-            : null;
-        $due = array_key_exists('amount_due', $validated) && $validated['amount_due'] !== ''
-            ? round((float) $validated['amount_due'], 2)
-            : null;
-
-        if ($grossSell <= 0) {
-            return [
-                'payment_status' => 'full',
-                'amount_received' => 0.0,
-                'amount_due' => 0.0,
-            ];
-        }
-
-        if ($status === null) {
-            if ($received === null && $due === null) {
-                $status = 'full';
-            } elseif (($received ?? 0) <= 0 && ($due ?? 0) > 0) {
-                $status = 'due';
-            } elseif (($received ?? 0) > 0 && ($received ?? 0) < $grossSell) {
-                $status = 'partial';
-            } else {
-                $status = 'full';
-            }
-        }
-
-        if ($status === 'full') {
-            $received = $grossSell;
-            $due = 0.0;
-        } elseif ($status === 'due') {
-            $received = 0.0;
-            $due = $due !== null ? max(0, $due) : $grossSell;
-        } elseif ($status === 'custom') {
-            if ($received === null) {
-                throw ValidationException::withMessages([
-                    'amount_received' => 'Amount received is required when payment status is custom.',
-                ]);
-            }
-
-            $received = max(0, min($received, $grossSell));
-            $due = round(max($grossSell - $received, 0), 2);
-            $status = $received <= 0
-                ? 'due'
-                : ($due > 0 ? 'partial' : 'full');
-        } else {
-            if ($received === null) {
-                throw ValidationException::withMessages([
-                    'amount_received' => 'Amount received is required when payment status is partial.',
-                ]);
-            }
-
-            if ($received <= 0 || $received >= $grossSell) {
-                throw ValidationException::withMessages([
-                    'amount_received' => 'Partial payment must be greater than 0 and less than the gross sell amount.',
-                ]);
-            }
-
-            $received = max(0, min($received, $grossSell));
-            $computedDue = round(max($grossSell - $received, 0), 2);
-            if ($due !== null && abs($due - $computedDue) > 0.01) {
-                throw ValidationException::withMessages([
-                    'amount_due' => 'Amount due must equal gross sell minus amount received.',
-                ]);
-            }
-            $due = $computedDue;
-        }
-
-        return [
-            'payment_status' => $status,
-            'amount_received' => round((float) $received, 2),
-            'amount_due' => round((float) $due, 2),
-        ];
-    }
-
-    /**
-     * Upload files to Cloudinary using direct SDK.
-     */
-    private function uploadToCloudinary(Request $request, string $field, string $folder, int $maxFiles, bool $isPdf = false): array
-    {
-        $uploadedFiles = [];
-
-        if (!$request->hasFile($field)) {
-            return $uploadedFiles;
-        }
-
-        $files = $request->file($field);
-
-        foreach ($files as $index => $file) {
-            if ($index >= $maxFiles) {
-                Log::warning("Max files limit reached for {$field}");
-                break;
-            }
-
-            try {
-                if (!$file->isValid()) {
-                    Log::error("Invalid file upload: {$file->getClientOriginalName()}");
-                    continue;
-                }
-
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $timestamp = time();
-                $uniqueId = uniqid();
-
-                $publicId = "{$folder}/{$timestamp}_{$uniqueId}";
-
-                $uploadOptions = [
-                    'public_id' => $publicId,
-                    'folder' => $folder,
-                ];
-
-                Log::info("Uploading to Cloudinary", [
-                    'file' => $file->getClientOriginalName(),
-                    'type' => $isPdf ? 'PDF' : 'Image',
-                    'size' => $file->getSize()
-                ]);
-
-                $uploadApi = $this->cloudinary->uploadApi();
-
-                if ($isPdf) {
-                    $uploadOptions['resource_type'] = 'raw';
-                    $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
-                } else {
-                    $uploadOptions['transformation'] = [
-                        'quality' => 'auto:good',
-                        'fetch_format' => 'auto'
-                    ];
-                    $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
-                }
-
-                $fileInfo = [
-                    'url' => $result['secure_url'],
-                    'public_id' => $result['public_id'],
-                    'name' => $originalName . '.' . $extension,
-                    'format' => $extension,
-                    'size' => $file->getSize(),
-                    'resource_type' => $isPdf ? 'raw' : 'image',
-                    'uploaded_at' => now()->toDateTimeString(),
-                ];
-
-                $uploadedFiles[] = $fileInfo;
-
-                Log::info("Successfully uploaded to Cloudinary", [
-                    'file' => $originalName,
-                    'url' => $fileInfo['url'],
-                    'public_id' => $result['public_id']
-                ]);
-
-            } catch (\Exception $e) {
-                Log::error('Cloudinary upload failed', [
-                    'file' => $file->getClientOriginalName(),
-                    'error' => $e->getMessage(),
-                    'line' => $e->getLine()
-                ]);
-                continue;
-            }
-        }
-
-        return $uploadedFiles;
-    }
-
-    /**
-     * Delete single file from Cloudinary
-     */
-    private function deleteFromCloudinary(string $publicId, string $resourceType = 'image'): bool
-    {
-        try {
-            $uploadApi = $this->cloudinary->uploadApi();
-            $uploadApi->destroy($publicId, ['resource_type' => $resourceType]);
-
-            Log::info("File deleted from Cloudinary", [
-                'public_id' => $publicId,
-                'resource_type' => $resourceType
-            ]);
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to delete from Cloudinary', [
-                'public_id' => $publicId,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
 
     /**
      * Dynamically load form partial based on order type.

@@ -2,32 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreExpenseRequest;
 use App\Models\Expense;
 use App\Models\Party;
+use App\Services\CloudinaryUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Cloudinary\Cloudinary;
-use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Support\Facades\Log;
 
 class ExpenseController extends Controller
 {
-    private $cloudinary;
+    private CloudinaryUploadService $uploadService;
 
-    public function __construct()
+    public function __construct(CloudinaryUploadService $uploadService)
     {
-        // Initialize Cloudinary with direct configuration matching OrderController
-        $this->cloudinary = new Cloudinary([
-            'cloud' => [
-                'cloud_name' => config('cloudinary.cloud_name'),
-                'api_key' => config('cloudinary.api_key'),
-                'api_secret' => config('cloudinary.api_secret'),
-            ],
-            'url' => [
-                'secure' => true
-            ]
-        ]);
+        $this->uploadService = $uploadService;
     }
     /**
      * Display a listing of the expenses.
@@ -130,28 +120,16 @@ class ExpenseController extends Controller
     /**
      * Store a newly created expense in storage.
      */
-    public function store(Request $request)
+    public function store(StoreExpenseRequest $request)
     {
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'title' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
-            'transaction_type' => 'required|in:in,out',
-            'category' => 'nullable|string|max:100',
-            'payment_method' => 'required|in:cash,upi,bank_transfer,cheque',
-            'party_id' => 'nullable|exists:parties,id',
-            'paid_to_received_from' => 'required|string|max:255',
-            'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string',
-            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
-        ]);
+        $validated = $request->validated();
 
         $validated['admin_id'] = Auth::guard('admin')->id();
 
         // Handle invoice image upload to Cloudinary using direct SDK
         if ($request->hasFile('invoice_image')) {
             try {
-                $uploadedFiles = $this->uploadToCloudinary($request, 'invoice_image', 'invoices/expenses', 1);
+                $uploadedFiles = $this->uploadService->uploadFromRequest($request, 'invoice_image', 'invoices/expenses', 1);
                 if (!empty($uploadedFiles)) {
                     $validated['invoice_image'] = $uploadedFiles[0];
                 } else {
@@ -202,27 +180,14 @@ class ExpenseController extends Controller
     /**
      * Update the specified expense in storage.
      */
-    public function update(Request $request, Expense $expense)
+    public function update(\App\Http\Requests\UpdateExpenseRequest $request, Expense $expense)
     {
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'title' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
-            'transaction_type' => 'required|in:in,out',
-            'category' => 'nullable|string|max:100',
-            'payment_method' => 'required|in:cash,upi,bank_transfer,cheque',
-            'party_id' => 'nullable|exists:parties,id',
-            'paid_to_received_from' => 'required|string|max:255',
-            'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string',
-            'invoice_image' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
-            'remove_invoice_image' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Handle invoice image
         if ($request->input('remove_invoice_image') && $expense->invoice_image_public_id) {
             try {
-                $this->deleteFromCloudinary($expense->invoice_image_public_id);
+                $this->uploadService->delete($expense->invoice_image_public_id);
             } catch (\Exception $e) {
                 Log::error('Cloudinary delete failed: ' . $e->getMessage());
             }
@@ -231,14 +196,14 @@ class ExpenseController extends Controller
             // Delete old image if exists
             if ($expense->invoice_image_public_id) {
                 try {
-                    $this->deleteFromCloudinary($expense->invoice_image_public_id);
+                    $this->uploadService->delete($expense->invoice_image_public_id);
                 } catch (\Exception $e) {
                     Log::error('Cloudinary delete failed: ' . $e->getMessage());
                 }
             }
 
             try {
-                $uploadedFiles = $this->uploadToCloudinary($request, 'invoice_image', 'invoices/expenses', 1);
+                $uploadedFiles = $this->uploadService->uploadFromRequest($request, 'invoice_image', 'invoices/expenses', 1);
                 if (!empty($uploadedFiles)) {
                     $validated['invoice_image'] = $uploadedFiles[0];
                 } else {
@@ -488,99 +453,5 @@ class ExpenseController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
-    }
-
-    /**
-     * Upload files to Cloudinary (matching OrderController pattern).
-     */
-    private function uploadToCloudinary(Request $request, string $field, string $folder, int $maxFiles = 1): array
-    {
-        $uploadedFiles = [];
-
-        if (!$request->hasFile($field)) {
-            return $uploadedFiles;
-        }
-
-        $files = $request->file($field);
-
-        // Handle both single and multiple file inputs
-        if (!is_array($files)) {
-            $files = [$files];
-        }
-
-        foreach ($files as $index => $file) {
-            if ($index >= $maxFiles) {
-                break;
-            }
-
-            try {
-                if (!$file->isValid()) {
-                    continue;
-                }
-
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $isPdf = strtolower($extension) === 'pdf';
-                $timestamp = time();
-                $uniqueId = uniqid();
-
-                $publicId = "{$folder}/{$timestamp}_{$uniqueId}";
-                $uploadOptions = [
-                    'public_id' => $publicId,
-                    'folder' => $folder,
-                ];
-
-                $uploadApi = $this->cloudinary->uploadApi();
-
-                if ($isPdf) {
-                    $uploadOptions['resource_type'] = 'raw';
-                    $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
-                } else {
-                    $uploadOptions['transformation'] = [
-                        'quality' => 'auto:good',
-                        'fetch_format' => 'auto'
-                    ];
-                    $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
-                }
-
-                $uploadedFiles[] = [
-                    'url' => $result['secure_url'],
-                    'public_id' => $result['public_id'],
-                    'name' => $originalName . '.' . $extension,
-                    'original_name' => $originalName . '.' . $extension, // For backward compatibility
-                    'format' => $extension,
-                    'size' => $file->getSize(),
-                    'resource_type' => $isPdf ? 'raw' : 'image',
-                    'uploaded_at' => now()->toDateTimeString(),
-                ];
-
-            } catch (\Exception $e) {
-                Log::error('Cloudinary direct upload failed in ExpenseController', [
-                    'file' => $file->getClientOriginalName(),
-                    'error' => $e->getMessage()
-                ]);
-                continue;
-            }
-        }
-
-        return $uploadedFiles;
-    }
-
-    /**
-     * Delete single file from Cloudinary (matching OrderController pattern).
-     */
-    private function deleteFromCloudinary(string $publicId, string $resourceType = 'image'): bool
-    {
-        try {
-            $uploadApi = $this->cloudinary->uploadApi();
-            $uploadApi->destroy($publicId, ['resource_type' => $resourceType]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Cloudinary delete failed in ExpenseController', [
-                'public_id' => $publicId,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
     }
 }

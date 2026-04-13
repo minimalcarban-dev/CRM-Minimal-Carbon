@@ -1,10 +1,10 @@
 {
   "node_modules/pdfjs-dist/build/pdf.worker.mjs": {
-    "file": "assets/pdf.worker-CliDBb4N.mjs",
+    "file": "assets/pdf.worker-CSHkrWs3.mjs",
     "src": "node_modules/pdfjs-dist/build/pdf.worker.mjs"
   },
   "resources/css/app.css": {
-    "file": "assets/app-C8MgtHge.css",
+    "file": "assets/app-DyBWpalE.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -13,15 +13,15 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-C4p_0OeY.js",
+    "file": "assets/app-De25OR8c.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app-De_Ek7wy.css"
+      "assets/app-74MzzL2c.css"
     ],
     "assets": [
-      "assets/pdf.worker-CliDBb4N.mjs"
+      "assets/pdf.worker-CSHkrWs3.mjs"
     ]
   }
 }

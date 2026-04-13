@@ -41,16 +41,15 @@ class CompanySalesReportService
     {
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
 
-        $result = Order::whereDate('created_at', Carbon::today())
+        $query = Order::whereDate('created_at', Carbon::today())
             ->where(function ($q) use ($cancelledStatuses) {
                 $q->whereNotIn('diamond_status', $cancelledStatuses)
                     ->orWhereNull('diamond_status');
-            })
-            ->get();
+            });
 
         return [
-            'order_count' => (int) $result->count(),
-            'total_revenue' => (float) $result->sum('amount_received_total'),
+            'order_count' => (int) $query->count(),
+            'total_revenue' => (float) $query->sum('amount_received'),
         ];
     }
 
@@ -72,21 +71,23 @@ class CompanySalesReportService
 
         // If today is within the date range, get today's live data from orders table
         if ($today->between($from, $to)) {
-            $todayOrders = Order::where('company_id', $companyId)
+            $todayOrdersQuery = Order::where('company_id', $companyId)
                 ->whereDate('created_at', $today)
                 ->where(function ($q) use ($cancelledStatuses) {
                     $q->whereNotIn('diamond_status', $cancelledStatuses)
                         ->orWhereNull('diamond_status');
-                })
-                ->get();
+                });
 
-            if ($todayOrders->count() > 0) {
+            $todayOrders = $todayOrdersQuery->get();
+
+            if ($todayOrders->isNotEmpty()) {
                 $orderCount = $todayOrders->count();
-                $totalRevenue = $todayOrders->sum('amount_received_total');
-                $breakdown = $todayOrders->groupBy('order_type')
+                $totalRevenue = (float) $todayOrders->sum('amount_received');
+
+                $breakdown = $todayOrders
+                    ->groupBy('order_type')
                     ->map(fn($group) => $group->count())
                     ->toArray();
-
                 // Create a virtual daily sales record for today
                 $todayRecord = new CompanyDailySales([
                     'company_id' => $companyId,
@@ -133,17 +134,20 @@ class CompanySalesReportService
         // If viewing current year, add live data for current month
         if ($year == $currentYear) {
             // Get today's live sales
-            $todayOrders = Order::where('company_id', $companyId)
+            $todayOrdersQuery = Order::where('company_id', $companyId)
                 ->whereDate('created_at', $today)
                 ->where(function ($q) use ($cancelledStatuses) {
                     $q->whereNotIn('diamond_status', $cancelledStatuses)
                         ->orWhereNull('diamond_status');
-                })
-                ->get();
+                });
 
-            if ($todayOrders->count() > 0) {
-                $monthlySales[$currentMonth] = ($monthlySales[$currentMonth] ?? 0) + $todayOrders->sum('amount_received_total');
-                $monthlyOrders[$currentMonth] = ($monthlyOrders[$currentMonth] ?? 0) + $todayOrders->count();
+            $todayStats = $todayOrdersQuery
+                ->selectRaw('COUNT(*) as order_count, COALESCE(SUM(amount_received), 0) as total_revenue')
+                ->first();
+
+            if ($todayStats->order_count > 0) {
+                $monthlySales[$currentMonth] = ($monthlySales[$currentMonth] ?? 0) + $todayStats->total_revenue;
+                $monthlyOrders[$currentMonth] = ($monthlyOrders[$currentMonth] ?? 0) + $todayStats->order_count;
             }
         }
 
@@ -235,7 +239,7 @@ class CompanySalesReportService
         $archived = [];
         foreach ($companySales as $companyId => $orders) {
             $orderCount = $orders->count();
-            $totalRevenue = $orders->sum('amount_received_total');
+            $totalRevenue = $orders->sum('amount_received'); // Sum column on collection
             $breakdown = $orders->groupBy('order_type')->map(fn($group) => $group->count())->toArray();
 
             CompanyDailySales::updateOrCreate(
