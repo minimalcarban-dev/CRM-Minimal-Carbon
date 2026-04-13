@@ -166,11 +166,11 @@ class OrderController extends Controller
             ->where(function ($q) use ($cancelledStatuses) {
                 $q->whereNotIn('diamond_status', $cancelledStatuses)->orWhereNull('diamond_status');
             });
-        
+
         if ($request->filled('company_id')) {
             $todaysSalesQuery->where('company_id', $request->company_id);
         }
-        
+
         $todaysSales = $todaysSalesQuery->get()->sum('amount_received_total');
         $todaysOrderCount = $todaysSalesQuery->count();
 
@@ -245,6 +245,14 @@ class OrderController extends Controller
 
         if ($request->filled('diamond_status')) {
             $query->where('diamond_status', $request->diamond_status);
+        }
+
+        if ($request->filled('priority_status')) {
+            $query->where('note', $request->priority_status);
+        }
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
         }
 
         // Date range filter
