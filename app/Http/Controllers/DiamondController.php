@@ -216,7 +216,7 @@ class DiamondController extends Controller
                 abort(403, 'Unauthorized access to this diamond.');
             }
         }
-        
+
         return view('diamonds.show', compact('diamond'));
     }
 

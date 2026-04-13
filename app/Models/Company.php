@@ -99,10 +99,13 @@ class Company extends Model
      */
     public function getTodaysSalesAttribute(): float
     {
-        $today = Carbon::today();
-        return (float) $this->getAllOrdersForSales()->filter(function ($order) use ($today) {
-            return Carbon::parse($order->created_at)->startOfDay()->eq($today);
-        })->sum('amount_received_total');
+        return (float) $this->orders()
+            ->whereDate('created_at', Carbon::today())
+            ->where(function ($q) {
+                $q->whereNotIn('diamond_status', ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'])
+                    ->orWhereNull('diamond_status');
+            })
+            ->sum('amount_received');
     }
 
     /**
@@ -123,14 +126,16 @@ class Company extends Model
         $now = Carbon::now();
         $startOfMonth = $now->copy()->startOfMonth();
 
-        $monthOrders = $this->getAllOrdersForSales()->filter(function ($order) use ($startOfMonth, $now) {
-            $createdDate = Carbon::parse($order->created_at);
-            return $createdDate->between($startOfMonth, $now);
-        });
+        $query = $this->orders()
+            ->whereBetween('created_at', [$startOfMonth, $now])
+            ->where(function ($q) {
+                $q->whereNotIn('diamond_status', ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'])
+                    ->orWhereNull('diamond_status');
+            });
 
         return [
-            'order_count' => $monthOrders->count(),
-            'total_revenue' => $monthOrders->sum('amount_received_total'),
+            'order_count' => (int) $query->count(),
+            'total_revenue' => (float) $query->sum('amount_received'),
         ];
     }
 

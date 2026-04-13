@@ -12,6 +12,13 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->mock(\App\Services\CloudinaryUploadService::class, function ($mock) {
+        $mock->shouldReceive('uploadFromRequest')->andReturn([]);
+        $mock->shouldReceive('deleteFile')->andReturn(true);
+    });
+});
+
 function makeOrderPaymentAdmin(): Admin
 {
     $admin = Admin::create([

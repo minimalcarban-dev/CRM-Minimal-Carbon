@@ -10,7 +10,7 @@ use App\Services\CompanySalesReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Cloudinary\Cloudinary;
+use App\Services\CloudinaryUploadService;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -19,26 +19,11 @@ use Barryvdh\DomPDF\Facade\Pdf;
  */
 class CompanyController extends BaseResourceController
 {
-    private $cloudinary = null;
+    private CloudinaryUploadService $uploadService;
 
-    /**
-     * Get Cloudinary instance (lazy initialization)
-     */
-    private function getCloudinary(): Cloudinary
+    public function __construct(CloudinaryUploadService $uploadService)
     {
-        if ($this->cloudinary === null) {
-            $this->cloudinary = new Cloudinary([
-                'cloud' => [
-                    'cloud_name' => config('cloudinary.cloud_name'),
-                    'api_key' => config('cloudinary.api_key'),
-                    'api_secret' => config('cloudinary.api_secret'),
-                ],
-                'url' => [
-                    'secure' => true
-                ]
-            ]);
-        }
-        return $this->cloudinary;
+        $this->uploadService = $uploadService;
     }
 
     protected function getModelClass(): string
@@ -130,9 +115,9 @@ class CompanyController extends BaseResourceController
     {
         // Handle logo upload to Cloudinary
         if ($request->hasFile('logo')) {
-            $logoUrl = $this->uploadLogoToCloudinary($request->file('logo'));
-            if ($logoUrl) {
-                $validated['logo'] = $logoUrl;
+            $uploadedFiles = $this->uploadService->uploadFromRequest($request, 'logo', 'companies/logos', 1);
+            if (!empty($uploadedFiles)) {
+                $validated['logo'] = $uploadedFiles[0]['url'];
             }
         }
 
@@ -148,87 +133,17 @@ class CompanyController extends BaseResourceController
         if ($request->hasFile('logo')) {
             // Delete old logo from Cloudinary if exists
             if ($item->logo && str_contains($item->logo, 'cloudinary.com')) {
-                $this->deleteLogoFromCloudinary($item->logo);
+                $this->uploadService->deleteByUrl($item->logo);
             }
 
             // Upload new logo
-            $logoUrl = $this->uploadLogoToCloudinary($request->file('logo'));
-            if ($logoUrl) {
-                $validated['logo'] = $logoUrl;
+            $uploadedFiles = $this->uploadService->uploadFromRequest($request, 'logo', 'companies/logos', 1);
+            if (!empty($uploadedFiles)) {
+                $validated['logo'] = $uploadedFiles[0]['url'];
             }
         }
 
         return parent::prepareDataForUpdate($validated, $request, $item);
-    }
-
-    /**
-     * Upload logo to Cloudinary
-     */
-    private function uploadLogoToCloudinary($file): ?string
-    {
-        try {
-            $timestamp = time();
-            $uniqueId = uniqid();
-            $publicId = "companies/logos/{$timestamp}_{$uniqueId}";
-
-            $uploadOptions = [
-                'public_id' => $publicId,
-                'folder' => 'companies/logos',
-                'transformation' => [
-                    'quality' => 'auto:good',
-                    'fetch_format' => 'auto'
-                ]
-            ];
-
-            Log::info("Uploading company logo to Cloudinary", [
-                'file' => $file->getClientOriginalName(),
-                'size' => $file->getSize()
-            ]);
-
-            $uploadApi = $this->getCloudinary()->uploadApi();
-            $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
-
-            Log::info("Successfully uploaded company logo to Cloudinary", [
-                'url' => $result['secure_url'],
-                'public_id' => $result['public_id']
-            ]);
-
-            return $result['secure_url'];
-
-        } catch (\Exception $e) {
-            Log::error('Cloudinary logo upload failed', [
-                'file' => $file->getClientOriginalName(),
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Delete logo from Cloudinary
-     */
-    private function deleteLogoFromCloudinary(string $url): bool
-    {
-        try {
-            // Extract public_id from URL
-            // URL format: https://res.cloudinary.com/cloud_name/image/upload/v123/companies/logos/xxx.jpg
-            $pattern = '/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/';
-            if (preg_match($pattern, $url, $matches)) {
-                $publicId = $matches[1];
-
-                $uploadApi = $this->getCloudinary()->uploadApi();
-                $uploadApi->destroy($publicId, ['resource_type' => 'image']);
-
-                Log::info('Deleted company logo from Cloudinary', ['public_id' => $publicId]);
-                return true;
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to delete company logo from Cloudinary', [
-                'url' => $url,
-                'error' => $e->getMessage()
-            ]);
-        }
-        return false;
     }
 
     /**
