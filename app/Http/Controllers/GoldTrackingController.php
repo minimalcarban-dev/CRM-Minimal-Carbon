@@ -146,7 +146,10 @@ class GoldTrackingController extends Controller
         // Sort: by date descending, then by priority (purchases first), then by created_at descending
         $transactions = $transactions->sort(function ($a, $b) {
             // First compare dates (descending)
-            $dateCompare = $b['date']->timestamp - $a['date']->timestamp;
+            $aTime = $a['date'] instanceof \Carbon\Carbon ? $a['date']->timestamp : (is_string($a['date']) ? strtotime($a['date']) : 0);
+            $bTime = $b['date'] instanceof \Carbon\Carbon ? $b['date']->timestamp : (is_string($b['date']) ? strtotime($b['date']) : 0);
+            $dateCompare = $bTime - $aTime;
+            
             if ($dateCompare !== 0) {
                 return $dateCompare;
             }
@@ -155,7 +158,9 @@ class GoldTrackingController extends Controller
                 return $a['sort_priority'] - $b['sort_priority'];
             }
             // Same type: sort by created_at descending
-            return $b['created_at']->timestamp - $a['created_at']->timestamp;
+            $aCreatedAt = $a['created_at'] instanceof \Carbon\Carbon ? $a['created_at']->timestamp : (is_string($a['created_at']) ? strtotime($a['created_at']) : 0);
+            $bCreatedAt = $b['created_at'] instanceof \Carbon\Carbon ? $b['created_at']->timestamp : (is_string($b['created_at']) ? strtotime($b['created_at']) : 0);
+            return $bCreatedAt - $aCreatedAt;
         })->values();
 
         // Stats
@@ -165,6 +170,14 @@ class GoldTrackingController extends Controller
         $thisMonth = GoldPurchase::getThisMonthPurchases();
         $liveRateResponse = $this->goldRateService->getRateForDate(now()->toDateString());
         $liveRatePerGram = (float) ($liveRateResponse['rate_inr_per_gram'] ?? 0);
+
+        if ($liveRatePerGram <= 0) {
+            $latestSnapshot = GoldRateSnapshot::query()->latest('rate_date')->first();
+            if ($latestSnapshot) {
+                $liveRatePerGram = (float) $latestSnapshot->inr_per_gram;
+            }
+        }
+
         $totalGold = $ownerStock + $inFactories;
         $totalValue = round($totalGold * $liveRatePerGram, 2);
 
