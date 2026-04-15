@@ -56,30 +56,13 @@ class JewelleryCalculatorController extends Controller
             });
 
             // --- 2. Gold Rate via GoldRateService (Navkar INR -> USD conversion) ---
-            $goldUsdPerGram = Cache::remember('gold_rate_usd_gram_v5', self::GOLD_RATE_CACHE_SECONDS, function () use ($usdRate) {
+            $goldUsdPerGram = Cache::remember('gold_rate_usd_gram_v6', self::GOLD_RATE_CACHE_SECONDS, function () use ($usdRate) {
                 $todayRate = $this->goldRateService->getRateForDate(now()->toDateString());
                 if (($todayRate['is_available'] ?? false) && ($todayRate['rate_inr_per_gram'] ?? 0) > 0) {
                     $perGram = (float) $todayRate['rate_inr_per_gram'] * $usdRate;
-                    Log::info('Gold via GoldRateService: ₹' . $todayRate['rate_inr_per_gram'] . '/g = $' . round($perGram, 2));
+                    $source = $todayRate['source'] ?? 'unknown';
+                    Log::info("Gold via GoldRateService ({$source}): ₹" . $todayRate['rate_inr_per_gram'] . '/g = $' . round($perGram, 2));
                     return $perGram;
-                }
-
-                // ── FALLBACK: Coinbase + India premium 8.5% ────────────────────
-                try {
-                    $r = Http::withoutVerifying()->timeout(8)
-                        ->get('https://api.coinbase.com/v2/exchange-rates?currency=USD');
-
-                    if ($r->successful()) {
-                        $xauPerUsd = floatval($r->json('data.rates.XAU') ?? 0);
-                        if ($xauPerUsd > 0) {
-                            $intlPerGram = (1 / $xauPerUsd) / 31.1035;
-                            $indianPerGram = $intlPerGram * 1.085;
-                            Log::info('Gold via Coinbase fallback: $' . round($indianPerGram, 2));
-                            return $indianPerGram;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    Log::warning('Coinbase fallback failed: ' . $e->getMessage());
                 }
 
                 return 0;

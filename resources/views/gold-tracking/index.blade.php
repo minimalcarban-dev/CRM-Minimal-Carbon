@@ -69,6 +69,9 @@
                     <small style="color:#64748b;">
                         @if(($liveRateResponse['is_available'] ?? false))
                             Rate: &#8377;{{ number_format((float) ($liveRateResponse['rate_inr_per_gram'] ?? 0), 2) }}/gm
+                            @if(!($liveRateResponse['is_live'] ?? false) && isset($liveRateResponse['message']))
+                                <br><span class="text-warning"><i class="bi bi-exclamation-triangle"></i> {{ $liveRateResponse['message'] }}</span>
+                            @endif
                         @else
                             Live rate unavailable
                         @endif

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class GoldRateService
 {
+    private const CUSTOM_GOLD_API_URL = 'https://custom-gold-api.onrender.com/gold';
     private const NAVKAR_PROXY_URL = 'https://navkar-gold-proxy.minimalcarbonstore.workers.dev';
     private const NAVKAR_PROXY_KEY = 'navkar-proxy-xK9mP2024';
     private const LIVE_CACHE_SECONDS = 60;
@@ -70,14 +71,16 @@ class GoldRateService
             }
 
             $snapshot = GoldRateSnapshot::query()
-                ->whereDate('rate_date', $targetDate)
+                ->latest('rate_date')
+                ->latest('fetched_at')
                 ->first();
 
             if ($snapshot) {
+                $timeAgo = $snapshot->fetched_at ? $snapshot->fetched_at->diffForHumans() : 'previously';
                 return $this->snapshotPayload(
                     $snapshot,
                     false,
-                    'Live rate unavailable, using last stored snapshot for today.'
+                    "Showing last known rate ($timeAgo). Live updates currently unavailable."
                 );
             }
 
@@ -118,42 +121,76 @@ class GoldRateService
      */
     public function fetchLiveInrRate(): array
     {
-        return Cache::remember('gold_rate_live_inr_v1', self::LIVE_CACHE_SECONDS, function () {
+        return Cache::remember('gold_rate_live_inr_v3', self::LIVE_CACHE_SECONDS, function () {
+
+            // 1. Primary: Custom API (Solid JSON)
+            try {
+                $response = Http::timeout(10)->get(self::CUSTOM_GOLD_API_URL);
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (($data['status'] ?? '') === 'ok' && isset($data['prices']['24k'])) {
+                        return [
+                            'success' => true,
+                            'rate_inr_per_10g' => round($data['prices']['24k']['per_10g'], 2),
+                            'rate_inr_per_gram' => round($data['prices']['24k']['per_gram'], 2),
+                            'source' => 'custom_api',
+                        ];
+                    }
+                }
+                Log::warning('GoldRateService: Custom API failed or invalid response.');
+            } catch (\Throwable $e) {   
+                Log::warning('GoldRateService: Custom API exception: ' . $e->getMessage());
+            }
+
+            // 2. Secondary Backup: Navkar Proxy (Scraping)
             try {
                 $response = Http::withoutVerifying()
                     ->timeout(10)
                     ->withHeaders(['X-Proxy-Key' => self::NAVKAR_PROXY_KEY])
                     ->get(self::NAVKAR_PROXY_URL);
-
-                if (!$response->successful()) {
-                    return [
-                        'success' => false,
-                        'message' => 'Navkar proxy request failed.',
-                    ];
+                if ($response->successful()) {
+                    $inrPer10g = $this->extractInrPer10g($response->body());
+                    if ($inrPer10g > 0) {
+                        return [
+                            'success' => true,
+                            'rate_inr_per_10g' => round($inrPer10g, 2),
+                            'rate_inr_per_gram' => round($inrPer10g / 10, 2),
+                            'source' => 'navkar_fallback',
+                        ];
+                    }
                 }
-
-                $inrPer10g = $this->extractInrPer10g($response->body());
-                if ($inrPer10g <= 0) {
-                    return [
-                        'success' => false,
-                        'message' => 'Unable to parse live Navkar gold rate.',
-                    ];
-                }
-
-                return [
-                    'success' => true,
-                    'rate_inr_per_10g' => round($inrPer10g, 2),
-                    'rate_inr_per_gram' => round($inrPer10g / 10, 2),
-                    'source' => 'navkar_live',
-                ];
             } catch (\Throwable $e) {
-                Log::warning('GoldRateService live fetch failed: ' . $e->getMessage());
-
-                return [
-                    'success' => false,
-                    'message' => 'Live gold rate unavailable.',
-                ];
+                Log::warning('GoldRateService: Navkar fallback exception: ' . $e->getMessage());
             }
+
+            // 3. Final Fallback: Coinbase
+            try {
+                $r = Http::withoutVerifying()->timeout(8)
+                    ->get('https://api.coinbase.com/v2/exchange-rates?currency=INR');
+                if ($r->successful()) {
+                    $xauPerInr = floatval($r->json('data.rates.XAU') ?? 0);
+                    if ($xauPerInr > 0) {
+                        $intlPerGram = (1 / $xauPerInr) / 31.1035;
+                        $indianPerGram = $intlPerGram * 1.085; // India premium 8.5%
+
+                        return [
+                            'success' => true,
+                            'rate_inr_per_10g' => round($indianPerGram * 10, 2),
+                            'rate_inr_per_gram' => round($indianPerGram, 2),
+                            'source' => 'coinbase_fallback',
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('GoldRateService: Coinbase fallback failed: ' . $e->getMessage());
+            }
+
+            Log::critical('CRITICAL: All live gold rate APIs failed in GoldRateService.');
+
+            return [
+                'success' => false,
+                'message' => 'Live gold rate unavailable.',
+            ];
         });
     }
 
@@ -181,7 +218,8 @@ class GoldRateService
                 continue;
             }
 
-            if (stripos($line, 'GOLD 999 IMP') === false && stripos($line, 'GOLD 999 10GM') === false) {
+            // Resilient matching: look for "GOLD" but avoid 18K/22K
+            if (!preg_match('/\bGOLD\b/i', $line) || preg_match('/\b(18K|22K|14K)\b/i', $line)) {
                 continue;
             }
 
@@ -193,7 +231,8 @@ class GoldRateService
                 }
 
                 $value = (float) $numeric;
-                if ($value > 50000) {
+                // Gold rate for 10g 24K validation (Reasonable range for 2026 prices)
+                if ($value > 50000 && $value < 200000) {
                     $inrPer10g = $value;
                     break 2;
                 }
