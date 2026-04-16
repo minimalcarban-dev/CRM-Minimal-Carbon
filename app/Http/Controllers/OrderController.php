@@ -491,15 +491,6 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Reserve stock Lot wise
-            if (!empty($meleeEntriesForStock)) {
-                $stockResult = $this->meleeStockService->reserveForOrder($order->id, $meleeEntriesForStock);
-                if (!$stockResult['success']) {
-                    DB::rollBack();
-                    return $this->orderErrorResponse($request, 'Failed to reserve melee stock: ' . $stockResult['message']);
-                }
-            }
-
             $order->refreshPaymentSummaryFromPayments();
 
             // ⚡ PERFORMANCE: Bulk update diamonds as sold (instead of loop + controller calls)
