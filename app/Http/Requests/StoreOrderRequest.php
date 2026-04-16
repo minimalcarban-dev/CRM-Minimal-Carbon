@@ -38,7 +38,7 @@ class StoreOrderRequest extends FormRequest
             'shipping_company_name' => 'nullable|string',
             'tracking_number' => 'nullable|string',
             'tracking_url' => 'nullable|url',
-            'images.*' => 'nullable|image|mimes:jpg,jpeg,png,avif,gif,webp|max:10240',
+            'images.*' => 'nullable|image|mimes:jpg,jpeg,png,avif,gif,webp,heic,heif|max:10240',
             'order_pdfs.*' => 'nullable|mimes:pdf|max:10240',
             'diamond_prices' => 'nullable|array',
             'diamond_prices.*' => 'nullable|numeric|min:0',

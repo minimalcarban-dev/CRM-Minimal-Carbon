@@ -5,7 +5,8 @@
 @section('content')
     @php
         $currentAdmin = auth()->guard('admin')->user();
-        $canViewPricing = $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_pricing'));
+        $canViewPricing =
+            $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_pricing'));
     @endphp
 
     <div class="tracker-page">
@@ -27,7 +28,8 @@
                     <p class="page-subtitle">Manage rings, earrings, tennis bracelets and other jewellery inventory</p>
                 </div>
                 <div class="header-right">
-                    @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.create']))
+                    @if (auth()->guard('admin')->user() &&
+                            auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.create']))
                         <a href="{{ route('jewellery-stock.create') }}" class="btn-primary-custom">
                             <i class="bi bi-plus-circle"></i>
                             <span>Add Jewellery</span>
@@ -82,14 +84,17 @@
 
         {{-- Filter Section --}}
         <div class="tracker-filter">
-            <form method="GET" action="{{ route('jewellery-stock.index') }}" class="tracker-filter-form" id="jewelleryFilterForm">
+            <form method="GET" action="{{ route('jewellery-stock.index') }}" class="tracker-filter-form"
+                id="jewelleryFilterForm">
                 <div class="tracker-filter-field">
                     <label class="tracker-filter-label"><i class="bi bi-upc-scan"></i> SKU</label>
-                    <input type="text" name="sku" class="tracker-filter-input" placeholder="Search SKU..." value="{{ request('sku') }}">
+                    <input type="text" name="sku" class="tracker-filter-input" placeholder="Search SKU..."
+                        value="{{ request('sku') }}">
                 </div>
                 <div class="tracker-filter-field">
                     <label class="tracker-filter-label"><i class="bi bi-tag"></i> Name</label>
-                    <input type="text" name="name" class="tracker-filter-input" placeholder="Search name..." value="{{ request('name') }}">
+                    <input type="text" name="name" class="tracker-filter-input" placeholder="Search name..."
+                        value="{{ request('name') }}">
                 </div>
                 <div class="tracker-filter-field">
                     <label class="tracker-filter-label"><i class="bi bi-collection"></i> Type</label>
@@ -97,7 +102,8 @@
                         <option value="">All Types</option>
                         <option value="ring" {{ request('type') == 'ring' ? 'selected' : '' }}>Ring</option>
                         <option value="earrings" {{ request('type') == 'earrings' ? 'selected' : '' }}>Earrings</option>
-                        <option value="tennis_bracelet" {{ request('type') == 'tennis_bracelet' ? 'selected' : '' }}>Tennis Bracelet</option>
+                        <option value="tennis_bracelet" {{ request('type') == 'tennis_bracelet' ? 'selected' : '' }}>Tennis
+                            Bracelet</option>
                         <option value="other" {{ request('type') == 'other' ? 'selected' : '' }}>Other</option>
                     </select>
                 </div>
@@ -106,7 +112,8 @@
                     <select name="metal_type_id" class="tracker-filter-select">
                         <option value="">All Metals</option>
                         @foreach ($metalTypes as $metal)
-                            <option value="{{ $metal->id }}" {{ request('metal_type_id') == $metal->id ? 'selected' : '' }}>
+                            <option value="{{ $metal->id }}"
+                                {{ request('metal_type_id') == $metal->id ? 'selected' : '' }}>
                                 {{ $metal->name }}
                             </option>
                         @endforeach
@@ -117,8 +124,10 @@
                     <select name="status" class="tracker-filter-select">
                         <option value="">All Statuses</option>
                         <option value="in_stock" {{ request('status') == 'in_stock' ? 'selected' : '' }}>In Stock</option>
-                        <option value="low_stock" {{ request('status') == 'low_stock' ? 'selected' : '' }}>Low Stock</option>
-                        <option value="out_of_stock" {{ request('status') == 'out_of_stock' ? 'selected' : '' }}>Out of Stock</option>
+                        <option value="low_stock" {{ request('status') == 'low_stock' ? 'selected' : '' }}>Low Stock
+                        </option>
+                        <option value="out_of_stock" {{ request('status') == 'out_of_stock' ? 'selected' : '' }}>Out of
+                            Stock</option>
                     </select>
                 </div>
                 <div class="tracker-filter-actions">
@@ -159,15 +168,18 @@
                         @forelse($items as $item)
                             <tr>
                                 <td>
-                                    <span class="tracker-badge" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                    <span class="tracker-badge"
+                                        style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
                                         {{ $item->sku }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span style="font-weight: 600; color: var(--dark, #1e293b);">{{ $item->name }}</span>
+                                    <span
+                                        style="font-weight: 600; color: var(--dark, #1e293b);">{{ $item->name }}</span>
                                 </td>
                                 <td>
-                                    <span class="tracker-badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                                    <span class="tracker-badge"
+                                        style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
                                         {{ ucwords(str_replace('_', ' ', $item->type)) }}
                                     </span>
                                 </td>
@@ -177,7 +189,8 @@
                                 <td style="font-weight: 700;">{{ $item->quantity }}</td>
                                 <td>
                                     @if ($canViewPricing)
-                                        <strong style="color: #10b981;">${{ number_format($item->purchase_price, 2) }}</strong>
+                                        <strong
+                                            style="color: #10b981;">${{ number_format($item->purchase_price, 2) }}</strong>
                                     @else
                                         <span class="text-muted" title="Restricted">Restricted</span>
                                     @endif
@@ -187,36 +200,47 @@
                                 </td>
                                 <td>
                                     @if ($item->status === 'in_stock')
-                                        <span class="tracker-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                        <span class="tracker-badge"
+                                            style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
                                             <i class="bi bi-check-circle"></i> In Stock
                                         </span>
                                     @elseif ($item->status === 'low_stock')
-                                        <span class="tracker-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                        <span class="tracker-badge"
+                                            style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
                                             <i class="bi bi-exclamation-triangle"></i> Low Stock
                                         </span>
                                     @else
-                                        <span class="tracker-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                        <span class="tracker-badge"
+                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
                                             <i class="bi bi-x-circle"></i> Out of Stock
                                         </span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="tracker-actions">
-                                        @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.view']))
-                                            <a href="{{ route('jewellery-stock.show', $item) }}" class="tracker-action-btn tracker-action-view" title="View">
+                                        @if (auth()->guard('admin')->user() &&
+                                                auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.view']))
+                                            <a href="{{ route('jewellery-stock.show', $item) }}"
+                                                class="tracker-action-btn tracker-action-view" title="View">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                         @endif
-                                        @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.edit']))
-                                            <a href="{{ route('jewellery-stock.edit', $item) }}" class="tracker-action-btn tracker-action-edit" title="Edit">
+                                        @if (auth()->guard('admin')->user() &&
+                                                auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.edit']))
+                                            <a href="{{ route('jewellery-stock.edit', $item) }}"
+                                                class="tracker-action-btn tracker-action-edit" title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                         @endif
-                                        @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.delete']))
-                                            <form action="{{ route('jewellery-stock.destroy', $item) }}" method="POST" style="display:inline" class="delete-form">
+                                        @if (auth()->guard('admin')->user() &&
+                                                auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.delete']))
+                                            <form action="{{ route('jewellery-stock.destroy', $item) }}" method="POST"
+                                                style="display:inline" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="tracker-action-btn tracker-action-delete delete-btn" title="Delete">
+                                                <button type="button"
+                                                    class="tracker-action-btn tracker-action-delete delete-btn"
+                                                    title="Delete">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -230,8 +254,10 @@
                                     <div class="tracker-empty">
                                         <div class="tracker-empty-icon"><i class="bi bi-inbox"></i></div>
                                         <h3 class="tracker-empty-title">No jewellery items found</h3>
-                                        <p class="tracker-empty-desc">Start by adding your first jewellery item to the inventory</p>
-                                        @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.create']))
+                                        <p class="tracker-empty-desc">Start by adding your first jewellery item to the
+                                            inventory</p>
+                                        @if (auth()->guard('admin')->user() &&
+                                                auth()->guard('admin')->user()->canAccessAny(['jewellery_stock.create']))
                                             <a href="{{ route('jewellery-stock.create') }}" class="btn-primary-custom">
                                                 <i class="bi bi-plus-circle"></i> Add First Item
                                             </a>
@@ -255,17 +281,17 @@
 
     @push('scripts')
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // Auto-submit on select changes
-                document.querySelectorAll('#jewelleryFilterForm select').forEach(function (el) {
-                    el.addEventListener('change', function () {
+                document.querySelectorAll('#jewelleryFilterForm select').forEach(function(el) {
+                    el.addEventListener('change', function() {
                         document.getElementById('jewelleryFilterForm').submit();
                     });
                 });
 
                 // Delete confirmation
-                document.querySelectorAll('.delete-btn').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
+                document.querySelectorAll('.delete-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
                         if (confirm('Are you sure you want to delete this jewellery item?')) {
                             this.closest('.delete-form').submit();
                         }

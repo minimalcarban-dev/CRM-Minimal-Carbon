@@ -17,7 +17,12 @@ class JewelleryStock extends Model
         'type',
         'name',
         'metal_type_id',
+        'metal_purity',
         'ring_size_id',
+        'length',
+        'width',
+        'diameter',
+        'bale_size',
         'weight',
         'quantity',
         'low_stock_threshold',
@@ -26,6 +31,21 @@ class JewelleryStock extends Model
         'status',
         'description',
         'image_url',
+        'images',
+        'closure_type_id',
+        'primary_stone_type_id',
+        'primary_stone_weight',
+        'primary_stone_count',
+        'primary_stone_shape_id',
+        'primary_stone_color_id',
+        'primary_stone_clarity_id',
+        'primary_stone_cut_id',
+        'side_stone_type_id',
+        'side_stone_weight',
+        'side_stone_count',
+        'certificate_number',
+        'certificate_type',
+        'certificate_url',
     ];
 
     protected $casts = [
@@ -34,6 +54,7 @@ class JewelleryStock extends Model
         'selling_price' => 'decimal:2',
         'quantity' => 'integer',
         'low_stock_threshold' => 'integer',
+        'images' => 'array',
     ];
 
     /**
@@ -95,6 +116,41 @@ class JewelleryStock extends Model
     public function ringSize()
     {
         return $this->belongsTo(\App\Models\RingSize::class);
+    }
+
+    public function closureType()
+    {
+        return $this->belongsTo(\App\Models\ClosureType::class);
+    }
+
+    public function primaryStoneType()
+    {
+        return $this->belongsTo(\App\Models\StoneType::class, 'primary_stone_type_id');
+    }
+
+    public function primaryStoneShape()
+    {
+        return $this->belongsTo(\App\Models\StoneShape::class, 'primary_stone_shape_id');
+    }
+
+    public function primaryStoneColor()
+    {
+        return $this->belongsTo(\App\Models\StoneColor::class, 'primary_stone_color_id');
+    }
+
+    public function primaryStoneClarity()
+    {
+        return $this->belongsTo(\App\Models\DiamondClarity::class, 'primary_stone_clarity_id');
+    }
+
+    public function primaryStoneCut()
+    {
+        return $this->belongsTo(\App\Models\DiamondCut::class, 'primary_stone_cut_id');
+    }
+
+    public function sideStoneType()
+    {
+        return $this->belongsTo(\App\Models\StoneType::class, 'side_stone_type_id');
     }
 
     // ── Scopes ───────────────────────────────────────────────

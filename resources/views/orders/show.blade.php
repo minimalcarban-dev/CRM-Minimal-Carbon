@@ -2762,8 +2762,10 @@
                     <div class="od-card-head">
                         <h3 class="od-card-title">
                             <i class="bi bi-chat-square-text"></i> Order Discussion
+                            @if($discussionRootMessage)
                             <span
                                 style="font-size:.72rem; background:var(--primary-soft); color:var(--primary); padding:.1rem .45rem; border-radius:100px; font-weight:700; margin-left:.25rem;">{{ (int) ($discussionRootMessage->thread_count ?? 0) }}</span>
+                            @endif
                         </h3>
                     </div>
                     <div class="od-card-body">
@@ -2773,7 +2775,7 @@
                                 <strong>Order #{{ $order->id }} |
                                     {{ $order->display_client_name ?? $order->client_name ?? 'N/A' }}</strong>
                             </div>
-                            @if(Auth::guard('admin')->user()?->hasPermission('chat.access'))
+                            @if(Auth::guard('admin')->user()?->hasPermission('chat.access') && $discussionRootMessage)
                                 <a href="{{ route('chat.index', ['channel_id' => $discussionChannel->id, 'message_id' => $discussionRootMessage->id, 'open_thread' => 1]) }}"
                                     class="btn-od no-print" style="padding:.5rem .75rem;">
                                     <i class="bi bi-box-arrow-up-right"></i> Open in Chat
@@ -2781,13 +2783,6 @@
                             @endif
                         </div>
 
-                        <form method="GET" action="{{ route('orders.show', $order->id) }}"
-                            class="od-discussion-search no-print">
-                            <input type="text" name="discussion_search" value="{{ $discussionSearch }}"
-                                placeholder="Search old message by text or admin name...">
-                            <button type="submit" class="btn-od" style="padding:.5rem .8rem;"><i
-                                    class="bi bi-search"></i></button>
-                        </form>
 
                         @if($canPostDiscussion)
                             <form method="POST" action="{{ route('orders.discussion.messages.store', $order->id) }}"

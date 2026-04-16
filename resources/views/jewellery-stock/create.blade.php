@@ -43,196 +43,353 @@
             </div>
         @endif
 
-        <form action="{{ route('jewellery-stock.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('jewellery-stock.store') }}" method="POST" enctype="multipart/form-data" id="jewelleryForm">
             @csrf
 
-            {{-- Basic Information --}}
-            <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
-                    <i class="bi bi-gem" style="color: #8b5cf6;"></i> Basic Information
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
-                    <div class="form-group">
-                        <label class="form-label">SKU <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="sku" class="form-control @error('sku') is-invalid @enderror"
-                            placeholder="e.g. JW-RING-001" value="{{ old('sku') }}" required>
-                        @error('sku') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        <small style="color: #64748b; margin-top: 0.25rem; display: block;">Unique stock-keeping unit identifier</small>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+                {{-- Left Column: Basics & Metal --}}
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    {{-- Basic Information --}}
+                    <div class="tracker-table-card" style="padding: 1.5rem;">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-gem" style="color: #8b5cf6;"></i> Basic Information
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                            <div class="form-group">
+                                <label class="form-label">SKU <span style="color: #ef4444;">*</span></label>
+                                <input type="text" name="sku" class="form-control @error('sku') is-invalid @enderror"
+                                    placeholder="e.g. JW-RING-001" value="{{ old('sku') }}" required>
+                                @error('sku')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category <span style="color: #ef4444;">*</span></label>
+                                <select name="type" id="categorySelect"
+                                    class="form-control themed-select @error('type') is-invalid @enderror" required>
+                                    <option value="">Select Category</option>
+                                    <option value="ring" {{ old('type') == 'ring' ? 'selected' : '' }}>Ring</option>
+                                    <option value="earrings" {{ old('type') == 'earrings' ? 'selected' : '' }}>Earrings
+                                    </option>
+                                    <option value="necklace" {{ old('type') == 'necklace' ? 'selected' : '' }}>Necklace
+                                    </option>
+                                    <option value="pendant" {{ old('type') == 'pendant' ? 'selected' : '' }}>Pendant
+                                    </option>
+                                    <option value="bracelet" {{ old('type') == 'bracelet' ? 'selected' : '' }}>Bracelet
+                                    </option>
+                                    <option value="bangle" {{ old('type') == 'bangle' ? 'selected' : '' }}>Bangle</option>
+                                    <option value="brooch" {{ old('type') == 'brooch' ? 'selected' : '' }}>Brooch</option>
+                                    <option value="other" {{ old('type') == 'other' ? 'selected' : '' }}>Other</option>
+                                </select>
+                                @error('type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label class="form-label">Item Name <span style="color: #ef4444;">*</span></label>
+                                <input type="text" name="name"
+                                    class="form-control @error('name') is-invalid @enderror"
+                                    placeholder="e.g. 18K Gold Diamond Pendant" value="{{ old('name') }}" required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Type <span style="color: #ef4444;">*</span></label>
-                        <select name="type" class="form-control themed-select @error('type') is-invalid @enderror" required>
-                            <option value="">Select Type</option>
-                            <option value="ring" {{ old('type') == 'ring' ? 'selected' : '' }}>Ring</option>
-                            <option value="earrings" {{ old('type') == 'earrings' ? 'selected' : '' }}>Earrings</option>
-                            <option value="tennis_bracelet" {{ old('type') == 'tennis_bracelet' ? 'selected' : '' }}>Tennis Bracelet</option>
-                            <option value="other" {{ old('type') == 'other' ? 'selected' : '' }}>Other</option>
-                        </select>
-                        @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                    {{-- Metal Details --}}
+                    <div class="tracker-table-card" style="padding: 1.5rem;">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-palette" style="color: #6366f1;"></i> Metal & Core Details
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                            <div class="form-group">
+                                <label class="form-label">Metal Type <span style="color: #ef4444;">*</span></label>
+                                <select name="metal_type_id"
+                                    class="form-control themed-select @error('metal_type_id') is-invalid @enderror"
+                                    required>
+                                    <option value="">Select Metal</option>
+                                    @foreach ($metalTypes as $metal)
+                                        <option value="{{ $metal->id }}"
+                                            {{ old('metal_type_id') == $metal->id ? 'selected' : '' }}>
+                                            {{ $metal->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Metal Purity</label>
+                                <input type="text" name="metal_purity" class="form-control"
+                                    placeholder="e.g. 18K, 14K, 950 Plat" value="{{ old('metal_purity') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gross Weight (g)</label>
+                                <input type="number" name="weight" class="form-control" step="0.001"
+                                    placeholder="0.000" value="{{ old('weight') }}">
+                            </div>
+                            <div class="form-group" id="closureSection">
+                                <label class="form-label">Closure/Backing</label>
+                                <select name="closure_type_id" class="form-control themed-select">
+                                    <option value="">Select Closure</option>
+                                    @foreach ($closureTypes as $closure)
+                                        <option value="{{ $closure->id }}"
+                                            {{ old('closure_type_id') == $closure->id ? 'selected' : '' }}>
+                                            {{ $closure->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label class="form-label">Name <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                            placeholder="e.g. 18K Gold Solitaire Ring" value="{{ old('name') }}" required>
-                        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                    {{-- Physical Dimensions (Dynamic) --}}
+                    <div class="tracker-table-card" style="padding: 1.5rem;" id="dimensionsCard">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-rulers" style="color: #6366f1;"></i> Physical Dimensions
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                            <div class="form-group" id="ringSizeSection">
+                                <label class="form-label">Ring Size</label>
+                                <select name="ring_size_id" class="form-control themed-select">
+                                    <option value="">Select Size</option>
+                                    @foreach ($ringSizes as $size)
+                                        <option value="{{ $size->id }}"
+                                            {{ old('ring_size_id') == $size->id ? 'selected' : '' }}>
+                                            {{ $size->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group" id="lengthSection">
+                                <label class="form-label">Length (inch/cm)</label>
+                                <input type="number" name="length" class="form-control" step="0.1"
+                                    value="{{ old('length') }}" placeholder="0.0">
+                            </div>
+                            <div class="form-group" id="widthSection">
+                                <label class="form-label">Width (mm)</label>
+                                <input type="number" name="width" class="form-control" step="0.1"
+                                    value="{{ old('width') }}" placeholder="0.0">
+                            </div>
+                            <div class="form-group" id="diameterSection">
+                                <label class="form-label">Diameter (mm)</label>
+                                <input type="number" name="diameter" class="form-control" step="0.1"
+                                    value="{{ old('diameter') }}" placeholder="0.0">
+                            </div>
+                            <div class="form-group" id="baleSection">
+                                <label class="form-label">Bale Size (mm)</label>
+                                <input type="number" name="bale_size" class="form-control" step="0.1"
+                                    value="{{ old('bale_size') }}" placeholder="0.0">
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Details --}}
-            <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
-                    <i class="bi bi-palette" style="color: #6366f1;"></i> Details
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
-                    <div class="form-group">
-                        <label class="form-label">Metal Type <span style="color: #ef4444;">*</span></label>
-                        <select name="metal_type_id" class="form-control themed-select @error('metal_type_id') is-invalid @enderror" required>
-                            <option value="">Select Metal Type</option>
-                            @foreach ($metalTypes as $metal)
-                                <option value="{{ $metal->id }}" {{ old('metal_type_id') == $metal->id ? 'selected' : '' }}>
-                                    {{ $metal->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('metal_type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Ring Size</label>
-                        <select name="ring_size_id" class="form-control themed-select @error('ring_size_id') is-invalid @enderror">
-                            <option value="">Select Ring Size (optional)</option>
-                            @foreach ($ringSizes as $size)
-                                <option value="{{ $size->id }}" {{ old('ring_size_id') == $size->id ? 'selected' : '' }}>
-                                    {{ $size->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('ring_size_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        <small style="color: #64748b; margin-top: 0.25rem; display: block;">Only applicable for rings</small>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Weight (grams)</label>
-                        <input type="number" name="weight" class="form-control @error('weight') is-invalid @enderror"
-                            placeholder="0.000" step="0.001" min="0" value="{{ old('weight') }}">
-                        @error('weight') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                </div>
-            </div>
+                {{-- Right Column: Stones & Pricing --}}
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    {{-- Stone Details --}}
+                    <div class="tracker-table-card" style="padding: 1.5rem;">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-diamond-half" style="color: #6366f1;"></i> Gemstone Details
+                        </h3>
 
-            {{-- Stock Information --}}
-            <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
-                    <i class="bi bi-box-seam" style="color: #6366f1;"></i> Stock Information
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
-                    <div class="form-group">
-                        <label class="form-label">Quantity <span style="color: #ef4444;">*</span></label>
-                        <input type="number" name="quantity" class="form-control @error('quantity') is-invalid @enderror"
-                            placeholder="0" min="0" value="{{ old('quantity', 1) }}" required>
-                        @error('quantity') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Low Stock Threshold</label>
-                        <input type="number" name="low_stock_threshold" class="form-control @error('low_stock_threshold') is-invalid @enderror"
-                            placeholder="5" min="0" value="{{ old('low_stock_threshold', 5) }}">
-                        @error('low_stock_threshold') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        <small style="color: #64748b; margin-top: 0.25rem; display: block;">Alert when stock falls below this number</small>
-                    </div>
-                </div>
-            </div>
+                        <div
+                            style="background: rgba(99, 102, 241, 0.05); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                            <h4 style="font-size: 0.9rem; color: #4f46e5; margin: 0 0 1rem;">Primary Stone</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Stone Type</label>
+                                    <select name="primary_stone_type_id" class="form-control themed-select">
+                                        <option value="">Select Stone</option>
+                                        @foreach ($stoneTypes as $stone)
+                                            <option value="{{ $stone->id }}"
+                                                {{ old('primary_stone_type_id') == $stone->id ? 'selected' : '' }}>
+                                                {{ $stone->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Carat Weight</label>
+                                    <input type="number" name="primary_stone_weight" class="form-control"
+                                        step="0.001" placeholder="0.000 cts"
+                                        value="{{ old('primary_stone_weight') }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Shape</label>
+                                    <select name="primary_stone_shape_id" class="form-control themed-select">
+                                        <option value="">Select Shape</option>
+                                        @foreach ($stoneShapes as $shape)
+                                            <option value="{{ $shape->id }}"
+                                                {{ old('primary_stone_shape_id') == $shape->id ? 'selected' : '' }}>
+                                                {{ $shape->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Cut Grade</label>
+                                    <select name="primary_stone_cut_id" class="form-control themed-select">
+                                        <option value="">Select Cut</option>
+                                        @foreach ($diamondCuts as $cut)
+                                            <option value="{{ $cut->id }}"
+                                                {{ old('primary_stone_cut_id') == $cut->id ? 'selected' : '' }}>
+                                                {{ $cut->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Color</label>
+                                    <select name="primary_stone_color_id" class="form-control themed-select">
+                                        <option value="">Select Color</option>
+                                        @foreach ($stoneColors as $color)
+                                            <option value="{{ $color->id }}"
+                                                {{ old('primary_stone_color_id') == $color->id ? 'selected' : '' }}>
+                                                {{ $color->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Clarity</label>
+                                    <select name="primary_stone_clarity_id" class="form-control themed-select">
+                                        <option value="">Select Clarity</option>
+                                        @foreach ($diamondClarities as $clarity)
+                                            <option value="{{ $clarity->id }}"
+                                                {{ old('primary_stone_clarity_id') == $clarity->id ? 'selected' : '' }}>
+                                                {{ $clarity->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-            {{-- Pricing --}}
-            <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
-                    <i class="bi bi-currency-dollar" style="color: #6366f1;"></i> Pricing
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
-                    <div class="form-group">
-                        <label class="form-label">Purchase Price ($)</label>
-                        <input type="number" name="purchase_price" class="form-control @error('purchase_price') is-invalid @enderror"
-                            placeholder="0.00" step="0.01" min="0" value="{{ old('purchase_price') }}">
-                        @error('purchase_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div style="background: rgba(99, 102, 241, 0.05); border-radius: 12px; padding: 1rem;">
+                            <h4 style="font-size: 0.9rem; color: #4f46e5; margin: 0 0 1rem;">Side Stones</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Stone Type</label>
+                                    <select name="side_stone_type_id" class="form-control themed-select">
+                                        <option value="">Select Type</option>
+                                        @foreach ($stoneTypes as $stone)
+                                            <option value="{{ $stone->id }}"
+                                                {{ old('side_stone_type_id') == $stone->id ? 'selected' : '' }}>
+                                                {{ $stone->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display: flex; gap: 0.5rem;">
+                                    <div style="flex: 1;">
+                                        <label class="form-label">Total cts</label>
+                                        <input type="number" name="side_stone_weight" class="form-control"
+                                            step="0.001" value="{{ old('side_stone_weight') }}">
+                                    </div>
+                                    <div style="width: 70px;">
+                                        <label class="form-label">Count</label>
+                                        <input type="number" name="side_stone_count" class="form-control"
+                                            value="{{ old('side_stone_count') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Selling Price ($)</label>
-                        <input type="number" name="selling_price" class="form-control @error('selling_price') is-invalid @enderror"
-                            placeholder="0.00" step="0.01" min="0" value="{{ old('selling_price') }}">
-                        @error('selling_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Profit Margin (Auto-calculated)</label>
-                        <div id="margin_display"
-                            style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; font-weight: 700; font-size: 1.1rem; color: #10b981;">
-                            $0.00 (0%)
+
+                    {{-- Stock & Pricing --}}
+                    <div class="tracker-table-card" style="padding: 1.5rem;">
+                        <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-cash-stack" style="color: #10b981;"></i> Stock & Pricing
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                            <div class="form-group">
+                                <label class="form-label">Initial Quantity <span style="color: #ef4444;">*</span></label>
+                                <input type="number" name="quantity" class="form-control"
+                                    value="{{ old('quantity', 1) }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stock Threshold</label>
+                                <input type="number" name="low_stock_threshold" class="form-control"
+                                    value="{{ old('low_stock_threshold', 5) }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Purchase Price ($)</label>
+                                <input type="number" name="purchase_price" class="form-control" step="0.01"
+                                    value="{{ old('purchase_price') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Selling Price ($)</label>
+                                <input type="number" name="selling_price" class="form-control" step="0.01"
+                                    value="{{ old('selling_price') }}">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <div id="margin_display"
+                                    style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; font-weight: 700; text-align: center; color: #10b981;">
+                                    Margin: $0.00 (0%)
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Additional Information --}}
-            <div class="tracker-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            {{-- Additional & Image --}}
+            <div class="tracker-table-card" style="padding: 1.5rem; margin-top: 1.5rem;">
                 <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
-                    <i class="bi bi-card-text" style="color: #6366f1;"></i> Additional Information
-                    <small style="font-weight: 400; color: #64748b;">(Optional)</small>
+                    <i class="bi bi-card-checklist" style="color: #6366f1;"></i> Certification & Media
                 </h3>
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3"
-                        placeholder="Enter a detailed description...">{{ old('description') }}</textarea>
-                    @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Image Source</label>
-                    <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem;">
-                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="radio" name="image_source_type" id="image_source_upload" value="upload"
-                                {{ !old('image_url') ? 'checked' : '' }} onchange="toggleImageSource('upload')">
-                            Upload Image File
-                        </label>
-                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="radio" name="image_source_type" id="image_source_url" value="url"
-                                {{ old('image_url') ? 'checked' : '' }} onchange="toggleImageSource('url')">
-                            Provide Image URL
-                        </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label class="form-label">Certificate Details</label>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <select name="certificate_type" class="form-control themed-select" style="width: 100px;">
+                                    <option value="">Type</option>
+                                    <option value="GIA" {{ old('certificate_type') == 'GIA' ? 'selected' : '' }}>GIA
+                                    </option>
+                                    <option value="IGI" {{ old('certificate_type') == 'IGI' ? 'selected' : '' }}>IGI
+                                    </option>
+                                    <option value="HRD" {{ old('certificate_type') == 'HRD' ? 'selected' : '' }}>HRD
+                                    </option>
+                                    <option value="Self" {{ old('certificate_type') == 'Self' ? 'selected' : '' }}>Self
+                                    </option>
+                                </select>
+                                <input type="text" name="certificate_number" class="form-control"
+                                    placeholder="Certificate Number" value="{{ old('certificate_number') }}">
+                            </div>
+                            <input type="url" name="certificate_url" class="form-control"
+                                placeholder="Certificate URL Link" value="{{ old('certificate_url') }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Item Description</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Enter detailed specifications...">{{ old('description') }}</textarea>
+                        </div>
                     </div>
 
-                    <div id="image_upload_section" style="display: {{ !old('image_url') ? 'block' : 'none' }};">
-                        <input type="file" name="image_upload" id="image_upload"
-                            class="form-control @error('image_upload') is-invalid @enderror"
-                            accept="image/jpeg,image/png,image/jpg,image/webp" onchange="previewUpload(this)">
-                        @error('image_upload') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        <small style="color: #64748b; margin-top: 0.25rem; display: block;">Max size: 5MB. Formats: JPEG, PNG, JPG, WEBP.</small>
-                    </div>
-
-                    <div id="image_url_section" style="display: {{ old('image_url') ? 'block' : 'none' }};">
-                        <input type="url" name="image_url" id="image_url"
-                            class="form-control @error('image_url') is-invalid @enderror"
-                            placeholder="https://example.com/image.jpg" value="{{ old('image_url') }}"
-                            oninput="previewUrl(this.value)">
-                        @error('image_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        <small style="color: #64748b; margin-top: 0.25rem; display: block;">Direct link to the item image</small>
-                    </div>
-
-                    <div class="mt-3 image-preview-container" style="display: {{ old('image_url') ? 'block' : 'none' }};">
-                        <small style="color: #64748b;">Image Preview</small>
-                        <br>
-                        <img id="image_preview" src="{{ old('image_url') }}" alt="Preview"
-                            style="max-height: 200px; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 0.5rem;">
-                        <div id="preview_error" style="display: none; color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem;">
-                            <i class="bi bi-exclamation-triangle"></i> Preview not available
+                    <div class="form-group">
+                        <label class="form-label">Product Images</label>
+                        <div id="image_upload_section"
+                            style="border: 2px dashed #e2e8f0; border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer;"
+                            onclick="document.getElementById('images').click()">
+                            <input type="file" name="images[]" id="images" class="d-none" accept="image/*"
+                                multiple onchange="previewUploads(this)">
+                            <i class="bi bi-images" style="font-size: 2rem; color: #6366f1;"></i>
+                            <p style="margin: 0.5rem 0 0; color: #64748b;">Click to upload item images</p>
+                            <small style="color: #94a3b8;">Max: 10MB per image (JPEG, PNG, WEBP, AVIF, HEIC)</small>
+                        </div>
+                        <div id="image_preview_container"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 1rem;">
                         </div>
                     </div>
                 </div>
             </div>
 
             {{-- Actions --}}
-            <div class="tracker-form-actions" style="display: flex; justify-content: flex-end; gap: 1rem;">
-                <a href="{{ route('jewellery-stock.index') }}" class="btn-secondary-custom">
-                    <i class="bi bi-x-circle"></i> Cancel
-                </a>
-                <button type="submit" class="btn-primary-custom">
-                    <i class="bi bi-save"></i> Save Jewellery Item
+            <div class="tracker-form-actions"
+                style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                <a href="{{ route('jewellery-stock.index') }}" class="btn-secondary-custom">Cancel</a>
+                <button type="submit" class="btn-primary-custom" style="padding-left: 2rem; padding-right: 2rem;">
+                    <i class="bi bi-save"></i> Save Catalogue Item
                 </button>
             </div>
         </form>
@@ -241,89 +398,99 @@
 
 @push('scripts')
     <script>
-        // Margin Calculator
+        function updateCategoryFields() {
+            const category = document.getElementById('categorySelect').value;
+            const ringSize = document.getElementById('ringSizeSection');
+            const length = document.getElementById('lengthSection');
+            const width = document.getElementById('widthSection');
+            const diameter = document.getElementById('diameterSection');
+            const bale = document.getElementById('baleSection');
+            const closure = document.getElementById('closureSection');
+
+            // Reset all
+            [ringSize, length, width, diameter, bale, closure].forEach(el => {
+                if (el) el.style.display = 'none';
+            });
+
+            switch (category) {
+                case 'ring':
+                    if (ringSize) ringSize.style.display = 'block';
+                    if (width) width.style.display = 'block';
+                    break;
+                case 'earrings':
+                    if (closure) closure.style.display = 'block';
+                    if (width) width.style.display = 'block';
+                    if (length) length.style.display = 'block';
+                    break;
+                case 'necklace':
+                case 'bracelet':
+                    if (length) length.style.display = 'block';
+                    if (width) width.style.display = 'block';
+                    if (closure) closure.style.display = 'block';
+                    break;
+                case 'pendant':
+                    if (width) width.style.display = 'block';
+                    if (length) length.style.display = 'block';
+                    if (bale) bale.style.display = 'block';
+                    break;
+                case 'bangle':
+                    if (diameter) diameter.style.display = 'block';
+                    if (width) width.style.display = 'block';
+                    break;
+                default:
+                    if (width) width.style.display = 'block';
+                    if (length) length.style.display = 'block';
+            }
+        }
+
         function calculateMargin() {
-            const purchase = parseFloat(document.querySelector('[name="purchase_price"]').value) || 0;
-            const selling = parseFloat(document.querySelector('[name="selling_price"]').value) || 0;
-            const margin = selling - purchase;
-            const pct = purchase > 0 ? (margin / purchase * 100) : 0;
+            const purchase = parseFloat(document.querySelector('input[name="purchase_price"]').value) || 0;
+            const selling = parseFloat(document.querySelector('input[name="selling_price"]').value) || 0;
             const display = document.getElementById('margin_display');
-            const isPositive = margin >= 0;
-            display.style.background = isPositive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-            display.style.color = isPositive ? '#10b981' : '#ef4444';
-            display.textContent = '$' + margin.toFixed(2) + ' (' + pct.toFixed(1) + '%)';
-        }
-        document.querySelector('[name="purchase_price"]')?.addEventListener('input', calculateMargin);
-        document.querySelector('[name="selling_price"]')?.addEventListener('input', calculateMargin);
 
-        function toggleImageSource(type) {
-            if (type === 'upload') {
-                document.getElementById('image_upload_section').style.display = 'block';
-                document.getElementById('image_url_section').style.display = 'none';
-                document.getElementById('preview_error').style.display = 'none';
-                const fileInput = document.getElementById('image_upload');
-                if (fileInput.files && fileInput.files[0]) {
-                    previewUpload(fileInput);
-                } else {
-                    document.querySelector('.image-preview-container').style.display = 'none';
-                    document.getElementById('image_preview').src = '';
-                }
+            if (selling > 0) {
+                const margin = selling - purchase;
+                const percentage = (margin / selling) * 100;
+                display.innerText = `Margin: $${margin.toFixed(2)} (${percentage.toFixed(1)}%)`;
+                display.style.background = margin >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+                display.style.color = margin >= 0 ? '#10b981' : '#ef4444';
             } else {
-                document.getElementById('image_upload_section').style.display = 'none';
-                document.getElementById('image_url_section').style.display = 'block';
-                document.getElementById('image_upload').value = '';
-                const urlInput = document.getElementById('image_url');
-                if (urlInput.value) previewUrl(urlInput.value);
-                else {
-                    document.querySelector('.image-preview-container').style.display = 'none';
-                    document.getElementById('image_preview').src = '';
-                }
+                display.innerText = 'Margin: $0.00 (0%)';
+                display.style.background = 'rgba(16, 185, 129, 0.1)';
+                display.style.color = '#10b981';
             }
         }
 
-        function previewUrl(url) {
-            const container = document.querySelector('.image-preview-container');
-            const img = document.getElementById('image_preview');
-            const error = document.getElementById('preview_error');
-            if (url && url.trim() !== '') {
-                container.style.display = 'block';
-                error.style.display = 'none';
-                img.style.display = 'block';
-                img.onerror = function () { img.style.display = 'none'; error.style.display = 'block'; };
-                img.onload = function () { img.style.display = 'block'; error.style.display = 'none'; };
-                img.src = url;
-            } else {
-                container.style.display = 'none';
-                img.src = '';
+        // Expanded Multi-Image Preview Function
+        function previewUploads(input) {
+            const container = document.getElementById('image_preview_container');
+            container.innerHTML = '';
+
+            if (input.files && input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.style.position = 'relative';
+                        div.style.aspectRatio = '1';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        `;
+                        container.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                });
             }
         }
 
-        function previewUpload(input) {
-            const container = document.querySelector('.image-preview-container');
-            const img = document.getElementById('image_preview');
-            const error = document.getElementById('preview_error');
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    container.style.display = 'block';
-                    error.style.display = 'none';
-                    img.style.display = 'block';
-                    img.src = e.target.result;
-                };
-                reader.onerror = function () { img.style.display = 'none'; error.style.display = 'block'; };
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                container.style.display = 'none';
-                img.src = '';
-            }
-        }
+        document.getElementById('categorySelect')?.addEventListener('change', updateCategoryFields);
+        document.querySelector('input[name="purchase_price"]')?.addEventListener('input', calculateMargin);
+        document.querySelector('input[name="selling_price"]')?.addEventListener('input', calculateMargin);
 
-        document.addEventListener('DOMContentLoaded', function () {
-            if (document.getElementById('image_source_url').checked) {
-                toggleImageSource('url');
-            } else {
-                toggleImageSource('upload');
-            }
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCategoryFields();
+            calculateMargin();
         });
     </script>
 @endpush

@@ -1273,27 +1273,19 @@ class OrderController extends Controller
 
         $editHistory = $order->editHistory()->with('admin')->get();
         $discussionChannel = $this->getOrCreateOrderDiscussionChannel();
-        $discussionRootMessage = $this->getOrCreateOrderDiscussionRootMessage($order, $discussionChannel, $admin);
+        $discussionRootMessage = $this->getOrderDiscussionRootMessage($order, $discussionChannel);
         $canPostDiscussion = $admin->is_super || $admin->hasPermission('orders.edit');
         $canManagePayments = $admin->is_super || $admin->hasPermission('orders.edit');
-        $discussionSearch = trim((string) request()->query('discussion_search', ''));
-        $discussionRootMessage->load([
-            'sender:id,name',
-            'replies' => fn($q) => $q->with('sender:id,name')->latest()->limit(50),
-        ]);
+        $discussionMessages = collect();
 
-        if ($discussionSearch !== '') {
-            $filteredReplies = $discussionRootMessage->replies->filter(function (Message $reply) use ($discussionSearch) {
-                $replyBody = mb_strtolower((string) ($reply->body ?? ''));
-                $replySender = mb_strtolower((string) ($reply->sender->name ?? ''));
-                $needle = mb_strtolower($discussionSearch);
-                return str_contains($replyBody, $needle) || str_contains($replySender, $needle);
-            })->values();
+        if ($discussionRootMessage) {
+            $discussionRootMessage->load([
+                'sender:id,name',
+                'replies' => fn($q) => $q->with('sender:id,name')->latest()->limit(50),
+            ]);
 
-            $discussionRootMessage->setRelation('replies', $filteredReplies);
+            $discussionMessages->push($discussionRootMessage);
         }
-
-        $discussionMessages = collect([$discussionRootMessage]);
 
         // Mark unread order notifications for this specific order as read
         $admin->unreadNotifications()
@@ -1318,7 +1310,6 @@ class OrderController extends Controller
             'editHistory',
             'discussionChannel',
             'discussionMessages',
-            'discussionSearch',
             'canPostDiscussion',
             'discussionRootMessage',
             'canManagePayments'
@@ -1469,14 +1460,19 @@ class OrderController extends Controller
         return $channel;
     }
 
-    private function getOrCreateOrderDiscussionRootMessage(Order $order, Channel $channel, Admin $actor): Message
+    private function getOrderDiscussionRootMessage(Order $order, Channel $channel): ?Message
     {
-        $existing = Message::query()
+        return Message::query()
             ->where('channel_id', $channel->id)
             ->whereNull('reply_to_id')
             ->where('metadata->kind', 'order_root')
             ->where('metadata->order_id', $order->id)
             ->first();
+    }
+
+    private function getOrCreateOrderDiscussionRootMessage(Order $order, Channel $channel, Admin $actor): Message
+    {
+        $existing = $this->getOrderDiscussionRootMessage($order, $channel);
 
         if ($existing) {
             return $existing;

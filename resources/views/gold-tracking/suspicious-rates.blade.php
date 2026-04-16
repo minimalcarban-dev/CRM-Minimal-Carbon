@@ -35,7 +35,7 @@
                 <strong>Rules:</strong>
                 outside {{ (int) ($outlierMinFactor * 100) }}%-{{ (int) ($outlierMaxFactor * 100) }}% of reference rate OR
                 outside absolute range &#8377;1000-&#8377;20000 per gram.
-                @if(($todayRatePayload['is_available'] ?? false))
+                @if ($todayRatePayload['is_available'] ?? false)
                     Current live reference:
                     <strong>&#8377;{{ number_format((float) ($todayRatePayload['rate_inr_per_gram'] ?? 0), 2) }}/gm</strong>.
                 @else
@@ -72,7 +72,7 @@
                                     &#8377;{{ number_format((float) $purchase->rate_per_gram, 2) }}/gm
                                 </td>
                                 <td>
-                                    @if($item['reference_rate'])
+                                    @if ($item['reference_rate'])
                                         &#8377;{{ number_format((float) $item['reference_rate'], 2) }}/gm
                                         <div><small style="color:#64748b;">{{ $item['reference_source'] }}</small></div>
                                     @else
@@ -80,7 +80,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if(!is_null($item['deviation_percent']))
+                                    @if (!is_null($item['deviation_percent']))
                                         {{ number_format((float) $item['deviation_percent'], 2) }}%
                                     @else
                                         <span style="color:#94a3b8;">N/A</span>
@@ -88,7 +88,8 @@
                                 </td>
                                 <td style="max-width: 280px;">{{ $item['reason'] }}</td>
                                 <td style="min-width: 320px;">
-                                    <form action="{{ route('gold-tracking.purchases.correct-rate', $purchase) }}" method="POST">
+                                    <form action="{{ route('gold-tracking.purchases.correct-rate', $purchase) }}"
+                                        method="POST">
                                         @csrf
                                         <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
                                             <input type="number" step="0.01" min="0.01" class="form-control"

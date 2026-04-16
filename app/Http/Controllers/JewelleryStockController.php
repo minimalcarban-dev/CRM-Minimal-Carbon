@@ -7,29 +7,25 @@ use App\Http\Requests\UpdateJewelleryStockRequest;
 use App\Models\JewelleryStock;
 use App\Models\MetalType;
 use App\Models\RingSize;
+use App\Models\ClosureType;
+use App\Models\StoneType;
+use App\Models\StoneShape;
+use App\Models\StoneColor;
+use App\Models\DiamondClarity;
+use App\Models\DiamondCut;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Cloudinary\Cloudinary;
+use App\Services\CloudinaryUploadService;
 
 class JewelleryStockController extends Controller
 {
-    private $cloudinary;
+    private $uploadService;
 
-    public function __construct()
+    public function __construct(CloudinaryUploadService $uploadService)
     {
-        // Initialize Cloudinary with direct configuration
-        $this->cloudinary = new Cloudinary([
-            'cloud' => [
-                'cloud_name' => config('cloudinary.cloud_name'),
-                'api_key' => config('cloudinary.api_key'),
-                'api_secret' => config('cloudinary.api_secret'),
-            ],
-            'url' => [
-                'secure' => true
-            ]
-        ]);
+        $this->uploadService = $uploadService;
     }
     /**
      * Display a listing of jewellery stock items.
@@ -103,15 +99,8 @@ class JewelleryStockController extends Controller
      */
     public function create()
     {
-        $metalTypes = Cache::remember('metal_types_list', 86400, function () {
-            return MetalType::where('is_active', true)->orderBy('name')->get();
-        });
-
-        $ringSizes = Cache::remember('ring_sizes_list', 86400, function () {
-            return RingSize::where('is_active', true)->orderBy('name')->get();
-        });
-
-        return view('jewellery-stock.create', compact('metalTypes', 'ringSizes'));
+        $data = $this->getLookupData();
+        return view('jewellery-stock.create', $data);
     }
 
     /**
@@ -124,21 +113,14 @@ class JewelleryStockController extends Controller
 
             $validated = $request->validated();
 
-            // Handle image upload to Cloudinary
-            if ($request->hasFile('image_upload')) {
-                try {
-                    $uploadedFile = $this->uploadToCloudinary($request, 'image_upload', 'jewellery-stock');
-                    if ($uploadedFile) {
-                        $validated['image_url'] = $uploadedFile['url'];
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Cloudinary upload failed for jewellery stock (store): ' . $e->getMessage());
-                    session()->flash('warning', 'Item created but image upload failed. Please try re-uploading the image.');
-                }
-            }
+            // Handle multiple images upload (same pattern as Order module)
+            $uploadedImages = $this->uploadService->uploadFromRequest($request, 'images', 'jewellery-stock');
 
-            // Remove the temporary file upload field from validated data if present
-            unset($validated['image_upload']);
+            if (!empty($uploadedImages)) {
+                $validated['images'] = $uploadedImages;
+                // Set primary image_url for backward compatibility
+                $validated['image_url'] = $uploadedImages[0]['url'];
+            }
 
             JewelleryStock::create($validated);
 
@@ -172,15 +154,43 @@ class JewelleryStockController extends Controller
      */
     public function edit(JewelleryStock $jewelleryStock)
     {
-        $metalTypes = Cache::remember('metal_types_list', 86400, function () {
-            return MetalType::where('is_active', true)->orderBy('name')->get();
-        });
+        $data = $this->getLookupData();
+        $data['jewelleryStock'] = $jewelleryStock;
 
-        $ringSizes = Cache::remember('ring_sizes_list', 86400, function () {
-            return RingSize::where('is_active', true)->orderBy('name')->get();
-        });
+        return view('jewellery-stock.edit', $data);
+    }
 
-        return view('jewellery-stock.edit', compact('jewelleryStock', 'metalTypes', 'ringSizes'));
+    /**
+     * Get lookup data for forms.
+     */
+    private function getLookupData(): array
+    {
+        return [
+            'metalTypes' => Cache::remember('metal_types_list', 86400, function () {
+                return MetalType::where('is_active', true)->orderBy('name')->get();
+            }),
+            'ringSizes' => Cache::remember('ring_sizes_list', 86400, function () {
+                return RingSize::where('is_active', true)->orderBy('name')->get();
+            }),
+            'closureTypes' => Cache::remember('closure_types_list', 86400, function () {
+                return ClosureType::where('is_active', true)->orderBy('name')->get();
+            }),
+            'stoneTypes' => Cache::remember('stone_types_list', 86400, function () {
+                return StoneType::where('is_active', true)->orderBy('name')->get();
+            }),
+            'stoneShapes' => Cache::remember('stone_shapes_list', 86400, function () {
+                return StoneShape::where('is_active', true)->orderBy('name')->get();
+            }),
+            'stoneColors' => Cache::remember('stone_colors_list', 86400, function () {
+                return StoneColor::where('is_active', true)->orderBy('name')->get();
+            }),
+            'diamondClarities' => Cache::remember('diamond_clarities_list', 86400, function () {
+                return DiamondClarity::where('is_active', true)->orderBy('name')->get();
+            }),
+            'diamondCuts' => Cache::remember('diamond_cuts_list', 86400, function () {
+                return DiamondCut::where('is_active', true)->orderBy('name')->get();
+            }),
+        ];
     }
 
     /**
@@ -193,22 +203,38 @@ class JewelleryStockController extends Controller
 
             $validated = $request->validated();
 
-            // Handle image upload to Cloudinary
-            if ($request->hasFile('image_upload')) {
-                try {
-                    $uploadedFile = $this->uploadToCloudinary($request, 'image_upload', 'jewellery-stock');
-                    if ($uploadedFile) {
-                        $validated['image_url'] = $uploadedFile['url'];
-                        // Optional: if you want to delete the old image, you'll need to store its public_id,
-                        // but currently only image_url is stored in DB.
+            // 1. Handle removals from existing images
+            $currentImages = $jewelleryStock->images ?? [];
+            if ($request->has('removed_images')) {
+                $removedUrls = $request->removed_images;
+                $currentImages = array_filter($currentImages, function ($img) use ($removedUrls) {
+                    // Check if this image URL is in the removal list
+                    if (in_array($img['url'], $removedUrls)) {
+                        // Delete from Cloudinary
+                        $this->uploadService->deleteByUrl($img['url']);
+                        return false;
                     }
-                } catch (\Exception $e) {
-                    Log::error('Cloudinary upload failed for jewellery stock (update): ' . $e->getMessage());
-                }
+                    return true;
+                });
+                // Re-index array
+                $currentImages = array_values($currentImages);
             }
 
-            // Remove the temporary file upload field from validated data if present
-            unset($validated['image_upload']);
+            // 2. Handle new image uploads
+            $newImages = $this->uploadService->uploadFromRequest($request, 'images', 'jewellery-stock');
+
+            if (!empty($newImages)) {
+                $currentImages = array_merge($currentImages, $newImages);
+            }
+
+            $validated['images'] = $currentImages;
+
+            // 3. Update primary image_url fallback
+            if (!empty($currentImages)) {
+                $validated['image_url'] = $currentImages[0]['url'];
+            } else {
+                $validated['image_url'] = null;
+            }
 
             $jewelleryStock->update($validated);
 
@@ -279,46 +305,5 @@ class JewelleryStockController extends Controller
             'available' => !$exists,
             'message' => $exists ? 'SKU already exists' : 'SKU is available',
         ]);
-    }
-
-    /**
-     * Upload a single file to Cloudinary.
-     */
-    private function uploadToCloudinary(Request $request, string $field, string $folder): ?array
-    {
-        if (!$request->hasFile($field)) {
-            return null;
-        }
-
-        $file = $request->file($field);
-
-        if (!$file->isValid()) {
-            return null;
-        }
-
-        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $extension = $file->getClientOriginalExtension();
-        $timestamp = time();
-        $uniqueId = uniqid();
-
-        $publicId = "{$timestamp}_{$uniqueId}";
-        $uploadOptions = [
-            'public_id' => $publicId,
-            'folder' => $folder,
-            'transformation' => [
-                'quality' => 'auto:good',
-                'fetch_format' => 'auto'
-            ]
-        ];
-        $uploadApi = $this->cloudinary->uploadApi();
-        $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
-
-        return [
-            'url' => $result['secure_url'],
-            'public_id' => $result['public_id'],
-            'name' => $originalName . '.' . $extension,
-            'format' => $extension,
-            'size' => $file->getSize(),
-        ];
     }
 }
