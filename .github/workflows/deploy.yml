@@ -27,7 +27,7 @@ jobs:
           php artisan down || true
 
           # Pull the latest code from the main branch
-          git pull origin main
+          ssh-agent sh -c 'ssh-add ~/.ssh/github_deploy_key; git fetch origin; git reset --hard origin/main'
           
           # Install PHP dependencies
           # We use --no-dev for production, and optimize autoloader
