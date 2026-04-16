@@ -203,6 +203,35 @@ class LeadController extends Controller
     }
 
     /**
+     * Update lead priority
+     */
+    public function updatePriority(Request $request, Lead $lead)
+    {
+        $validated = $request->validate([
+            'priority' => 'required|in:low,medium,high',
+        ]);
+
+        $oldPriority = $lead->priority;
+        $lead->update(['priority' => $validated['priority']]);
+
+        // Log activity
+        $lead->logActivity(
+            LeadActivity::TYPE_PRIORITY_CHANGED,
+            "Priority changed from {$oldPriority} to {$validated['priority']}"
+        );
+
+        // Update score as priority changes it
+        $this->scoringService->updateScore($lead);
+
+        return response()->json([
+            'success' => true,
+            'lead' => $lead->fresh(),
+            'heat_icon' => $lead->heat_icon,
+            'lead_score' => $lead->lead_score,
+        ]);
+    }
+
+    /**
      * Update lead details
      */
     public function update(Request $request, Lead $lead)
@@ -300,13 +329,28 @@ class LeadController extends Controller
                     ], 400);
                 }
 
-                // Create a conversation for this lead
-                $conversation = $lead->conversations()->create([
-                    'meta_account_id' => $metaAccount->id,
-                    'conversation_id' => 'conv_' . $lead->id . '_' . time(),
-                    'platform' => $lead->platform,
-                    'status' => 'active',
-                ]);
+                // Use deterministic ID: {sender_id}_{recipient_id}
+                // When we send, sender is our page, recipient is the lead
+                // But we use the SAME ID format as the webhook (lead_page)
+                $conversationId = "{$lead->platform_user_id}_{$metaAccount->page_id}";
+
+                // Find or create conversation for this lead
+                $conversation = MetaConversation::firstOrCreate(
+                    [
+                        'lead_id' => $lead->id,
+                        'meta_account_id' => $metaAccount->id,
+                    ],
+                    [
+                        'conversation_id' => $conversationId,
+                        'platform' => $lead->platform,
+                        'status' => 'active',
+                    ]
+                );
+
+                // Ensure the conversation_id matches our deterministic format if it was different
+                if ($conversation->conversation_id !== $conversationId) {
+                    $conversation->update(['conversation_id' => $conversationId]);
+                }
             }
 
             $messageContent = $validated['message'];
@@ -507,8 +551,43 @@ class LeadController extends Controller
     protected function calculateAverageResponseTime(): string
     {
         // Calculate average time between incoming message and first outgoing response
-        // Simplified: return placeholder for now
-        return '12 min';
+        // We look at activities to find this
+        $responseTimes = [];
+
+        Lead::whereHas('activities', function ($q) {
+            $q->where('type', LeadActivity::TYPE_MESSAGE_RECEIVED);
+        })->chunk(100, function ($leads) use (&$responseTimes) {
+            foreach ($leads as $lead) {
+                $activities = $lead->activities()
+                    ->whereIn('type', [LeadActivity::TYPE_MESSAGE_RECEIVED, LeadActivity::TYPE_MESSAGE_SENT])
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                $receivedAt = null;
+                foreach ($activities as $activity) {
+                    if ($activity->type === LeadActivity::TYPE_MESSAGE_RECEIVED && !$receivedAt) {
+                        $receivedAt = $activity->created_at;
+                    } elseif ($activity->type === LeadActivity::TYPE_MESSAGE_SENT && $receivedAt) {
+                        $responseTimes[] = $activity->created_at->diffInMinutes($receivedAt);
+                        $receivedAt = null; // Reset for next interaction pair
+                    }
+                }
+            }
+        });
+
+        if (empty($responseTimes)) {
+            return 'N/A';
+        }
+
+        $avgMinutes = array_sum($responseTimes) / count($responseTimes);
+
+        if ($avgMinutes < 60) {
+            return round($avgMinutes) . ' min';
+        }
+
+        $hours = floor($avgMinutes / 60);
+        $minutes = round($avgMinutes % 60);
+        return "{$hours}h {$minutes}m";
     }
 
     protected function calculateConversionRate(): float

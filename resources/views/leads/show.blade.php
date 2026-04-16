@@ -801,14 +801,15 @@
                 <div class="sidebar-card">
                     <div class="sidebar-card-title">
                         <i class="bi bi-star"></i> Lead Score
+                        <span id="heatIcon" style="margin-left: auto;">{{ $lead->heat_icon }}</span>
                     </div>
                     <div class="score-bar-container">
                         <div class="score-bar">
-                            <div class="score-bar-fill" style="width: {{ $lead->lead_score }}%;"></div>
+                            <div id="scoreBarFill" class="score-bar-fill" style="width: {{ $lead->lead_score }}%;"></div>
                         </div>
                         <div class="score-label">
                             <span>Score</span>
-                            <span><strong>{{ $lead->lead_score }}</strong>/100</span>
+                            <span><strong id="scoreValue">{{ $lead->lead_score }}</strong>/100</span>
                         </div>
                     </div>
                 </div>
@@ -988,6 +989,38 @@
                         this.classList.add('active');
                     }
                 });
+            });
+
+            // Priority change
+            document.getElementById('leadPriority')?.addEventListener('change', async function () {
+                const priority = this.value;
+
+                try {
+                    const response = await fetch(`/admin/leads/${leadId}/priority`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ priority }),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Update score and heat icon in UI
+                        const scoreVal = document.getElementById('scoreValue');
+                        const scoreBar = document.getElementById('scoreBarFill');
+                        const heatIcon = document.getElementById('heatIcon');
+                        
+                        if (scoreVal) scoreVal.textContent = data.lead_score;
+                        if (scoreBar) scoreBar.style.width = data.lead_score + '%';
+                        if (heatIcon) heatIcon.textContent = data.heat_icon;
+                        
+                        console.log('Priority updated successfully');
+                    }
+                } catch (error) {
+                    console.error('Error updating priority:', error);
+                }
             });
 
             // Assignment change

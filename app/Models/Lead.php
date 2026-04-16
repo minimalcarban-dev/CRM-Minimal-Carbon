@@ -131,41 +131,12 @@ class Lead extends Model
 
     public function calculateScore(): int
     {
-        $score = 0;
-
-        // Base points for having contact information
-        if ($this->email)
-            $score += 15;
-        if ($this->phone)
-            $score += 20;
-
-        // Points for engagement (message count)
-        $messageCount = $this->messages()->count();
-        $score += min($messageCount * 5, 30); // Max 30 points for messages
-
-        // Points for recent activity
-        if ($this->last_contact_at) {
-            $hoursSinceContact = now()->diffInHours($this->last_contact_at);
-            if ($hoursSinceContact < 24)
-                $score += 20;
-            elseif ($hoursSinceContact < 72)
-                $score += 10;
-            elseif ($hoursSinceContact < 168)
-                $score += 5;
-        }
-
-        // Bonus for high priority
-        if ($this->priority === 'high')
-            $score += 15;
-        elseif ($this->priority === 'medium')
-            $score += 5;
-
-        return min($score, 100); // Cap at 100
+        return app(\App\Services\LeadScoringService::class)->calculateScore($this);
     }
 
     public function updateScore(): void
     {
-        $this->update(['lead_score' => $this->calculateScore()]);
+        app(\App\Services\LeadScoringService::class)->updateScore($this);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -247,5 +218,15 @@ class Lead extends Model
         return $this->conversations()
             ->where('is_read', false)
             ->count();
+    }
+
+    public function getHeatLevelAttribute(): string
+    {
+        return app(\App\Services\LeadScoringService::class)->getHeatLevel($this);
+    }
+
+    public function getHeatIconAttribute(): string
+    {
+        return app(\App\Services\LeadScoringService::class)->getHeatIcon($this);
     }
 }

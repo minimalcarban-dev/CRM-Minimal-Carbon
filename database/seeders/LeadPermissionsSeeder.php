@@ -19,10 +19,11 @@ class LeadPermissionsSeeder extends Seeder
             ['name' => 'leads.delete', 'slug' => 'leads-delete', 'category' => 'leads', 'description' => 'Delete leads'],
             ['name' => 'leads.assign', 'slug' => 'leads-assign', 'category' => 'leads', 'description' => 'Assign leads to agents'],
             ['name' => 'leads.message', 'slug' => 'leads-message', 'category' => 'leads', 'description' => 'Send messages to leads'],
+            ['name' => 'meta_leads.settings', 'slug' => 'meta-leads-settings', 'category' => 'leads', 'description' => 'Manage Meta integration settings'],
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(
+            Permission::updateOrCreate(
                 ['name' => $permission['name']],
                 [
                     'slug' => $permission['slug'],

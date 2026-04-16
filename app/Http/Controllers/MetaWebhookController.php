@@ -129,13 +129,14 @@ class MetaWebhookController extends Controller
         $messageId = $event['message_id'];
         $text = $event['text'];
         $attachments = $event['attachments'];
+        $platform = $event['platform'] ?? 'facebook';
 
         // Find or create lead
         $lead = Lead::firstOrCreate(
             ['platform_user_id' => $senderId],
             [
                 'name' => 'Unknown User', // Will be updated from profile
-                'platform' => $event['platform'] ?? 'facebook', // Detect from webhook payload
+                'platform' => $platform,
                 'status' => 'new',
                 'priority' => 'medium',
                 'first_contact_at' => now(),
@@ -143,12 +144,17 @@ class MetaWebhookController extends Controller
             ]
         );
 
+        // Update platform if it changed or was unknown
+        if ($lead->platform !== $platform) {
+            $lead->update(['platform' => $platform]);
+        }
+
         // Try to fetch user profile
-        if ($lead->name === 'Unknown User') {
+        if ($lead->name === 'Unknown User' || empty($lead->profile_pic_url)) {
             self::fetchAndUpdateUserProfile($lead, $senderId, $recipientId);
         }
 
-        // Find or create conversation
+        // Find meta account
         $metaAccount = MetaAccount::where('page_id', $recipientId)
             ->orWhere('account_id', $recipientId)
             ->first();
@@ -158,14 +164,28 @@ class MetaWebhookController extends Controller
             return;
         }
 
-        $conversation = MetaConversation::firstOrCreate(
-            ['conversation_id' => "{$senderId}_{$recipientId}"],
-            [
-                'lead_id' => $lead->id,
-                'meta_account_id' => $metaAccount->id,
-                'platform' => $lead->platform,
-            ]
-        );
+        // Find or create conversation - use deterministic ID
+        $conversationId = "{$senderId}_{$recipientId}";
+        $conversation = MetaConversation::where('conversation_id', $conversationId)->first();
+
+        if (!$conversation) {
+            // Check if there's an existing conversation for this lead and account regardless of ID
+            $conversation = MetaConversation::where('lead_id', $lead->id)
+                ->where('meta_account_id', $metaAccount->id)
+                ->first();
+
+            if ($conversation) {
+                // Update the old random ID to the deterministic one
+                $conversation->update(['conversation_id' => $conversationId]);
+            } else {
+                $conversation = MetaConversation::create([
+                    'conversation_id' => $conversationId,
+                    'lead_id' => $lead->id,
+                    'meta_account_id' => $metaAccount->id,
+                    'platform' => $platform,
+                ]);
+            }
+        }
 
         // Check for duplicate message
         if (MetaMessage::where('message_id', $messageId)->exists()) {
@@ -222,8 +242,20 @@ class MetaWebhookController extends Controller
     protected static function handleDeliveryEvent(array $event): void
     {
         $messageIds = $event['message_ids'] ?? [];
+        $senderId = $event['sender_id'];
+        $recipientId = $event['recipient_id'];
 
+        if (empty($messageIds)) {
+            return;
+        }
+
+        // Filter by conversation to be safe
+        $conversationId = "{$senderId}_{$recipientId}";
+        
         MetaMessage::whereIn('message_id', $messageIds)
+            ->whereHas('conversation', function($q) use ($conversationId) {
+                $q->where('conversation_id', $conversationId);
+            })
             ->where('status', '!=', MetaMessage::STATUS_READ)
             ->update(['status' => MetaMessage::STATUS_DELIVERED]);
     }
@@ -234,12 +266,18 @@ class MetaWebhookController extends Controller
     protected static function handleReadEvent(array $event): void
     {
         $watermark = $event['watermark'];
+        $senderId = $event['sender_id'];
+        $recipientId = $event['recipient_id'];
 
-        // Mark all messages sent before watermark as read
+        // Mark all messages sent before watermark as read FOR THIS CONVERSATION
         // Watermark is a timestamp in milliseconds
         $timestamp = \Carbon\Carbon::createFromTimestampMs($watermark);
+        $conversationId = "{$senderId}_{$recipientId}";
 
         MetaMessage::where('direction', MetaMessage::DIRECTION_OUTGOING)
+            ->whereHas('conversation', function($q) use ($conversationId) {
+                $q->where('conversation_id', $conversationId);
+            })
             ->where('created_at', '<=', $timestamp)
             ->where('status', '!=', MetaMessage::STATUS_READ)
             ->update([

@@ -98,6 +98,35 @@ class LeadScoringService
     }
 
     /**
+     * Get heat level for a lead
+     */
+    public function getHeatLevel(Lead $lead): string
+    {
+        $score = $lead->lead_score ?? $this->calculateScore($lead);
+
+        if ($score >= 80) {
+            return 'hot';
+        } elseif ($score >= 40) {
+            return 'warm';
+        } else {
+            return 'cold';
+        }
+    }
+
+    /**
+     * Get heat icon for a lead
+     */
+    public function getHeatIcon(Lead $lead): string
+    {
+        return match ($this->getHeatLevel($lead)) {
+            'hot' => '🔥',
+            'warm' => '⚡',
+            'cold' => '❄️',
+            default => '❄️'
+        };
+    }
+
+    /**
      * Get score breakdown for a lead
      */
     public function getScoreBreakdown(Lead $lead): array
@@ -139,6 +168,7 @@ class LeadScoringService
         }
 
         $breakdown['total'] = $this->calculateScore($lead);
+        $breakdown['heat'] = $this->getHeatLevel($lead);
 
         return $breakdown;
     }

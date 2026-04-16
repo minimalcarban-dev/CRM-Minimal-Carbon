@@ -766,7 +766,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
     // Lead Actions
     Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])
-        ->name('leads.updateStatus')
+        ->name('leads.updateStatus');
+    Route::patch('leads/{lead}/priority', [LeadController::class, 'updatePriority'])
+        ->name('leads.updatePriority')
         ->middleware('admin.permission:leads.edit');
 
     Route::post('leads/{lead}/assign', [LeadController::class, 'assign'])

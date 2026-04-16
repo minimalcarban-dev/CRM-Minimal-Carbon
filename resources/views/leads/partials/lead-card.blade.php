@@ -17,8 +17,8 @@
     </div>
 
     <div class="lead-card-meta">
-        <span class="lead-score">
-            <i class="bi bi-star-fill"></i>
+        <span class="lead-score" title="Heat Level: {{ ucfirst($lead->heat_level) }}">
+            <span class="heat-icon">{{ $lead->heat_icon }}</span>
             {{ $lead->lead_score }}
         </span>
         <span class="lead-priority {{ $lead->priority }}">

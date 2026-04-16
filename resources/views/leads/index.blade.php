@@ -112,6 +112,11 @@
             font-weight: 600;
         }
 
+        .heat-icon {
+            font-size: 1rem;
+            margin-right: 0.2rem;
+        }
+
         .kanban-column.new .column-count {
             background: var(--primary);
         }

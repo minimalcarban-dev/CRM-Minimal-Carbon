@@ -237,12 +237,15 @@ class MetaApiService
             $messaging = $entry['messaging'] ?? [];
 
             foreach ($messaging as $event) {
+                $senderId = $event['sender']['id'] ?? null;
+                $recipientId = $event['recipient']['id'] ?? null;
+
                 if (isset($event['message'])) {
                     $messages[] = [
                         'type' => 'message',
-                        'platform' => $platform, // Include platform in event
-                        'sender_id' => $event['sender']['id'] ?? null,
-                        'recipient_id' => $event['recipient']['id'] ?? null,
+                        'platform' => $platform,
+                        'sender_id' => $senderId,
+                        'recipient_id' => $recipientId,
                         'timestamp' => $event['timestamp'] ?? null,
                         'message_id' => $event['message']['mid'] ?? null,
                         'text' => $event['message']['text'] ?? null,
@@ -252,12 +255,16 @@ class MetaApiService
                 } elseif (isset($event['delivery'])) {
                     $messages[] = [
                         'type' => 'delivery',
+                        'sender_id' => $senderId,
+                        'recipient_id' => $recipientId,
                         'message_ids' => $event['delivery']['mids'] ?? [],
                         'watermark' => $event['delivery']['watermark'] ?? null,
                     ];
                 } elseif (isset($event['read'])) {
                     $messages[] = [
                         'type' => 'read',
+                        'sender_id' => $senderId,
+                        'recipient_id' => $recipientId,
                         'watermark' => $event['read']['watermark'] ?? null,
                     ];
                 }
