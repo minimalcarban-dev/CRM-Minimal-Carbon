@@ -1,0 +1,48 @@
+name: Deploy Laravel App to cPanel
+
+on:
+  push:
+    branches:
+      - main # Trigger on push to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Executing remote SSH commands
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          # Go to the project root directory in cPanel
+          cd /home/prjugsw6cmad/Minimal-carbon
+          
+          # Put app into maintenance mode
+          php artisan down || true
+
+          # Pull the latest code from the main branch
+          git pull origin main
+          
+          # Install PHP dependencies
+          # We use --no-dev for production, and optimize autoloader
+          composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+          
+          # Clear out the caches
+          php artisan optimize:clear
+          
+          # Optionally configure caching
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          
+          # Run database migrations if any (ignoring confirmation)
+          php artisan migrate --force
+          
+          # Bring the app back up
+          php artisan up
