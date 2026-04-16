@@ -17,7 +17,7 @@ jobs:
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        key: ${{ secrets.SSH_PASSWORD }}
         port: 22
         script: |
           # Go to the project root directory in cPanel
