@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MeleeDiamond extends Model
 {
@@ -71,6 +72,17 @@ class MeleeDiamond extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(MeleeTransaction::class);
+    }
+
+    /**
+     * Latest stock IN transaction for this melee diamond.
+     */
+    public function latestInTransaction(): HasOne
+    {
+        return $this->hasOne(MeleeTransaction::class)
+            ->ofMany(['id' => 'max'], function ($query) {
+                $query->where('transaction_type', 'in');
+            });
     }
 
     /**

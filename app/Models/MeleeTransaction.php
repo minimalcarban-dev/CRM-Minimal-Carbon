@@ -18,6 +18,7 @@ class MeleeTransaction extends Model
         'transaction_type', // in, out, adjustment
         'pieces', // + or -
         'carat_weight', // + or - (optional)
+        'price_per_ct',
         'reference_type',
         'reference_id',
         'notes',
@@ -26,6 +27,7 @@ class MeleeTransaction extends Model
 
     protected $casts = [
         'carat_weight' => 'decimal:3',
+        'price_per_ct' => 'decimal:2',
     ];
 
     /**

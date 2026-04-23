@@ -1859,7 +1859,7 @@
                                                                 </span>
                                                             @endif
                                                         </td>
-                                                        <td class="fw-medium">
+                                                        <td class="fw-medium" data-stock-avg-cost="1">
                                                             ${{ number_format($diamond->purchase_price_per_ct ?? 0, 2) }}
                                                         </td>
                                                         <td class="fw-medium" data-stock-carat="1">
@@ -1887,14 +1887,19 @@
                                                                 <i class="bi bi-dash-lg"></i>
                                                             </button>
                                                             @php
-                                                                $lastTx = $diamond->transactions->first();
+                                                                $lastTx = $diamond->latestInTransaction;
                                                                 $lastTxPieces = $lastTx ? $lastTx->pieces : '';
                                                                 $lastTxCarats = $lastTx ? $lastTx->carat_weight : '';
+                                                                $lastTxCostPerCt = $lastTx ? $lastTx->price_per_ct : '';
+                                                                $lastTxCostEditable =
+                                                                    $lastTx &&
+                                                                    $lastTx->transaction_type === 'in' &&
+                                                                    $lastTx->reference_type !== 'order';
                                                             @endphp
                                                             <button
                                                                 class="btn btn-sm btn-theme-icon btn-theme-icon-edit ms-1"
                                                                 title="Edit Melee"
-                                                                onclick="openEditModal({{ $diamond->id }}, '{{ $diamond->shape }}', '{{ explode('-', $diamond->size_label)[1] ?? str_replace(strtolower($diamond->shape) . '-', '', $diamond->size_label) }}', '{{ $lastTxPieces }}', '{{ $lastTxCarats }}')">
+                                                                onclick="openEditModal({{ $diamond->id }}, '{{ $diamond->shape }}', '{{ explode('-', $diamond->size_label)[1] ?? str_replace(strtolower($diamond->shape) . '-', '', $diamond->size_label) }}', '{{ $lastTxPieces }}', '{{ $lastTxCarats }}', '{{ $lastTxCostPerCt }}', {{ $lastTx ? 'true' : 'false' }}, {{ $lastTxCostEditable ? 'true' : 'false' }})">
                                                                 <i class="bi bi-pencil-square"></i>
                                                             </button>
                                                             <button
@@ -2113,6 +2118,13 @@
                                     placeholder="0.000" min="0">
                             </div>
                         </div>
+                        <div class="mb-4 d-none" id="edit_last_price_wrap">
+                            <label class="form-label fw-bold text-secondary text-uppercase fs-8 ls-1">Cost $/Ct</label>
+                            <input type="number" step="0.01" id="edit_last_price_per_ct" class="form-control"
+                                placeholder="0.00" min="0">
+                            <div class="form-text">Latest IN entry cost. Changing this updates Avg $/Ct and value.</div>
+                        </div>
+                        <div class="alert alert-light border small d-none mb-4" id="edit_last_price_hint"></div>
 
                         <button type="submit"
                             class="btn btn-primary w-100 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2"
@@ -2163,6 +2175,7 @@
 
     <script>
         let activeCategoryId = null;
+        const canEditMeleeCost = @json($canEditMeleeCost ?? false);
 
         document.addEventListener('DOMContentLoaded', function() {
             // Check localStorage for previous tab, otherwise default to lab-grown
@@ -2208,15 +2221,51 @@
         // ==========================================
         //  EDIT / DELETE STOCK FUNCTIONS
         // ==========================================
-        function openEditModal(id, shape, size, lastPieces, lastCarats) {
+        function openEditModal(id, shape, size, lastPieces, lastCarats, lastPricePerCt = '', hasLastInTx = false,
+            isLastTxCostEditable = false) {
             document.getElementById('edit_melee_id').value = id;
             document.getElementById('edit_shape').value = shape;
             document.getElementById('edit_size').value = size;
 
-            document.getElementById('edit_last_pieces').value = lastPieces || '';
-            document.getElementById('edit_last_carats').value = lastCarats || '';
-            document.getElementById('edit_last_pieces').disabled = !lastPieces;
-            document.getElementById('edit_last_carats').disabled = !lastPieces;
+            const piecesInput = document.getElementById('edit_last_pieces');
+            const caratsInput = document.getElementById('edit_last_carats');
+            const priceWrap = document.getElementById('edit_last_price_wrap');
+            const priceInput = document.getElementById('edit_last_price_per_ct');
+            const priceHint = document.getElementById('edit_last_price_hint');
+
+            const hasPiecesValue = lastPieces !== '' && lastPieces !== null && lastPieces !== undefined;
+            const hasCaratsValue = lastCarats !== '' && lastCarats !== null && lastCarats !== undefined;
+            const hasPriceValue = lastPricePerCt !== '' && lastPricePerCt !== null && lastPricePerCt !== undefined;
+
+            document.getElementById('edit_last_pieces').value = hasPiecesValue ? lastPieces : '';
+            document.getElementById('edit_last_carats').value = hasCaratsValue ? lastCarats : '';
+            piecesInput.disabled = !hasLastInTx;
+            caratsInput.disabled = !hasLastInTx;
+
+            if (canEditMeleeCost) {
+                priceWrap.classList.remove('d-none');
+                priceInput.value = hasPriceValue ? parseFloat(lastPricePerCt).toFixed(2) : '';
+
+                if (!hasLastInTx) {
+                    priceInput.disabled = true;
+                    priceHint.classList.remove('d-none');
+                    priceHint.textContent = 'No IN transaction found for this size.';
+                } else if (!isLastTxCostEditable) {
+                    priceInput.disabled = true;
+                    priceHint.classList.remove('d-none');
+                    priceHint.textContent = 'Latest IN transaction manual nahi hai, isliye cost yahan edit nahi hogi.';
+                } else {
+                    priceInput.disabled = false;
+                    priceHint.classList.add('d-none');
+                    priceHint.textContent = '';
+                }
+            } else {
+                priceWrap.classList.add('d-none');
+                priceInput.value = '';
+                priceInput.disabled = true;
+                priceHint.classList.remove('d-none');
+                priceHint.textContent = 'You do not have permission to edit cost ($/Ct).';
+            }
 
             new bootstrap.Modal(document.getElementById('editMeleeModal')).show();
         }
@@ -2229,9 +2278,21 @@
             const size = document.getElementById('edit_size').value;
             const last_pieces = document.getElementById('edit_last_pieces').value;
             const last_carats = document.getElementById('edit_last_carats').value;
+            const lastPriceInput = document.getElementById('edit_last_price_per_ct');
 
             const btn = document.getElementById('btnUpdateMelee');
             const originalText = btn.innerHTML;
+
+            const payload = {
+                shape,
+                size,
+                last_pieces,
+                last_carats
+            };
+
+            if (!lastPriceInput.disabled && lastPriceInput.value !== '') {
+                payload.last_price_per_ct = lastPriceInput.value;
+            }
 
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
@@ -2244,12 +2305,7 @@
                             'content'),
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        shape,
-                        size,
-                        last_pieces,
-                        last_carats
-                    })
+                    body: JSON.stringify(payload)
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -2650,6 +2706,8 @@
                     document.getElementById('history-diamond-detail').textContent =
                         `Size: ${d.size_label.replace('-', ' ')}`;
                     document.getElementById('history-stock-badge').textContent = `${d.available_pieces} pcs available`;
+                    document.getElementById('history-price-summary').textContent =
+                        `Current Avg $/Ct: $${parseFloat(d.avg_price_per_ct || 0).toFixed(2)} | Current Value: $${parseFloat(d.total_price || 0).toFixed(2)}`;
 
                     // Populate transactions
                     const txns = data.transactions;
@@ -2802,6 +2860,7 @@
             document.getElementById('edit_tx_id').value = id;
             document.getElementById('edit_tx_pieces').value = pieces;
             document.getElementById('edit_tx_carats').value = carats;
+
             new bootstrap.Modal(document.getElementById('editTransactionModal')).show();
         }
 
@@ -2832,6 +2891,10 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.diamond && data.diamond.id) {
+                            updateStockDisplay(data.diamond.id, data.diamond);
+                        }
+
                         bootstrap.Modal.getInstance(document.getElementById('editTransactionModal')).hide();
 
                         if (window.Swal) {
@@ -2912,6 +2975,10 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.diamond && data.diamond.id) {
+                            updateStockDisplay(data.diamond.id, data.diamond);
+                        }
+
                         if (window.Swal) {
                             Swal.fire({
                                 title: 'Deleted!',
@@ -3112,6 +3179,12 @@
             const caratCell = row.querySelector('[data-stock-carat="1"]');
             if (caratCell) {
                 caratCell.textContent = `${parseFloat(diamondData.available_carat_weight || 0).toFixed(3)} ct`;
+            }
+
+            // Update avg cost
+            const avgCostCell = row.querySelector('[data-stock-avg-cost="1"]');
+            if (avgCostCell && diamondData.purchase_price_per_ct !== undefined) {
+                avgCostCell.textContent = `$${parseFloat(diamondData.purchase_price_per_ct || 0).toFixed(2)}`;
             }
 
             // Update total price

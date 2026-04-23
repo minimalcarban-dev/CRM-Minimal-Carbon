@@ -65,6 +65,7 @@ class MeleeStockService
                         'transaction_type' => 'out',
                         'pieces' => $entry['pieces'],
                         'carat_weight' => $carats,
+                        'price_per_ct' => (float) $diamond->purchase_price_per_ct,
                         'reference_type' => 'order',
                         'reference_id' => $orderId,
                         'created_by' => $this->resolveActorId(),
@@ -144,6 +145,7 @@ class MeleeStockService
                         'transaction_type' => 'in',
                         'pieces' => $entry['pieces'],
                         'carat_weight' => $carats,
+                        'price_per_ct' => (float) $diamond->purchase_price_per_ct,
                         'reference_type' => 'order',
                         'reference_id' => $orderId,
                         'created_by' => $this->resolveActorId(),
@@ -244,6 +246,7 @@ class MeleeStockService
                     'transaction_type' => $transactionType,
                     'pieces' => $pieces,
                     'carat_weight' => $caratWeight,
+                    'price_per_ct' => $this->resolveTransactionPricePerCt($diamond, $transactionType, $pricePerCt),
                     'created_by' => $this->resolveActorId(),
                     'notes' => $notes,
                     'reference_type' => 'manual',
@@ -271,6 +274,65 @@ class MeleeStockService
                 'message' => 'Failed to record transaction: ' . $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Rebuild diamond balances and weighted average from its full transaction ledger.
+     */
+    public function recalculateDiamondFromTransactions(MeleeDiamond $diamond): void
+    {
+        $transactions = MeleeTransaction::where('melee_diamond_id', $diamond->id)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
+
+        $totalPieces = 0;
+        $availablePieces = 0;
+        $totalCarats = 0.0;
+        $availableCarats = 0.0;
+        $avgPricePerCt = 0.0;
+
+        foreach ($transactions as $transaction) {
+            $pieces = abs((int) $transaction->pieces);
+            $carats = abs((float) $transaction->carat_weight);
+
+            if ($transaction->transaction_type === 'in') {
+                if ($transaction->reference_type === 'order') {
+                    $availablePieces += $pieces;
+                    $availableCarats += $carats;
+                    continue;
+                }
+
+                $incomingPrice = (float) ($transaction->price_per_ct ?? 0);
+                $this->applyWeightedAverageInMemory($avgPricePerCt, $availableCarats, $carats, $incomingPrice);
+
+                $totalPieces += $pieces;
+                $availablePieces += $pieces;
+                $totalCarats += $carats;
+                $availableCarats += $carats;
+                continue;
+            }
+
+            if ($transaction->transaction_type === 'adjustment') {
+                $totalPieces += $pieces;
+                $availablePieces += $pieces;
+                $totalCarats += $carats;
+                $availableCarats += $carats;
+                continue;
+            }
+
+            if ($transaction->transaction_type === 'out') {
+                $availablePieces -= $pieces;
+                $availableCarats -= $carats;
+            }
+        }
+
+        $diamond->total_pieces = $totalPieces;
+        $diamond->available_pieces = $availablePieces;
+        $diamond->total_carat_weight = round($totalCarats, 3);
+        $diamond->available_carat_weight = round($availableCarats, 3);
+        $diamond->purchase_price_per_ct = round($avgPricePerCt, 2);
+        $diamond->save();
     }
 
     /**
@@ -410,6 +472,32 @@ class MeleeStockService
         $diamond->save();
     }
 
+    private function applyWeightedAverageInMemory(float &$avgPricePerCt, float $currentCarats, float $newCarats, float $newPricePerCt): void
+    {
+        if ($newCarats <= 0 || $newPricePerCt <= 0) {
+            return;
+        }
+
+        $totalCarats = $currentCarats + $newCarats;
+        if ($totalCarats <= 0) {
+            return;
+        }
+
+        $currentValue = $currentCarats * $avgPricePerCt;
+        $newValue = $newCarats * $newPricePerCt;
+
+        $avgPricePerCt = ($currentValue + $newValue) / $totalCarats;
+    }
+
+    private function resolveTransactionPricePerCt(MeleeDiamond $diamond, string $transactionType, float $incomingPricePerCt): float
+    {
+        if ($transactionType === 'in' && $incomingPricePerCt > 0) {
+            return $incomingPricePerCt;
+        }
+
+        return (float) $diamond->purchase_price_per_ct;
+    }
+
     /**
      * @param \Illuminate\Support\Collection<int, MeleeDiamond> $diamonds
      */
@@ -444,6 +532,7 @@ class MeleeStockService
             'name' => (optional($diamond->category)->name ?? 'Melee') . ' - ' . $diamond->shape . ' - ' . $diamond->size_label,
             'available_pieces' => (int) $diamond->available_pieces,
             'available_carat_weight' => (float) $diamond->available_carat_weight,
+            'purchase_price_per_ct' => (float) $diamond->purchase_price_per_ct,
             'total_price' => (float) $diamond->total_price,
             'status' => $diamond->status,
         ];

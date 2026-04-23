@@ -107,6 +107,7 @@ class PermissionSeeder extends Seeder
 
             // Jewellery Stock
             ['name' => 'View Jewellery Pricing', 'slug' => 'jewellery_stock.view_pricing', 'description' => 'View jewellery pricing details (purchase price and margin)', 'category' => 'jewellery_stock'],
+            ['name' => 'Edit Melee Cost', 'slug' => 'melee_diamonds.edit_cost', 'description' => 'Edit manual melee stock IN cost ($/ct) in transaction history', 'category' => 'melee_diamonds'],
 
             // Clients
             ['name' => 'View Clients', 'slug' => 'clients.view', 'description' => 'View client list and details', 'category' => 'clients'],

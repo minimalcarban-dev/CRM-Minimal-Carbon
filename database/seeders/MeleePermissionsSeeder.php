@@ -35,6 +35,11 @@ class MeleePermissionsSeeder extends Seeder
                 'name' => 'Manage Stock Transactions',
                 'description' => 'Can perform IN/OUT stock transactions',
             ],
+            [
+                'slug' => 'melee_diamonds.edit_cost',
+                'name' => 'Edit Melee Cost',
+                'description' => 'Can edit manual stock IN cost ($/ct) from transaction history',
+            ],
         ];
 
         foreach ($permissions as $perm) {
