@@ -220,6 +220,21 @@
                                             {{ $jewelleryStock->primary_stone_weight }} cts</div>
                                     </div>
                                     <div class="detail-item">
+                                        <div class="detail-label" style="font-size: 0.7rem; color: #64748b;">Total Carat
+                                        </div>
+                                        <div class="detail-value" style="font-weight: 600;">
+                                            @if (
+                                                $jewelleryStock->total_stone_weight !== null ||
+                                                    $jewelleryStock->primary_stone_weight !== null ||
+                                                    $jewelleryStock->side_stone_weight !== null)
+                                                {{ number_format((float) ($jewelleryStock->total_stone_weight ?? (($jewelleryStock->primary_stone_weight ?? 0) + ($jewelleryStock->side_stone_weight ?? 0))), 3) }}
+                                                cts
+                                            @else
+                                                -
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="detail-item">
                                         <div class="detail-label" style="font-size: 0.7rem; color: #64748b;">Shape</div>
                                         <div class="detail-value" style="font-weight: 600;">
                                             {{ $jewelleryStock->primaryStoneShape ? $jewelleryStock->primaryStoneShape->name : 'N/A' }}

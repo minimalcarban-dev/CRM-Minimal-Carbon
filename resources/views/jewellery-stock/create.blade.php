@@ -209,8 +209,9 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Carat Weight</label>
-                                    <input type="number" name="primary_stone_weight" class="form-control"
+                                    <label class="form-label">Main Stone Carat Weight</label>
+                                    <input type="number" name="primary_stone_weight" id="primaryStoneWeight"
+                                        class="form-control"
                                         step="0.001" placeholder="0.000 cts"
                                         value="{{ old('primary_stone_weight') }}">
                                 </div>
@@ -282,9 +283,17 @@
                                 </div>
                                 <div class="form-group" style="display: flex; gap: 0.5rem;">
                                     <div style="flex: 1;">
-                                        <label class="form-label">Total cts</label>
-                                        <input type="number" name="side_stone_weight" class="form-control"
-                                            step="0.001" value="{{ old('side_stone_weight') }}">
+                                        <label class="form-label">Side Stone Carat Weight</label>
+                                        <input type="number" name="side_stone_weight" id="sideStoneWeight"
+                                            class="form-control" step="0.001"
+                                            value="{{ old('side_stone_weight') }}">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label class="form-label">Total Carat Weight</label>
+                                        <input type="number" name="total_stone_weight" id="totalStoneWeight"
+                                            class="form-control" step="0.001"
+                                            value="{{ old('total_stone_weight') }}" placeholder="Auto-calculated"
+                                            readonly>
                                     </div>
                                     <div style="width: 70px;">
                                         <label class="form-label">Count</label>
@@ -295,7 +304,6 @@
                             </div>
                         </div>
                     </div>
-
                     {{-- Stock & Pricing --}}
                     <div class="tracker-table-card" style="padding: 1.5rem;">
                         <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
@@ -461,6 +469,27 @@
             }
         }
 
+        function calculateTotalStoneWeight() {
+            const primaryInput = document.getElementById('primaryStoneWeight');
+            const sideInput = document.getElementById('sideStoneWeight');
+            const totalInput = document.getElementById('totalStoneWeight');
+
+            if (!totalInput) return;
+
+            const primaryRaw = primaryInput?.value?.trim() ?? '';
+            const sideRaw = sideInput?.value?.trim() ?? '';
+            const hasWeightValue = primaryRaw !== '' || sideRaw !== '';
+
+            if (!hasWeightValue) {
+                totalInput.value = '';
+                return;
+            }
+
+            const primary = parseFloat(primaryRaw) || 0;
+            const side = parseFloat(sideRaw) || 0;
+            totalInput.value = (primary + side).toFixed(3);
+        }
+
         // Expanded Multi-Image Preview Function
         function previewUploads(input) {
             const container = document.getElementById('image_preview_container');
@@ -486,11 +515,14 @@
         document.getElementById('categorySelect')?.addEventListener('change', updateCategoryFields);
         document.querySelector('input[name="purchase_price"]')?.addEventListener('input', calculateMargin);
         document.querySelector('input[name="selling_price"]')?.addEventListener('input', calculateMargin);
+        document.getElementById('primaryStoneWeight')?.addEventListener('input', calculateTotalStoneWeight);
+        document.getElementById('sideStoneWeight')?.addEventListener('input', calculateTotalStoneWeight);
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
             updateCategoryFields();
             calculateMargin();
+            calculateTotalStoneWeight();
         });
     </script>
 @endpush

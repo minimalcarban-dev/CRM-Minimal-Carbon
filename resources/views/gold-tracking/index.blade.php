@@ -116,8 +116,7 @@
 
         <!-- Filter Section -->
         <div class="tracker-filter">
-            <form method="GET" action="{{ route('gold-tracking.index') }}" class="tracker-filter-form"
-                id="goldFilterForm">
+            <form method="GET" action="{{ route('gold-tracking.index') }}" class="tracker-filter-form" id="goldFilterForm">
                 <div class="tracker-filter-field date-range-field">
                     <label class="tracker-filter-label"><i class="bi bi-calendar-range"></i> Date Range</label>
                     <div class="date-range-wrapper">
@@ -143,8 +142,7 @@
                     <select name="factory_id" class="tracker-filter-select">
                         <option value="">All Factories</option>
                         @foreach ($factories as $factory)
-                            <option value="{{ $factory->id }}"
-                                {{ request('factory_id') == $factory->id ? 'selected' : '' }}>
+                            <option value="{{ $factory->id }}" {{ request('factory_id') == $factory->id ? 'selected' : '' }}>
                                 {{ $factory->name }}
                             </option>
                         @endforeach
@@ -230,43 +228,35 @@
                                 </td>
                                 <td>
                                     @if ($txn['type'] === 'purchase')
-                                        <span class="tracker-badge"
-                                            style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                        <span class="tracker-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
                                             <i class="bi bi-plus-circle"></i> PURCHASE
                                         </span>
                                     @elseif($txn['type'] === 'distribute')
-                                        <span class="tracker-badge"
-                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                        <span class="tracker-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
                                             <i class="bi bi-arrow-right"></i> DISTRIBUTE
                                         </span>
                                     @elseif($txn['type'] === 'return')
-                                        <span class="tracker-badge"
-                                            style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                        <span class="tracker-badge" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
                                             <i class="bi bi-arrow-left"></i> RETURN
                                         </span>
                                     @elseif($txn['type'] === 'consumed')
-                                        <span class="tracker-badge"
-                                            style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                        <span class="tracker-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
                                             <i class="bi bi-heptagon-half"></i> CONSUMED
                                         </span>
                                     @endif
                                 </td>
                                 <td>
                                     @if ($txn['type'] === 'purchase')
-                                        <span
-                                            style="color: #10b981; font-weight: 600;">+{{ number_format($txn['weight'], 3) }}
+                                        <span style="color: #10b981; font-weight: 600;">+{{ number_format($txn['weight'], 3) }}
                                             gm</span>
                                     @elseif($txn['type'] === 'distribute')
-                                        <span
-                                            style="color: #ef4444; font-weight: 600;">-{{ number_format($txn['weight'], 3) }}
+                                        <span style="color: #ef4444; font-weight: 600;">-{{ number_format($txn['weight'], 3) }}
                                             gm</span>
                                     @elseif($txn['type'] === 'return')
-                                        <span
-                                            style="color: #8b5cf6; font-weight: 600;">+{{ number_format($txn['weight'], 3) }}
+                                        <span style="color: #8b5cf6; font-weight: 600;">+{{ number_format($txn['weight'], 3) }}
                                             gm</span>
                                     @elseif($txn['type'] === 'consumed')
-                                        <span
-                                            style="color: #f59e0b; font-weight: 600;">-{{ number_format($txn['weight'], 3) }}
+                                        <span style="color: #f59e0b; font-weight: 600;">-{{ number_format($txn['weight'], 3) }}
                                             gm</span>
                                     @endif
                                 </td>
@@ -278,7 +268,20 @@
                                     @elseif($txn['type'] === 'return')
                                         ← {{ $txn['from_to'] }}
                                     @elseif($txn['type'] === 'consumed')
-                                        Order #{{ $txn['order_id'] ?? '' }} ({{ $txn['from_to'] }})
+                                        @if(!empty($txn['order_id']))
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <a href="{{ route('orders.show', $txn['order_id']) }}"
+                                                    style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(99, 102, 241, 0.1); color: #4f46e5; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(99, 102, 241, 0.2); transition: all 0.3s ease;"
+                                                    onmouseover="this.style.background='rgba(99, 102, 241, 0.2)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 4px rgba(99, 102, 241, 0.1)';"
+                                                    onmouseout="this.style.background='rgba(99, 102, 241, 0.1)'; this.style.transform='none'; this.style.boxShadow='none';">
+                                                    <i class="bi bi-box-seam"></i> Order #{{ $txn['order_id'] }}
+                                                </a>
+                                                <span style="color: #64748b; font-size: 0.85rem;">{{ $txn['from_to'] }}</span>
+                                            </div>
+                                        @else
+                                            <span style="color: #64748b; font-size: 0.85rem;">Order #{{ $txn['order_id'] ?? '' }}
+                                                ({{ $txn['from_to'] }})</span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td>
@@ -306,9 +309,8 @@
                                                 class="tracker-action-btn tracker-action-edit" title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('gold-tracking.purchases.destroy', $txn['id']) }}"
-                                                method="POST" style="display:inline"
-                                                onsubmit="return confirm('Delete this purchase?')">
+                                            <form action="{{ route('gold-tracking.purchases.destroy', $txn['id']) }}" method="POST"
+                                                style="display:inline" onsubmit="return confirm('Delete this purchase?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="tracker-action-btn tracker-action-delete"
@@ -330,8 +332,7 @@
                                         <div class="tracker-empty-icon"><i class="bi bi-inbox"></i></div>
                                         <h3 class="tracker-empty-title">No transactions found</h3>
                                         <p class="tracker-empty-desc">Start by adding your first gold purchase</p>
-                                        <a href="{{ route('gold-tracking.purchases.create') }}"
-                                            class="btn-primary-custom">
+                                        <a href="{{ route('gold-tracking.purchases.create') }}" class="btn-primary-custom">
                                             <i class="bi bi-plus-circle"></i> Add Purchase
                                         </a>
                                     </div>
@@ -349,7 +350,7 @@
 
     @push('scripts')
         <script>
-            $(document).ready(function() {
+            $(document).ready(function () {
                 var startDate = $('#goldDateFrom').val() ? moment($('#goldDateFrom').val()) : null;
                 var endDate = $('#goldDateTo').val() ? moment($('#goldDateTo').val()) : null;
 
@@ -372,7 +373,7 @@
                         applyLabel: 'Apply',
                         format: 'MMM D, YYYY'
                     }
-                }, function(start, end, label) {
+                }, function (start, end, label) {
                     $('#goldDateFrom').val(start.format('YYYY-MM-DD'));
                     $('#goldDateTo').val(end.format('YYYY-MM-DD'));
                     $('#goldDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
@@ -383,14 +384,14 @@
                     $('#goldDateRange').val(startDate.format('MMM D, YYYY') + ' - ' + endDate.format('MMM D, YYYY'));
                 }
 
-                $('#goldDateRange').on('cancel.daterangepicker', function(ev, picker) {
+                $('#goldDateRange').on('cancel.daterangepicker', function (ev, picker) {
                     $(this).val('');
                     $('#goldDateFrom').val('');
                     $('#goldDateTo').val('');
                     $('#goldFilterForm').submit();
                 });
 
-                $('select[name="type"], select[name="factory_id"]').on('change', function() {
+                $('select[name="type"], select[name="factory_id"]').on('change', function () {
                     $('#goldFilterForm').submit();
                 });
             });

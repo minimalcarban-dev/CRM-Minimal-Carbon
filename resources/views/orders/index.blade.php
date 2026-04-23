@@ -412,14 +412,17 @@
 
                 <select name="priority_status" class="filter-select">
                     <option value="">All Priorities</option>
-                    <option value="priority" {{ request('priority_status') == 'priority' ? 'selected' : '' }}>Priority Order</option>
-                    <option value="non_priority" {{ request('priority_status') == 'non_priority' ? 'selected' : '' }}>Non-Priority</option>
+                    <option value="priority" {{ request('priority_status') == 'priority' ? 'selected' : '' }}>Priority Order
+                    </option>
+                    <option value="non_priority" {{ request('priority_status') == 'non_priority' ? 'selected' : '' }}>
+                        Non-Priority</option>
                 </select>
 
                 <select name="payment_status" class="filter-select">
                     <option value="">All Payment Statuses</option>
                     <option value="full" {{ request('payment_status') == 'full' ? 'selected' : '' }}>Full Paid</option>
-                    <option value="partial" {{ request('payment_status') == 'partial' ? 'selected' : '' }}>Partial Paid</option>
+                    <option value="partial" {{ request('payment_status') == 'partial' ? 'selected' : '' }}>Partial Paid
+                    </option>
                     <option value="due" {{ request('payment_status') == 'due' ? 'selected' : '' }}>Payment Due</option>
                 </select>
 
@@ -430,6 +433,7 @@
                         ? request()->except(['overdue', 'page'])
                         : array_merge(request()->except(['page', 'shipped', 'cancelled', 'in_transit']), [
                             'overdue' => '1',
+
                         ]);
                 @endphp
                 <a href="{{ route('orders.index', $overdueParams) }}"
@@ -764,9 +768,9 @@
                                 form.method = 'POST';
                                 form.action = `/admin/orders/${orderId}`;
                                 form.innerHTML = `
-                                                    @csrf
-                                                    @method('DELETE')
-                                                `;
+                                                            @csrf
+                                                            @method('DELETE')
+                                                        `;
                                 document.body.appendChild(form);
                                 form.submit();
                             }
@@ -813,12 +817,12 @@
                     <table class="orders-table">
                         <thead>
                             <tr>
-                            <!-- <th class="th-id">
-                                    <div class="th-content">
-                                        <i class="bi bi-hash"></i>
-                                        <span>ID</span>
-                                    </div>
-                                </th> -->
+                                <!-- <th class="th-id">
+                                                    <div class="th-content">
+                                                        <i class="bi bi-hash"></i>
+                                                        <span>ID</span>
+                                                    </div>
+                                                </th> -->
                                 <th>
                                     <div class="th-content">
                                         <i class="bi bi-image"></i>
@@ -894,7 +898,9 @@
                                         <div class="custom-row mb-2 d-flex align-items-center gap-1">
                                             <span class="order-id-badge">#{{ $order->id }}</span>
                                             @if ($order->note === 'priority')
-                                                <span style="background-color: #ef4444; color: white; border-radius: 4px; padding: 1px 6px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);" title="Priority Order">P</span>
+                                                <span
+                                                    style="background-color: #ef4444; color: white; border-radius: 4px; padding: 1px 6px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);"
+                                                    title="Priority Order">P</span>
                                             @endif
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
@@ -1024,8 +1030,7 @@
                                         <div class="d-flex flex-column gap-1" style="font-size: 0.8rem; max-width: 300px;">
                                             @if ($order->special_notes)
                                                 <div>
-                                                    <strong
-                                                        style="font-size: 0.7rem; color: #6366f1; display: block;">Special
+                                                    <strong style="font-size: 0.7rem; color: #6366f1; display: block;">Special
                                                         Note:</strong>
                                                     <div style="white-space: pre-wrap;">{{ trim($order->special_notes) }}</div>
                                                 </div>
@@ -3734,8 +3739,8 @@
             }
 
             /* .client-info {
-                                text-align: start;
-                            } */
+                                        text-align: start;
+                                    } */
         }
 
         /* Print Styles */
@@ -4322,17 +4327,17 @@
                         const historyItem = document.createElement('div');
                         historyItem.className = 'tracking-history-item';
                         historyItem.innerHTML = `
-                                                                                                        <div class="tracking-history-dot"></div>
-                                                                                                        <div class="tracking-history-details shadow-sm">
-                                                                                                            <div class="tracking-history-header">
-                                                                                                                <span class="tracking-history-status">${escapeHtml(item.status)}</span>
-                                                                                                                <span class="tracking-history-date">${escapeHtml(item.date)}</span>
-                                                                                                            </div>
-                                                                                                            <div class="tracking-history-location">
-                                                                                                                <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
-                                                                                                            </div>
-                                                                                                            ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
-                                                                                                        </div>`;
+                                                                                                                        <div class="tracking-history-dot"></div>
+                                                                                                                        <div class="tracking-history-details shadow-sm">
+                                                                                                                            <div class="tracking-history-header">
+                                                                                                                                <span class="tracking-history-status">${escapeHtml(item.status)}</span>
+                                                                                                                                <span class="tracking-history-date">${escapeHtml(item.date)}</span>
+                                                                                                                            </div>
+                                                                                                                            <div class="tracking-history-location">
+                                                                                                                                <i class="bi bi-geo-alt-fill"></i> ${escapeHtml(item.location)}
+                                                                                                                            </div>
+                                                                                                                            ${item.description ? `<div class="tracking-history-desc">${escapeHtml(item.description)}</div>` : ''}
+                                                                                                                        </div>`;
                         container.appendChild(historyItem);
                     });
                 }

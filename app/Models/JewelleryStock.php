@@ -42,6 +42,7 @@ class JewelleryStock extends Model
         'primary_stone_cut_id',
         'side_stone_type_id',
         'side_stone_weight',
+        'total_stone_weight',
         'side_stone_count',
         'certificate_number',
         'certificate_type',
@@ -50,6 +51,9 @@ class JewelleryStock extends Model
 
     protected $casts = [
         'weight' => 'decimal:3',
+        'primary_stone_weight' => 'decimal:3',
+        'side_stone_weight' => 'decimal:3',
+        'total_stone_weight' => 'decimal:3',
         'purchase_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
         'quantity' => 'integer',
@@ -65,6 +69,13 @@ class JewelleryStock extends Model
         parent::boot();
 
         static::saving(function ($item) {
+            $hasPrimaryWeight = $item->primary_stone_weight !== null && $item->primary_stone_weight !== '';
+            $hasSideWeight = $item->side_stone_weight !== null && $item->side_stone_weight !== '';
+            $primaryWeight = (float) ($item->primary_stone_weight ?? 0);
+            $sideWeight = (float) ($item->side_stone_weight ?? 0);
+            $hasStoneWeight = $hasPrimaryWeight || $hasSideWeight;
+            $item->total_stone_weight = $hasStoneWeight ? round($primaryWeight + $sideWeight, 3) : null;
+
             if ($item->quantity <= 0) {
                 $item->status = 'out_of_stock';
             } elseif ($item->quantity <= $item->low_stock_threshold) {
