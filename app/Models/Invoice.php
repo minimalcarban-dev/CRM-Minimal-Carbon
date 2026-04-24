@@ -32,6 +32,7 @@ class Invoice extends Model
         'invoice_type',
         'place_of_supply',
         'payment_terms',
+        'include_terms_conditions',
         'billed_to_id',
         'shipped_to_id',
         'taxable_amount',
@@ -42,6 +43,10 @@ class Invoice extends Model
         'express_shipping',
         'status',
         'copy_type'
+    ];
+
+    protected $casts = [
+        'include_terms_conditions' => 'boolean',
     ];
 
     public function company()

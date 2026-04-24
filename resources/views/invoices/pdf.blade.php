@@ -559,6 +559,17 @@
             text-align: justify;
         }
 
+        .terms-list {
+            margin: 0;
+            padding-left: 16px;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .terms-list li {
+            margin-bottom: 3px;
+        }
+
         /* Signature Section */
         .signature-section {
             margin-top: 12px;
@@ -1071,6 +1082,20 @@
                 {{ number_format($invoice->total_invoice_value ?? 0, 2) }} -
                 {{ $amountWords }}
             </div>
+
+            @if($invoice->include_terms_conditions)
+                <div class="declarations">
+                    <div class="declaration-section">
+                        <div class="declaration-title">Terms & Conditions</div>
+                        <ol class="terms-list">
+                            <li>Goods once sold will not be returned or exchanged unless agreed in writing.</li>
+                            <li>Payment must be made as per the agreed payment terms.</li>
+                            <li>Any dispute must be reported within 7 days from invoice date.</li>
+                            <li>This invoice is subject to applicable local laws and jurisdiction.</li>
+                        </ol>
+                    </div>
+                </div>
+            @endif
 
             <!-- Bank Details -->
             <!-- @if(!empty($invoice->company->bank_name) || !empty($invoice->company->ifsc_code))
