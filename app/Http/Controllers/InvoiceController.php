@@ -58,7 +58,7 @@ class InvoiceController extends Controller
 
         DB::beginTransaction();
         try {
-            $invoice = Invoice::create($request->only([
+            $invoiceData = $request->only([
                 'invoice_no',
                 'invoice_region',
                 'invoice_date',
@@ -69,7 +69,10 @@ class InvoiceController extends Controller
                 'billed_to_id',
                 'shipped_to_id',
                 'copy_type'
-            ]));
+            ]);
+            $invoiceData['include_terms_conditions'] = $request->boolean('include_terms_conditions');
+
+            $invoice = Invoice::create($invoiceData);
 
             // Auto-set status based on invoice type
             $invoice->status = ($request->invoice_type === 'tax') ? 'done' : 'draft';
@@ -107,7 +110,7 @@ class InvoiceController extends Controller
 
         DB::beginTransaction();
         try {
-            $invoice->update($request->only([
+            $invoiceData = $request->only([
                 'invoice_no',
                 'invoice_region',
                 'invoice_date',
@@ -119,7 +122,10 @@ class InvoiceController extends Controller
                 'shipped_to_id',
                 'copy_type',
                 'express_shipping'
-            ]));
+            ]);
+            $invoiceData['include_terms_conditions'] = $request->boolean('include_terms_conditions');
+
+            $invoice->update($invoiceData);
 
             // Auto-set status based on invoice type
             $invoice->status = ($request->invoice_type === 'tax') ? 'done' : 'draft';

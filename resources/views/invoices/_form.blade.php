@@ -343,6 +343,30 @@
         </div>
     </div>
 
+    <!-- Terms & Conditions -->
+    <div class="form-section-card">
+        <div class="section-header">
+            <div class="section-info">
+                <div class="section-icon"><i class="bi bi-card-checklist"></i></div>
+                <div class="section-text">
+                    <h5 class="section-title">Terms & Conditions</h5>
+                    <p class="section-description">Choose whether standard terms should appear on the invoice PDF</p>
+                </div>
+            </div>
+        </div>
+        <div class="section-body">
+            <label class="terms-checkbox-option">
+                <input type="hidden" name="include_terms_conditions" value="0">
+                <input type="checkbox" name="include_terms_conditions" value="1"
+                    {{ old('include_terms_conditions', $invoice->include_terms_conditions ?? false) ? 'checked' : '' }}>
+                <span>
+                    <strong>Include Terms & Conditions in Invoice</strong>
+                    <small>Shows the standard terms block after Total Invoice Value in the PDF.</small>
+                </span>
+            </label>
+        </div>
+    </div>
+
     <!-- Submit Button -->
     <div class="tracker-form-actions" style="margin-top: 2rem;">
         <button type="submit" class="btn-primary-custom">
@@ -923,6 +947,39 @@
         box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
     }
 
+    .terms-checkbox-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 1rem;
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 8px;
+        background: var(--bg-card, #fff);
+    }
+
+    .terms-checkbox-option input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .terms-checkbox-option strong,
+    .terms-checkbox-option small {
+        display: block;
+    }
+
+    .terms-checkbox-option strong {
+        color: var(--gray-900, #111827);
+        font-weight: 700;
+    }
+
+    .terms-checkbox-option small {
+        margin-top: 0.25rem;
+        color: var(--gray-600, #64748b);
+    }
+
     [data-theme="dark"] .invoice-form-container,
     [data-theme="dark"] .form-card,
     [data-theme="dark"] .card-header {
@@ -1000,6 +1057,19 @@
     [data-theme="dark"] .btn-add-item {
         background: linear-gradient(135deg, var(--primary, #6366f1), var(--primary-dark, #4f46e5)) !important;
         color: #fff !important;
+    }
+
+    [data-theme="dark"] .terms-checkbox-option {
+        background: rgba(15, 23, 42, 0.62) !important;
+        border-color: rgba(148, 163, 184, 0.3) !important;
+    }
+
+    [data-theme="dark"] .terms-checkbox-option strong {
+        color: var(--text-primary, #f1f5f9) !important;
+    }
+
+    [data-theme="dark"] .terms-checkbox-option small {
+        color: var(--text-secondary, #94a3b8) !important;
     }
 
     /* Responsive */

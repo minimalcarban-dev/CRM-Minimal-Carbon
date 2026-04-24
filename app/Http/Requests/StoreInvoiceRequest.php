@@ -21,6 +21,7 @@ class StoreInvoiceRequest extends FormRequest
             'copy_type' => 'nullable|in:original,duplicate,triplicate',
             'place_of_supply' => 'nullable|string',
             'payment_terms' => 'nullable|string',
+            'include_terms_conditions' => 'nullable|boolean',
             'billed_to_id' => 'nullable|exists:parties,id',
             'shipped_to_id' => 'nullable|exists:parties,id',
             'items' => 'required|array|min:1',

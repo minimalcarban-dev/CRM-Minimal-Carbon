@@ -179,6 +179,11 @@
                                 <span class="text-muted">Place of Supply</span>
                                 <span style="font-weight: 600;">{{ $invoice->place_of_supply ?? '-' }}</span>
                             </div>
+                            <div
+                                style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem;">
+                                <span class="text-muted">Terms & Conditions</span>
+                                <span style="font-weight: 600;">{{ $invoice->include_terms_conditions ? 'Included' : 'Not Included' }}</span>
+                            </div>
                             <div style="display: flex; justify-content: space-between;">
                                 <span class="text-muted">Copy Type</span>
                                 <span style="font-weight: 600;">{{ ucfirst($invoice->copy_type ?? '-') }}</span>
