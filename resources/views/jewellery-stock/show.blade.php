@@ -25,6 +25,8 @@
         $currentAdmin = auth()->guard('admin')->user();
         $canViewPricing =
             $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_pricing'));
+        $canViewProfit =
+            $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_profit'));
     @endphp
 
     <div class="tracker-page">
@@ -278,25 +280,41 @@
             {{-- Sidebar --}}
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 {{-- Image Viewer Modal --}}
-                <div id="imageViewerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 2rem;" onclick="closeImageViewer()">
-                    <button style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">
+                <div id="imageViewerModal"
+                    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 2rem;"
+                    onclick="closeImageViewer()">
+                    <button
+                        style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">
                         <i class="bi bi-x-lg"></i>
                     </button>
-                    <div style="background: white; border-radius: 12px; overflow: hidden; max-width: 900px; width: 100%; animation: zoomIn 0.3s ease-out;" onclick="event.stopPropagation()">
-                        <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                            <h4 id="modalImageTitle" style="margin: 0; font-weight: 700; color: #1e293b;">Image Preview</h4>
+                    <div style="background: white; border-radius: 12px; overflow: hidden; max-width: 900px; width: 100%; animation: zoomIn 0.3s ease-out;"
+                        onclick="event.stopPropagation()">
+                        <div
+                            style="padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                            <h4 id="modalImageTitle" style="margin: 0; font-weight: 700; color: #1e293b;">Image Preview
+                            </h4>
                         </div>
-                        <div style="background: #000; display: flex; align-items: center; justify-content: center; max-height: 80vh;">
-                            <img id="modalImageViewer" src="" style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+                        <div
+                            style="background: #000; display: flex; align-items: center; justify-content: center; max-height: 80vh;">
+                            <img id="modalImageViewer" src=""
+                                style="max-width: 100%; max-height: 80vh; object-fit: contain;">
                         </div>
                     </div>
                 </div>
 
                 <style>
                     @keyframes zoomIn {
-                        from { opacity: 0; transform: scale(0.9); }
-                        to { opacity: 1; transform: scale(1); }
+                        from {
+                            opacity: 0;
+                            transform: scale(0.9);
+                        }
+
+                        to {
+                            opacity: 1;
+                            transform: scale(1);
+                        }
                     }
+
                     .gallery-item:hover {
                         transform: scale(1.05);
                         border-color: #6366f1 !important;
@@ -333,39 +351,72 @@
                                         ? ($margin / $jewelleryStock->selling_price) * 100
                                         : 0;
                             @endphp
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: rgba(255,255,255,0.5);">Profit:</span>
-                                <span style="font-weight: 600; color: {{ $margin >= 0 ? '#10b981' : '#ef4444' }};">
-                                    +${{ number_format($margin, 2) }} ({{ number_format($marginPct, 1) }}%)
-                                </span>
-                            </div>
+                            @if ($canViewProfit)
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: rgba(255,255,255,0.5);">Profit:</span>
+                                    <span style="font-weight: 600; color: {{ $margin >= 0 ? '#10b981' : '#ef4444' }};">
+                                        +${{ number_format($margin, 2) }} ({{ number_format($marginPct, 1) }}%)
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
+
+                @if ($jewelleryStock->pricingVariants->isNotEmpty())
+                    <div class="tracker-table-card" style="padding: 1.5rem;">
+                        <h3 style="margin: 0 0 1rem; font-size: 1.1rem; color: #1e293b;">
+                            <i class="bi bi-calculator" style="color: #10b981;"></i> Pricing Variants
+                        </h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            @foreach ($jewelleryStock->pricingVariants as $variant)
+                                <div
+                                    style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.85rem; background: {{ $variant->is_default_listing ? 'rgba(16,185,129,0.08)' : '#fff' }};">
+                                    <div style="display: flex; justify-content: space-between; gap: 1rem;">
+                                        <strong style="color: #1e293b;">{{ $variant->variant_label }}</strong>
+                                        <strong
+                                            style="color: #6366f1;">${{ number_format((float) $variant->listing_price, 2) }}</strong>
+                                    </div>
+                                    <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.35rem;">
+                                        Wt {{ number_format((float) $variant->net_weight_grams, 3) }}g
+                                        @if ($canViewPricing)
+                                            | Cost ${{ number_format((float) $variant->subtotal_cost, 2) }}
+                                        @endif
+                                        @if ($canViewProfit)
+                                            | Profit ${{ number_format((float) $variant->profit_amount, 2) }}
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 {{-- Media Section --}}
                 <div class="tracker-table-card" style="padding: 1rem;">
                     <h3 style="margin: 0 0 1rem; font-size: 1.1rem; color: #1e293b;">
                         <i class="bi bi-images" style="color: #6366f1;"></i> Media Gallery
                     </h3>
-                    
+
                     <div id="image_gallery" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                        @if($jewelleryStock->images && count($jewelleryStock->images) > 0)
-                            @foreach($jewelleryStock->images as $image)
-                                <div class="gallery-item" 
-                                     style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.2s;"
-                                     onclick="openImageViewer('{{ $image['url'] }}', '{{ $jewelleryStock->name }}')">
+                        @if ($jewelleryStock->images && count($jewelleryStock->images) > 0)
+                            @foreach ($jewelleryStock->images as $image)
+                                <div class="gallery-item"
+                                    style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.2s;"
+                                    onclick="openImageViewer('{{ $image['url'] }}', '{{ $jewelleryStock->name }}')">
                                     <img src="{{ $image['url'] }}" style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
                             @endforeach
                         @elseif($jewelleryStock->image_url)
-                            <div class="gallery-item" 
-                                 style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.2s;"
-                                 onclick="openImageViewer('{{ $jewelleryStock->image_url }}', '{{ $jewelleryStock->name }}')">
-                                <img src="{{ $jewelleryStock->image_url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div class="gallery-item"
+                                style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.2s;"
+                                onclick="openImageViewer('{{ $jewelleryStock->image_url }}', '{{ $jewelleryStock->name }}')">
+                                <img src="{{ $jewelleryStock->image_url }}"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                         @else
-                            <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: #94a3b8; background: #f8fafc; border-radius: 8px;">
+                            <div
+                                style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: #94a3b8; background: #f8fafc; border-radius: 8px;">
                                 <i class="bi bi-image" style="font-size: 2rem;"></i>
                                 <p style="margin-top: 5px; font-size: 0.9rem;">No images available</p>
                             </div>

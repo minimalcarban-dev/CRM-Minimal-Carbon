@@ -54,6 +54,21 @@ class UpdateJewelleryStockRequest extends FormRequest
             'certificate_number' => 'nullable|string|max:255',
             'certificate_type' => 'nullable|string|max:100',
             'certificate_url' => 'nullable|string|max:2000',
+            'pricing_variants' => 'nullable|array',
+            'pricing_variants.*.net_weight_grams' => 'nullable|numeric|min:0',
+            'pricing_variants.*.color_weights' => 'nullable|array',
+            'pricing_variants.*.color_weights.yellow' => 'nullable|numeric|min:0',
+            'pricing_variants.*.color_weights.white' => 'nullable|numeric|min:0',
+            'pricing_variants.*.color_weights.rose' => 'nullable|numeric|min:0',
+            'pricing_variants.*.stone_cost' => 'nullable|numeric|min:0',
+            'pricing_variants.*.extra_cost' => 'nullable|numeric|min:0',
+            'pricing_variants.*.labor_rate_usd_per_gram' => 'nullable|numeric|min:0',
+            'pricing_variants.*.commission_percent' => 'nullable|numeric|min:0|max:999',
+            'pricing_variants.*.profit_percent' => 'nullable|numeric|min:0|max:999',
+            'pricing_variants.*.sales_markup_percent' => 'nullable|numeric|min:0|max:999',
+            'pricing_variants.*.is_default_listing' => 'nullable|boolean',
+            'default_pricing_variant' => 'nullable|string|max:100',
+            'platinum_950_rate_usd_per_gram' => 'nullable|numeric|min:0',
         ];
     }
 }

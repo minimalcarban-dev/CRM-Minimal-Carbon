@@ -1006,6 +1006,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             ->name('check-sku')
             ->middleware('admin.permission:jewellery_stock.view');
 
+        Route::get('/pricing-rates', [JewelleryStockController::class, 'pricingRates'])
+            ->name('pricing-rates');
+
         Route::get('/{jewellery_stock}', [JewelleryStockController::class, 'show'])
             ->name('show')
             ->middleware('admin.permission:jewellery_stock.view');

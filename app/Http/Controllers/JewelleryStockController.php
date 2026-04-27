@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJewelleryStockRequest;
 use App\Http\Requests\UpdateJewelleryStockRequest;
+use App\Models\AppSetting;
 use App\Models\JewelleryStock;
 use App\Models\MetalType;
 use App\Models\RingSize;
@@ -18,15 +19,16 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\CloudinaryUploadService;
+use App\Services\JewelleryMaterialRateService;
+use App\Services\JewelleryPricingService;
 
 class JewelleryStockController extends Controller
 {
-    private $uploadService;
-
-    public function __construct(CloudinaryUploadService $uploadService)
-    {
-        $this->uploadService = $uploadService;
-    }
+    public function __construct(
+        private CloudinaryUploadService $uploadService,
+        private JewelleryPricingService $pricingService,
+        private JewelleryMaterialRateService $materialRateService
+    ) {}
     /**
      * Display a listing of jewellery stock items.
      */
@@ -112,6 +114,12 @@ class JewelleryStockController extends Controller
             DB::beginTransaction();
 
             $validated = $request->validated();
+            $pricingVariants = $validated['pricing_variants'] ?? [];
+            $defaultPricingVariant = $validated['default_pricing_variant'] ?? null;
+            $platinumRate = $validated['platinum_950_rate_usd_per_gram'] ?? null;
+            unset($validated['pricing_variants'], $validated['default_pricing_variant'], $validated['platinum_950_rate_usd_per_gram']);
+            $pricingVariants = $this->markDefaultPricingVariant($pricingVariants, $defaultPricingVariant);
+            $this->updatePlatinumRateIfAllowed($platinumRate);
 
             // Handle multiple images upload (same pattern as Order module)
             $uploadedImages = $this->uploadService->uploadFromRequest($request, 'images', 'jewellery-stock');
@@ -122,7 +130,15 @@ class JewelleryStockController extends Controller
                 $validated['image_url'] = $uploadedImages[0]['url'];
             }
 
-            JewelleryStock::create($validated);
+            $jewelleryStock = JewelleryStock::create($validated);
+
+            if ($request->has('pricing_variants')) {
+                $this->pricingService->replacePricingRows(
+                    $jewelleryStock,
+                    $pricingVariants,
+                    auth('admin')->user()
+                );
+            }
 
             DB::commit();
 
@@ -144,7 +160,7 @@ class JewelleryStockController extends Controller
      */
     public function show(JewelleryStock $jewelleryStock)
     {
-        $jewelleryStock->load(['metalType', 'ringSize']);
+        $jewelleryStock->load(['metalType', 'ringSize', 'pricingVariants']);
 
         return view('jewellery-stock.show', compact('jewelleryStock'));
     }
@@ -154,8 +170,17 @@ class JewelleryStockController extends Controller
      */
     public function edit(JewelleryStock $jewelleryStock)
     {
+        $jewelleryStock->load('pricingVariants');
         $data = $this->getLookupData();
         $data['jewelleryStock'] = $jewelleryStock;
+        $data['pricingRows'] = $this->pricingService->formRows($jewelleryStock->pricingVariants);
+        $defaultPricing = $jewelleryStock->pricingVariants->firstWhere('is_default_listing', true);
+        if ($defaultPricing) {
+            $data['pricingDefaults']['labor_rate_usd_per_gram'] = (float) $defaultPricing->labor_rate_usd_per_gram;
+            $data['pricingDefaults']['commission_percent'] = (float) $defaultPricing->commission_percent;
+            $data['pricingDefaults']['profit_percent'] = (float) $defaultPricing->profit_percent;
+            $data['pricingDefaults']['sales_markup_percent'] = (float) $defaultPricing->sales_markup_percent;
+        }
 
         return view('jewellery-stock.edit', $data);
     }
@@ -190,6 +215,8 @@ class JewelleryStockController extends Controller
             'diamondCuts' => Cache::remember('diamond_cuts_list', 86400, function () {
                 return DiamondCut::where('is_active', true)->orderBy('name')->get();
             }),
+            'pricingDefaults' => $this->pricingService->defaultsFor(auth('admin')->user()),
+            'pricingRows' => $this->pricingService->formRows(),
         ];
     }
 
@@ -202,6 +229,12 @@ class JewelleryStockController extends Controller
             DB::beginTransaction();
 
             $validated = $request->validated();
+            $pricingVariants = $validated['pricing_variants'] ?? [];
+            $defaultPricingVariant = $validated['default_pricing_variant'] ?? null;
+            $platinumRate = $validated['platinum_950_rate_usd_per_gram'] ?? null;
+            unset($validated['pricing_variants'], $validated['default_pricing_variant'], $validated['platinum_950_rate_usd_per_gram']);
+            $pricingVariants = $this->markDefaultPricingVariant($pricingVariants, $defaultPricingVariant);
+            $this->updatePlatinumRateIfAllowed($platinumRate);
 
             // 1. Handle removals from existing images
             $currentImages = $jewelleryStock->images ?? [];
@@ -237,6 +270,14 @@ class JewelleryStockController extends Controller
             }
 
             $jewelleryStock->update($validated);
+
+            if ($request->has('pricing_variants')) {
+                $this->pricingService->replacePricingRows(
+                    $jewelleryStock,
+                    $pricingVariants,
+                    auth('admin')->user()
+                );
+            }
 
             DB::commit();
 
@@ -305,5 +346,39 @@ class JewelleryStockController extends Controller
             'available' => !$exists,
             'message' => $exists ? 'SKU already exists' : 'SKU is available',
         ]);
+    }
+
+    public function pricingRates()
+    {
+        $admin = auth('admin')->user();
+        $defaults = $this->pricingService->defaultsFor($admin);
+        if (!$defaults['can_view_profit'] && !$defaults['can_edit_profit']) {
+            $defaults['profit_percent'] = null;
+        }
+
+        return response()->json([
+            'success' => true,
+            'rates' => $this->materialRateService->currentRates(),
+            'defaults' => $defaults,
+        ]);
+    }
+
+    private function markDefaultPricingVariant(array $pricingVariants, ?string $defaultKey): array
+    {
+        foreach ($pricingVariants as $key => $variant) {
+            $pricingVariants[$key]['is_default_listing'] = $defaultKey === (string) $key;
+        }
+
+        return $pricingVariants;
+    }
+
+    private function updatePlatinumRateIfAllowed(mixed $platinumRate): void
+    {
+        $admin = auth('admin')->user();
+        if (!$admin?->is_super || $platinumRate === null || $platinumRate === '') {
+            return;
+        }
+
+        AppSetting::set('jewellery_pricing.platinum_950_rate_usd_per_gram', (string) max(0, (float) $platinumRate));
     }
 }

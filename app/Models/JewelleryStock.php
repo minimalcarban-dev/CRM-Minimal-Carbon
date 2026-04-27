@@ -110,47 +110,57 @@ class JewelleryStock extends Model
 
     public function metalType()
     {
-        return $this->belongsTo(\App\Models\MetalType::class);
+        return $this->belongsTo(MetalType::class);
     }
 
     public function ringSize()
     {
-        return $this->belongsTo(\App\Models\RingSize::class);
+        return $this->belongsTo(RingSize::class);
     }
 
     public function closureType()
     {
-        return $this->belongsTo(\App\Models\ClosureType::class);
+        return $this->belongsTo(ClosureType::class);
     }
 
     public function primaryStoneType()
     {
-        return $this->belongsTo(\App\Models\StoneType::class, 'primary_stone_type_id');
+        return $this->belongsTo(StoneType::class, 'primary_stone_type_id');
     }
 
     public function primaryStoneShape()
     {
-        return $this->belongsTo(\App\Models\StoneShape::class, 'primary_stone_shape_id');
+        return $this->belongsTo(StoneShape::class, 'primary_stone_shape_id');
     }
 
     public function primaryStoneColor()
     {
-        return $this->belongsTo(\App\Models\StoneColor::class, 'primary_stone_color_id');
+        return $this->belongsTo(StoneColor::class, 'primary_stone_color_id');
     }
 
     public function primaryStoneClarity()
     {
-        return $this->belongsTo(\App\Models\DiamondClarity::class, 'primary_stone_clarity_id');
+        return $this->belongsTo(DiamondClarity::class, 'primary_stone_clarity_id');
     }
 
     public function primaryStoneCut()
     {
-        return $this->belongsTo(\App\Models\DiamondCut::class, 'primary_stone_cut_id');
+        return $this->belongsTo(DiamondCut::class, 'primary_stone_cut_id');
     }
 
     public function sideStoneType()
     {
-        return $this->belongsTo(\App\Models\StoneType::class, 'side_stone_type_id');
+        return $this->belongsTo(StoneType::class, 'side_stone_type_id');
+    }
+
+    public function pricingVariants()
+    {
+        return $this->hasMany(JewelleryStockPricing::class);
+    }
+
+    public function defaultPricingVariant()
+    {
+        return $this->hasOne(JewelleryStockPricing::class)->where('is_default_listing', true);
     }
 
     // ── Scopes ───────────────────────────────────────────────
