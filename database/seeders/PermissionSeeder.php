@@ -107,6 +107,10 @@ class PermissionSeeder extends Seeder
 
             // Jewellery Stock
             ['name' => 'View Jewellery Pricing', 'slug' => 'jewellery_stock.view_pricing', 'description' => 'View jewellery pricing details (purchase price and margin)', 'category' => 'jewellery_stock'],
+            ['name' => 'View Jewellery Profit', 'slug' => 'jewellery_stock.view_profit', 'description' => 'View hidden jewellery profit calculation details', 'category' => 'jewellery_stock'],
+            ['name' => 'Edit Jewellery Commission', 'slug' => 'jewellery_stock.edit_commission', 'description' => 'Edit jewellery commission percentage', 'category' => 'jewellery_stock'],
+            ['name' => 'Edit Jewellery Profit', 'slug' => 'jewellery_stock.edit_profit', 'description' => 'Edit jewellery profit percentage', 'category' => 'jewellery_stock'],
+            ['name' => 'Edit Jewellery Sales Markup', 'slug' => 'jewellery_stock.edit_sales_markup', 'description' => 'Edit jewellery sales markup percentage', 'category' => 'jewellery_stock'],
 
             // Clients
             ['name' => 'View Clients', 'slug' => 'clients.view', 'description' => 'View client list and details', 'category' => 'clients'],

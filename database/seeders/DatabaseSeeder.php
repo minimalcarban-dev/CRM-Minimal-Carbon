@@ -49,5 +49,6 @@ class DatabaseSeeder extends Seeder
         $this->call(MeleePermissionsSeeder::class);
         $this->call(PackagePermissionSeeder::class);
         $this->call(JewelleryStockPermissionsSeeder::class);
+        $this->call(JewelleryStockSeeder::class);
     }
 }
