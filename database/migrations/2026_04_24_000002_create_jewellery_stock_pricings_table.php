@@ -34,8 +34,8 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->unique(['jewellery_stock_id', 'material_code', 'metal_color'], 'jsp_stock_material_color_unique');
-            $table->index(['jewellery_stock_id', 'is_default_listing']);
-            $table->index(['material_code', 'metal_color']);
+            $table->index(['jewellery_stock_id', 'is_default_listing'], 'jsp_stock_default_index');
+            $table->index(['material_code', 'metal_color'], 'jsp_material_color_index');
         });
     }
 
