@@ -119,7 +119,7 @@ class JewelleryStockController extends Controller
             $platinumRate = $validated['platinum_950_rate_usd_per_gram'] ?? null;
             unset($validated['pricing_variants'], $validated['default_pricing_variant'], $validated['platinum_950_rate_usd_per_gram']);
             $pricingVariants = $this->markDefaultPricingVariant($pricingVariants, $defaultPricingVariant);
-            $this->updatePlatinumRateIfAllowed($platinumRate);
+            // Global platinum rate update removed - handled by .env or central settings.
 
             // Handle multiple images upload (same pattern as Order module)
             $uploadedImages = $this->uploadService->uploadFromRequest($request, 'images', 'jewellery-stock');
@@ -234,7 +234,7 @@ class JewelleryStockController extends Controller
             $platinumRate = $validated['platinum_950_rate_usd_per_gram'] ?? null;
             unset($validated['pricing_variants'], $validated['default_pricing_variant'], $validated['platinum_950_rate_usd_per_gram']);
             $pricingVariants = $this->markDefaultPricingVariant($pricingVariants, $defaultPricingVariant);
-            $this->updatePlatinumRateIfAllowed($platinumRate);
+            // Global platinum rate update removed - handled by .env or central settings.
 
             // 1. Handle removals from existing images
             $currentImages = $jewelleryStock->images ?? [];
@@ -356,9 +356,12 @@ class JewelleryStockController extends Controller
             $defaults['profit_percent'] = null;
         }
 
+        $rates = $this->materialRateService->currentRates();
+        $rates['is_platinum_locked'] = env('JEWELLERY_PLATINUM_RATE') !== null;
+
         return response()->json([
             'success' => true,
-            'rates' => $this->materialRateService->currentRates(),
+            'rates' => $rates,
             'defaults' => $defaults,
         ]);
     }
@@ -372,13 +375,5 @@ class JewelleryStockController extends Controller
         return $pricingVariants;
     }
 
-    private function updatePlatinumRateIfAllowed(mixed $platinumRate): void
-    {
-        $admin = auth('admin')->user();
-        if (!$admin?->is_super || $platinumRate === null || $platinumRate === '') {
-            return;
-        }
 
-        AppSetting::set('jewellery_pricing.platinum_950_rate_usd_per_gram', (string) max(0, (float) $platinumRate));
-    }
 }
