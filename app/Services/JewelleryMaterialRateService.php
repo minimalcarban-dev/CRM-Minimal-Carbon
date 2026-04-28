@@ -104,6 +104,13 @@ class JewelleryMaterialRateService
 
     private function getPlatinumRate(): float
     {
+        // 1. Priority: .env value
+        $envRate = env('JEWELLERY_PLATINUM_RATE');
+        if ($envRate !== null) {
+            return (float) $envRate;
+        }
+
+        // 2. Fallback: Database setting
         $manual950Rate = $this->settingFloat('jewellery_pricing.platinum_950_rate_usd_per_gram', 30);
 
         // Future-ready hook: swap this assignment with API-derived base * 0.95.
