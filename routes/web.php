@@ -33,6 +33,7 @@ use App\Http\Controllers\AdminPermissionController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\DiamondController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\VglIntegrationController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ChatController;
@@ -316,6 +317,13 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::post('orders/{order}/sync-tracking', [OrderController::class, 'syncTracking'])
         ->name('orders.sync-tracking')
         ->middleware('admin.permission:orders.edit');
+
+    // ─────────────────────────────────────────────────────────────
+    // VGL Integration — Push order data to VGL for certificate creation
+    // ─────────────────────────────────────────────────────────────
+    Route::post('orders/{order}/push-to-vgl', [VglIntegrationController::class, 'pushOrder'])
+        ->name('orders.push-to-vgl')
+        ->middleware(['admin.permission:orders.edit', 'throttle:5,1']);
 
     // ─────────────────────────────────────────────────────────────
     // Client Dashboard Module
@@ -766,7 +774,8 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
     // Lead Actions
     Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])
-        ->name('leads.updateStatus');
+        ->name('leads.updateStatus')
+        ->middleware('admin.permission:leads.edit');
     Route::patch('leads/{lead}/priority', [LeadController::class, 'updatePriority'])
         ->name('leads.updatePriority')
         ->middleware('admin.permission:leads.edit');

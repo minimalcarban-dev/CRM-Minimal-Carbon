@@ -1977,6 +1977,26 @@
                         <i class="bi bi-x-circle"></i> Cancel Order
                     </button>
                 @endif
+                @if (auth()->guard('admin')->user() && auth()->guard('admin')->user()->hasPermission('orders.edit'))
+                    @if ($order->vgl_pushed_at && $order->vgl_push_status === 'success')
+                        {{-- Already pushed successfully — show status badge --}}
+                        <span class="btn-od no-print" style="color: #10b981; border-color: #10b981; cursor: default; opacity: 0.85;">
+                            <i class="bi bi-check-circle-fill"></i> Sent to VGL
+                            <small style="font-size: .7rem; opacity: .7; margin-left: 4px;">{{ $order->vgl_pushed_at->format('d M') }}</small>
+                        </span>
+                    @else
+                        {{-- Not yet pushed, or last push failed — show send button --}}
+                        <form action="{{ route('orders.push-to-vgl', $order->id) }}" method="POST" class="d-inline"
+                            onsubmit="if(!confirm('Send this order data to VGL for certificate creation?')) return false; var btn=this.querySelector('button[type=submit]'); btn.disabled=true; btn.innerHTML='<i class=\'bi bi-hourglass-split\'></i> Sending...'; return true;">
+                            @csrf
+                            <button type="submit" class="btn-od no-print"
+                                style="color: #8b5cf6; border-color: #8b5cf6;">
+                                <i class="bi bi-send"></i>
+                                {{ $order->vgl_push_status === 'failed' ? 'Retry VGL Push' : 'Send to VGL' }}
+                            </button>
+                        </form>
+                    @endif
+                @endif
                 <a href="{{ route('orders.edit', $order) }}" class="btn-od btn-od-primary no-print">
                     <i class="bi bi-pencil"></i> Edit
                 </a>
