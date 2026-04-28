@@ -104,8 +104,8 @@ class JewelleryMaterialRateService
 
     private function getPlatinumRate(): float
     {
-        // 1. Priority: .env value
-        $envRate = env('JEWELLERY_PLATINUM_RATE');
+        // 1. Priority: config value (sourced from .env via config/diamond.php)
+        $envRate = config('diamond.jewellery_platinum_rate');
         if ($envRate !== null) {
             return (float) $envRate;
         }
