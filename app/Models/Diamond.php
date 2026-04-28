@@ -136,7 +136,10 @@ class Diamond extends Model
         // 5. PROFIT: Only calculate if sold with price
         if (!empty($this->sold_out_date) && !empty($this->sold_out_price)) {
             $shipping = (float) ($this->shipping_price ?? 0);
-            $this->profit = round($this->sold_out_price - $base - $shipping, 2);
+            $this->profit = round((float) $this->sold_out_price - $base - $shipping, 2);
+        } else {
+            // Reset profit if not sold or sold_out_price is missing
+            $this->profit = null;
         }
     }
 
