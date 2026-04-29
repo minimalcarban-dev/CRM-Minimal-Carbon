@@ -13,7 +13,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CbAFGQbb.js",
+    "file": "assets/app-C3A7uTtH.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -21,14 +21,14 @@
       "resources/js/components/MediaGallery.vue"
     ],
     "css": [
-      "assets/app-DhjXrGiE.css"
+      "assets/app-pcrlTQ7c.css"
     ],
     "assets": [
       "assets/pdf.worker-xSiVJ7U_.mjs"
     ]
   },
   "resources/js/components/MediaGallery.vue": {
-    "file": "assets/MediaGallery-BMxz6A55.js",
+    "file": "assets/MediaGallery-C8O1uM8i.js",
     "name": "MediaGallery",
     "src": "resources/js/components/MediaGallery.vue",
     "isDynamicEntry": true,

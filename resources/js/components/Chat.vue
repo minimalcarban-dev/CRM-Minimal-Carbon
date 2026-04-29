@@ -2333,6 +2333,8 @@ export default {
         const lastTypingSentAt = ref(0);
         const typingTick = ref(0);
         let typingTickInterval = null;
+        const globalListenerChannelIds = new Set();
+        const activeListenerChannelIds = new Set();
         const showEmojiPicker = ref(false);
         const pinnedMessages = ref([]);
         const showPinnedPanel = ref(false);
@@ -4558,21 +4560,20 @@ export default {
                 console.warn("Echo is not defined, skipping WebSocket setup");
                 return;
             }
+            const numericChannelId = Number(channelId);
+            if (activeListenerChannelIds.has(numericChannelId)) {
+                return;
+            }
 
             try {
+                activeListenerChannelIds.add(numericChannelId);
                 return window.Echo.private(`chat.channel.${channelId}`)
                     .listen("MessageSent", (e) => {
-                        if (import.meta.env.DEV)
-                            console.log("Broadcasting Event Received:", e);
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (e?.message?.sender_id === props.userId) return;
 
                         // Handle Thread Replies
                         if (e.message.reply_to_id) {
-                            if (import.meta.env.DEV)
-                                console.log("Thread reply detected", {
-                                    msgReplyId: e.message.reply_to_id,
-                                    activeId: activeThreadMessage.value?.id,
-                                });
                             // 1. If looking at this thread, add it
                             if (
                                 activeThreadMessage.value?.id ==
@@ -4648,6 +4649,7 @@ export default {
                         scrollToBottom();
                     })
                     .listen("MessageReacted", (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (!e?.message_id) return;
                         const applyReactionToMessage = (targetMessage) => {
                             if (
@@ -4716,6 +4718,7 @@ export default {
                         }
                     })
                     .listen("MessagePinned", async (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (!e?.message_id) return;
 
                         const isPinned = e.action === "pinned";
@@ -4754,6 +4757,7 @@ export default {
                         }
                     })
                     .listen(".UserTyping", (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (!e || e.userId === props.userId) return;
                         // Replace the whole object to guarantee Vue reactivity
                         typingUsers.value = {
@@ -4766,6 +4770,7 @@ export default {
                         };
                     })
                     .listen("MessagesRead", (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         messages.value = messages.value.map((message) => {
                             if (
                                 !message.reads.some(
@@ -4781,6 +4786,7 @@ export default {
                         });
                     });
             } catch (e) {
+                activeListenerChannelIds.delete(numericChannelId);
                 console.error("WebSocket setup failed", e);
             }
         };
@@ -4792,26 +4798,14 @@ export default {
                 return;
             }
 
-            console.log(
-                "[Chat] Setting up global listeners for",
-                channels.value.length,
-                "channels",
-            );
-
             channels.value.forEach((channel) => {
-                // Skip the current channel - it's already handled by setupChannelListeners
-                if (
-                    currentChannel.value &&
-                    channel.id === currentChannel.value.id
-                ) {
-                    console.log(
-                        "[Chat] Skipping current channel:",
-                        channel.name,
-                    );
+                const numericChannelId = Number(channel.id);
+                if (globalListenerChannelIds.has(numericChannelId)) {
                     return;
                 }
 
                 try {
+                    globalListenerChannelIds.add(numericChannelId);
                     window.Echo.private(`chat.channel.${channel.id}`).listen(
                         "MessageSent",
                         (e) => {
@@ -4820,11 +4814,6 @@ export default {
 
                             // If this is NOT the current channel
                             if (currentChannel.value?.id !== channel.id) {
-                                console.log(
-                                    "[Chat] Message received in other channel:",
-                                    channel.name,
-                                );
-
                                 // Increment unread count
                                 const ch = channels.value.find(
                                     (c) => c.id === channel.id,
@@ -4832,12 +4821,6 @@ export default {
                                 if (ch) {
                                     ch.unread_messages_count =
                                         (ch.unread_messages_count || 0) + 1;
-                                    console.log(
-                                        "[Chat] Unread count for",
-                                        ch.name,
-                                        ":",
-                                        ch.unread_messages_count,
-                                    );
                                 }
 
                                 // Update preview
@@ -4855,11 +4838,6 @@ export default {
                                 } else {
                                     notificationMessage = `New message in ${channelName}`;
                                 }
-
-                                console.log(
-                                    "[Chat] Showing notification:",
-                                    notificationMessage,
-                                );
 
                                 if (typeof window.showToast === "function") {
                                     window.showToast(notificationMessage);
@@ -4883,6 +4861,7 @@ export default {
                     )
                     .listen(".UserTyping", (e) => {
                         if (!e || e.userId === props.userId) return;
+                        if (Number(currentChannel.value?.id) === numericChannelId) return;
                         // Store typing state per-channel for sidebar indicators
                         const cId = channel.id;
                         const existing = sidebarTypingUsers.value[cId] || {};
@@ -4897,11 +4876,8 @@ export default {
                             },
                         };
                     });
-                    console.log(
-                        "[Chat] Listener setup for channel:",
-                        channel.name,
-                    );
                 } catch (err) {
+                    globalListenerChannelIds.delete(numericChannelId);
                     console.error(
                         `Failed to setup listener for channel ${channel.id}`,
                         err,
@@ -4974,12 +4950,21 @@ export default {
                         (e) => {
                             if (!e || !e.channelId || !e.action) return;
                             if (e.action === "removed") {
-                                if (currentChannel.value?.id === e.channelId) {
-                                    try {
-                                        window.Echo.leave(
-                                            `chat.channel.${e.channelId}`,
-                                        );
-                                    } catch (_) {}
+                                try {
+                                    window.Echo.leave(
+                                        `chat.channel.${e.channelId}`,
+                                    );
+                                    globalListenerChannelIds.delete(
+                                        Number(e.channelId),
+                                    );
+                                    activeListenerChannelIds.delete(
+                                        Number(e.channelId),
+                                    );
+                                } catch (_) {}
+                                if (
+                                    Number(currentChannel.value?.id) ===
+                                    Number(e.channelId)
+                                ) {
                                     currentChannel.value = null;
                                 }
                                 channels.value = channels.value.filter(
@@ -5012,6 +4997,19 @@ export default {
         onBeforeUnmount(() => {
             window.removeEventListener("resize", handleViewportChange);
             window.removeEventListener("paste", handlePaste);
+            if (window.Echo) {
+                const channelIds = new Set([
+                    ...globalListenerChannelIds,
+                    ...activeListenerChannelIds,
+                ]);
+                channelIds.forEach((channelId) => {
+                    try {
+                        window.Echo.leave(`chat.channel.${channelId}`);
+                    } catch (_) {}
+                });
+                globalListenerChannelIds.clear();
+                activeListenerChannelIds.clear();
+            }
             if (messageContainer.value) {
                 messageContainer.value.removeEventListener(
                     "scroll",
@@ -5104,11 +5102,6 @@ export default {
         );
 
         watch(currentChannel, (newChannel, oldChannel) => {
-            if (oldChannel?.id && window.Echo) {
-                try {
-                    window.Echo.leave(`chat.channel.${oldChannel.id}`);
-                } catch (_) {}
-            }
             if (newChannel?.id) {
                 setupChannelListeners(newChannel.id);
                 if (isMobile.value) mobileSidebarOpen.value = false;
