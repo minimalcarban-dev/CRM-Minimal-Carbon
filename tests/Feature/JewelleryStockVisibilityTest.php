@@ -5,6 +5,7 @@ use App\Models\JewelleryStock;
 use App\Models\MetalType;
 use App\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -117,4 +118,29 @@ it('shows jewellery pricing to super admin', function () {
     $show = $this->actingAs($superAdmin, 'admin')->get(route('jewellery-stock.show', $item));
     $show->assertOk();
     $show->assertSee('4,321.99');
+});
+
+it('keeps jewellery detail form columns in sync with the database schema', function () {
+    expect(Schema::hasColumns('jewellery_stocks', [
+        'metal_purity',
+        'closure_type_id',
+        'length',
+        'width',
+        'diameter',
+        'bale_size',
+        'primary_stone_type_id',
+        'primary_stone_weight',
+        'primary_stone_count',
+        'primary_stone_shape_id',
+        'primary_stone_color_id',
+        'primary_stone_clarity_id',
+        'primary_stone_cut_id',
+        'side_stone_type_id',
+        'side_stone_weight',
+        'side_stone_count',
+        'certificate_number',
+        'certificate_type',
+        'certificate_url',
+        'images',
+    ]))->toBeTrue();
 });
