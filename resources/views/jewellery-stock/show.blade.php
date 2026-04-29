@@ -198,7 +198,7 @@
                 </div>
 
                 {{-- Stone Details --}}
-                @if ($jewelleryStock->primary_stone_type_id || $jewelleryStock->side_stone_type_id)
+                @if ($jewelleryStock->primary_stone_type_id || $jewelleryStock->sideStones->isNotEmpty())
                     <div class="tracker-table-card" style="padding: 1.5rem;">
                         <h3 style="margin: 0 0 1.5rem; font-size: 1.1rem; color: #1e293b;">
                             <i class="bi bi-diamond-half" style="color: #6366f1;"></i> Component Gemstones
@@ -247,29 +247,66 @@
                             </div>
                         @endif
 
-                        @if ($jewelleryStock->side_stone_type_id)
+                        @if ($jewelleryStock->sideStones->isNotEmpty())
                             <div
-                                style="background: #f8fafc; border-radius: 12px; padding: 1.25rem; border: 1px solid #e2e8f0;">
+                                style="background: var(--bg-body); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); margin-top: 1.5rem;">
                                 <h4
-                                    style="font-size: 0.85rem; color: #475569; margin: 0 0 1rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
-                                    Secondary / Side Stones</h4>
-                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                                    <div class="detail-item">
-                                        <div class="detail-label" style="font-size: 0.7rem; color: #64748b;">Type</div>
-                                        <div class="detail-value" style="font-weight: 600;">
-                                            {{ $jewelleryStock->sideStoneType->name }}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label" style="font-size: 0.7rem; color: #64748b;">Total Weight
+                                    style="font-size: 0.85rem; color: var(--text-primary); margin: 0 0 1.25rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; display:flex; align-items:center; gap:0.5rem;">
+                                    <i class="bi bi-layers" style="color:var(--primary);"></i> Secondary / Side Stones
+                                </h4>
+                                
+                                <div style="display:flex;flex-direction:column;gap:1.5rem;">
+                                    @foreach($jewelleryStock->sideStones as $index => $sideStone)
+                                    <div style="border-left: 3px solid var(--border); padding-left: 1.25rem; position:relative;">
+                                        <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                                            Group {{ $index + 1 }}
                                         </div>
-                                        <div class="detail-value" style="font-weight: 600;">
-                                            {{ $jewelleryStock->side_stone_weight }} cts</div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;">
+                                            <div class="detail-item">
+                                                <div class="detail-label" style="font-size: 0.7rem; color: var(--gray); margin-bottom:0.25rem;">Type</div>
+                                                <div class="detail-value" style="font-weight: 600; color: var(--text-primary);">
+                                                    {{ $sideStone->stoneType ? $sideStone->stoneType->name : 'N/A' }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label" style="font-size: 0.7rem; color: var(--gray); margin-bottom:0.25rem;">Total Weight
+                                                </div>
+                                                <div class="detail-value" style="font-weight: 600; color: var(--text-primary);">
+                                                    {{ $sideStone->total_weight }} cts</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label" style="font-size: 0.7rem; color: var(--gray); margin-bottom:0.25rem;">Per Stone Wt
+                                                </div>
+                                                <div class="detail-value" style="font-weight: 600; color: var(--text-primary);">
+                                                    {{ $sideStone->carat_weight ?: '-' }} cts</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label" style="font-size: 0.7rem; color: var(--gray); margin-bottom:0.25rem;">Count</div>
+                                                <div class="detail-value" style="font-weight: 600; color: var(--text-primary);">
+                                                    {{ $sideStone->count }} stones</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label" style="font-size: 0.7rem; color: var(--gray); margin-bottom:0.25rem;">Shape</div>
+                                                <div class="detail-value" style="font-weight: 600; color: var(--text-primary);">
+                                                    {{ $sideStone->stoneShape ? $sideStone->stoneShape->name : 'N/A' }}
+                                                </div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label" style="font-size: 0.7rem; color: var(--gray); margin-bottom:0.25rem;">Color / Clarity</div>
+                                                <div class="detail-value" style="font-weight: 600; color: var(--text-primary);">
+                                                    {{ $sideStone->stoneColor ? $sideStone->stoneColor->name : '-' }}
+                                                    /
+                                                    {{ $sideStone->stoneClarity ? $sideStone->stoneClarity->name : '-' }}
+                                                </div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label" style="font-size: 0.7rem; color: var(--gray); margin-bottom:0.25rem;">Cut Grade</div>
+                                                <div class="detail-value" style="font-weight: 600; color: var(--text-primary);">
+                                                    {{ $sideStone->stoneCut ? $sideStone->stoneCut->name : 'N/A' }}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label" style="font-size: 0.7rem; color: #64748b;">Count</div>
-                                        <div class="detail-value" style="font-weight: 600;">
-                                            {{ $jewelleryStock->side_stone_count }} stones</div>
-                                    </div>
+                                    @endforeach
                                 </div>
                             </div>
                         @endif
@@ -439,7 +476,13 @@
                             @if ($jewelleryStock->certificate_url)
                                 <a href="{{ $jewelleryStock->certificate_url }}" target="_blank"
                                     class="btn btn-sm btn-outline-success mt-2 w-100">
-                                    <i class="bi bi-file-earmark-pdf"></i> View Certificate
+                                    <i class="bi bi-link-45deg"></i> View Certificate Link
+                                </a>
+                            @endif
+                            @if ($jewelleryStock->certificate_image)
+                                <a href="{{ $jewelleryStock->certificate_image }}" target="_blank"
+                                    class="btn btn-sm btn-outline-primary mt-2 w-100">
+                                    <i class="bi bi-file-earmark-text"></i> View Uploaded File
                                 </a>
                             @endif
                         </div>

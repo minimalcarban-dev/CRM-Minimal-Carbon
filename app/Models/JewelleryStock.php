@@ -40,12 +40,10 @@ class JewelleryStock extends Model
         'primary_stone_color_id',
         'primary_stone_clarity_id',
         'primary_stone_cut_id',
-        'side_stone_type_id',
-        'side_stone_weight',
-        'side_stone_count',
         'certificate_number',
         'certificate_type',
         'certificate_url',
+        'certificate_image',
     ];
 
     protected $casts = [
@@ -148,9 +146,9 @@ class JewelleryStock extends Model
         return $this->belongsTo(DiamondCut::class, 'primary_stone_cut_id');
     }
 
-    public function sideStoneType()
+    public function sideStones()
     {
-        return $this->belongsTo(StoneType::class, 'side_stone_type_id');
+        return $this->hasMany(JewelleryStockSideStone::class);
     }
 
     public function pricingVariants()
