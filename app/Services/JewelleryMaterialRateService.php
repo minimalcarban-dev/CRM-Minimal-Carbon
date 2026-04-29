@@ -106,7 +106,7 @@ class JewelleryMaterialRateService
     {
         // 1. Priority: .env value
         $envRate = env('JEWELLERY_PLATINUM_RATE');
-        if ($envRate !== null) {
+        if ($envRate !== null && $envRate !== '') {
             return (float) $envRate;
         }
 
