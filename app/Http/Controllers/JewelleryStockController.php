@@ -357,7 +357,8 @@ class JewelleryStockController extends Controller
         }
 
         $rates = $this->materialRateService->currentRates();
-        $rates['is_platinum_locked'] = env('JEWELLERY_PLATINUM_RATE') !== null;
+        $envPlatinumRate = env('JEWELLERY_PLATINUM_RATE');
+        $rates['is_platinum_locked'] = $envPlatinumRate !== null && $envPlatinumRate !== '';
 
         return response()->json([
             'success' => true,

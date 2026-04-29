@@ -11,6 +11,7 @@
     $profitDefault = $canViewProfit || $canEditProfit ? (float) ($pricingDefaults['profit_percent'] ?? 25) : 0;
     $salesMarkupDefault = (float) ($pricingDefaults['sales_markup_percent'] ?? 0);
     $platinumDefault = (float) ($pricingDefaults['platinum_950_rate_usd_per_gram'] ?? 30);
+    $isPlatinumLocked = env('JEWELLERY_PLATINUM_RATE') !== null && env('JEWELLERY_PLATINUM_RATE') !== '';
 @endphp
 
 <div class="form-section-card">
@@ -59,14 +60,14 @@
                         <input type="number" name="platinum_950_rate_usd_per_gram" id="platinum_950_rate_usd_per_gram"
                             class="form-control" step="0.0001"
                             value="{{ old('platinum_950_rate_usd_per_gram', $pricingDefaults['platinum_950_rate_usd_per_gram'] ?? $platinumDefault) }}"
-                            {{ (env('JEWELLERY_PLATINUM_RATE') !== null || !$canEditLabor) ? 'readonly' : '' }}>
-                        @if(env('JEWELLERY_PLATINUM_RATE') !== null)
+                            {{ ($isPlatinumLocked || !$canEditLabor) ? 'readonly' : '' }}>
+                        @if($isPlatinumLocked)
                             <span class="input-group-text bg-light" title="Locked via .env config">
                                 <i class="bi bi-lock-fill text-muted"></i>
                             </span>
                         @endif
                     </div>
-                    @if(env('JEWELLERY_PLATINUM_RATE') !== null)
+                    @if($isPlatinumLocked)
                         <div class="form-text text-info" style="font-size: 0.75rem;">
                             <i class="bi bi-info-circle"></i> Managed via .env configuration
                         </div>
@@ -336,6 +337,10 @@
                 const payload = await response.json();
                 if (payload.success) {
                     window.jewelleryPricingRates = payload.rates;
+                    const platinumInput = document.getElementById('platinum_950_rate_usd_per_gram');
+                    if (payload.rates.is_platinum_locked && platinumInput) {
+                        platinumInput.value = pricingNumber(payload.rates.platinum_950_usd_per_gram).toFixed(4);
+                    }
                     const sourceText = payload.rates.source || 'live';
                     const lockIcon = payload.rates.is_platinum_locked ? '<i class="bi bi-lock-fill" title="Locked via config"></i> ' : '';
                     

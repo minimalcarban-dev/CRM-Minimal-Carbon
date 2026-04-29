@@ -31,7 +31,7 @@ class JewelleryPricingService
             'commission_percent' => $this->settingFloat('jewellery_pricing.default_commission_percent', 20),
             'profit_percent' => $this->settingFloat('jewellery_pricing.default_profit_percent', 25),
             'sales_markup_percent' => $this->settingFloat('jewellery_pricing.default_sales_markup_percent', 0),
-            'platinum_950_rate_usd_per_gram' => $this->settingFloat('jewellery_pricing.platinum_950_rate_usd_per_gram', 30),
+            'platinum_950_rate_usd_per_gram' => $this->platinum950Rate(),
             'can_edit_labor' => (bool) ($admin?->is_super),
             'can_edit_commission' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.edit_commission'))),
             'can_edit_profit' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.edit_profit'))),
@@ -223,6 +223,17 @@ class JewelleryPricingService
     protected function settingFloat(string $key, float $default): float
     {
         return (float) AppSetting::get($key, (string) $default);
+    }
+
+    protected function platinum950Rate(): float
+    {
+        $envRate = env('JEWELLERY_PLATINUM_RATE');
+
+        if ($envRate !== null && $envRate !== '') {
+            return (float) $envRate;
+        }
+
+        return $this->settingFloat('jewellery_pricing.platinum_950_rate_usd_per_gram', 30);
     }
 
     protected function normalizeColorWeights(string $materialCode, mixed $weights): ?array
