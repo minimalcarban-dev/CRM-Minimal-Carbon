@@ -154,6 +154,7 @@
         <!-- Main Chat Area -->
         <div
             class="chat-main"
+            ref="chatMainRef"
             :class="{ 'sidebar-open-mobile': isMobile && mobileSidebarOpen }"
             v-if="currentChannel"
             :style="chatMainStyle"
@@ -1049,6 +1050,7 @@
         <!-- Right Sidebar (Channel Info or Thread) -->
         <div
             class="info-sidebar"
+            ref="infoSidebarRef"
             v-if="shouldShowInfoSidebar"
             :class="{ 'is-mobile': isMobile }"
             :style="infoSidebarStyle"
@@ -2313,6 +2315,8 @@ export default {
         const messageInput = ref(null);
         const threadInput = ref(null);
         const inputContainer = ref(null);
+        const chatMainRef = ref(null);
+        const infoSidebarRef = ref(null);
         const page = ref(1);
         const hasMoreMessages = ref(true);
         const loadingMessages = ref(false);
@@ -4259,6 +4263,10 @@ export default {
         const resizeInfoStartX = ref(0);
         const resizeInfoStartWidth = ref(0);
         const userInfoOpen = ref(true);
+        let pendingSidebarWidth = null;
+        let resizeAnimationFrame = null;
+        let liveInfoPanelWidth = infoPanelWidth.value;
+        let liveThreadPanelWidth = threadPanelWidth.value;
         const infoSidebarWidth = computed(() => {
             if (isMobile.value) {
                 return threadPanelOpen.value
@@ -4282,6 +4290,24 @@ export default {
         const infoSidebarStyle = computed(() => ({
             width: `${Math.max(0, infoSidebarWidth.value)}px`,
         }));
+        const applyLiveSidebarWidth = (width) => {
+            const sidebarWidth = Math.max(0, width);
+            if (infoSidebarRef.value) {
+                infoSidebarRef.value.style.width = `${sidebarWidth}px`;
+            }
+            if (chatMainRef.value && !isMobile.value) {
+                chatMainRef.value.style.width = `calc(100% - ${leftSidebarWidth.value}px - ${sidebarWidth}px)`;
+            }
+        };
+        const scheduleLiveSidebarWidth = (width) => {
+            pendingSidebarWidth = width;
+            if (resizeAnimationFrame) return;
+
+            resizeAnimationFrame = requestAnimationFrame(() => {
+                resizeAnimationFrame = null;
+                applyLiveSidebarWidth(pendingSidebarWidth);
+            });
+        };
         const openChannelList = () => {
             if (!isMobile.value) return;
             mobileSidebarOpen.value = true;
@@ -4304,6 +4330,7 @@ export default {
             isResizingThread.value = true;
             resizeStartX.value = e.clientX;
             resizeStartWidth.value = threadPanelWidth.value;
+            liveThreadPanelWidth = threadPanelWidth.value;
 
             document.addEventListener("mousemove", handleResizeThread);
             document.addEventListener("mouseup", stopResizeThread);
@@ -4316,6 +4343,7 @@ export default {
             isResizingInfo.value = true;
             resizeInfoStartX.value = e.clientX;
             resizeInfoStartWidth.value = infoPanelWidth.value;
+            liveInfoPanelWidth = infoPanelWidth.value;
 
             document.addEventListener("mousemove", handleResizeInfo);
             document.addEventListener("mouseup", stopResizeInfo);
@@ -4327,11 +4355,18 @@ export default {
             if (!isResizingInfo.value) return;
             const delta = resizeInfoStartX.value - e.clientX;
             const newWidth = resizeInfoStartWidth.value + delta;
-            infoPanelWidth.value = Math.max(240, Math.min(900, newWidth));
+            liveInfoPanelWidth = Math.max(240, Math.min(900, newWidth));
+            scheduleLiveSidebarWidth(liveInfoPanelWidth);
         };
 
         const stopResizeInfo = () => {
             isResizingInfo.value = false;
+            if (resizeAnimationFrame) {
+                cancelAnimationFrame(resizeAnimationFrame);
+                resizeAnimationFrame = null;
+            }
+            infoPanelWidth.value = liveInfoPanelWidth;
+            applyLiveSidebarWidth(liveInfoPanelWidth);
             document.removeEventListener("mousemove", handleResizeInfo);
             document.removeEventListener("mouseup", stopResizeInfo);
             document.body.style.cursor = "";
@@ -4345,11 +4380,18 @@ export default {
             const newWidth = resizeStartWidth.value + delta;
 
             // Min width: 300px, Max width: 800px
-            threadPanelWidth.value = Math.max(300, Math.min(800, newWidth));
+            liveThreadPanelWidth = Math.max(300, Math.min(800, newWidth));
+            scheduleLiveSidebarWidth(liveThreadPanelWidth);
         };
 
         const stopResizeThread = () => {
             isResizingThread.value = false;
+            if (resizeAnimationFrame) {
+                cancelAnimationFrame(resizeAnimationFrame);
+                resizeAnimationFrame = null;
+            }
+            threadPanelWidth.value = liveThreadPanelWidth;
+            applyLiveSidebarWidth(liveThreadPanelWidth);
             document.removeEventListener("mousemove", handleResizeThread);
             document.removeEventListener("mouseup", stopResizeThread);
             document.body.style.cursor = "";
@@ -5021,6 +5063,14 @@ export default {
                 clearInterval(typingTickInterval);
                 typingTickInterval = null;
             }
+            if (resizeAnimationFrame) {
+                cancelAnimationFrame(resizeAnimationFrame);
+                resizeAnimationFrame = null;
+            }
+            document.removeEventListener("mousemove", handleResizeThread);
+            document.removeEventListener("mouseup", stopResizeThread);
+            document.removeEventListener("mousemove", handleResizeInfo);
+            document.removeEventListener("mouseup", stopResizeInfo);
         });
 
         // Adjust messages container bottom padding dynamically based on input container height
@@ -5178,6 +5228,8 @@ export default {
             attachmentFiles,
             messageContainer,
             inputContainer,
+            chatMainRef,
+            infoSidebarRef,
             messageInput,
             replyTo,
             showScrollDown,
