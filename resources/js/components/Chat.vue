@@ -52,7 +52,15 @@
                                 </span>
                             </div>
                             <div class="channel-preview-row">
-                                <p class="channel-preview">
+                                <p v-if="sidebarTypingLabel(channel.id)" class="channel-preview sidebar-typing-text">
+                                    <span class="sidebar-typing-dots">
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                    </span>
+                                    {{ sidebarTypingLabel(channel.id) }}
+                                </p>
+                                <p v-else class="channel-preview">
                                     {{
                                         lastMessagePreview[channel.id]?.text ||
                                         "No messages yet"
@@ -103,7 +111,15 @@
                                 </span>
                             </div>
                             <div class="channel-preview-row">
-                                <p class="channel-preview">
+                                <p v-if="sidebarTypingLabel(channel.id)" class="channel-preview sidebar-typing-text">
+                                    <span class="sidebar-typing-dots">
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                    </span>
+                                    {{ sidebarTypingLabel(channel.id) }}
+                                </p>
+                                <p v-else class="channel-preview">
                                     {{
                                         lastMessagePreview[channel.id]?.text ||
                                         "No messages yet"
@@ -172,7 +188,12 @@
                     </div>
                     <div class="header-info">
                         <h4 class="header-title">{{ currentChannel.name }}</h4>
-                        <p class="header-subtitle" v-if="typingLabel">
+                        <p class="header-subtitle typing-indicator" v-if="typingLabel">
+                            <span class="typing-dots">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </span>
                             {{ typingLabel }}
                         </p>
                         <p
@@ -247,7 +268,10 @@
                             pinnedMessages.length === 1 ? "" : "s"
                         }}</span
                     >
-                    <button @click="showPinnedPanel = false" class="panel-close">
+                    <button
+                        @click="showPinnedPanel = false"
+                        class="panel-close"
+                    >
                         <i class="bi bi-x"></i>
                     </button>
                 </div>
@@ -453,7 +477,11 @@
                                         </div>
                                         <!-- Text Content -->
                                         <div
-                                            v-if="hasRenderableMessageBody(message)"
+                                            v-if="
+                                                hasRenderableMessageBody(
+                                                    message,
+                                                )
+                                            "
                                             class="message-text"
                                             v-html="
                                                 formatMessageWithMentions(
@@ -463,11 +491,16 @@
                                         ></div>
 
                                         <div
-                                            v-if="getOrderReferences(message).length"
+                                            v-if="
+                                                getOrderReferences(message)
+                                                    .length
+                                            "
                                             class="order-reference-stack"
                                         >
                                             <button
-                                                v-for="orderRef in getOrderReferences(message)"
+                                                v-for="orderRef in getOrderReferences(
+                                                    message,
+                                                )"
                                                 :key="`${message.id}-${orderRef.id}`"
                                                 type="button"
                                                 class="order-reference-card"
@@ -476,16 +509,26 @@
                                                         !orderRef.order_url,
                                                 }"
                                                 :disabled="!orderRef.order_url"
-                                                @click="openOrderReference(orderRef)"
+                                                @click="
+                                                    openOrderReference(orderRef)
+                                                "
                                             >
-                                                <div class="order-reference-header">
-                                                    <div class="order-reference-title">
-                                                        <span class="order-reference-number">
+                                                <div
+                                                    class="order-reference-header"
+                                                >
+                                                    <div
+                                                        class="order-reference-title"
+                                                    >
+                                                        <span
+                                                            class="order-reference-number"
+                                                        >
                                                             #{{
                                                                 orderRef.display_number
                                                             }}
                                                         </span>
-                                                        <span class="order-reference-label-text">
+                                                        <span
+                                                            class="order-reference-label-text"
+                                                        >
                                                             Order
                                                         </span>
                                                     </div>
@@ -500,16 +543,30 @@
                                                     </span>
                                                 </div>
 
-                                                <div class="order-reference-body">
-                                                    <div class="order-reference-row">
-                                                        <div class="order-reference-row-icon">
-                                                            <i class="bi bi-person-badge"></i>
+                                                <div
+                                                    class="order-reference-body"
+                                                >
+                                                    <div
+                                                        class="order-reference-row"
+                                                    >
+                                                        <div
+                                                            class="order-reference-row-icon"
+                                                        >
+                                                            <i
+                                                                class="bi bi-person-badge"
+                                                            ></i>
                                                         </div>
-                                                        <div class="order-reference-row-content">
-                                                            <span class="order-reference-row-label">
+                                                        <div
+                                                            class="order-reference-row-content"
+                                                        >
+                                                            <span
+                                                                class="order-reference-row-label"
+                                                            >
                                                                 Client
                                                             </span>
-                                                            <span class="order-reference-row-value">
+                                                            <span
+                                                                class="order-reference-row-value"
+                                                            >
                                                                 {{
                                                                     orderRef.exists
                                                                         ? orderRef.client_name ||
@@ -520,15 +577,27 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="order-reference-row">
-                                                        <div class="order-reference-row-icon">
-                                                            <i class="bi bi-calendar3"></i>
+                                                    <div
+                                                        class="order-reference-row"
+                                                    >
+                                                        <div
+                                                            class="order-reference-row-icon"
+                                                        >
+                                                            <i
+                                                                class="bi bi-calendar3"
+                                                            ></i>
                                                         </div>
-                                                        <div class="order-reference-row-content">
-                                                            <span class="order-reference-row-label">
+                                                        <div
+                                                            class="order-reference-row-content"
+                                                        >
+                                                            <span
+                                                                class="order-reference-row-label"
+                                                            >
                                                                 Created
                                                             </span>
-                                                            <span class="order-reference-row-value">
+                                                            <span
+                                                                class="order-reference-row-value"
+                                                            >
                                                                 {{
                                                                     orderRef.created_at
                                                                         ? formatOrderCreatedAt(
@@ -549,14 +618,24 @@
                                                         "
                                                         class="order-reference-row"
                                                     >
-                                                        <div class="order-reference-row-icon">
-                                                            <i class="bi bi-truck"></i>
+                                                        <div
+                                                            class="order-reference-row-icon"
+                                                        >
+                                                            <i
+                                                                class="bi bi-truck"
+                                                            ></i>
                                                         </div>
-                                                        <div class="order-reference-row-content">
-                                                            <span class="order-reference-row-label">
+                                                        <div
+                                                            class="order-reference-row-content"
+                                                        >
+                                                            <span
+                                                                class="order-reference-row-label"
+                                                            >
                                                                 Shipping
                                                             </span>
-                                                            <span class="order-reference-row-value">
+                                                            <span
+                                                                class="order-reference-row-value"
+                                                            >
                                                                 {{
                                                                     orderRef.shipping_company_name ||
                                                                     orderRef.tracking_status ||
@@ -689,11 +768,18 @@
                                         class="reaction-bar"
                                     >
                                         <button
-                                            v-for="group in groupedReactions(message)"
+                                            v-for="group in groupedReactions(
+                                                message,
+                                            )"
                                             :key="`${message.id}-${group.emoji}`"
                                             class="reaction-chip"
                                             :class="{ mine: group.my }"
-                                            @click.stop="reactToMessage(message, group.emoji)"
+                                            @click.stop="
+                                                reactToMessage(
+                                                    message,
+                                                    group.emoji,
+                                                )
+                                            "
                                         >
                                             {{ group.emoji }}
                                             <span>{{ group.count }}</span>
@@ -738,7 +824,9 @@
                                         <button
                                             class="meta-action"
                                             title="Reply Quote"
-                                            @click.stop="replyToMessage(message)"
+                                            @click.stop="
+                                                replyToMessage(message)
+                                            "
                                         >
                                             <i class="bi bi-reply"></i>
                                         </button>
@@ -784,7 +872,9 @@
                                             <button
                                                 class="meta-action"
                                                 title="Reply in Thread"
-                                                @click.stop="openThread(message)"
+                                                @click.stop="
+                                                    openThread(message)
+                                                "
                                             >
                                                 <i class="bi bi-chat-text"></i>
                                             </button>
@@ -792,7 +882,9 @@
                                                 class="meta-action"
                                                 title="More actions"
                                                 @click.stop="
-                                                    toggleMessageMenu(message.id)
+                                                    toggleMessageMenu(
+                                                        message.id,
+                                                    )
                                                 "
                                             >
                                                 <i class="bi bi-three-dots"></i>
@@ -879,6 +971,18 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Typing Bubble in Chat Area (WhatsApp-style) -->
+                    <div v-if="typingLabel" class="typing-bubble-wrapper">
+                        <div class="typing-bubble">
+                            <div class="typing-bubble-dots">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                            <span class="typing-bubble-text">{{ typingLabel }}</span>
+                        </div>
+                    </div>
                 </template>
             </div>
 
@@ -926,7 +1030,10 @@
                     @cancel-reply="replyTo = null"
                 >
                     <template #emoji-picker>
-                        <EmojiPicker :data="emojiData" @emoji-select="appendEmoji" />
+                        <EmojiPicker
+                            :data="emojiData"
+                            @emoji-select="appendEmoji"
+                        />
                     </template>
                 </ChatInput>
             </div>
@@ -1006,140 +1113,170 @@
                                     "
                                     class="message-text"
                                 ></div>
-                            <div
-                                v-if="
-                                    getOrderReferences(activeThreadMessage)
-                                        .length
-                                "
-                                class="order-reference-stack"
-                            >
-                                <button
-                                    v-for="orderRef in getOrderReferences(
-                                        activeThreadMessage,
-                                    )"
-                                    :key="`${activeThreadMessage.id}-${orderRef.id}`"
-                                    type="button"
-                                    class="order-reference-card"
-                                    :class="{
-                                        'order-reference-card--missing':
-                                            !orderRef.order_url,
-                                    }"
-                                    :disabled="!orderRef.order_url"
-                                    @click="openOrderReference(orderRef)"
+                                <div
+                                    v-if="
+                                        getOrderReferences(activeThreadMessage)
+                                            .length
+                                    "
+                                    class="order-reference-stack"
                                 >
-                                    <div class="order-reference-header">
-                                        <div class="order-reference-title">
-                                            <span class="order-reference-number">
-                                                #{{ orderRef.display_number }}
-                                            </span>
-                                            <span class="order-reference-label-text">
-                                                Order
-                                            </span>
-                                        </div>
-                                        <span
-                                            class="order-reference-status"
-                                            :class="`status-${orderRef.status_color || 'secondary'}`"
-                                        >
-                                            {{
-                                                orderRef.status_label ||
-                                                "Unknown"
-                                            }}
-                                        </span>
-                                    </div>
-                                    <div class="order-reference-body">
-                                        <div class="order-reference-row">
-                                            <div class="order-reference-row-icon">
-                                                <i class="bi bi-person-badge"></i>
-                                            </div>
-                                            <div
-                                                class="order-reference-row-content"
-                                            >
-                                                <span class="order-reference-row-label">
-                                                    Client
-                                                </span>
-                                                <span class="order-reference-row-value">
-                                                    {{
-                                                        orderRef.exists
-                                                            ? orderRef.client_name ||
-                                                              "Unknown client"
-                                                            : "Order not found"
-                                                    }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="order-reference-row">
-                                            <div class="order-reference-row-icon">
-                                                <i class="bi bi-calendar3"></i>
-                                            </div>
-                                            <div
-                                                class="order-reference-row-content"
-                                            >
-                                                <span class="order-reference-row-label">
-                                                    Created
-                                                </span>
-                                                <span class="order-reference-row-value">
-                                                    {{
-                                                        orderRef.created_at
-                                                            ? formatOrderCreatedAt(
-                                                                  orderRef.created_at,
-                                                              )
-                                                            : "Not available"
-                                                    }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div
-                                            v-if="
-                                                orderRef.shipping_company_name ||
-                                                orderRef.tracking_number ||
-                                                orderRef.dispatch_date ||
-                                                orderRef.tracking_status
-                                            "
-                                            class="order-reference-row"
-                                        >
-                                            <div class="order-reference-row-icon">
-                                                <i class="bi bi-truck"></i>
-                                            </div>
-                                            <div
-                                                class="order-reference-row-content"
-                                            >
-                                                <span class="order-reference-row-label">
-                                                    Shipping
-                                                </span>
-                                                <span class="order-reference-row-value">
-                                                    {{
-                                                        orderRef.shipping_company_name ||
-                                                        orderRef.tracking_status ||
-                                                        "Tracking ready"
+                                    <button
+                                        v-for="orderRef in getOrderReferences(
+                                            activeThreadMessage,
+                                        )"
+                                        :key="`${activeThreadMessage.id}-${orderRef.id}`"
+                                        type="button"
+                                        class="order-reference-card"
+                                        :class="{
+                                            'order-reference-card--missing':
+                                                !orderRef.order_url,
+                                        }"
+                                        :disabled="!orderRef.order_url"
+                                        @click="openOrderReference(orderRef)"
+                                    >
+                                        <div class="order-reference-header">
+                                            <div class="order-reference-title">
+                                                <span
+                                                    class="order-reference-number"
+                                                >
+                                                    #{{
+                                                        orderRef.display_number
                                                     }}
                                                 </span>
                                                 <span
-                                                    v-if="
-                                                        orderRef.tracking_number
-                                                    "
-                                                    class="order-reference-row-subvalue"
+                                                    class="order-reference-label-text"
                                                 >
-                                                    Tracking:
-                                                    {{ orderRef.tracking_number }}
-                                                </span>
-                                                <span
-                                                    v-if="
-                                                        orderRef.dispatch_date
-                                                    "
-                                                    class="order-reference-row-subvalue"
-                                                >
-                                                    Dispatch:
-                                                    {{
-                                                        formatOrderCreatedAt(
-                                                            orderRef.dispatch_date,
-                                                        )
-                                                    }}
+                                                    Order
                                                 </span>
                                             </div>
+                                            <span
+                                                class="order-reference-status"
+                                                :class="`status-${orderRef.status_color || 'secondary'}`"
+                                            >
+                                                {{
+                                                    orderRef.status_label ||
+                                                    "Unknown"
+                                                }}
+                                            </span>
                                         </div>
-                                    </div>
-                                </button>
-                            </div>
+                                        <div class="order-reference-body">
+                                            <div class="order-reference-row">
+                                                <div
+                                                    class="order-reference-row-icon"
+                                                >
+                                                    <i
+                                                        class="bi bi-person-badge"
+                                                    ></i>
+                                                </div>
+                                                <div
+                                                    class="order-reference-row-content"
+                                                >
+                                                    <span
+                                                        class="order-reference-row-label"
+                                                    >
+                                                        Client
+                                                    </span>
+                                                    <span
+                                                        class="order-reference-row-value"
+                                                    >
+                                                        {{
+                                                            orderRef.exists
+                                                                ? orderRef.client_name ||
+                                                                  "Unknown client"
+                                                                : "Order not found"
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="order-reference-row">
+                                                <div
+                                                    class="order-reference-row-icon"
+                                                >
+                                                    <i
+                                                        class="bi bi-calendar3"
+                                                    ></i>
+                                                </div>
+                                                <div
+                                                    class="order-reference-row-content"
+                                                >
+                                                    <span
+                                                        class="order-reference-row-label"
+                                                    >
+                                                        Created
+                                                    </span>
+                                                    <span
+                                                        class="order-reference-row-value"
+                                                    >
+                                                        {{
+                                                            orderRef.created_at
+                                                                ? formatOrderCreatedAt(
+                                                                      orderRef.created_at,
+                                                                  )
+                                                                : "Not available"
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div
+                                                v-if="
+                                                    orderRef.shipping_company_name ||
+                                                    orderRef.tracking_number ||
+                                                    orderRef.dispatch_date ||
+                                                    orderRef.tracking_status
+                                                "
+                                                class="order-reference-row"
+                                            >
+                                                <div
+                                                    class="order-reference-row-icon"
+                                                >
+                                                    <i class="bi bi-truck"></i>
+                                                </div>
+                                                <div
+                                                    class="order-reference-row-content"
+                                                >
+                                                    <span
+                                                        class="order-reference-row-label"
+                                                    >
+                                                        Shipping
+                                                    </span>
+                                                    <span
+                                                        class="order-reference-row-value"
+                                                    >
+                                                        {{
+                                                            orderRef.shipping_company_name ||
+                                                            orderRef.tracking_status ||
+                                                            "Tracking ready"
+                                                        }}
+                                                    </span>
+                                                    <span
+                                                        v-if="
+                                                            orderRef.tracking_number
+                                                        "
+                                                        class="order-reference-row-subvalue"
+                                                    >
+                                                        Tracking:
+                                                        {{
+                                                            orderRef.tracking_number
+                                                        }}
+                                                    </span>
+                                                    <span
+                                                        v-if="
+                                                            orderRef.dispatch_date
+                                                        "
+                                                        class="order-reference-row-subvalue"
+                                                    >
+                                                        Dispatch:
+                                                        {{
+                                                            formatOrderCreatedAt(
+                                                                orderRef.dispatch_date,
+                                                            )
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
                                 <!-- <div
                                     v-if="
                                         activeThreadMessage.attachments &&
@@ -1240,9 +1377,7 @@
                                 </div>
                                 <div class="message-bubble">
                                     <div
-                                        v-if="
-                                            hasRenderableMessageBody(reply)
-                                        "
+                                        v-if="hasRenderableMessageBody(reply)"
                                         v-html="
                                             formatMessageWithMentions(reply)
                                         "
@@ -1254,7 +1389,9 @@
                                         class="order-reference-stack"
                                     >
                                         <button
-                                            v-for="orderRef in getOrderReferences(reply)"
+                                            v-for="orderRef in getOrderReferences(
+                                                reply,
+                                            )"
                                             :key="`${reply.id}-${orderRef.id}`"
                                             type="button"
                                             class="order-reference-card"
@@ -1263,14 +1400,24 @@
                                                     !orderRef.order_url,
                                             }"
                                             :disabled="!orderRef.order_url"
-                                            @click="openOrderReference(orderRef)"
+                                            @click="
+                                                openOrderReference(orderRef)
+                                            "
                                         >
                                             <div class="order-reference-header">
-                                                <div class="order-reference-title">
-                                                    <span class="order-reference-number">
-                                                        #{{ orderRef.display_number }}
+                                                <div
+                                                    class="order-reference-title"
+                                                >
+                                                    <span
+                                                        class="order-reference-number"
+                                                    >
+                                                        #{{
+                                                            orderRef.display_number
+                                                        }}
                                                     </span>
-                                                    <span class="order-reference-label-text">
+                                                    <span
+                                                        class="order-reference-label-text"
+                                                    >
                                                         Order
                                                     </span>
                                                 </div>
@@ -1286,17 +1433,27 @@
                                             </div>
 
                                             <div class="order-reference-body">
-                                                <div class="order-reference-row">
-                                                    <div class="order-reference-row-icon">
-                                                        <i class="bi bi-person-badge"></i>
+                                                <div
+                                                    class="order-reference-row"
+                                                >
+                                                    <div
+                                                        class="order-reference-row-icon"
+                                                    >
+                                                        <i
+                                                            class="bi bi-person-badge"
+                                                        ></i>
                                                     </div>
                                                     <div
                                                         class="order-reference-row-content"
                                                     >
-                                                        <span class="order-reference-row-label">
+                                                        <span
+                                                            class="order-reference-row-label"
+                                                        >
                                                             Client
                                                         </span>
-                                                        <span class="order-reference-row-value">
+                                                        <span
+                                                            class="order-reference-row-value"
+                                                        >
                                                             {{
                                                                 orderRef.exists
                                                                     ? orderRef.client_name ||
@@ -1307,17 +1464,27 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="order-reference-row">
-                                                    <div class="order-reference-row-icon">
-                                                        <i class="bi bi-calendar3"></i>
+                                                <div
+                                                    class="order-reference-row"
+                                                >
+                                                    <div
+                                                        class="order-reference-row-icon"
+                                                    >
+                                                        <i
+                                                            class="bi bi-calendar3"
+                                                        ></i>
                                                     </div>
                                                     <div
                                                         class="order-reference-row-content"
                                                     >
-                                                        <span class="order-reference-row-label">
+                                                        <span
+                                                            class="order-reference-row-label"
+                                                        >
                                                             Created
                                                         </span>
-                                                        <span class="order-reference-row-value">
+                                                        <span
+                                                            class="order-reference-row-value"
+                                                        >
                                                             {{
                                                                 orderRef.created_at
                                                                     ? formatOrderCreatedAt(
@@ -1338,16 +1505,24 @@
                                                     "
                                                     class="order-reference-row"
                                                 >
-                                                    <div class="order-reference-row-icon">
-                                                        <i class="bi bi-truck"></i>
+                                                    <div
+                                                        class="order-reference-row-icon"
+                                                    >
+                                                        <i
+                                                            class="bi bi-truck"
+                                                        ></i>
                                                     </div>
                                                     <div
                                                         class="order-reference-row-content"
                                                     >
-                                                        <span class="order-reference-row-label">
+                                                        <span
+                                                            class="order-reference-row-label"
+                                                        >
                                                             Shipping
                                                         </span>
-                                                        <span class="order-reference-row-value">
+                                                        <span
+                                                            class="order-reference-row-value"
+                                                        >
                                                             {{
                                                                 orderRef.shipping_company_name ||
                                                                 orderRef.tracking_status ||
@@ -1361,7 +1536,9 @@
                                                             class="order-reference-row-subvalue"
                                                         >
                                                             Tracking:
-                                                            {{ orderRef.tracking_number }}
+                                                            {{
+                                                                orderRef.tracking_number
+                                                            }}
                                                         </span>
                                                         <span
                                                             v-if="
@@ -1473,26 +1650,41 @@
                         :files="threadReplyFiles"
                         :emoji-picker-open="threadEditor.emojiPickerOpen.value"
                         :sending="isSendingThread"
-                        :can-send="!!threadEditor.input.value.trim() || threadReplyFiles.length > 0"
+                        :can-send="
+                            !!threadEditor.input.value.trim() ||
+                            threadReplyFiles.length > 0
+                        "
                         :mention-open="threadEditor.mentionOpen.value"
                         :mention-items="threadEditor.mentionItems.value"
                         :mention-index="threadEditor.mentionIndex.value"
-                        :order-suggest-open="threadEditor.orderSuggestOpen.value"
-                        :order-suggest-items="threadEditor.orderSuggestItems.value"
-                        :order-suggest-index="threadEditor.orderSuggestIndex.value"
+                        :order-suggest-open="
+                            threadEditor.orderSuggestOpen.value
+                        "
+                        :order-suggest-items="
+                            threadEditor.orderSuggestItems.value
+                        "
+                        :order-suggest-index="
+                            threadEditor.orderSuggestIndex.value
+                        "
                         textarea-ref="threadInput"
                         file-input-ref="threadFileInput"
                         @send="sendThreadReply"
                         @attach-files="handleThreadFiles"
                         @remove-file="removeThreadAttachment"
-                        @toggle-emoji="threadEditor.emojiPickerOpen.value = !threadEditor.emojiPickerOpen.value"
+                        @toggle-emoji="
+                            threadEditor.emojiPickerOpen.value =
+                                !threadEditor.emojiPickerOpen.value
+                        "
                         @editor-input="threadEditor.onInput"
                         @editor-keydown="threadEditor.onKeyDown"
                         @pick-mention="threadEditor.pickMention"
                         @pick-order="threadEditor.pickOrderSuggest"
                     >
                         <template #emoji-picker>
-                            <EmojiPicker :data="emojiData" @emoji-select="threadEditor.appendEmoji" />
+                            <EmojiPicker
+                                :data="emojiData"
+                                @emoji-select="threadEditor.appendEmoji"
+                            />
                         </template>
                     </ChatInput>
                 </div>
@@ -2051,8 +2243,10 @@ import {
 import axios from "axios";
 import { format } from "date-fns";
 import debounce from "lodash/debounce";
+import throttle from "lodash/throttle";
 import DOMPurify from "dompurify";
-import MediaGallery from "./MediaGallery.vue";
+import { defineAsyncComponent } from "vue";
+const MediaGallery = defineAsyncComponent(() => import("./MediaGallery.vue"));
 import ChatInput from "./ChatInput.vue";
 import { Picker as EmojiMartPicker } from "emoji-mart";
 import emojiData from "@emoji-mart/data";
@@ -2135,7 +2329,10 @@ export default {
         const sidebarFiles = ref([]);
         const sidebarLinks = ref([]);
         const typingUsers = ref({});
+        const sidebarTypingUsers = ref({});  // { channelId: { userId: { name, at } } }
         const lastTypingSentAt = ref(0);
+        const typingTick = ref(0);
+        let typingTickInterval = null;
         const showEmojiPicker = ref(false);
         const pinnedMessages = ref([]);
         const showPinnedPanel = ref(false);
@@ -2522,12 +2719,14 @@ export default {
             () => !isPersonalChannel.value,
         );
         const typingLabel = computed(() => {
+            // Reference typingTick so this computed re-evaluates periodically
+            const _tick = typingTick.value;
             const now = Date.now();
-            Object.keys(typingUsers.value).forEach((uid) => {
-                if (now - typingUsers.value[uid].at > 3500)
-                    delete typingUsers.value[uid];
-            });
-            const users = Object.values(typingUsers.value).filter(Boolean);
+
+            // Pure read — no mutations here (cleanup is in the tick interval)
+            const users = Object.values(typingUsers.value).filter(
+                (u) => u && now - u.at <= 3500
+            );
             if (!users.length) return "";
 
             const names = users.map((x) => x.name).filter(Boolean);
@@ -2542,6 +2741,35 @@ export default {
             const verb = names.length > 1 ? "are" : "is";
             return `${nameStr} ${verb} typing${channelNote}...`;
         });
+
+        // Sidebar typing label for any channel (used in sidebar preview)
+        // IMPORTANT: This is called during render — must be pure read-only, no mutations
+        const sidebarTypingLabel = (channelId) => {
+            const _tick = typingTick.value;
+            const now = Date.now();
+
+            // For current channel, read from typingUsers
+            if (currentChannel.value?.id === channelId) {
+                const users = Object.values(typingUsers.value).filter(
+                    (u) => u && now - u.at <= 3500
+                );
+                if (!users.length) return '';
+                const names = users.map((x) => x.name).filter(Boolean);
+                return `${names.slice(0, 2).join(', ')}${names.length > 2 ? ` +${names.length - 2}` : ''} typing...`;
+            }
+
+            // For other channels, read from sidebarTypingUsers (no mutations!)
+            const channelTypers = sidebarTypingUsers.value[channelId];
+            if (!channelTypers) return '';
+
+            const users = Object.values(channelTypers).filter(
+                (u) => u && now - u.at <= 3500
+            );
+            if (!users.length) return '';
+
+            const names = users.map((x) => x.name).filter(Boolean);
+            return `${names.slice(0, 2).join(', ')}${names.length > 2 ? ` +${names.length - 2}` : ''} typing...`;
+        };
 
         const groupedReactions = (message) => {
             if (!Array.isArray(message?.reactions)) return [];
@@ -2640,7 +2868,9 @@ export default {
             if (!message?.id) return;
             try {
                 if (message.is_saved) {
-                    await axios.delete(`/admin/chat/messages/${message.id}/save`);
+                    await axios.delete(
+                        `/admin/chat/messages/${message.id}/save`,
+                    );
                     message.is_saved = false;
                 } else {
                     await axios.post(`/admin/chat/messages/${message.id}/save`);
@@ -2674,7 +2904,9 @@ export default {
 
         const jumpToSavedMessage = async (saved) => {
             if (!saved?.id) return;
-            const inCurrentChannel = messages.value.some((m) => m.id === saved.id);
+            const inCurrentChannel = messages.value.some(
+                (m) => m.id === saved.id,
+            );
             showSavedPanel.value = false;
             if (inCurrentChannel) {
                 scrollToMessageById(saved.id);
@@ -2821,9 +3053,10 @@ export default {
         const pickOrderSuggest = (order) => {
             if (!order?.id) return;
             // Use activeElement since textarea is now inside ChatInput component
-            const textarea = document.activeElement?.tagName === 'TEXTAREA'
-                ? document.activeElement
-                : messageInput.value;
+            const textarea =
+                document.activeElement?.tagName === "TEXTAREA"
+                    ? document.activeElement
+                    : messageInput.value;
             const val = newMessage.value;
             const caret = textarea?.selectionStart ?? val.length;
             const before = val.slice(0, caret);
@@ -2833,17 +3066,15 @@ export default {
 
             const prefix = orderMatch[1] || "";
             const insert = `${prefix}#${order.id} `;
-            newMessage.value =
-                before.replace(/(^|\s)#(\w*)$/, insert) + after;
+            newMessage.value = before.replace(/(^|\s)#(\w*)$/, insert) + after;
             orderSuggestOpen.value = false;
             orderSuggestItems.value = [];
             orderSuggestQuery.value = "";
 
             nextTick(() => {
                 try {
-                    const pos = (
-                        before.replace(/(^|\s)#(\w*)$/, "") + insert
-                    ).length;
+                    const pos = (before.replace(/(^|\s)#(\w*)$/, "") + insert)
+                        .length;
                     textarea.focus();
                     textarea.setSelectionRange(pos, pos);
                 } catch (_) {}
@@ -3244,12 +3475,16 @@ export default {
                 }
                 if (e.key === "ArrowUp") {
                     orderSuggestIndex.value =
-                        (orderSuggestIndex.value - 1 + orderSuggestItems.value.length) %
+                        (orderSuggestIndex.value -
+                            1 +
+                            orderSuggestItems.value.length) %
                         orderSuggestItems.value.length;
                     return;
                 }
                 if (e.key === "Enter" || e.key === "Tab") {
-                    pickOrderSuggest(orderSuggestItems.value[orderSuggestIndex.value]);
+                    pickOrderSuggest(
+                        orderSuggestItems.value[orderSuggestIndex.value],
+                    );
                     return;
                 }
                 if (e.key === "Escape") {
@@ -3259,7 +3494,11 @@ export default {
             }
 
             // When no popover is open, handle Enter key
-            if (!mentionOpen.value && !orderSuggestOpen.value && e.key === "Enter") {
+            if (
+                !mentionOpen.value &&
+                !orderSuggestOpen.value &&
+                e.key === "Enter"
+            ) {
                 // Shift+Enter = new line (allow default behavior)
                 if (e.shiftKey) {
                     return;
@@ -3273,9 +3512,10 @@ export default {
         const pickMention = (m) => {
             if (!m) return;
             // Use activeElement since textarea is now inside ChatInput component
-            const textarea = document.activeElement?.tagName === 'TEXTAREA'
-                ? document.activeElement
-                : messageInput.value;
+            const textarea =
+                document.activeElement?.tagName === "TEXTAREA"
+                    ? document.activeElement
+                    : messageInput.value;
             const val = newMessage.value;
             const caret = textarea?.selectionStart ?? val.length;
             const before = val.slice(0, caret);
@@ -3353,7 +3593,7 @@ export default {
 
                 // 3. THEN: Convert URLs to links (emails are now protected)
                 const urlRegex =
-                    /(?:https?:\/\/)?(?:www\.)?[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)+(?:\/[^\s<>()"']*)?/gi;
+                    /\b(?:https?:\/\/|www\.)[^\s<>()"']+|\b[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)*\.[a-z]{2,}\b(?:\/[^\s<>()"']*)?/gi;
                 content = content.replace(urlRegex, (url) => {
                     let href = url;
                     if (!/^https?:\/\//i.test(url)) {
@@ -3624,7 +3864,8 @@ export default {
             if (!currentChannel.value?.id) return;
             if (
                 deepLinkChannelId.value &&
-                Number(currentChannel.value.id) !== Number(deepLinkChannelId.value)
+                Number(currentChannel.value.id) !==
+                    Number(deepLinkChannelId.value)
             ) {
                 return;
             }
@@ -3677,7 +3918,7 @@ export default {
             }
         };
 
-        const onScrollMessages = async () => {
+        const onScrollMessages = throttle(async () => {
             const el = messageContainer.value;
             if (!el) return;
             const nearBottom =
@@ -3708,7 +3949,7 @@ export default {
                         newScrollHeight - prevScrollHeight + prevScrollTop;
                 }
             }
-        };
+        }, 150);
 
         const sameDay = (a, b) => {
             const da = new Date(a),
@@ -3748,17 +3989,12 @@ export default {
             const now = Date.now();
             if (now - lastTypingSentAt.value < 1500) return;
             lastTypingSentAt.value = now;
-            if (currentChannel.value?.id && window.Echo) {
-                try {
-                    window.Echo.private(
-                        `chat.channel.${currentChannel.value.id}`,
-                    ).whisper("typing", {
-                        userId: props.userId,
-                        name: window?.authAdminName || "Someone",
-                        channelId: currentChannel.value.id,
-                        channelName: currentChannel.value.name || "",
-                    });
-                } catch (e) {}
+            if (currentChannel.value?.id) {
+                // Use server-side broadcasting instead of Pusher client events (whispers)
+                // Whispers require "Enable client events" in Pusher dashboard settings
+                // Server-side approach uses the same broadcast mechanism as MessageSent — always works
+                axios.post(`/admin/chat/channels/${currentChannel.value.id}/typing`)
+                    .catch(() => {}); // fire-and-forget, no need to block UI
             }
         };
 
@@ -3997,13 +4233,15 @@ export default {
 
         // Thread Editor Composable — isolated state, no sharing with main chat
         const threadEditor = useChatEditor({
-            type: 'thread',
+            type: "thread",
             getMembers: currentMembers,
             onSend: () => sendThreadReply(),
             onTyping: null, // threads don't broadcast typing indicator
             textareaRef: threadInput,
             fetchOrderSuggestions: async (q) => {
-                const { data } = await axios.get('/admin/chat/orders/suggest', { params: { q } });
+                const { data } = await axios.get("/admin/chat/orders/suggest", {
+                    params: { q },
+                });
                 return data?.orders || [];
             },
         });
@@ -4049,7 +4287,7 @@ export default {
         const closeChannelList = () => {
             mobileSidebarOpen.value = false;
         };
-        const handleViewportChange = () => {
+        const handleViewportChange = throttle(() => {
             if (typeof window === "undefined") return;
             viewportWidth.value = window.innerWidth;
             if (viewportWidth.value <= 768) {
@@ -4058,7 +4296,7 @@ export default {
             } else {
                 mobileSidebarOpen.value = false;
             }
-        };
+        }, 150);
 
         const startResizeThread = (e) => {
             isResizingThread.value = true;
@@ -4197,9 +4435,11 @@ export default {
             });
             // Forward mention IDs so backend can send mention notifications
             if (threadEditor.pendingMentionIds.value.size) {
-                Array.from(threadEditor.pendingMentionIds.value).forEach((id) => {
-                    formData.append("metadata[mentions][]", String(id));
-                });
+                Array.from(threadEditor.pendingMentionIds.value).forEach(
+                    (id) => {
+                        formData.append("metadata[mentions][]", String(id));
+                    },
+                );
             }
 
             try {
@@ -4410,10 +4650,15 @@ export default {
                     .listen("MessageReacted", (e) => {
                         if (!e?.message_id) return;
                         const applyReactionToMessage = (targetMessage) => {
-                            if (!targetMessage || targetMessage.id !== e.message_id)
+                            if (
+                                !targetMessage ||
+                                targetMessage.id !== e.message_id
+                            )
                                 return;
 
-                            const existing = Array.isArray(targetMessage.reactions)
+                            const existing = Array.isArray(
+                                targetMessage.reactions,
+                            )
                                 ? [...targetMessage.reactions]
                                 : [];
                             const idx = existing.findIndex(
@@ -4434,7 +4679,8 @@ export default {
                                     });
                                 }
                             } else if (e.action === "removed" && idx >= 0) {
-                                const nextCount = (existing[idx].count || 1) - 1;
+                                const nextCount =
+                                    (existing[idx].count || 1) - 1;
                                 if (nextCount > 0) {
                                     existing[idx] = {
                                         ...existing[idx],
@@ -4474,7 +4720,10 @@ export default {
 
                         const isPinned = e.action === "pinned";
                         const applyPinToMessage = (targetMessage) => {
-                            if (!targetMessage || targetMessage.id !== e.message_id)
+                            if (
+                                !targetMessage ||
+                                targetMessage.id !== e.message_id
+                            )
                                 return;
                             targetMessage.is_pinned = isPinned;
                         };
@@ -4504,12 +4753,16 @@ export default {
                             await loadPinnedMessages();
                         }
                     })
-                    .listenForWhisper("typing", (e) => {
+                    .listen(".UserTyping", (e) => {
                         if (!e || e.userId === props.userId) return;
-                        typingUsers.value[e.userId] = {
-                            name: e.name || "Someone",
-                            channelName: e.channelName || "",
-                            at: Date.now(),
+                        // Replace the whole object to guarantee Vue reactivity
+                        typingUsers.value = {
+                            ...typingUsers.value,
+                            [e.userId]: {
+                                name: e.name || "Someone",
+                                channelName: e.channelName || "",
+                                at: Date.now(),
+                            },
                         };
                     })
                     .listen("MessagesRead", (e) => {
@@ -4612,11 +4865,38 @@ export default {
                                     window.showToast(notificationMessage);
                                 }
 
-                                // Play sound
-                                playNotificationSound();
+                                notifyIfBackground(
+                                    channel.id,
+                                    senderName,
+                                    channelName,
+                                );
+
+                                // Play sound (only if notifyIfBackground skips it due to permissions)
+                                if (
+                                    !("Notification" in window) ||
+                                    Notification.permission === "denied"
+                                ) {
+                                    playNotificationSound();
+                                }
                             }
                         },
-                    );
+                    )
+                    .listen(".UserTyping", (e) => {
+                        if (!e || e.userId === props.userId) return;
+                        // Store typing state per-channel for sidebar indicators
+                        const cId = channel.id;
+                        const existing = sidebarTypingUsers.value[cId] || {};
+                        sidebarTypingUsers.value = {
+                            ...sidebarTypingUsers.value,
+                            [cId]: {
+                                ...existing,
+                                [e.userId]: {
+                                    name: e.name || 'Someone',
+                                    at: Date.now(),
+                                },
+                            },
+                        };
+                    });
                     console.log(
                         "[Chat] Listener setup for channel:",
                         channel.name,
@@ -4640,6 +4920,49 @@ export default {
             window.addEventListener("paste", handlePaste);
             loadChannels();
             checkCreateCapability();
+
+            // Start typing indicator tick timer (1s interval)
+            // Handles stale-entry cleanup here (NOT in computed/render functions)
+            typingTickInterval = setInterval(() => {
+                const now = Date.now();
+                let hasActive = false;
+
+                // Clean stale entries from typingUsers (current channel)
+                if (Object.keys(typingUsers.value).length > 0) {
+                    const fresh = {};
+                    Object.keys(typingUsers.value).forEach((uid) => {
+                        if (now - typingUsers.value[uid].at <= 3500) {
+                            fresh[uid] = typingUsers.value[uid];
+                        }
+                    });
+                    typingUsers.value = fresh;
+                    if (Object.keys(fresh).length > 0) hasActive = true;
+                }
+
+                // Clean stale entries from sidebarTypingUsers (other channels)
+                if (Object.keys(sidebarTypingUsers.value).length > 0) {
+                    const cleaned = {};
+                    Object.keys(sidebarTypingUsers.value).forEach((cId) => {
+                        const channelFresh = {};
+                        const typers = sidebarTypingUsers.value[cId];
+                        Object.keys(typers).forEach((uid) => {
+                            if (now - typers[uid].at <= 3500) {
+                                channelFresh[uid] = typers[uid];
+                            }
+                        });
+                        if (Object.keys(channelFresh).length > 0) {
+                            cleaned[cId] = channelFresh;
+                        }
+                    });
+                    sidebarTypingUsers.value = cleaned;
+                    if (Object.keys(cleaned).length > 0) hasActive = true;
+                }
+
+                // Only bump tick if there are active typers (avoids needless re-renders)
+                if (hasActive) {
+                    typingTick.value++;
+                }
+            }, 1000);
 
             try {
                 if (window.Echo) {
@@ -4695,6 +5018,11 @@ export default {
                     onScrollMessages,
                 );
             }
+            // Clean up typing indicator tick timer
+            if (typingTickInterval) {
+                clearInterval(typingTickInterval);
+                typingTickInterval = null;
+            }
         });
 
         // Adjust messages container bottom padding dynamically based on input container height
@@ -4703,9 +5031,11 @@ export default {
             try {
                 if (!window.ResizeObserver) return;
                 if (!_resizeObserver) {
-                    _resizeObserver = new ResizeObserver(() => {
-                        nextTick(adjustMessagePadding);
-                    });
+                    _resizeObserver = new ResizeObserver(
+                        debounce(() => {
+                            nextTick(adjustMessagePadding);
+                        }, 50),
+                    );
                 }
                 if (inputContainer.value) {
                     _resizeObserver.disconnect();
@@ -4804,7 +5134,8 @@ export default {
                     if (deepLinkChannelId.value) {
                         channelToSelect = list.find(
                             (c) =>
-                                Number(c.id) === Number(deepLinkChannelId.value),
+                                Number(c.id) ===
+                                Number(deepLinkChannelId.value),
                         );
                     }
 
@@ -4883,6 +5214,7 @@ export default {
             createSearch,
             createMemberIds,
             typingLabel,
+            sidebarTypingLabel,
             showEmojiPicker,
             pinnedMessages,
             showPinnedPanel,
@@ -5399,6 +5731,145 @@ export default {
     margin: 0.125rem 0 0;
 }
 
+/* Typing Indicator (WhatsApp-style) */
+.header-subtitle.typing-indicator {
+    color: #25d366;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    animation: typingFadeIn 0.2s ease-out;
+}
+
+.typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.typing-dots .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #25d366;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dots .dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-dots .dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+.typing-dots .dot:nth-child(3) {
+    animation-delay: 0s;
+}
+
+@keyframes typingBounce {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes typingFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Chat Area Typing Bubble (WhatsApp-style) ─────────────────── */
+.typing-bubble-wrapper {
+    display: flex;
+    padding: 0.25rem 1.25rem 0.75rem;
+    animation: typingFadeIn 0.25s ease-out;
+}
+
+.typing-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f0f2f5;
+    border-radius: 18px 18px 18px 4px;
+    padding: 0.65rem 1rem;
+    max-width: 300px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .typing-bubble {
+    background: rgba(30, 41, 59, 0.85);
+}
+
+.typing-bubble-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.typing-bubble-dots .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #25d366;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-bubble-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-bubble-dots .dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-bubble-dots .dot:nth-child(3) { animation-delay: 0s; }
+
+.typing-bubble-text {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    font-weight: 500;
+    font-style: italic;
+}
+
+[data-theme="dark"] .typing-bubble-text {
+    color: #94a3b8;
+}
+
+/* ── Sidebar Typing Indicator ─────────────────────────────────── */
+.sidebar-typing-text {
+    color: #25d366 !important;
+    font-weight: 500 !important;
+    font-style: italic;
+    display: flex !important;
+    align-items: center;
+    gap: 0.3rem;
+    animation: typingFadeIn 0.2s ease-out;
+}
+
+.sidebar-typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.sidebar-typing-dots .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #25d366;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.sidebar-typing-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+.sidebar-typing-dots .dot:nth-child(2) { animation-delay: -0.16s; }
+.sidebar-typing-dots .dot:nth-child(3) { animation-delay: 0s; }
+
 .header-actions {
     display: flex;
     gap: 0.5rem;
@@ -5768,8 +6239,11 @@ export default {
     width: 100%;
     text-align: left;
     border: 1px solid rgba(99, 102, 241, 0.16);
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 249, 255, 0.88));
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.92),
+        rgba(247, 249, 255, 0.88)
+    );
     border-radius: 16px;
     padding: 0.95rem 1rem 0.9rem;
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
@@ -5781,8 +6255,11 @@ export default {
 }
 
 .own-message .order-reference-card {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 244, 255, 0.9));
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.94),
+        rgba(239, 244, 255, 0.9)
+    );
 }
 
 .order-reference-card:hover:not(:disabled) {

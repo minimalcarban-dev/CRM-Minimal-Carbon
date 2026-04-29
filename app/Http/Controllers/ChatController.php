@@ -688,7 +688,7 @@ class ChatController extends Controller
                 $bodyWithoutEmails = preg_replace($emailPattern, '', $body);
 
                 // Now find URLs in the cleaned text
-                $pattern = '/(?:https?:\/\/)?(?:www\.)?[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)+(?:\/[^\s<>()"\']*)?\b/i';
+                $pattern = '/\b(?:https?:\/\/|www\.)[^\s<>()"\']+|\b[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)*\.[a-z]{2,}\b(?:\/[^\s<>()"\']*)?/i';
 
                 if (preg_match_all($pattern, $bodyWithoutEmails, $matches)) {
                     $urls = array_unique($matches[0] ?? []);
@@ -733,6 +733,35 @@ class ChatController extends Controller
 
             return response()->json(['error' => 'Failed to send message'], 500);
         }
+    }
+
+    /**
+     * Broadcast typing indicator for a channel.
+     * Lightweight server-side approach — replaces client whispers that
+     * require "Enable client events" on Pusher dashboard.
+     */
+    public function typing(Channel $channel, Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+        if (!$admin || !$channel->hasMember($admin)) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        // Throttle: max 1 typing event per 1.5 seconds per user per channel
+        $cacheKey = "typing:{$admin->id}:{$channel->id}";
+        if (Cache::has($cacheKey)) {
+            return response()->json(['ok' => true]); // silently skip
+        }
+        Cache::put($cacheKey, true, 2); // expire after 2 seconds
+
+        broadcast(new \App\Events\UserTyping(
+            $admin->id,
+            $admin->name ?? 'Someone',
+            $channel->id,
+            $channel->name ?? ''
+        ))->toOthers();
+
+        return response()->json(['ok' => true]);
     }
 
     /**
