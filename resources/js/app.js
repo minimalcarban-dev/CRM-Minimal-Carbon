@@ -21,6 +21,15 @@ document.addEventListener("DOMContentLoaded", () => {
         window.showToast = showToast;
     }
 
+    // Request notification permission on first user interaction
+    if ("Notification" in window && Notification.permission === "default") {
+        document.body.addEventListener("click", () => {
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        }, { once: true });
+    }
+
     // --- NEW GLOBAL NOTIFICATION LOGIC ---
     // Ensure Echo is available
     if (typeof window.Echo === "undefined") {

@@ -31,8 +31,7 @@ class JewelleryPricingService
             'commission_percent' => $this->settingFloat('jewellery_pricing.default_commission_percent', 20),
             'profit_percent' => $this->settingFloat('jewellery_pricing.default_profit_percent', 25),
             'sales_markup_percent' => $this->settingFloat('jewellery_pricing.default_sales_markup_percent', 0),
-            'platinum_950_rate_usd_per_gram' => config('diamond.jewellery_platinum_rate')
-                ?? $this->settingFloat('jewellery_pricing.platinum_950_rate_usd_per_gram', 30),
+            'platinum_950_rate_usd_per_gram' => $this->settingFloat('jewellery_pricing.platinum_950_rate_usd_per_gram', 30),
             'can_edit_labor' => (bool) ($admin?->is_super),
             'can_edit_commission' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.edit_commission'))),
             'can_edit_profit' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.edit_profit'))),

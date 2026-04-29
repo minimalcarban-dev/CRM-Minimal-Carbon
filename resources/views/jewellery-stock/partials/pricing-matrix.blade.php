@@ -59,14 +59,14 @@
                         <input type="number" name="platinum_950_rate_usd_per_gram" id="platinum_950_rate_usd_per_gram"
                             class="form-control" step="0.0001"
                             value="{{ old('platinum_950_rate_usd_per_gram', $pricingDefaults['platinum_950_rate_usd_per_gram'] ?? $platinumDefault) }}"
-                            {{ (config('diamond.jewellery_platinum_rate') !== null || !$canEditLabor) ? 'readonly' : '' }}>
-                        @if(config('diamond.jewellery_platinum_rate') !== null)
+                            {{ (env('JEWELLERY_PLATINUM_RATE') !== null || !$canEditLabor) ? 'readonly' : '' }}>
+                        @if(env('JEWELLERY_PLATINUM_RATE') !== null)
                             <span class="input-group-text bg-light" title="Locked via .env config">
                                 <i class="bi bi-lock-fill text-muted"></i>
                             </span>
                         @endif
                     </div>
-                    @if(config('diamond.jewellery_platinum_rate') !== null)
+                    @if(env('JEWELLERY_PLATINUM_RATE') !== null)
                         <div class="form-text text-info" style="font-size: 0.75rem;">
                             <i class="bi bi-info-circle"></i> Managed via .env configuration
                         </div>

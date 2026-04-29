@@ -13,15 +13,30 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-GwYq-Wku.js",
+    "file": "assets/app-CbAFGQbb.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
+    "dynamicImports": [
+      "resources/js/components/MediaGallery.vue"
+    ],
     "css": [
-      "assets/app-74MzzL2c.css"
+      "assets/app-DhjXrGiE.css"
     ],
     "assets": [
       "assets/pdf.worker-xSiVJ7U_.mjs"
+    ]
+  },
+  "resources/js/components/MediaGallery.vue": {
+    "file": "assets/MediaGallery-BMxz6A55.js",
+    "name": "MediaGallery",
+    "src": "resources/js/components/MediaGallery.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "css": [
+      "assets/MediaGallery-BRQO4LuG.css"
     ]
   }
 }

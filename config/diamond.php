@@ -39,16 +39,4 @@ return [
         'static_data' => 86400,  // 24 hours
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Jewellery – Platinum Rate (USD per gram, 950 purity)
-    |--------------------------------------------------------------------------
-    |
-    | When set, this value overrides the database setting and locks
-    | the field as read-only in the pricing matrix form.
-    | Set to null to allow manual entry via the UI / database setting.
-    |
-    */
-    'jewellery_platinum_rate' => env('JEWELLERY_PLATINUM_RATE'),
-
 ];

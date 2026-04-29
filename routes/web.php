@@ -106,6 +106,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             Route::post('/direct', [ChatController::class, 'direct']);
             Route::get('/channels/{channel}/messages', [ChatController::class, 'getMessages']);
             Route::post('/channels/{channel}/messages', [ChatController::class, 'sendMessage']);
+            Route::post('/channels/{channel}/typing', [ChatController::class, 'typing']);
             Route::post('/channels/{channel}/read', [ChatController::class, 'markAsRead']);
             Route::get('/channels/{channel}/sidebar', [ChatController::class, 'sidebar']);
             Route::get('/messages/search', [ChatController::class, 'searchMessages']);
