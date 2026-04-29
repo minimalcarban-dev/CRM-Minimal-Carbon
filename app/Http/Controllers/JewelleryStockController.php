@@ -130,7 +130,25 @@ class JewelleryStockController extends Controller
                 $validated['image_url'] = $uploadedImages[0]['url'];
             }
 
+            // Handle certificate image upload
+            if ($request->hasFile('certificate_image_file')) {
+                $certUpload = $this->uploadService->uploadFile($request->file('certificate_image_file'), 'jewellery-certificates', true);
+                if ($certUpload) {
+                    $validated['certificate_image'] = $certUpload['url'];
+                }
+            }
+            unset($validated['certificate_image_file']);
+
             $jewelleryStock = JewelleryStock::create($validated);
+
+            // Handle side stones
+            if ($request->has('side_stones')) {
+                foreach ($request->input('side_stones') as $stone) {
+                    if (!empty($stone['stone_type_id'])) {
+                        $jewelleryStock->sideStones()->create($stone);
+                    }
+                }
+            }
 
             if ($request->has('pricing_variants')) {
                 $this->pricingService->replacePricingRows(
@@ -269,7 +287,30 @@ class JewelleryStockController extends Controller
                 $validated['image_url'] = null;
             }
 
+            // Handle certificate image upload
+            if ($request->hasFile('certificate_image_file')) {
+                // Delete old certificate if exists
+                if ($jewelleryStock->certificate_image) {
+                    $this->uploadService->deleteByUrl($jewelleryStock->certificate_image, 'image'); // or raw if PDF
+                }
+                $certUpload = $this->uploadService->uploadFile($request->file('certificate_image_file'), 'jewellery-certificates', true);
+                if ($certUpload) {
+                    $validated['certificate_image'] = $certUpload['url'];
+                }
+            }
+            unset($validated['certificate_image_file']);
+
             $jewelleryStock->update($validated);
+
+            // Handle side stones
+            if ($request->has('side_stones')) {
+                $jewelleryStock->sideStones()->delete(); // Clear old side stones
+                foreach ($request->input('side_stones') as $stone) {
+                    if (!empty($stone['stone_type_id'])) {
+                        $jewelleryStock->sideStones()->create($stone);
+                    }
+                }
+            }
 
             if ($request->has('pricing_variants')) {
                 $this->pricingService->replacePricingRows(

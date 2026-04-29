@@ -179,82 +179,145 @@
                         <p style="font-size:0.8rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem;">
                             <i class="bi bi-circle-fill" style="font-size:.5rem;vertical-align:middle;margin-right:.4rem;"></i>Primary Stone
                         </p>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                            <div class="form-group">
-                                <label class="form-label">Stone Type</label>
-                                <select name="primary_stone_type_id" class="form-control themed-select">
-                                    <option value="">Select Stone</option>
-                                    @foreach ($stoneTypes as $stone)
-                                    <option value="{{ $stone->id }}" {{ old('primary_stone_type_id',$jewelleryStock->primary_stone_type_id)==$stone->id?'selected':'' }}>{{ $stone->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Carat Weight</label>
-                                <input type="number" name="primary_stone_weight" class="form-control" step="0.001" placeholder="0.000 cts" value="{{ old('primary_stone_weight', $jewelleryStock->primary_stone_weight) }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Shape</label>
-                                <select name="primary_stone_shape_id" class="form-control themed-select">
-                                    <option value="">Select Shape</option>
-                                    @foreach ($stoneShapes as $shape)
-                                    <option value="{{ $shape->id }}" {{ old('primary_stone_shape_id',$jewelleryStock->primary_stone_shape_id)==$shape->id?'selected':'' }}>{{ $shape->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Cut Grade</label>
-                                <select name="primary_stone_cut_id" class="form-control themed-select">
-                                    <option value="">Select Cut</option>
-                                    @foreach ($diamondCuts as $cut)
-                                    <option value="{{ $cut->id }}" {{ old('primary_stone_cut_id',$jewelleryStock->primary_stone_cut_id)==$cut->id?'selected':'' }}>{{ $cut->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Color</label>
-                                <select name="primary_stone_color_id" class="form-control themed-select">
-                                    <option value="">Select Color</option>
-                                    @foreach ($stoneColors as $color)
-                                    <option value="{{ $color->id }}" {{ old('primary_stone_color_id',$jewelleryStock->primary_stone_color_id)==$color->id?'selected':'' }}>{{ $color->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Clarity</label>
-                                <select name="primary_stone_clarity_id" class="form-control themed-select">
-                                    <option value="">Select Clarity</option>
-                                    @foreach ($diamondClarities as $clarity)
-                                    <option value="{{ $clarity->id }}" {{ old('primary_stone_clarity_id',$jewelleryStock->primary_stone_clarity_id)==$clarity->id?'selected':'' }}>{{ $clarity->name }}</option>
-                                    @endforeach
-                                </select>
+                        <div style="border:2px solid var(--border);border-radius:12px;padding:1.5rem;background:transparent;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Stone Type</label>
+                                    <select name="primary_stone_type_id" class="form-control themed-select">
+                                        <option value="">Select Stone</option>
+                                        @foreach ($stoneTypes as $stone)
+                                        <option value="{{ $stone->id }}" {{ old('primary_stone_type_id',$jewelleryStock->primary_stone_type_id)==$stone->id?'selected':'' }}>{{ $stone->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Carat Weight</label>
+                                    <input type="number" name="primary_stone_weight" class="form-control" step="0.001" placeholder="0.000 cts" value="{{ old('primary_stone_weight', $jewelleryStock->primary_stone_weight) }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Shape</label>
+                                    <select name="primary_stone_shape_id" class="form-control themed-select">
+                                        <option value="">Select Shape</option>
+                                        @foreach ($stoneShapes as $shape)
+                                        <option value="{{ $shape->id }}" {{ old('primary_stone_shape_id',$jewelleryStock->primary_stone_shape_id)==$shape->id?'selected':'' }}>{{ $shape->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Cut Grade</label>
+                                    <select name="primary_stone_cut_id" class="form-control themed-select">
+                                        <option value="">Select Cut</option>
+                                        @foreach ($diamondCuts as $cut)
+                                        <option value="{{ $cut->id }}" {{ old('primary_stone_cut_id',$jewelleryStock->primary_stone_cut_id)==$cut->id?'selected':'' }}>{{ $cut->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Color</label>
+                                    <select name="primary_stone_color_id" class="form-control themed-select">
+                                        <option value="">Select Color</option>
+                                        @foreach ($stoneColors as $color)
+                                        <option value="{{ $color->id }}" {{ old('primary_stone_color_id',$jewelleryStock->primary_stone_color_id)==$color->id?'selected':'' }}>{{ $color->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Clarity</label>
+                                    <select name="primary_stone_clarity_id" class="form-control themed-select">
+                                        <option value="">Select Clarity</option>
+                                        @foreach ($diamondClarities as $clarity)
+                                        <option value="{{ $clarity->id }}" {{ old('primary_stone_clarity_id',$jewelleryStock->primary_stone_clarity_id)==$clarity->id?'selected':'' }}>{{ $clarity->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Side Stones --}}
+                    {{-- Side Stones Repeater --}}
                     <div>
-                        <p style="font-size:0.8rem;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem;">
-                            <i class="bi bi-circle-fill" style="font-size:.5rem;vertical-align:middle;margin-right:.4rem;"></i>Side Stones
-                        </p>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                            <div class="form-group" style="grid-column:1/-1;">
-                                <label class="form-label">Stone Type</label>
-                                <select name="side_stone_type_id" class="form-control themed-select">
-                                    <option value="">Select Type</option>
-                                    @foreach ($stoneTypes as $stone)
-                                    <option value="{{ $stone->id }}" {{ old('side_stone_type_id',$jewelleryStock->side_stone_type_id)==$stone->id?'selected':'' }}>{{ $stone->name }}</option>
-                                    @endforeach
-                                </select>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                            <p style="font-size:0.8rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0;">
+                                <i class="bi bi-circle-fill" style="font-size:.5rem;vertical-align:middle;margin-right:.4rem;"></i>Side Stones
+                            </p>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="addSideStoneBtn" style="font-size:0.75rem;">
+                                <i class="bi bi-plus-circle"></i> Add Side Stone
+                            </button>
+                        </div>
+                        <div id="sideStonesContainer" style="display:flex;flex-direction:column;gap:1.5rem;">
+                            @php
+                                $sideStonesList = old('side_stones', $jewelleryStock->sideStones->toArray());
+                                if (empty($sideStonesList)) {
+                                    $sideStonesList = [[]]; // Default empty row
+                                }
+                            @endphp
+
+                            @foreach($sideStonesList as $index => $sideStone)
+                            <div class="side-stone-item" style="border:2px solid var(--border);border-radius:12px;padding:1.5rem;background:transparent;position:relative;transition:border-color 0.2s ease;" onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)'">
+                                <button type="button" class="remove-side-stone" style="position:absolute;top:1rem;right:1rem;background:rgba(220, 38, 38, 0.1);border:none;color:var(--danger);width:32px;height:32px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;display:{{ $index === 0 && count($sideStonesList) === 1 ? 'none' : 'flex' }};transition:all 0.2s;" onmouseenter="this.style.background='var(--danger)';this.style.color='#fff'" onmouseleave="this.style.background='rgba(220, 38, 38, 0.1)';this.style.color='var(--danger)'" title="Remove Side Stone Group">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                                    <div class="form-group">
+                                        <label class="form-label">Stone Type</label>
+                                        <select name="side_stones[{{ $index }}][stone_type_id]" class="form-control themed-select">
+                                            <option value="">Select Type</option>
+                                            @foreach ($stoneTypes as $stone)
+                                            <option value="{{ $stone->id }}" {{ (isset($sideStone['stone_type_id']) && $sideStone['stone_type_id'] == $stone->id) ? 'selected' : '' }}>{{ $stone->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Shape</label>
+                                        <select name="side_stones[{{ $index }}][stone_shape_id]" class="form-control themed-select">
+                                            <option value="">Select Shape</option>
+                                            @foreach ($stoneShapes as $shape)
+                                            <option value="{{ $shape->id }}" {{ (isset($sideStone['stone_shape_id']) && $sideStone['stone_shape_id'] == $shape->id) ? 'selected' : '' }}>{{ $shape->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Color</label>
+                                        <select name="side_stones[{{ $index }}][stone_color_id]" class="form-control themed-select">
+                                            <option value="">Select Color</option>
+                                            @foreach ($stoneColors as $color)
+                                            <option value="{{ $color->id }}" {{ (isset($sideStone['stone_color_id']) && $sideStone['stone_color_id'] == $color->id) ? 'selected' : '' }}>{{ $color->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Clarity</label>
+                                        <select name="side_stones[{{ $index }}][stone_clarity_id]" class="form-control themed-select">
+                                            <option value="">Select Clarity</option>
+                                            @foreach ($diamondClarities as $clarity)
+                                            <option value="{{ $clarity->id }}" {{ (isset($sideStone['stone_clarity_id']) && $sideStone['stone_clarity_id'] == $clarity->id) ? 'selected' : '' }}>{{ $clarity->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Cut Grade</label>
+                                        <select name="side_stones[{{ $index }}][stone_cut_id]" class="form-control themed-select">
+                                            <option value="">Select Cut</option>
+                                            @foreach ($diamondCuts as $cut)
+                                            <option value="{{ $cut->id }}" {{ (isset($sideStone['stone_cut_id']) && $sideStone['stone_cut_id'] == $cut->id) ? 'selected' : '' }}>{{ $cut->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Count</label>
+                                        <input type="number" name="side_stones[{{ $index }}][count]" class="form-control" value="{{ $sideStone['count'] ?? '' }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Carat Wt (Per Stone)</label>
+                                        <input type="number" name="side_stones[{{ $index }}][carat_weight]" class="form-control" step="0.001" placeholder="0.000 cts" value="{{ $sideStone['carat_weight'] ?? '' }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Total cts</label>
+                                        <input type="number" name="side_stones[{{ $index }}][total_weight]" class="form-control" step="0.001" value="{{ $sideStone['total_weight'] ?? '' }}">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Total cts</label>
-                                <input type="number" name="side_stone_weight" class="form-control" step="0.001" value="{{ old('side_stone_weight', $jewelleryStock->side_stone_weight) }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Count</label>
-                                <input type="number" name="side_stone_count" class="form-control" value="{{ old('side_stone_count', $jewelleryStock->side_stone_count) }}">
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -289,7 +352,19 @@
                                 </select>
                                 <input type="text" name="certificate_number" class="form-control" placeholder="Certificate Number" value="{{ old('certificate_number', $jewelleryStock->certificate_number) }}">
                             </div>
-                            <input type="url" name="certificate_url" class="form-control" placeholder="Certificate URL Link" value="{{ old('certificate_url', $jewelleryStock->certificate_url) }}">
+                            <div style="display:flex;gap:.5rem;margin-bottom:.5rem;">
+                                <input type="url" name="certificate_url" class="form-control" placeholder="Certificate URL Link" value="{{ old('certificate_url', $jewelleryStock->certificate_url) }}">
+                            </div>
+                            <label class="form-label mt-2">Or Upload Certificate File</label>
+                            @if($jewelleryStock->certificate_image)
+                            <div class="mb-2">
+                                <a href="{{ $jewelleryStock->certificate_image }}" target="_blank" class="text-primary" style="font-size:0.9rem;">
+                                    <i class="bi bi-file-earmark-text"></i> View Current Certificate
+                                </a>
+                            </div>
+                            @endif
+                            <input type="file" name="certificate_image_file" class="form-control" accept="image/*,.pdf">
+                            <small class="text-muted">Uploading a new file will replace the current one.</small>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Item Description</label>
@@ -404,6 +479,52 @@
     }
 
     document.getElementById('categorySelect')?.addEventListener('change', updateCategoryFields);
-    document.addEventListener('DOMContentLoaded', () => { updateCategoryFields(); });
+    document.addEventListener('DOMContentLoaded', () => { 
+        updateCategoryFields(); 
+
+        // Init remove buttons
+        document.querySelectorAll('.remove-side-stone').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.side-stone-item').remove();
+            });
+        });
+
+        let sideStoneIndex = {{ max(count($sideStonesList ?? []), 1) }};
+        const container = document.getElementById('sideStonesContainer');
+        const addBtn = document.getElementById('addSideStoneBtn');
+
+        addBtn?.addEventListener('click', function() {
+            const items = container.querySelectorAll('.side-stone-item');
+            const firstItem = items[0];
+            const newItem = firstItem.cloneNode(true);
+            
+            // Update input names
+            const inputs = newItem.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const name = input.getAttribute('name');
+                if (name) {
+                    input.setAttribute('name', name.replace(/\[\d+\]/, `[${sideStoneIndex}]`));
+                    // Check if select has options, unselect
+                    if (input.tagName === 'SELECT') {
+                        input.selectedIndex = 0;
+                    } else {
+                        input.value = '';
+                    }
+                }
+            });
+
+            // Show remove button
+            const removeBtn = newItem.querySelector('.remove-side-stone');
+            if (removeBtn) {
+                removeBtn.style.display = 'flex';
+                removeBtn.addEventListener('click', function() {
+                    newItem.remove();
+                });
+            }
+
+            container.appendChild(newItem);
+            sideStoneIndex++;
+        });
+    });
 </script>
 @endpush
