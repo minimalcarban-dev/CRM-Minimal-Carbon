@@ -52,9 +52,7 @@ class JewelleryPricingService
                 'metal_color' => null,
                 'variant_label' => $material['label'],
                 'net_weight_grams' => 0,
-                'color_weights' => str_starts_with($materialCode, 'gold_')
-                    ? ['yellow' => 0, 'white' => 0, 'rose' => 0]
-                    : null,
+                'color_weights' => null,
                 'stone_cost' => 0,
                 'extra_cost' => 0,
                 'is_default_listing' => $materialCode === 'silver_925',
@@ -75,15 +73,6 @@ class JewelleryPricingService
             }
 
             $resolvedWeight = (float) $row->net_weight_grams;
-            if (str_starts_with($row->material_code, 'gold_')) {
-                $weights = is_array($row->color_weights) ? $row->color_weights : [];
-                $resolvedWeight = max(
-                    $resolvedWeight,
-                    (float) ($weights['yellow'] ?? 0),
-                    (float) ($weights['white'] ?? 0),
-                    (float) ($weights['rose'] ?? 0),
-                );
-            }
 
             $rows[$key] = array_merge($rows[$key], [
                 'net_weight_grams' => $resolvedWeight,
@@ -112,10 +101,8 @@ class JewelleryPricingService
             $input = $submittedRows[$key] ?? [];
             $materialCode = $definition['material_code'];
             $purity = self::MATERIALS[$materialCode]['purity'];
-            $colorWeights = $this->normalizeColorWeights($materialCode, $input['color_weights'] ?? null);
-            $weight = str_starts_with($materialCode, 'gold_')
-                ? $this->defaultGoldWeight($colorWeights)
-                : $this->positiveFloat($input['net_weight_grams'] ?? $definition['net_weight_grams']);
+            $colorWeights = null;
+            $weight = $this->positiveFloat($input['net_weight_grams'] ?? $definition['net_weight_grams']);
             $stoneCost = $this->positiveFloat($input['stone_cost'] ?? 0);
             $extraCost = $this->positiveFloat($input['extra_cost'] ?? 0);
             $laborRate = $defaults['can_edit_labor']
@@ -233,32 +220,13 @@ class JewelleryPricingService
             return (float) $envRate;
         }
 
+        $currentRates = $this->rateService->currentRates();
+        if (!empty($currentRates['platinum_950_usd_per_gram'])) {
+            return (float) $currentRates['platinum_950_usd_per_gram'];
+        }
+
         return $this->settingFloat('jewellery_pricing.platinum_950_rate_usd_per_gram', 30);
     }
 
-    protected function normalizeColorWeights(string $materialCode, mixed $weights): ?array
-    {
-        if (!str_starts_with($materialCode, 'gold_')) {
-            return null;
-        }
 
-        $weights = is_array($weights) ? $weights : [];
-
-        return [
-            'yellow' => round($this->positiveFloat($weights['yellow'] ?? 0), 3),
-            'white' => round($this->positiveFloat($weights['white'] ?? 0), 3),
-            'rose' => round($this->positiveFloat($weights['rose'] ?? 0), 3),
-        ];
-    }
-
-    protected function defaultGoldWeight(?array $colorWeights): float
-    {
-        $colorWeights = $colorWeights ?? [];
-
-        return round(max(
-            (float) ($colorWeights['yellow'] ?? 0),
-            (float) ($colorWeights['white'] ?? 0),
-            (float) ($colorWeights['rose'] ?? 0),
-        ), 3);
-    }
 }

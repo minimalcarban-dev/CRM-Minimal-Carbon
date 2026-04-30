@@ -202,6 +202,21 @@
                     </div>
                 </div>
                 <div class="section-body">
+
+                    <div
+                        style="margin-bottom: 1.5rem; background: rgba(139, 92, 246, 0.05); padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.15); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4
+                                style="margin: 0; font-size: 0.95rem; color: #6d28d9; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Total Carat Weight</h4>
+                            <p style="margin: 0; font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">Combined weight
+                                of primary and all secondary stones</p>
+                        </div>
+                        <div>
+                            <span id="total_carat_weight_display"
+                                style="font-size: 1.5rem; font-weight: 800; color: #6d28d9;">0.000 cts</span>
+                        </div>
+                    </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
                         {{-- Primary Stone --}}
                         <div>
@@ -521,6 +536,41 @@
         document.getElementById('categorySelect')?.addEventListener('change', updateCategoryFields);
         document.addEventListener('DOMContentLoaded', () => {
             updateCategoryFields();
+        });
+
+        function calculateTotalCaratWeight() {
+            let total = 0;
+            const primary = document.querySelector('input[name="primary_stone_weight"]');
+            if (primary && primary.value) {
+                const w = parseFloat(primary.value);
+                if (!isNaN(w) && w > 0) total += w;
+            }
+            const sideStones = document.querySelectorAll('input[name^="side_stones"][name$="[weight]"]');
+            sideStones.forEach(input => {
+                if (input.value) {
+                    const w = parseFloat(input.value);
+                    if (!isNaN(w) && w > 0) total += w;
+                }
+            });
+            const display = document.getElementById('total_carat_weight_display');
+            if (display) {
+                display.innerText = total.toFixed(3) + ' cts';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.addEventListener('input', (e) => {
+                if (e.target.name === 'primary_stone_weight' || (e.target.name && e.target.name.startsWith(
+                        'side_stones') && e.target.name.endsWith('[weight]'))) {
+                    calculateTotalCaratWeight();
+                }
+            });
+            document.body.addEventListener('click', (e) => {
+                if (e.target.closest('button[onclick^="removeSideStoneRow"]')) {
+                    setTimeout(calculateTotalCaratWeight, 50);
+                }
+            });
+            calculateTotalCaratWeight();
         });
     </script>
 @endpush

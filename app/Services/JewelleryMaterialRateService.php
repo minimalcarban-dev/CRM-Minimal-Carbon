@@ -23,16 +23,18 @@ class JewelleryMaterialRateService
         $usdRate = $this->usdRate();
         $gold = $this->goldRateService->getRateForDate(now()->toDateString());
         $rawInrPerGram = (float) ($gold['rate_inr_per_gram'] ?? 0);
+        $rawUsdPerGram = $rawInrPerGram * $usdRate;
         $adjustedInrPerGram = $rawInrPerGram * (1 + (self::GOLD_MARKUP_PERCENT / 100));
         $adjustedUsdPerGram = $adjustedInrPerGram * $usdRate;
         $silverInrPerGram = $this->silverInrPerGram();
         $silverUsdPerGram = $silverInrPerGram * $usdRate;
-        $platinum950UsdPerGram = $this->getPlatinumRate();
+        $platinum950UsdPerGram = $this->getPlatinumRate($rawUsdPerGram);
 
         return [
             'success' => $rawInrPerGram > 0,
             'gold_markup_percent' => self::GOLD_MARKUP_PERCENT,
             'gold_raw_inr_per_gram' => round($rawInrPerGram, 2),
+            'gold_raw_usd_per_gram' => round($rawUsdPerGram, 4),
             'gold_adjusted_inr_per_gram' => round($adjustedInrPerGram, 2),
             'gold_adjusted_usd_per_gram' => round($adjustedUsdPerGram, 4),
             'usd_rate' => round($usdRate, 6),
@@ -102,18 +104,9 @@ class JewelleryMaterialRateService
         });
     }
 
-    private function getPlatinumRate(): float
+    private function getPlatinumRate(float $goldRawUsdPerGram): float
     {
-        // 1. Priority: .env value
-        $envRate = env('JEWELLERY_PLATINUM_RATE');
-        if ($envRate !== null && $envRate !== '') {
-            return (float) $envRate;
-        }
-
-        // 2. Fallback: Database setting
-        $manual950Rate = $this->settingFloat('jewellery_pricing.platinum_950_rate_usd_per_gram', 30);
-
-        // Future-ready hook: swap this assignment with API-derived base * 0.95.
-        return max(0, $manual950Rate * (self::PLATINUM_950_PURITY / 0.95));
+        // Platinum is calculated dynamically as 80% of the 24K Gold rate
+        return $goldRawUsdPerGram * 0.80;
     }
 }
