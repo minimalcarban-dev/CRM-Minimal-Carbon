@@ -47,6 +47,11 @@ return [
         'api_key' => env('SEVENTEEN_TRACK_API_KEY'),
     ],
 
+    // ParcelsApp (Global Parcel Tracking) API
+    'parcelsapp' => [
+        'api_key' => env('PARCELSAPP_API_KEY'),
+    ],
+
     // VGL Certificate Project — API Integration
     'vgl' => [
         'base_url' => env('VGL_API_URL', 'http://localhost:8001'),

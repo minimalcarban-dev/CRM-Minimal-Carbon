@@ -34,16 +34,16 @@ class ShippingTrackingService
             ];
         }
 
-        // 2. Fetch from 17Track
-        $apiKey = config('services.17track.api_key');
+        // 2. Fetch from ParcelsApp
+        $apiKey = config('services.parcelsapp.api_key');
         if (!$apiKey) {
             return [
                 'success' => false,
-                'message' => '17Track API Key is missing.'
+                'message' => 'ParcelsApp API Key is missing.'
             ];
         }
 
-        $trackingData = $this->fetchFrom17Track($trackingNumber, $apiKey, $carrierCode);
+        $trackingData = $this->fetchFromParcelsApp($trackingNumber, $apiKey, $carrierCode);
 
         if ($trackingData['success']) {
             $order->update([
@@ -68,7 +68,7 @@ class ShippingTrackingService
     }
 
     /**
-     * Map company name to TrackingMore courier code
+     * Map company name to courier code
      */
     private function detectCarrierCode($companyName)
     {
@@ -77,18 +77,56 @@ class ShippingTrackingService
 
         $name = strtolower(trim($companyName));
 
-        if (str_contains($name, 'aramex') || str_contains($name, 'aramax'))
-            return 'aramex';
-        if (str_contains($name, 'dhl'))
-            return 'dhl';
-        if (str_contains($name, 'fedex'))
-            return 'fedex';
-        if (str_contains($name, 'ups'))
-            return 'ups';
-        if (str_contains($name, 'usps'))
-            return 'usps';
-        if (str_contains($name, 'india post') || str_contains($name, 'speed post'))
-            return 'india-post';
+        // Mapping common names to standard courier codes
+        $carriers = [
+            'aramex' => 'aramex',
+            'aramax' => 'aramex',
+            'dhl' => 'dhl',
+            'fedex' => 'fedex',
+            'ups' => 'ups',
+            'usps' => 'usps',
+            'tnt' => 'tnt',
+            'ems' => 'ems',
+            'india post' => 'india-post',
+            'speed post' => 'india-post',
+            'emirates post' => 'emirates-post',
+            'royal mail' => 'royal-mail',
+            'blue dart' => 'bluedart',
+            'dtdc' => 'dtdc',
+            'delhivery' => 'delhivery',
+            'china post' => 'china-post',
+            'singapore post' => 'singapore-post',
+            'hong kong post' => 'hong-kong-post',
+            'postnl' => 'postnl',
+            'canada post' => 'canada-post',
+            'australia post' => 'australia-post',
+            'la poste' => 'la-poste',
+            'deutsche post' => 'deutsche-post',
+            'dpd' => 'dpd',
+            'gls' => 'gls',
+            'hermes' => 'hermes',
+            'sf express' => 'sf-express',
+            'yanwen' => 'yanwen',
+            'yunexpress' => 'yun-express',
+            '4px' => '4px',
+            'cainiao' => 'cainiao',
+            'landmark global' => 'landmark-global',
+            'skynet' => 'skynet',
+            'j&t' => 'jt-express',
+            'ninja van' => 'ninjavan',
+            'kerry' => 'kerry-express',
+            'flash' => 'flash-express',
+            'an post' => 'an-post',
+            'bpost' => 'bpost',
+            'pos malaysia' => 'pos-malaysia',
+            'thailand post' => 'thailand-post',
+        ];
+
+        foreach ($carriers as $key => $code) {
+            if (str_contains($name, $key)) {
+                return $code;
+            }
+        }
 
         return null;
     }
@@ -117,83 +155,103 @@ class ShippingTrackingService
             return "https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?strTrackId=" . urlencode($number);
         } elseif (str_contains($carrier, 'ems')) {
             return "https://www.ems.post/en/tracking?id=" . urlencode($number);
-        } elseif (str_contains($carrier, 'lp service')) {
-            return "https://t.17track.net/en#nums=" . urlencode($number);
         }
 
-        return null;
+        // Fallback to ParcelsApp for global tracking
+        return "https://parcelsapp.com/en/tracking/" . urlencode($number);
     }
 
     /**
-     * Call 17Track API
+     * Call ParcelsApp API (Global Parcel Tracking)
      */
-    private function fetchFrom17Track($number, $apiKey, $carrierCode = null)
+    private function fetchFromParcelsApp($number, $apiKey, $carrierCode = null)
     {
         try {
-            $payloadObj = ['number' => $number];
-            if ($carrierCode) {
-                $payloadObj['carrier'] = $carrierCode;
-            }
+            // Step 1: Initiate Tracking Request
+            $shipment = ['trackingId' => $number];
             
-            $postPayload = [
-                $payloadObj
+            // ParcelsApp v3 requires destinationCountry for some carriers
+            // 'Auto' is supported for automatic detection
+            $shipment['destinationCountry'] = 'Auto'; 
+
+            $initPayload = [
+                'shipments' => [
+                    $shipment
+                ],
+                'language' => 'en',
+                'apiKey' => $apiKey
             ];
 
-            // Step 1: Register Tracking
-            $registerResponse = Http::withHeaders([
-                '17token' => $apiKey,
-                'Content-Type' => 'application/json'
-            ])->timeout(10)->post('https://api.17track.net/track/v2.2/register', $postPayload);
+            $initResponse = Http::timeout(15)->post('https://parcelsapp.com/api/v3/shipments/tracking', $initPayload);
 
-            Log::info("17Track Register Response for {$number}: " . $registerResponse->body());
+            Log::info("ParcelsApp Init Response for {$number}: " . $initResponse->body());
 
-            // Step 2: Get Tracking Details
-            $getResponse = Http::withHeaders([
-                '17token' => $apiKey,
-                'Content-Type' => 'application/json'
-            ])->timeout(10)->post('https://api.17track.net/track/v2.2/gettrackinfo', $postPayload);
-            if ($getResponse->failed()) {
-                Log::error("17Track Get Failed: " . $getResponse->body());
+            if ($initResponse->failed()) {
+                Log::error("ParcelsApp Init Failed: " . $initResponse->body());
                 return [
                     'success' => false,
-                    'message' => 'Tracking API Error: ' . $getResponse->status()
+                    'message' => 'Tracking API Initiation Error: ' . $initResponse->status()
                 ];
             }
 
-            $body = $getResponse->json();
-
-            if (empty($body['data']['accepted'][0]['track_info'])) {
-                $errorMsg = $body['data']['rejected'][0]['error']['message'] ?? 'No tracking data returned from API.';
+            $uuid = $initResponse->json()['uuid'] ?? null;
+            if (!$uuid) {
                 return [
                     'success' => false,
-                    'message' => $errorMsg
+                    'message' => 'Failed to obtain tracking UUID from ParcelsApp.'
                 ];
             }
 
-            $trackInfo = $body['data']['accepted'][0]['track_info'];
-            $latestStatus = $trackInfo['latest_status']['status'] ?? 'Unknown';
+            // Step 2: Poll for Results (Short polling since it's a synchronous UI action)
+            $maxRetries = 5;
+            $retryDelay = 2; // seconds
+            $trackData = null;
 
-            // 17Track statuses mapping
+            for ($i = 0; $i < $maxRetries; $i++) {
+                sleep($retryDelay);
+                
+                $getResponse = Http::timeout(15)->get("https://parcelsapp.com/api/v3/shipments/tracking", [
+                    'uuid' => $uuid,
+                    'apiKey' => $apiKey
+                ]);
+
+                if ($getResponse->successful()) {
+                    $body = $getResponse->json();
+                    if (($body['done'] ?? false) === true) {
+                        $trackData = $body['shipments'][0] ?? null;
+                        break;
+                    }
+                } else {
+                    Log::warning("ParcelsApp Poll Attempt {$i} failed: " . $getResponse->status());
+                }
+            }
+
+            if (!$trackData) {
+                return [
+                    'success' => false,
+                    'message' => 'Tracking data is still being processed. Please try again in a moment.'
+                ];
+            }
+
+            $statusCode = $trackData['status_code'] ?? null;
+
+            // ParcelsApp statuses mapping
             $statusMap = [
-                'NotFound' => 'Not found',
-                'InfoReceived' => 'Info received',
-                'InTransit' => 'In transit',
-                'Expired' => 'Expired',
-                'AvailableForPickup' => 'Pick up',
-                'OutForDelivery' => 'Out for delivery',
-                'Undelivered' => 'Undelivered',
-                'Delivered' => 'Delivered',
-                'Alert' => 'Alert',
-                'Exception' => 'Exception',
+                0 => 'Delivered',
+                2 => 'In transit',
+                3 => 'Pick up',
+                4 => 'Out for delivery',
+                7 => 'Exception',
+                8 => 'Info received',
             ];
-            $readableStatus = $statusMap[$latestStatus] ?? $latestStatus;
+            $readableStatus = $statusMap[$statusCode] ?? ($trackData['description'] ?? 'In transit');
 
-            $providerName = $trackInfo['tracking']['providers'][0]['provider']['name'] ?? null;
-            $events = $trackInfo['tracking']['providers'][0]['events'] ?? [];
+            $carrierName = $trackData['carrier_code'] ?? 'Unknown';
+            $events = $trackData['events'] ?? [];
 
             $history = [];
             foreach ($events as $checkpoint) {
-                $dateStr = $checkpoint['time_iso'] ?? $checkpoint['time_utc'] ?? now();
+                $dateStr = $checkpoint['date'] ?? now()->toIso8601String();
                 try {
                     $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
                 } catch (\Exception $e) {
@@ -202,9 +260,9 @@ class ShippingTrackingService
 
                 $history[] = [
                     'date' => $dateFormatted,
-                    'status' => $checkpoint['stage'] ?? $readableStatus,
+                    'status' => $checkpoint['event'] ?? $readableStatus,
                     'location' => $checkpoint['location'] ?? '',
-                    'description' => $checkpoint['description'] ?? ''
+                    'description' => $checkpoint['additional'] ?? ''
                 ];
             }
 
@@ -213,7 +271,7 @@ class ShippingTrackingService
                     'date' => now()->format('d M Y, h:i A'),
                     'status' => $readableStatus,
                     'location' => '',
-                    'description' => 'Tracking initialized. Please check back later.'
+                    'description' => $trackData['description'] ?? 'Tracking initialized.'
                 ];
             }
 
@@ -226,11 +284,11 @@ class ShippingTrackingService
                 'success' => true,
                 'status' => $readableStatus,
                 'history' => $history,
-                'carrier' => $providerName
+                'carrier' => $carrierName
             ];
 
         } catch (\Exception $e) {
-            Log::error("Tracking Sync Exception: " . $e->getMessage());
+            Log::error("ParcelsApp Sync Exception: " . $e->getMessage());
             return [
                 'success' => false,
                 'message' => 'System Error: ' . $e->getMessage()
