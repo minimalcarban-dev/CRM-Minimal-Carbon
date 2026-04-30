@@ -32,7 +32,26 @@
         <input type="hidden" name="selling_price" id="selling_price"
             value="{{ old('selling_price', $jewelleryStock->selling_price ?? 0) }}">
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+
+<div class="form-section-card">
+    <div class="section-header">
+        <div class="section-info">
+            <div class="section-icon" style="background:linear-gradient(135deg,#10b981,#059669);"><i
+                    class="bi bi-calculator"></i></div>
+            <div>
+                <h3 class="section-title">Stock &amp; Pricing</h3>
+                <p class="section-description">Quantity, live rates and per-variant pricing matrix</p>
+            </div>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <input type="hidden" name="purchase_price" id="purchase_price"
+            value="{{ old('purchase_price', $jewelleryStock->purchase_price ?? 0) }}">
+        <input type="hidden" name="selling_price" id="selling_price"
+            value="{{ old('selling_price', $jewelleryStock->selling_price ?? 0) }}">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
             <div class="form-group">
                 <label class="form-label">Initial Quantity <span class="required">*</span></label>
                 <input type="number" name="quantity" class="form-control"
@@ -42,6 +61,12 @@
                 <label class="form-label">Stock Threshold</label>
                 <input type="number" name="low_stock_threshold" class="form-control"
                     value="{{ old('low_stock_threshold', $jewelleryStock->low_stock_threshold ?? 5) }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Discount (%)</label>
+                <input type="number" name="discount_percent" id="discount_percent_input" class="form-control"
+                    step="0.01" min="0" max="100"
+                    value="{{ old('discount_percent', $jewelleryStock->discount_percent ?? 0) }}">
             </div>
         </div>
 
@@ -128,6 +153,7 @@
                         @if ($canViewProfit)
                             <th>Profit</th>
                         @endif
+                        <th>Discounted</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -200,6 +226,7 @@
                             @if ($canViewProfit)
                                 <td class="pricing-profit">$0.00</td>
                             @endif
+                            <td class="pricing-discounted" style="font-weight: 800; color: #10b981;">$0.00</td>
                             <input type="hidden"
                                 name="pricing_variants[{{ $key }}][labor_rate_usd_per_gram]"
                                 data-hidden-assumption="labor_rate_usd_per_gram" value="{{ $laborDefault }}">
@@ -258,6 +285,7 @@
             syncPricingAssumptions();
             let selectedSubtotal = 0;
             let selectedListing = 0;
+            const globalDiscount = pricingNumber(document.getElementById('discount_percent_input')?.value);
 
             document.querySelectorAll('.pricing-row').forEach(row => {
                 const materialCode = row.dataset.material || '';
@@ -295,12 +323,14 @@
                 const afterProfit = afterCommission + profit;
                 const markup = afterProfit * markupPct / 100;
                 const listing = afterProfit + markup;
+                const discounted = listing * (1 - globalDiscount / 100);
 
                 row.querySelector('.pricing-rate').innerText = money(rate);
                 row.querySelector('.pricing-metal').innerText = money(metal);
                 row.querySelector('.pricing-labor').innerText = money(labor);
                 row.querySelector('.pricing-subtotal').innerText = money(subtotal);
                 row.querySelector('.pricing-listing').innerText = money(listing);
+                row.querySelector('.pricing-discounted').innerText = money(discounted);
                 row.querySelector('.pricing-profit') && (row.querySelector('.pricing-profit').innerText = money(
                     profit));
 
@@ -314,7 +344,8 @@
             document.getElementById('selling_price').value = selectedListing.toFixed(2);
             const display = document.getElementById('margin_display');
             if (display) {
-                display.innerText = `Listing: ${money(selectedListing)} | Cost: ${money(selectedSubtotal)}`;
+                const discLabel = globalDiscount > 0 ? ` | Discounted: ${money(selectedListing * (1 - globalDiscount / 100))}` : '';
+                display.innerText = `Listing: ${money(selectedListing)}${discLabel} | Cost: ${money(selectedSubtotal)}`;
             }
         }
 
@@ -363,6 +394,7 @@
                 el.addEventListener('input', calculateJewelleryPricing);
                 el.addEventListener('change', calculateJewelleryPricing);
             });
+            document.getElementById('discount_percent_input')?.addEventListener('input', calculateJewelleryPricing);
             document.getElementById('platinum_950_rate_usd_per_gram')?.addEventListener('input',
                 calculateJewelleryPricing);
             fetchJewelleryPricingRates();

@@ -17,7 +17,6 @@ class JewelleryStock extends Model
         'type',
         'name',
         'metal_type_id',
-        'metal_purity',
         'ring_size_id',
         'length',
         'width',
@@ -28,6 +27,7 @@ class JewelleryStock extends Model
         'low_stock_threshold',
         'purchase_price',
         'selling_price',
+        'discount_percent',
         'status',
         'description',
         'image_url',
@@ -40,9 +40,6 @@ class JewelleryStock extends Model
         'primary_stone_color_id',
         'primary_stone_clarity_id',
         'primary_stone_cut_id',
-        'side_stone_type_id',
-        'side_stone_weight',
-        'side_stone_count',
         'certificate_number',
         'certificate_type',
         'certificate_url',
@@ -52,6 +49,7 @@ class JewelleryStock extends Model
         'weight' => 'decimal:3',
         'purchase_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
         'quantity' => 'integer',
         'low_stock_threshold' => 'integer',
         'images' => 'array',
@@ -148,9 +146,9 @@ class JewelleryStock extends Model
         return $this->belongsTo(DiamondCut::class, 'primary_stone_cut_id');
     }
 
-    public function sideStoneType()
+    public function sideStones()
     {
-        return $this->belongsTo(StoneType::class, 'side_stone_type_id');
+        return $this->hasMany(JewelleryStockSideStone::class);
     }
 
     public function pricingVariants()
@@ -178,5 +176,17 @@ class JewelleryStock extends Model
     public function scopeOutOfStock($query)
     {
         return $query->where('status', 'out_of_stock');
+    }
+
+    public function getDiscountedPriceAttribute()
+    {
+        $discount = (float) $this->discount_percent;
+        $price = (float) $this->selling_price;
+        
+        if ($discount <= 0) {
+            return $price;
+        }
+
+        return $price * (1 - ($discount / 100));
     }
 }

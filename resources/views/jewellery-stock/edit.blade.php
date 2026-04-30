@@ -100,10 +100,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Metal Purity</label>
-                        <input type="text" name="metal_purity" class="form-control" placeholder="e.g. 18K, 14K, 950 Plat" value="{{ old('metal_purity', $jewelleryStock->metal_purity) }}">
-                    </div>
+
                     <div class="form-group">
                         <label class="form-label">Gross Weight (g)</label>
                         <input type="number" name="weight" class="form-control" step="0.001" placeholder="0.000" value="{{ old('weight', $jewelleryStock->weight) }}">
@@ -232,30 +229,9 @@
                         </div>
                     </div>
 
-                    {{-- Side Stones --}}
-                    <div>
-                        <p style="font-size:0.8rem;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem;">
-                            <i class="bi bi-circle-fill" style="font-size:.5rem;vertical-align:middle;margin-right:.4rem;"></i>Side Stones
-                        </p>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                            <div class="form-group" style="grid-column:1/-1;">
-                                <label class="form-label">Stone Type</label>
-                                <select name="side_stone_type_id" class="form-control themed-select">
-                                    <option value="">Select Type</option>
-                                    @foreach ($stoneTypes as $stone)
-                                    <option value="{{ $stone->id }}" {{ old('side_stone_type_id',$jewelleryStock->side_stone_type_id)==$stone->id?'selected':'' }}>{{ $stone->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Total cts</label>
-                                <input type="number" name="side_stone_weight" class="form-control" step="0.001" value="{{ old('side_stone_weight', $jewelleryStock->side_stone_weight) }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Count</label>
-                                <input type="number" name="side_stone_count" class="form-control" value="{{ old('side_stone_count', $jewelleryStock->side_stone_count) }}">
-                            </div>
-                        </div>
+                    {{-- Side Stones Repeater --}}
+                    <div style="grid-column: 1 / -1;">
+                        @include('jewellery-stock.partials.side-stones-repeater')
                     </div>
                 </div>
             </div>
