@@ -123,4 +123,89 @@ class TrackingWebhookController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Handle ParcelsApp (Global Parcel Tracking) Webhook
+     */
+    public function handleParcelsApp(Request $request)
+    {
+        $payload = $request->all();
+        Log::info('ParcelsApp Webhook received', ['uuid' => $payload['uuid'] ?? 'unknown']);
+
+        $shipments = $payload['shipments'] ?? [];
+        if (empty($shipments)) {
+            return response()->json(['success' => true, 'message' => 'No shipments in payload']);
+        }
+
+        foreach ($shipments as $trackData) {
+            $number = $trackData['trackingId'] ?? null;
+            if (!$number)
+                continue;
+
+            $statusCode = $trackData['status_code'] ?? null;
+
+            // ParcelsApp statuses mapping
+            $statusMap = [
+                0 => 'Delivered',
+                2 => 'In transit',
+                3 => 'Pick up',
+                4 => 'Out for delivery',
+                7 => 'Exception',
+                8 => 'Info received',
+            ];
+            $readableStatus = $statusMap[$statusCode] ?? ($trackData['description'] ?? 'In transit');
+
+            $carrierName = $trackData['carrier_code'] ?? null;
+            $events = $trackData['events'] ?? [];
+
+            $history = [];
+            foreach ($events as $checkpoint) {
+                $dateStr = $checkpoint['date'] ?? now()->toIso8601String();
+                try {
+                    $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
+                } catch (\Exception $e) {
+                    $dateFormatted = $dateStr;
+                }
+
+                $history[] = [
+                    'date' => $dateFormatted,
+                    'status' => $checkpoint['event'] ?? $readableStatus,
+                    'location' => $checkpoint['location'] ?? '',
+                    'description' => $checkpoint['additional'] ?? ''
+                ];
+            }
+
+            if (empty($history)) {
+                $history[] = [
+                    'date' => now()->format('d M Y, h:i A'),
+                    'status' => $readableStatus,
+                    'location' => '',
+                    'description' => 'Tracking update received.'
+                ];
+            }
+
+            // Sort history descending (newest first)
+            usort($history, function ($a, $b) {
+                return strtotime($b['date']) - strtotime($a['date']);
+            });
+
+            // Update matching orders
+            $orders = Order::where('tracking_number', $number)->get();
+            foreach ($orders as $order) {
+                $updatedData = [
+                    'tracking_status' => $readableStatus,
+                    'tracking_history' => $history,
+                    'last_tracker_sync' => now(),
+                ];
+
+                if (empty($order->shipping_company_name) && !empty($carrierName)) {
+                    $updatedData['shipping_company_name'] = $carrierName;
+                }
+
+                $order->update($updatedData);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
 }

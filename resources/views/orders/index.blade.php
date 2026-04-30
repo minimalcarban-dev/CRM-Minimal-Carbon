@@ -4276,8 +4276,8 @@
                         window.location.reload();
                     } else {
                         let errorMsg = result.message;
-                        if (errorMsg && (errorMsg.toLowerCase().includes('no tracking') || errorMsg.toLowerCase().includes('information at this time'))) {
-                            errorMsg = "Tracking scan initiated. 17Track is querying the carrier. Please wait 15-30 seconds and click Sync again to see the live status.";
+                        if (errorMsg && (errorMsg.toLowerCase().includes('no tracking') || errorMsg.toLowerCase().includes('information at this time') || errorMsg.toLowerCase().includes('still being processed'))) {
+                            errorMsg = "Tracking scan initiated. Global Parcel Tracking is querying the carrier. Please wait 15-30 seconds and click Sync again to see the live status.";
                         }
                         alert(errorMsg);
                         btn.classList.remove('spinning');

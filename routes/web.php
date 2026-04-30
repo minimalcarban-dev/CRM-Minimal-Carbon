@@ -1136,3 +1136,6 @@ Route::prefix('webhook/meta')->group(function () {
 Route::post('webhook/17track', [TrackingWebhookController::class, 'handle17Track'])
     ->withoutMiddleware([VerifyCsrfToken::class]);
 
+Route::post('webhook/parcelsapp', [TrackingWebhookController::class, 'handleParcelsApp'])
+    ->withoutMiddleware([VerifyCsrfToken::class]);
+
