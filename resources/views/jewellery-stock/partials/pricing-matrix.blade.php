@@ -67,14 +67,14 @@
                         <input type="number" name="platinum_950_rate_usd_per_gram" id="platinum_950_rate_usd_per_gram"
                             class="form-control" step="0.0001"
                             value="{{ old('platinum_950_rate_usd_per_gram', $pricingDefaults['platinum_950_rate_usd_per_gram'] ?? $platinumDefault) }}"
-                            {{ ($isPlatinumLocked || !$canEditLabor) ? 'readonly' : '' }}>
-                        @if($isPlatinumLocked)
+                            {{ $isPlatinumLocked || !$canEditLabor ? 'readonly' : '' }}>
+                        @if ($isPlatinumLocked)
                             <span class="input-group-text bg-light" title="Locked via .env config">
                                 <i class="bi bi-lock-fill text-muted"></i>
                             </span>
                         @endif
                     </div>
-                    @if($isPlatinumLocked)
+                    @if ($isPlatinumLocked)
                         <div class="form-text text-info" style="font-size: 0.75rem;">
                             <i class="bi bi-info-circle"></i> Managed via .env configuration
                         </div>
@@ -122,9 +122,7 @@
                     <tr>
                         <th>Default</th>
                         <th>Material</th>
-                        <th>Yellow Wt(g)</th>
-                        <th>White Wt(g)</th>
-                        <th>Rose Wt(g)</th>
+                        <th>Weight (g)</th>
                         <th>Rate/g</th>
                         <th>Metal</th>
                         <th>Labor</th>
@@ -159,37 +157,11 @@
                             <td style="font-weight: 700;">
                                 {{ $row['material_label'] }}
                             </td>
-                            @if (str_starts_with($row['material_code'], 'gold_'))
-                                <td>
-                                    <input type="number"
-                                        name="pricing_variants[{{ $key }}][color_weights][yellow]"
-                                        class="form-control pricing-input" data-field="color_weights.yellow"
-                                        step="0.001"
-                                        value="{{ old($oldBase . 'color_weights.yellow', $row['color_weights']['yellow'] ?? 0) }}">
-                                </td>
-                                <td>
-                                    <input type="number"
-                                        name="pricing_variants[{{ $key }}][color_weights][white]"
-                                        class="form-control pricing-input" data-field="color_weights.white"
-                                        step="0.001"
-                                        value="{{ old($oldBase . 'color_weights.white', $row['color_weights']['white'] ?? 0) }}">
-                                </td>
-                                <td>
-                                    <input type="number"
-                                        name="pricing_variants[{{ $key }}][color_weights][rose]"
-                                        class="form-control pricing-input" data-field="color_weights.rose"
-                                        step="0.001"
-                                        value="{{ old($oldBase . 'color_weights.rose', $row['color_weights']['rose'] ?? 0) }}">
-                                </td>
-                            @else
-                                <td colspan="3">
-                                    <input type="number"
-                                        name="pricing_variants[{{ $key }}][net_weight_grams]"
-                                        class="form-control pricing-input" data-field="net_weight_grams"
-                                        step="0.001"
-                                        value="{{ old($oldBase . 'net_weight_grams', $row['net_weight_grams'] ?? 0) }}">
-                                </td>
-                            @endif
+                            <td>
+                                <input type="number" name="pricing_variants[{{ $key }}][net_weight_grams]"
+                                    class="form-control pricing-input" data-field="net_weight_grams" step="0.001"
+                                    value="{{ old($oldBase . 'net_weight_grams', $row['net_weight_grams'] ?? 0) }}">
+                            </td>
                             <td class="pricing-rate">$0.00</td>
                             <td class="pricing-metal">$0.00</td>
                             <td class="pricing-labor">$0.00</td>
@@ -275,11 +247,7 @@
                 const isGold = row.dataset.isGold === '1';
                 const isPlatinum = materialCode === 'platinum_950';
                 const purity = pricingNumber(row.dataset.purity);
-                const yellowWeight = pricingNumber(row.querySelector('[data-field="color_weights.yellow"]')?.value);
-                const whiteWeight = pricingNumber(row.querySelector('[data-field="color_weights.white"]')?.value);
-                const roseWeight = pricingNumber(row.querySelector('[data-field="color_weights.rose"]')?.value);
-                const manualWeight = pricingNumber(row.querySelector('[data-field="net_weight_grams"]')?.value);
-                const weight = isGold ? Math.max(yellowWeight, whiteWeight, roseWeight) : manualWeight;
+                const weight = pricingNumber(row.querySelector('[data-field="net_weight_grams"]')?.value);
                 const stone = pricingNumber(row.querySelector('[data-field="stone_cost"]')?.value);
                 const extra = pricingNumber(row.querySelector('[data-field="extra_cost"]')?.value);
                 const laborRate = pricingNumber(row.querySelector(
@@ -326,7 +294,8 @@
             document.getElementById('selling_price').value = selectedListing.toFixed(2);
             const display = document.getElementById('margin_display');
             if (display) {
-                const discLabel = globalDiscount > 0 ? ` | Discounted: ${money(selectedListing * (1 - globalDiscount / 100))}` : '';
+                const discLabel = globalDiscount > 0 ?
+                    ` | Discounted: ${money(selectedListing * (1 - globalDiscount / 100))}` : '';
                 display.innerText = `Listing: ${money(selectedListing)}${discLabel} | Cost: ${money(selectedSubtotal)}`;
             }
         }
@@ -355,9 +324,10 @@
                         platinumInput.value = pricingNumber(payload.rates.platinum_950_usd_per_gram).toFixed(4);
                     }
                     const sourceText = payload.rates.source || 'live';
-                    const lockIcon = payload.rates.is_platinum_locked ? '<i class="bi bi-lock-fill" title="Locked via config"></i> ' : '';
-                    
-                    status.innerHTML = 
+                    const lockIcon = payload.rates.is_platinum_locked ?
+                        '<i class="bi bi-lock-fill" title="Locked via config"></i> ' : '';
+
+                    status.innerHTML =
                         `Gold 24K adj: INR ${pricingNumber(payload.rates.gold_adjusted_inr_per_gram).toFixed(2)}/g (${money(payload.rates.gold_adjusted_usd_per_gram)}/g) | ` +
                         `Silver base: INR ${pricingNumber(payload.rates.silver_inr_per_gram).toFixed(2)}/g (${money(payload.rates.silver_base_usd_per_gram)}/g) | ` +
                         `Platinum 950: ${lockIcon}${money(payload.rates.platinum_950_usd_per_gram)}/g | ` +

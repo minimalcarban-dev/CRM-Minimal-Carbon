@@ -11,7 +11,7 @@ function jewelleryPricingRows(array $overrides = []): array
 {
     return array_replace_recursive([
         'gold_10k__none' => [
-            'color_weights' => ['yellow' => 10, 'white' => 0, 'rose' => 0],
+            'net_weight_grams' => 10,
             'stone_cost' => 50,
             'extra_cost' => 25,
             'labor_rate_usd_per_gram' => 20,
@@ -53,7 +53,7 @@ it('calculates gold pricing with purity labor commission profit and markup', fun
 
     expect($default['purity_percent'])->toBe(41.7)
         ->and($default['base_rate_usd_per_gram'])->toBe(41.7)
-        ->and($default['color_weights'])->toMatchArray(['yellow' => 10.0, 'white' => 0.0, 'rose' => 0.0])
+        ->and($default['color_weights'])->toBeNull()
         ->and($default['material_value'])->toBe(417.0)
         ->and($default['labor_cost'])->toBe(200.0)
         ->and($default['subtotal_cost'])->toBe(692.0)
@@ -83,13 +83,13 @@ it('ignores restricted posted assumptions for regular admins', function () {
         ->and($default['sales_markup_percent'])->toBe(0.0);
 });
 
-it('uses heaviest gold color as default listing weight', function () {
+it('uses net_weight_grams as default listing weight', function () {
     $admin = new Admin();
     $admin->is_super = true;
 
     $rows = jewelleryPricingService()->calculateMatrix([
         'gold_10k__none' => [
-            'color_weights' => ['yellow' => 4.2, 'white' => 5.1, 'rose' => 3.4],
+            'net_weight_grams' => 5.1,
             'stone_cost' => 0,
             'extra_cost' => 0,
             'is_default_listing' => true,
