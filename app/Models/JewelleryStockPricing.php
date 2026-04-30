@@ -82,4 +82,16 @@ class JewelleryStockPricing extends Model
 
         return trim($color . $this->material_label);
     }
+
+    public function getDiscountedPriceAttribute()
+    {
+        $discount = (float) ($this->jewelleryStock->discount_percent ?? 0);
+        $price = (float) $this->listing_price;
+
+        if ($discount <= 0) {
+            return $price;
+        }
+
+        return $price * (1 - ($discount / 100));
+    }
 }

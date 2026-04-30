@@ -28,7 +28,8 @@ class JewelleryStockController extends Controller
         private CloudinaryUploadService $uploadService,
         private JewelleryPricingService $pricingService,
         private JewelleryMaterialRateService $materialRateService
-    ) {}
+    ) {
+    }
     /**
      * Display a listing of jewellery stock items.
      */
@@ -132,6 +133,13 @@ class JewelleryStockController extends Controller
 
             $jewelleryStock = JewelleryStock::create($validated);
 
+            // Handle side stones
+            if ($request->has('side_stones')) {
+                foreach ($request->side_stones as $stoneData) {
+                    $jewelleryStock->sideStones()->create($stoneData);
+                }
+            }
+
             if ($request->has('pricing_variants')) {
                 $this->pricingService->replacePricingRows(
                     $jewelleryStock,
@@ -160,7 +168,22 @@ class JewelleryStockController extends Controller
      */
     public function show(JewelleryStock $jewelleryStock)
     {
-        $jewelleryStock->load(['metalType', 'ringSize', 'pricingVariants']);
+        $jewelleryStock->load([
+            'metalType',
+            'ringSize',
+            'closureType',
+            'primaryStoneType',
+            'primaryStoneShape',
+            'primaryStoneColor',
+            'primaryStoneClarity',
+            'primaryStoneCut',
+            'sideStones.type',
+            'sideStones.shape',
+            'sideStones.color',
+            'sideStones.clarity',
+            'sideStones.cut',
+            'pricingVariants',
+        ]);
 
         return view('jewellery-stock.show', compact('jewelleryStock'));
     }
@@ -270,6 +293,14 @@ class JewelleryStockController extends Controller
             }
 
             $jewelleryStock->update($validated);
+
+            // Handle side stones sync (delete old and re-create)
+            if ($request->has('side_stones')) {
+                $jewelleryStock->sideStones()->delete();
+                foreach ($request->side_stones as $stoneData) {
+                    $jewelleryStock->sideStones()->create($stoneData);
+                }
+            }
 
             if ($request->has('pricing_variants')) {
                 $this->pricingService->replacePricingRows(
