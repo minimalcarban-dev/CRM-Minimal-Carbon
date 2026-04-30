@@ -81,9 +81,15 @@
     @else
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
-    <link href="{{ asset('css/diamond.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/attributes.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/tracker.css') }}" rel="stylesheet">
+    <link
+        href="{{ asset('css/diamond.css') }}?v={{ file_exists(public_path('css/diamond.css')) ? filemtime(public_path('css/diamond.css')) : '1.0' }}"
+        rel="stylesheet">
+    <link
+        href="{{ asset('css/attributes.css') }}?v={{ file_exists(public_path('css/attributes.css')) ? filemtime(public_path('css/attributes.css')) : '1.0' }}"
+        rel="stylesheet">
+    <link
+        href="{{ asset('css/tracker.css') }}?v={{ file_exists(public_path('css/tracker.css')) ? filemtime(public_path('css/tracker.css')) : '1.0' }}"
+        rel="stylesheet">
 
     @stack('styles')
 
@@ -3431,8 +3437,9 @@
                         title="Security & Devices"
                         style="text-decoration:none;position:relative;{{ request()->routeIs('settings.security.*') ? 'border-color:var(--primary);color:var(--primary);background:rgba(99,102,241,0.06);' : '' }}">
                         <i class="bi bi-shield-lock-fill"></i>
-                        @if($devicePendingCount > 0)
-                            <span style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;width:16px;height:16px;border-radius:50%;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-weight:700;">
+                        @if ($devicePendingCount > 0)
+                            <span
+                                style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;width:16px;height:16px;border-radius:50%;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-weight:700;">
                                 {{ $devicePendingCount > 9 ? '9+' : $devicePendingCount }}
                             </span>
                         @endif
@@ -4477,8 +4484,8 @@
 
     <script>
         /* ══════════════════════════════════════
-                    ENHANCEMENTS JS
-        ══════════════════════════════════════ */
+                        ENHANCEMENTS JS
+            ══════════════════════════════════════ */
 
         // ── DARK MODE ──
         const darkBtn = document.getElementById('darkModeBtn');
@@ -4675,16 +4682,16 @@
             container.innerHTML = groups.map(g => `
             <div class="cmd-group-label">${g}</div>
             ${filtered.filter(i => i.group === g).map((item, idx) => `
-                    <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
-                        <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
-                            <i class="bi ${item.icon}"></i>
-                        </div>
-                        <div class="cmd-item-text">
-                            <div>${item.label}</div>
-                            <div class="cmd-item-hint">${item.hint}</div>
-                        </div>
-                    </a>
-                `).join('')}
+                        <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
+                            <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
+                                <i class="bi ${item.icon}"></i>
+                            </div>
+                            <div class="cmd-item-text">
+                                <div>${item.label}</div>
+                                <div class="cmd-item-hint">${item.hint}</div>
+                            </div>
+                        </a>
+                    `).join('')}
         `).join('') ||
                 '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:0.875rem;">No results found</div>';
         }

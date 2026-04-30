@@ -229,7 +229,7 @@
                     </div>
 
                     {{-- Side Stones Repeater --}}
-                    <div style="grid-column: 1 / -1;">
+                    <div>
                         @include('jewellery-stock.partials.side-stones-repeater')
                     </div>
                 </div>
@@ -279,10 +279,10 @@
                             onclick="document.getElementById('images').click()"
                             onmouseenter="this.style.borderColor='var(--primary)';this.style.background='rgba(99,102,241,.03)'"
                             onmouseleave="this.style.borderColor='var(--border)';this.style.background=''">
-                            <input type="file" name="images[]" id="images" class="d-none" accept="image/*" multiple onchange="previewUploads(this)">
-                            <i class="bi bi-images" style="font-size:2.5rem;color:var(--primary);"></i>
-                            <p style="margin:.75rem 0 0;color:var(--gray);font-weight:500;">Click to upload item images</p>
-                            <small style="color:var(--muted);">Max 10MB per image · JPEG, PNG, WEBP, AVIF, HEIC</small>
+                            <input type="file" name="images[]" id="images" class="d-none" accept="image/*,video/*" multiple onchange="previewUploads(this)">
+                            <i class="bi bi-cloud-arrow-up" style="font-size:2.5rem;color:var(--primary);"></i>
+                            <p style="margin:.75rem 0 0;color:var(--gray);font-weight:500;">Click to upload images or videos</p>
+                            <small style="color:var(--muted);">Max 20MB · JPEG, PNG, WEBP, AVIF, HEIC, MP4, MOV</small>
                         </div>
                         <div id="image_preview_container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:1rem;"></div>
                     </div>
@@ -326,21 +326,63 @@
         }
     }
 
+    let selectedFiles = [];
+
     function previewUploads(input) {
         const container = document.getElementById('image_preview_container');
-        container.innerHTML = '';
-        if (input.files && input.files.length > 0) {
+        if (input.files) {
             Array.from(input.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'position:relative;aspect-ratio:1;';
-                    div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:2px solid var(--border);">`;
-                    container.appendChild(div);
-                };
-                reader.readAsDataURL(file);
+                selectedFiles.push(file);
             });
         }
+        renderPreviews();
+        updateInputFiles();
+    }
+
+    function renderPreviews() {
+        const container = document.getElementById('image_preview_container');
+        container.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.style.cssText = 'position:relative;aspect-ratio:1;';
+                
+                let mediaHtml = '';
+                if (file.type.startsWith('video/')) {
+                    mediaHtml = `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:2px solid var(--border);"></video>`;
+                } else {
+                    mediaHtml = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:2px solid var(--border);">`;
+                }
+                
+                div.innerHTML = `
+                    ${mediaHtml}
+                    <button type="button" onclick="removeSelectedFile(${index})" 
+                        style="position:absolute;top:4px;right:4px;background:#ef4444;color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:white;font-size:10px;padding:2px 4px;border-bottom-left-radius:8px;border-bottom-right-radius:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        ${file.name}
+                    </div>
+                `;
+                container.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeSelectedFile(index) {
+        selectedFiles.splice(index, 1);
+        renderPreviews();
+        updateInputFiles();
+    }
+
+    function updateInputFiles() {
+        const input = document.getElementById('images');
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        input.files = dt.files;
     }
 
     document.getElementById('categorySelect')?.addEventListener('change', updateCategoryFields);

@@ -124,7 +124,6 @@ class JewelleryStockController extends Controller
 
             // Handle multiple images upload (same pattern as Order module)
             $uploadedImages = $this->uploadService->uploadFromRequest($request, 'images', 'jewellery-stock');
-
             if (!empty($uploadedImages)) {
                 $validated['images'] = $uploadedImages;
                 // Set primary image_url for backward compatibility
@@ -278,7 +277,6 @@ class JewelleryStockController extends Controller
 
             // 2. Handle new image uploads
             $newImages = $this->uploadService->uploadFromRequest($request, 'images', 'jewellery-stock');
-
             if (!empty($newImages)) {
                 $currentImages = array_merge($currentImages, $newImages);
             }

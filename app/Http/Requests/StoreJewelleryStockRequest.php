@@ -32,7 +32,7 @@ class StoreJewelleryStockRequest extends FormRequest
             'description' => 'nullable|string|max:3000',
             'image_url' => 'nullable|string|max:500',
             'images' => 'nullable|array',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif,gif,heic,heif|max:10240',
+            'images.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,avif,gif,heic,heif,mp4,mov,avi,wmv|max:20480',
             'closure_type_id' => 'nullable|exists:closure_types,id',
             'primary_stone_type_id' => 'nullable|exists:stone_types,id',
             'primary_stone_weight' => 'nullable|numeric|min:0',

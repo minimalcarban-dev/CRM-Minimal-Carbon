@@ -2,7 +2,7 @@
     <button type="button" class="btn btn-sm btn-outline-danger position-absolute" style="top:10px;right:10px;" onclick="removeSideStoneRow(this)">
         <i class="bi bi-trash"></i>
     </button>
-    <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:1rem;">
+    <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:1rem;">
         <div class="form-group">
             <label class="form-label">Stone Type <span class="required">*</span></label>
             <select name="side_stones[{{ $index }}][stone_type_id]" class="form-control themed-select" required>
