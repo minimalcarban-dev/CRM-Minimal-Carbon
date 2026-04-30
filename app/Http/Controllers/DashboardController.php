@@ -60,7 +60,7 @@ class DashboardController extends Controller
                 return Order::whereDate('created_at', $today)
                     ->whereNotIn('diamond_status', $this->cancelledStatuses)
                     ->count();
-            }); 
+            });
 
             $todayRevenue = Cache::remember("dash.today_revenue.{$today}", 120, function () use ($today) {
                 return Order::whereDate('created_at', $today)
@@ -143,15 +143,37 @@ class DashboardController extends Controller
 
         // ── 7. INVOICES ───────────────────────────────────────────
         if ($hasRange) {
-            $invoiceStats = Invoice::whereBetween('invoice_date', [$rangeFrom, $rangeTo])
-                ->selectRaw('COUNT(*) as count, SUM(total_invoice_value) as total')
-                ->first();
+            $invoiceData = Invoice::whereBetween('invoice_date', [$rangeFrom, $rangeTo])
+                ->selectRaw('invoice_region, COUNT(*) as count, SUM(total_invoice_value) as total')
+                ->groupBy('invoice_region')
+                ->get();
+
+            $invoiceStats = (object) [
+                'count' => $invoiceData->sum('count'),
+                'breakdown' => $invoiceData->map(function ($s) {
+                    return (object) [
+                        'symbol' => Invoice::REGIONS[$s->invoice_region]['symbol'] ?? '$',
+                        'total' => $s->total
+                    ];
+                })
+            ];
         } else {
             $invoiceStats = Cache::remember("dash.invoices.{$month}.{$year}", 300, function () use ($month, $year) {
-                return Invoice::whereMonth('invoice_date', $month)
+                $invoiceData = Invoice::whereMonth('invoice_date', $month)
                     ->whereYear('invoice_date', $year)
-                    ->selectRaw('COUNT(*) as count, SUM(total_invoice_value) as total')
-                    ->first();
+                    ->selectRaw('invoice_region, COUNT(*) as count, SUM(total_invoice_value) as total')
+                    ->groupBy('invoice_region')
+                    ->get();
+
+                return (object) [
+                    'count' => $invoiceData->sum('count'),
+                    'breakdown' => $invoiceData->map(function ($s) {
+                        return (object) [
+                            'symbol' => Invoice::REGIONS[$s->invoice_region]['symbol'] ?? '$',
+                            'total' => $s->total
+                        ];
+                    })
+                ];
             });
         }
 

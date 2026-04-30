@@ -37,7 +37,7 @@ class UpdateJewelleryStockRequest extends FormRequest
             'description' => 'nullable|string|max:3000',
             'image_url' => 'nullable|string|max:500',
             'images' => 'nullable|array',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif,gif,heic,heif|max:10240',
+            'images.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,avif,gif,heic,heif,mp4,mov,avi,wmv|max:20480',
             'removed_images' => 'nullable|array',
             'removed_images.*' => 'nullable|string',
             'closure_type_id' => 'nullable|exists:closure_types,id',

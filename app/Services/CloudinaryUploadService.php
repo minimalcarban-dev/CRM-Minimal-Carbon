@@ -27,7 +27,7 @@ class CloudinaryUploadService
             $this->cloudinary = new Cloudinary([
                 'cloud' => [
                     'cloud_name' => config('cloudinary.cloud_name'),
-                    'api_key'    => config('cloudinary.api_key'),
+                    'api_key' => config('cloudinary.api_key'),
                     'api_secret' => config('cloudinary.api_secret'),
                 ],
                 'url' => [
@@ -99,6 +99,8 @@ class CloudinaryUploadService
 
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $extension = $file->getClientOriginalExtension();
+            $videoExtensions = ['mp4', 'mov', 'avi', 'wmv', 'mkv', 'flv', 'webm'];
+            $detectedVideo = in_array(strtolower($extension), $videoExtensions);
             $detectedPdf = $isPdf || strtolower($extension) === 'pdf';
             $timestamp = time();
             $uniqueId = uniqid();
@@ -106,51 +108,50 @@ class CloudinaryUploadService
             $publicId = "{$folder}/{$timestamp}_{$uniqueId}";
             $uploadOptions = [
                 'public_id' => $publicId,
-                'folder'    => $folder,
+                'folder' => $folder,
+                'resource_type' => 'auto',
             ];
 
             Log::info("Uploading to Cloudinary", [
                 'file' => $file->getClientOriginalName(),
-                'type' => $detectedPdf ? 'PDF' : 'Image',
+                'type' => $detectedPdf ? 'PDF' : ($detectedVideo ? 'Video' : 'Image'),
                 'size' => $file->getSize(),
             ]);
 
             $uploadApi = $this->client()->uploadApi();
 
-            if ($detectedPdf) {
-                $uploadOptions['resource_type'] = 'raw';
-                $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
-            } else {
+            if (!$detectedPdf && !$detectedVideo) {
                 $uploadOptions['transformation'] = [
-                    'quality'      => 'auto:good',
+                    'quality' => 'auto:good',
                     'fetch_format' => 'auto',
                 ];
-                $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
             }
 
+            $result = $uploadApi->upload($file->getRealPath(), $uploadOptions);
+
             $fileInfo = [
-                'url'           => $result['secure_url'],
-                'public_id'     => $result['public_id'],
-                'name'          => $originalName . '.' . $extension,
+                'url' => $result['secure_url'],
+                'public_id' => $result['public_id'],
+                'name' => $originalName . '.' . $extension,
                 'original_name' => $originalName . '.' . $extension,
-                'format'        => $extension,
-                'size'          => $file->getSize(),
-                'resource_type' => $detectedPdf ? 'raw' : 'image',
-                'uploaded_at'   => now()->toDateTimeString(),
+                'format' => $result['format'] ?? $extension,
+                'size' => $file->getSize(),
+                'resource_type' => $result['resource_type'] ?? ($detectedPdf ? 'raw' : ($detectedVideo ? 'video' : 'image')),
+                'uploaded_at' => now()->toDateTimeString(),
             ];
 
             Log::info("Successfully uploaded to Cloudinary", [
-                'file'      => $originalName,
-                'url'       => $fileInfo['url'],
+                'file' => $originalName,
+                'url' => $fileInfo['url'],
                 'public_id' => $result['public_id'],
             ]);
 
             return $fileInfo;
         } catch (\Exception $e) {
             Log::error('Cloudinary upload failed', [
-                'file'  => $file->getClientOriginalName(),
+                'file' => $file->getClientOriginalName(),
                 'error' => $e->getMessage(),
-                'line'  => $e->getLine(),
+                'line' => $e->getLine(),
             ]);
             return null;
         }
@@ -170,7 +171,7 @@ class CloudinaryUploadService
             $uploadApi->destroy($publicId, ['resource_type' => $resourceType]);
 
             Log::info("File deleted from Cloudinary", [
-                'public_id'     => $publicId,
+                'public_id' => $publicId,
                 'resource_type' => $resourceType,
             ]);
 
@@ -178,7 +179,7 @@ class CloudinaryUploadService
         } catch (\Exception $e) {
             Log::error('Failed to delete from Cloudinary', [
                 'public_id' => $publicId,
-                'error'     => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             return false;
         }

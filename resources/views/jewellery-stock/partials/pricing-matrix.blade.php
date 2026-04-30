@@ -33,24 +33,6 @@
             value="{{ old('selling_price', $jewelleryStock->selling_price ?? 0) }}">
 
 
-<div class="form-section-card">
-    <div class="section-header">
-        <div class="section-info">
-            <div class="section-icon" style="background:linear-gradient(135deg,#10b981,#059669);"><i
-                    class="bi bi-calculator"></i></div>
-            <div>
-                <h3 class="section-title">Stock &amp; Pricing</h3>
-                <p class="section-description">Quantity, live rates and per-variant pricing matrix</p>
-            </div>
-        </div>
-    </div>
-    <div class="section-body">
-
-        <input type="hidden" name="purchase_price" id="purchase_price"
-            value="{{ old('purchase_price', $jewelleryStock->purchase_price ?? 0) }}">
-        <input type="hidden" name="selling_price" id="selling_price"
-            value="{{ old('selling_price', $jewelleryStock->selling_price ?? 0) }}">
-
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
             <div class="form-group">
                 <label class="form-label">Initial Quantity <span class="required">*</span></label>

@@ -162,7 +162,7 @@
                                     </td>
                                     <td>
                                         <span class="amount-value">
-                                            {{ $inv->company->currency_symbol ?? '$' }}
+                                            {{ \App\Models\Invoice::REGIONS[$inv->invoice_region]['symbol'] ?? ($inv->company->currency_symbol ?? '$') }}
                                             {{ number_format($inv->total_invoice_value, 2) }}
                                         </span>
                                     </td>
