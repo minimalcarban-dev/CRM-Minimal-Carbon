@@ -32,6 +32,27 @@ return new class extends Migration {
                 $table->foreignId('stone_cut_id')->nullable()->constrained('diamond_cuts')->nullOnDelete();
                 $table->timestamps();
             });
+        } else {
+            Schema::table('jewellery_stock_side_stones', function (Blueprint $table) {
+                if (!Schema::hasColumn('jewellery_stock_side_stones', 'weight')) {
+                    $table->decimal('weight', 10, 3)->nullable()->after('stone_type_id');
+                }
+                if (!Schema::hasColumn('jewellery_stock_side_stones', 'count')) {
+                    $table->integer('count')->nullable()->after('weight');
+                }
+                if (!Schema::hasColumn('jewellery_stock_side_stones', 'stone_shape_id')) {
+                    $table->foreignId('stone_shape_id')->nullable()->constrained('stone_shapes')->nullOnDelete()->after('count');
+                }
+                if (!Schema::hasColumn('jewellery_stock_side_stones', 'stone_color_id')) {
+                    $table->foreignId('stone_color_id')->nullable()->constrained('stone_colors')->nullOnDelete()->after('stone_shape_id');
+                }
+                if (!Schema::hasColumn('jewellery_stock_side_stones', 'stone_clarity_id')) {
+                    $table->foreignId('stone_clarity_id')->nullable()->constrained('diamond_clarities')->nullOnDelete()->after('stone_color_id');
+                }
+                if (!Schema::hasColumn('jewellery_stock_side_stones', 'stone_cut_id')) {
+                    $table->foreignId('stone_cut_id')->nullable()->constrained('diamond_cuts')->nullOnDelete()->after('stone_clarity_id');
+                }
+            });
         }
 
         // 3. Migrate existing side stone data (if any)
