@@ -188,17 +188,19 @@ class OrderController extends Controller
         $companySalesStats = Company::where('status', 'active')
             ->get()
             ->map(function ($company) {
-                return [
-                    'id' => $company->id,
-                    'name' => $company->name,
-                    'logo' => $company->logo,
-                    'currency_symbol' => $company->currency_symbol,
-                    'todays_orders' => $company->todays_order_count,
-                    'todays_sales' => $company->todays_sales,
-                    'month_to_date' => $company->month_to_date_sales,
-                    'current_target' => $company->current_month_target,
-                    'target_progress' => $company->target_progress,
-                ];
+                return Cache::remember("company.{$company->id}.stats.today", 300, function () use ($company) {
+                    return [
+                        'id' => $company->id,
+                        'name' => $company->name,
+                        'logo' => $company->logo,
+                        'currency_symbol' => $company->currency_symbol,
+                        'todays_orders' => $company->todays_order_count,
+                        'todays_sales' => $company->todays_sales,
+                        'month_to_date' => $company->month_to_date_sales,
+                        'current_target' => $company->current_month_target,
+                        'target_progress' => $company->target_progress,
+                    ];
+                });
             });
 
         // Now apply optional filters for the listing
@@ -1051,14 +1053,26 @@ class OrderController extends Controller
             // Compute diff and log audit entry
             $oldValues = [];
             $newValues = [];
+
+            // Pre-load foreign key names to prevent N+1 queries in audit loop
+            $fkData = [
+                'company_id' => Company::whereIn('id', array_unique(array_filter([$oldSnapshot['company_id'] ?? null, $order->company_id])))->pluck('name', 'id')->toArray(),
+                'factory_id' => Factory::whereIn('id', array_unique(array_filter([$oldSnapshot['factory_id'] ?? null, $order->factory_id])))->pluck('name', 'id')->toArray(),
+                'gold_detail_id' => MetalType::whereIn('id', array_unique(array_filter([$oldSnapshot['gold_detail_id'] ?? null, $order->gold_detail_id])))->pluck('name', 'id')->toArray(),
+                'ring_size_id' => RingSize::whereIn('id', array_unique(array_filter([$oldSnapshot['ring_size_id'] ?? null, $order->ring_size_id])))->pluck('name', 'id')->toArray(),
+                'setting_type_id' => SettingType::whereIn('id', array_unique(array_filter([$oldSnapshot['setting_type_id'] ?? null, $order->setting_type_id])))->pluck('name', 'id')->toArray(),
+                'earring_type_id' => ClosureType::whereIn('id', array_unique(array_filter([$oldSnapshot['earring_type_id'] ?? null, $order->earring_type_id])))->pluck('name', 'id')->toArray(),
+                'melee_diamond_id' => MeleeDiamond::whereIn('id', array_unique(array_filter([$oldSnapshot['melee_diamond_id'] ?? null, $order->melee_diamond_id])))->pluck('name', 'id')->toArray(),
+            ];
+
             $fkResolvers = [
-                'company_id' => fn($id) => $id ? (Company::find($id)->name ?? "ID:$id") : null,
-                'factory_id' => fn($id) => $id ? (Factory::find($id)->name ?? "ID:$id") : null,
-                'gold_detail_id' => fn($id) => $id ? (MetalType::find($id)->name ?? "ID:$id") : null,
-                'ring_size_id' => fn($id) => $id ? (RingSize::find($id)->name ?? "ID:$id") : null,
-                'setting_type_id' => fn($id) => $id ? (SettingType::find($id)->name ?? "ID:$id") : null,
-                'earring_type_id' => fn($id) => $id ? (ClosureType::find($id)->name ?? "ID:$id") : null,
-                'melee_diamond_id' => fn($id) => $id ? (MeleeDiamond::find($id)->name ?? "ID:$id") : null,
+                'company_id' => fn($id) => $id ? ($fkData['company_id'][$id] ?? "ID:$id") : null,
+                'factory_id' => fn($id) => $id ? ($fkData['factory_id'][$id] ?? "ID:$id") : null,
+                'gold_detail_id' => fn($id) => $id ? ($fkData['gold_detail_id'][$id] ?? "ID:$id") : null,
+                'ring_size_id' => fn($id) => $id ? ($fkData['ring_size_id'][$id] ?? "ID:$id") : null,
+                'setting_type_id' => fn($id) => $id ? ($fkData['setting_type_id'][$id] ?? "ID:$id") : null,
+                'earring_type_id' => fn($id) => $id ? ($fkData['earring_type_id'][$id] ?? "ID:$id") : null,
+                'melee_diamond_id' => fn($id) => $id ? ($fkData['melee_diamond_id'][$id] ?? "ID:$id") : null,
             ];
             foreach ($auditFields as $field => $label) {
                 $oldVal = $oldSnapshot[$field];
@@ -1256,11 +1270,11 @@ class OrderController extends Controller
         $order->load(['goldDetail', 'ringSize', 'settingType', 'earringDetail', 'company', 'creator', 'lastModifier', 'payments.recordedBy']);
 
         $editHistory = collect();
-        $metalTypes = MetalType::all();
-        $ringSizes = RingSize::all();
-        $settingTypes = SettingType::all();
-        $closureTypes = ClosureType::all();
-        $companies = Company::all();
+        $metalTypes = Cache::remember('metal_types', 3600, fn() => MetalType::all());
+        $ringSizes = Cache::remember('ring_sizes', 3600, fn() => RingSize::all());
+        $settingTypes = Cache::remember('setting_types', 3600, fn() => SettingType::all());
+        $closureTypes = Cache::remember('closure_types', 3600, fn() => ClosureType::all());
+        $companies = Cache::remember('companies', 1800, fn() => Company::all());
 
         $editHistory = $order->editHistory()->with('admin')->get();
         $discussionChannel = $this->getOrCreateOrderDiscussionChannel();
@@ -1547,13 +1561,9 @@ class OrderController extends Controller
 
     private function syncOrderDiscussionMembers(Channel $channel): void
     {
-        $eligibleAdmins = Admin::query()->get()->filter(function (Admin $candidate) {
-            if ($candidate->is_super) {
-                return true;
-            }
-
-            return $candidate->hasPermission('chat.access');
-        });
+        $eligibleAdmins = Admin::where('is_super', true)
+            ->orWhereHas('permissions', fn($q) => $q->where('slug', 'chat.access'))
+            ->get();
 
         $membersPayload = [];
         foreach ($eligibleAdmins as $candidate) {

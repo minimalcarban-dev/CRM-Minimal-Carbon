@@ -65,4 +65,13 @@ class StoreJewelleryStockRequest extends FormRequest
             'platinum_950_rate_usd_per_gram' => 'nullable|numeric|min:0',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'images.*.uploaded' => 'The file failed to upload. This usually means the file size exceeds the server\'s PHP limits (upload_max_filesize or post_max_size in php.ini).',
+            'images.*.max' => 'The file may not be larger than 20MB.',
+            'images.*.mimes' => 'The file must be an image or video (jpeg, png, jpg, webp, avif, gif, heic, heif, mp4, mov, avi, wmv).',
+        ];
+    }
 }
