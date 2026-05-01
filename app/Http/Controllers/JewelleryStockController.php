@@ -114,6 +114,9 @@ class JewelleryStockController extends Controller
         try {
             DB::beginTransaction();
 
+            // Increase execution time for Cloudinary uploads
+            set_time_limit(120);
+
             $validated = $request->validated();
             $pricingVariants = $validated['pricing_variants'] ?? [];
             $defaultPricingVariant = $validated['default_pricing_variant'] ?? null;
@@ -249,6 +252,9 @@ class JewelleryStockController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            // Increase execution time for Cloudinary uploads
+            set_time_limit(120);
 
             $validated = $request->validated();
             $pricingVariants = $validated['pricing_variants'] ?? [];

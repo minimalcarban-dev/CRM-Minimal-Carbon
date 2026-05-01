@@ -180,29 +180,30 @@ class ChatController extends Controller
         /** @var Admin $user */
         $user = Auth::guard('admin')->user();
 
-        // Load channels with users data (needed for calculating names)
+        // Load channels with users data, latest message and unread count in one go (Fix N+1)
         $channels = Channel::with([
             'users' => function ($q) {
                 $q->select('admins.id', 'name', 'is_super');
-            }
+            },
+            'latestMessage.sender:id,name'
         ])
+            ->withCount(['messages as unread_count' => function ($query) use ($user) {
+                $query->where('sender_id', '!=', $user->id)
+                    ->whereDoesntHave('reads', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+            }])
             ->whereHas('users', function ($query) use ($user) {
                 $query->where('admin_id', $user->id);
             })->get();
 
         // Add unread count and CALCULATE DYNAMIC NAME
         $channels->each(function ($channel) use ($user) {
-            $channel->unread_count = $channel->unreadCount($user);
             $channel->unread_messages_count = $channel->unread_count;
             $channel->can_manage_members = ($user->is_super || (int) $channel->created_by === (int) $user->id);
 
-            // Get last message for preview
-            $lastMessage = $channel->messages()
-                ->with('sender:id,name')
-                ->latest()
-                ->first();
-
-            $channel->last_message = $lastMessage;
+            // Use eager-loaded latest message
+            $channel->last_message = $channel->latestMessage;
 
             if ($channel->type === 'personal') {
                 $channel->name = $this->resolvePersonalDisplayName($channel->users, $user);
@@ -631,30 +632,22 @@ class ChatController extends Controller
                     }
 
                     // Store file
-                    // $path = $file->store('chat-attachments', 'public');
                     $path = $file->store('uploads/chat-attachments', 'public');
-                    $abs = Storage::disk('public')->path($path);
 
-                    // Virus scan
-                    $scan = $scanner->scan($abs);
-                    if (empty($scan['clean'])) {
-                        Storage::disk('public')->delete($path);
-                        continue;
-                    }
-
-                    // Save attachment record
+                    // Save attachment record (PENDING state)
                     $attachment = $message->attachments()->create([
                         'filename' => $originalName,
                         'path' => $path,
                         'mime_type' => $resolvedMime,
                         'size' => $file->getSize(),
+                        'status' => 'pending',
                     ]);
 
-                    // Process attachment safely (NO QUEUE)
+                    // Dispatch async processing (Virus scan + Cloudinary upload)
                     try {
-                        (new \App\Jobs\ProcessChatAttachment($attachment))->handle();
+                        \App\Jobs\ProcessChatAttachment::dispatch($attachment);
                     } catch (\Throwable $e) {
-                        Log::error('Attachment processing failed (non-blocking)', [
+                        Log::error('Failed to dispatch attachment job', [
                             'attachment_id' => $attachment->id,
                             'error' => $e->getMessage(),
                         ]);
@@ -1206,12 +1199,23 @@ class ChatController extends Controller
                         }
                         $originalName = 'attachment-' . Str::uuid() . ($extension !== '' ? ".{$extension}" : '');
                     }
-                    $reply->attachments()->create([
+                    $attachment = $reply->attachments()->create([
                         'filename' => $originalName,
                         'path' => $path,
                         'mime_type' => $mimeType,
-                        'size' => $file->getSize()
+                        'size' => $file->getSize(),
+                        'status' => 'pending',
                     ]);
+
+                    // Dispatch async processing
+                    try {
+                        \App\Jobs\ProcessChatAttachment::dispatch($attachment);
+                    } catch (\Throwable $e) {
+                        Log::error('Failed to dispatch thread attachment job', [
+                            'attachment_id' => $attachment->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
             }
 

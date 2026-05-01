@@ -616,7 +616,7 @@
         $marginPct = (float) $jewelleryStock->selling_price > 0
             ? ($margin / (float) $jewelleryStock->selling_price) * 100
             : 0;
-        $metalLabel = $jewelleryStock->metalType->name ?? 'Metal N/A';
+        $metalLabel = $jewelleryStock->metalType->name ?? '';
         $discountPercent = (float) $jewelleryStock->discount_percent;
     @endphp
 
@@ -704,10 +704,12 @@
                         <i class="bi bi-collection"></i>
                         {{ ucwords(str_replace('_', ' ', $jewelleryStock->type)) }}
                     </span>
-                    <span class="tracker-badge tracker-badge-secondary">
-                        <i class="bi bi-palette"></i>
-                        {{ $metalLabel ?: 'Metal N/A' }}
-                    </span>
+                    @if($jewelleryStock->metal_type_id)
+                        <span class="tracker-badge tracker-badge-secondary">
+                            <i class="bi bi-palette"></i>
+                            {{ $jewelleryStock->metalType->name }}
+                        </span>
+                    @endif
                     @if ($jewelleryStock->certificate_type)
                         <span class="tracker-badge tracker-badge-success">
                             <i class="bi bi-patch-check"></i>
@@ -730,10 +732,12 @@
                             <p class="tile-value">${{ number_format((float) $jewelleryStock->selling_price, 2) }}</p>
                         @endif
                     </div>
-                    <div class="stat-tile">
-                        <p class="tile-label">Gross Weight</p>
-                        <p class="tile-value">{{ $jewelleryStock->weight ? number_format((float) $jewelleryStock->weight, 3) . ' g' : 'N/A' }}</p>
-                    </div>
+                    @if($jewelleryStock->weight)
+                        <div class="stat-tile">
+                            <p class="tile-label">Gross Weight</p>
+                            <p class="tile-value">{{ number_format((float) $jewelleryStock->weight, 3) }} g</p>
+                        </div>
+                    @endif
                     <div class="stat-tile">
                         <p class="tile-label">Stock Alert</p>
                         <p class="tile-value">{{ $jewelleryStock->low_stock_threshold }} pcs</p>
@@ -741,22 +745,30 @@
                 </div>
 
                 <div class="fact-grid">
-                    <div class="fact-tile">
-                        <p class="fact-label">Metal Composition</p>
-                        <p class="fact-value">{{ $metalLabel ?: 'N/A' }}</p>
-                    </div>
-                    <div class="fact-tile">
-                        <p class="fact-label">Ring Size</p>
-                        <p class="fact-value">{{ $jewelleryStock->ringSize->name ?? 'N/A' }}</p>
-                    </div>
-                    <div class="fact-tile">
-                        <p class="fact-label">Width</p>
-                        <p class="fact-value">{{ $jewelleryStock->width ? $jewelleryStock->width . ' mm' : 'N/A' }}</p>
-                    </div>
-                    <div class="fact-tile">
-                        <p class="fact-label">Closure / Backing</p>
-                        <p class="fact-value">{{ $jewelleryStock->closureType->name ?? 'N/A' }}</p>
-                    </div>
+                    @if($jewelleryStock->metal_type_id)
+                        <div class="fact-tile">
+                            <p class="fact-label">Metal Composition</p>
+                            <p class="fact-value">{{ $metalLabel }}</p>
+                        </div>
+                    @endif
+                    @if($jewelleryStock->ring_size_id)
+                        <div class="fact-tile">
+                            <p class="fact-label">Ring Size</p>
+                            <p class="fact-value">{{ $jewelleryStock->ringSize->name }}</p>
+                        </div>
+                    @endif
+                    @if($jewelleryStock->width)
+                        <div class="fact-tile">
+                            <p class="fact-label">Width</p>
+                            <p class="fact-value">{{ $jewelleryStock->width }} mm</p>
+                        </div>
+                    @endif
+                    @if($jewelleryStock->closure_type_id)
+                        <div class="fact-tile">
+                            <p class="fact-label">Closure / Backing</p>
+                            <p class="fact-value">{{ $jewelleryStock->closureType->name }}</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -819,26 +831,36 @@
                     </div>
                     <div class="card-body">
                         <div class="spec-grid">
-                            <div class="fact-tile">
-                                <p class="fact-label">Ring Size</p>
-                                <p class="fact-value">{{ $jewelleryStock->ringSize->name ?? 'N/A' }}</p>
-                            </div>
-                            <div class="fact-tile">
-                                <p class="fact-label">Length</p>
-                                <p class="fact-value">{{ $jewelleryStock->length ? $jewelleryStock->length . ' in/cm' : 'N/A' }}</p>
-                            </div>
-                            <div class="fact-tile">
-                                <p class="fact-label">Width</p>
-                                <p class="fact-value">{{ $jewelleryStock->width ? $jewelleryStock->width . ' mm' : 'N/A' }}</p>
-                            </div>
-                            <div class="fact-tile">
-                                <p class="fact-label">Diameter</p>
-                                <p class="fact-value">{{ $jewelleryStock->diameter ? $jewelleryStock->diameter . ' mm' : 'N/A' }}</p>
-                            </div>
-                            <div class="fact-tile">
-                                <p class="fact-label">Bale Size</p>
-                                <p class="fact-value">{{ $jewelleryStock->bale_size ? $jewelleryStock->bale_size . ' mm' : 'N/A' }}</p>
-                            </div>
+                            @if($jewelleryStock->ring_size_id)
+                                <div class="fact-tile">
+                                    <p class="fact-label">Ring Size</p>
+                                    <p class="fact-value">{{ $jewelleryStock->ringSize->name }}</p>
+                                </div>
+                            @endif
+                            @if($jewelleryStock->length)
+                                <div class="fact-tile">
+                                    <p class="fact-label">Length</p>
+                                    <p class="fact-value">{{ $jewelleryStock->length }} in/cm</p>
+                                </div>
+                            @endif
+                            @if($jewelleryStock->width)
+                                <div class="fact-tile">
+                                    <p class="fact-label">Width</p>
+                                    <p class="fact-value">{{ $jewelleryStock->width }} mm</p>
+                                </div>
+                            @endif
+                            @if($jewelleryStock->diameter)
+                                <div class="fact-tile">
+                                    <p class="fact-label">Diameter</p>
+                                    <p class="fact-value">{{ $jewelleryStock->diameter }} mm</p>
+                                </div>
+                            @endif
+                            @if($jewelleryStock->bale_size)
+                                <div class="fact-tile">
+                                    <p class="fact-label">Bale Size</p>
+                                    <p class="fact-value">{{ $jewelleryStock->bale_size }} mm</p>
+                                </div>
+                            @endif
                             <div class="fact-tile">
                                 <p class="fact-label">Quantity</p>
                                 <p class="fact-value">{{ $jewelleryStock->quantity }} pcs</p>
@@ -863,28 +885,38 @@
                                         <div class="stone-fields">
                                             <div>
                                                 <p class="fact-label">Type</p>
-                                                <p class="fact-value">{{ $jewelleryStock->primaryStoneType->name ?? 'N/A' }}</p>
+                                                <p class="fact-value">{{ $jewelleryStock->primaryStoneType->name }}</p>
                                             </div>
-                                            <div>
-                                                <p class="fact-label">Weight</p>
-                                                <p class="fact-value">{{ $jewelleryStock->primary_stone_weight ? $jewelleryStock->primary_stone_weight . ' cts' : 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Shape</p>
-                                                <p class="fact-value">{{ $jewelleryStock->primaryStoneShape->name ?? 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Cut Grade</p>
-                                                <p class="fact-value">{{ $jewelleryStock->primaryStoneCut->name ?? 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Color</p>
-                                                <p class="fact-value">{{ $jewelleryStock->primaryStoneColor->name ?? 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Clarity</p>
-                                                <p class="fact-value">{{ $jewelleryStock->primaryStoneClarity->name ?? 'N/A' }}</p>
-                                            </div>
+                                            @if($jewelleryStock->primary_stone_weight)
+                                                <div>
+                                                    <p class="fact-label">Weight</p>
+                                                    <p class="fact-value">{{ $jewelleryStock->primary_stone_weight }} cts</p>
+                                                </div>
+                                            @endif
+                                            @if($jewelleryStock->primary_stone_shape_id)
+                                                <div>
+                                                    <p class="fact-label">Shape</p>
+                                                    <p class="fact-value">{{ $jewelleryStock->primaryStoneShape->name }}</p>
+                                                </div>
+                                            @endif
+                                            @if($jewelleryStock->primary_stone_cut_id)
+                                                <div>
+                                                    <p class="fact-label">Cut Grade</p>
+                                                    <p class="fact-value">{{ $jewelleryStock->primaryStoneCut->name }}</p>
+                                                </div>
+                                            @endif
+                                            @if($jewelleryStock->primary_stone_color_id)
+                                                <div>
+                                                    <p class="fact-label">Color</p>
+                                                    <p class="fact-value">{{ $jewelleryStock->primaryStoneColor->name }}</p>
+                                                </div>
+                                            @endif
+                                            @if($jewelleryStock->primary_stone_clarity_id)
+                                                <div>
+                                                    <p class="fact-label">Clarity</p>
+                                                    <p class="fact-value">{{ $jewelleryStock->primaryStoneClarity->name }}</p>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endif
@@ -895,28 +927,46 @@
                                         <div class="stone-fields">
                                             <div>
                                                 <p class="fact-label">Type</p>
-                                                <p class="fact-value">{{ $stone->type->name ?? 'N/A' }}</p>
+                                                <p class="fact-value">{{ $stone->type->name }}</p>
                                             </div>
-                                            <div>
-                                                <p class="fact-label">Weight</p>
-                                                <p class="fact-value">{{ $stone->weight ? $stone->weight . ' cts' : 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Count</p>
-                                                <p class="fact-value">{{ $stone->count ? $stone->count . ' stones' : 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Shape</p>
-                                                <p class="fact-value">{{ $stone->shape->name ?? 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Cut</p>
-                                                <p class="fact-value">{{ $stone->cut->name ?? 'N/A' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="fact-label">Color / Clarity</p>
-                                                <p class="fact-value">{{ $stone->color->name ?? 'N/A' }} / {{ $stone->clarity->name ?? 'N/A' }}</p>
-                                            </div>
+                                            @if($stone->weight)
+                                                <div>
+                                                    <p class="fact-label">Weight</p>
+                                                    <p class="fact-value">{{ $stone->weight }} cts</p>
+                                                </div>
+                                            @endif
+                                            @if($stone->count)
+                                                <div>
+                                                    <p class="fact-label">Count</p>
+                                                    <p class="fact-value">{{ $stone->count }} stones</p>
+                                                </div>
+                                            @endif
+                                            @if($stone->stone_shape_id)
+                                                <div>
+                                                    <p class="fact-label">Shape</p>
+                                                    <p class="fact-value">{{ $stone->shape->name }}</p>
+                                                </div>
+                                            @endif
+                                            @if($stone->stone_cut_id)
+                                                <div>
+                                                    <p class="fact-label">Cut</p>
+                                                    <p class="fact-value">{{ $stone->cut->name }}</p>
+                                                </div>
+                                            @endif
+                                            @if($stone->stone_color_id || $stone->stone_clarity_id)
+                                                <div>
+                                                    <p class="fact-label">Color / Clarity</p>
+                                                    <p class="fact-value">
+                                                        @if($stone->stone_color_id && $stone->stone_clarity_id)
+                                                            {{ $stone->color->name }} / {{ $stone->clarity->name }}
+                                                        @elseif($stone->stone_color_id)
+                                                            {{ $stone->color->name }}
+                                                        @else
+                                                            {{ $stone->clarity->name }}
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -980,19 +1030,21 @@
                     </section>
                 @endif
 
-                <section class="tracker-table-card detail-card">
-                    <div class="card-head">
-                        <span class="card-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
-                            <i class="bi bi-patch-check"></i>
-                        </span>
-                        <h3 class="card-title">Certification</h3>
-                    </div>
-                    <div class="card-body">
-                        @if ($jewelleryStock->certificate_type)
+                @if ($jewelleryStock->certificate_type)
+                    <section class="tracker-table-card detail-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                <i class="bi bi-patch-check"></i>
+                            </span>
+                            <h3 class="card-title">Certification</h3>
+                        </div>
+                        <div class="card-body">
                             <div class="cert-box">
                                 <p class="fact-label">Certificate</p>
                                 <p class="fact-value">{{ $jewelleryStock->certificate_type }}</p>
-                                <p class="fact-value mono" style="margin-top: 0.35rem;">#{{ $jewelleryStock->certificate_number ?: 'N/A' }}</p>
+                                @if($jewelleryStock->certificate_number)
+                                    <p class="fact-value mono" style="margin-top: 0.35rem;">#{{ $jewelleryStock->certificate_number }}</p>
+                                @endif
                                 @if ($jewelleryStock->certificate_url)
                                     <a href="{{ $jewelleryStock->certificate_url }}" target="_blank"
                                         class="btn-secondary-custom" style="width: 100%; justify-content: center; margin-top: 0.85rem;">
@@ -1001,11 +1053,9 @@
                                     </a>
                                 @endif
                             </div>
-                        @else
-                            <div class="empty-state">No digital certificate linked</div>
-                        @endif
-                    </div>
-                </section>
+                        </div>
+                    </section>
+                @endif
 
                 <section class="tracker-table-card detail-card">
                     <div class="card-head">

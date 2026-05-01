@@ -21,6 +21,7 @@ class MessageAttachment extends Model
         'size',
         'thumbnail_path',
         'metadata',
+        'status',
     ];
 
     protected $casts = [
