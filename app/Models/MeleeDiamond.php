@@ -68,6 +68,13 @@ class MeleeDiamond extends Model
         return $this->belongsTo(MeleeCategory::class, 'melee_category_id');
     }
 
+    public function getNameAttribute(): string
+    {
+        $categoryName = $this->category->name ?? 'Melee';
+        $size = str_replace('-', ' ', $this->size_label ?? 'N/A');
+        return "{$categoryName} — {$size}";
+    }
+
     public function transactions(): HasMany
     {
         return $this->hasMany(MeleeTransaction::class);
