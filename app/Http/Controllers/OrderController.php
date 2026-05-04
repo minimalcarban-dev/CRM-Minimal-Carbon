@@ -553,6 +553,7 @@ class OrderController extends Controller
                     return $this->orderErrorResponse(
                         $request,
                         $stockResult['message'],
+                        null,
                         $stockResult['status'] ?? 422
                     );
                 }
@@ -1062,7 +1063,10 @@ class OrderController extends Controller
                 'ring_size_id' => RingSize::whereIn('id', array_unique(array_filter([$oldSnapshot['ring_size_id'] ?? null, $order->ring_size_id])))->pluck('name', 'id')->toArray(),
                 'setting_type_id' => SettingType::whereIn('id', array_unique(array_filter([$oldSnapshot['setting_type_id'] ?? null, $order->setting_type_id])))->pluck('name', 'id')->toArray(),
                 'earring_type_id' => ClosureType::whereIn('id', array_unique(array_filter([$oldSnapshot['earring_type_id'] ?? null, $order->earring_type_id])))->pluck('name', 'id')->toArray(),
-                'melee_diamond_id' => MeleeDiamond::whereIn('id', array_unique(array_filter([$oldSnapshot['melee_diamond_id'] ?? null, $order->melee_diamond_id])))->pluck('name', 'id')->toArray(),
+                'melee_diamond_id' => MeleeDiamond::with('category')->whereIn('id', array_unique(array_filter([$oldSnapshot['melee_diamond_id'] ?? null, $order->melee_diamond_id])))->get()->mapWithKeys(function ($item) {
+                    $name = ($item->category->name ?? 'Melee') . ' — ' . str_replace('-', ' ', $item->size_label ?? 'N/A');
+                    return [$item->id => $name];
+                })->toArray(),
             ];
 
             $fkResolvers = [
@@ -1254,7 +1258,7 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
                 'admin_id' => Auth::guard('admin')->id()
             ]);
-            return $this->orderErrorResponse($request, 'Failed to update order: ' . $e->getMessage(), 500);
+            return $this->orderErrorResponse($request, 'Failed to update order: ' . $e->getMessage(), null, 500);
         }
     }
 

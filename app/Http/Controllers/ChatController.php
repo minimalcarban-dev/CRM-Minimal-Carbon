@@ -187,12 +187,14 @@ class ChatController extends Controller
             },
             'latestMessage.sender:id,name'
         ])
-            ->withCount(['messages as unread_count' => function ($query) use ($user) {
-                $query->where('sender_id', '!=', $user->id)
-                    ->whereDoesntHave('reads', function ($q) use ($user) {
-                        $q->where('user_id', $user->id);
-                    });
-            }])
+            ->withCount([
+                'messages as unread_count' => function ($query) use ($user) {
+                    $query->where('sender_id', '!=', $user->id)
+                        ->whereDoesntHave('reads', function ($q) use ($user) {
+                            $q->where('user_id', $user->id);
+                        });
+                }
+            ])
             ->whereHas('users', function ($query) use ($user) {
                 $query->where('admin_id', $user->id);
             })->get();
@@ -772,7 +774,7 @@ class ChatController extends Controller
             ->whereNull('reply_to_id')
             ->with(['sender', 'attachments', 'reads', 'reactions', 'pins', 'savedBy'])
             ->latest()
-            ->paginate(5000);
+            ->paginate(50);
 
         $messages->getCollection()->transform(function (Message $message) use ($adminId) {
             return $this->decorateMessagePayload($message, (int) $adminId);
@@ -802,12 +804,13 @@ class ChatController extends Controller
                 })
                 ->get();
 
-            foreach ($unreadMessages as $message) {
-                $message->reads()->create([
-                    'user_id' => $user->id,
-                    'read_at' => now()
-                ]);
-            }
+            $now = now();
+            $inserts = $unreadMessages->map(fn($m) => [
+                'message_id' => $m->id,
+                'user_id' => $user->id,
+                'read_at' => $now,
+            ])->all();
+            DB::table('message_reads')->insertOrIgnore($inserts);
 
             // Persist read position for accurate unread counts across sessions
             $channel->users()->updateExistingPivot($user->id, [
@@ -1209,7 +1212,7 @@ class ChatController extends Controller
 
                     // Dispatch async processing
                     try {
-                        \App\Jobs\ProcessChatAttachment::dispatch($attachment);
+                        ProcessChatAttachment::dispatch($attachment);
                     } catch (\Throwable $e) {
                         Log::error('Failed to dispatch thread attachment job', [
                             'attachment_id' => $attachment->id,
