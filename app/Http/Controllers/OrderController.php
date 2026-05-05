@@ -812,6 +812,96 @@ class OrderController extends Controller
     /**
      * Unified error responder for store/update operations.
      */
+
+    private function safeHttpStatus(mixed $status, int $default = 422): int
+    {
+        $allowed = [400, 401, 403, 404, 409, 422, 429, 500, 503];
+        return in_array((int) $status, $allowed, true) ? (int) $status : $default;
+    }
+
+    private function applyMeleeStockDiff(
+        Request $request,
+        Order $order,
+        array $oldMeleeEntries,
+        array $newMeleeEntries,
+        bool $allowNegativeMelee
+    ): ?JsonResponse {
+        // Build a mutable copy of new entries for matching
+        $newCopy = $newMeleeEntries;
+        $entriesToReturn = [];
+
+        foreach ($oldMeleeEntries as $oldEntry) {
+            $foundMatch = false;
+
+            foreach ($newCopy as $i => $newEntry) {
+                // [FIX-2] Float comparison uses epsilon for ALL float fields, including price_per_ct
+                $sameId = ($oldEntry['melee_diamond_id'] === $newEntry['melee_diamond_id']); // [FIX-2] strict ===
+                $samePieces = ($oldEntry['pieces'] == $newEntry['pieces']);
+                $sameCarat = abs((float) ($oldEntry['avg_carat_per_piece'] ?? 0) - (float) ($newEntry['avg_carat_per_piece'] ?? 0)) < 0.00001;
+                $samePrice = abs((float) ($oldEntry['price_per_ct'] ?? 0) - (float) ($newEntry['price_per_ct'] ?? 0)) < 0.00001; // [FIX-2] was bare ==
+
+                if ($sameId && $samePieces && $sameCarat && $samePrice) {
+                    unset($newCopy[$i]);
+                    $foundMatch = true;
+                    break;
+                }
+            }
+
+            if (!$foundMatch) {
+                $entriesToReturn[] = $oldEntry;
+            }
+        }
+
+        // Entries remaining in $newCopy are genuinely new/changed
+        $entriesToDeduct = array_values($newCopy);
+
+        // Return only the entries that were actually removed or changed
+        if (!empty($entriesToReturn)) {
+            // [FIX-3] try/catch so an exception still triggers rollback
+            try {
+                $returnResult = $this->meleeStockService->returnForOrder($order->id, $entriesToReturn);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return $this->orderErrorResponse($request, 'Exception returning old stock: ' . $e->getMessage(), null, 500);
+            }
+
+            if (!$returnResult['success']) {
+                DB::rollBack();
+                // [FIX-1] Pass null for $draft, validated int for $status
+                return $this->orderErrorResponse(
+                    $request,
+                    'Failed to return old stock: ' . $returnResult['message'],
+                    null,                                                      // [FIX-1] was passing int as $draft
+                    $this->safeHttpStatus($returnResult['status'] ?? 422)      // [FIX-8]
+                );
+            }
+        }
+
+        // Deduct only the entries that are genuinely new/changed
+        if (!empty($entriesToDeduct)) {
+            // [FIX-3] try/catch
+            try {
+                $deductResult = $this->meleeStockService->deductForOrder($order->id, $entriesToDeduct, [
+                    'allow_negative' => $allowNegativeMelee,
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return $this->orderErrorResponse($request, 'Exception deducting new stock: ' . $e->getMessage(), null, 500);
+            }
+
+            if (!$deductResult['success']) {
+                DB::rollBack();
+                return $this->orderErrorResponse(
+                    $request,
+                    'Failed to deduct new stock: ' . $deductResult['message'],
+                    null,
+                    $this->safeHttpStatus($deductResult['status'] ?? 422)      // [FIX-8]
+                );
+            }
+        }
+
+        return null; // null = success, no early-return response needed
+    }
     private function orderErrorResponse(Request $request, string $message, ?OrderDraft $draft = null, int $status = 422)
     {
         if ($request->ajax() || $request->wantsJson()) {
@@ -874,12 +964,10 @@ class OrderController extends Controller
     {
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
 
-        // If order is cancelled, only allow updating 'special_notes' UNLESS user is a super admin
+        // ── Cancelled orders: non-super admins can only update notes ──────────
         if (in_array($order->diamond_status, $cancelledStatuses) && !Auth::guard('admin')->user()->is_super) {
             $validated = $request->validated();
-            $order->update([
-                'special_notes' => $validated['special_notes'] ?? null
-            ]);
+            $order->update(['special_notes' => $validated['special_notes'] ?? null]);
             $message = 'Order note updated successfully (Order is cancelled).';
 
             if ($request->expectsJson()) {
@@ -899,11 +987,11 @@ class OrderController extends Controller
             $validated = $request->validated();
             $allowNegativeMelee = (bool) ($validated['allow_negative_melee'] ?? false);
 
-            // ✅ CRITICAL: Validate melee stock with reservation logic
+            // ── Melee stock availability validation ───────────────────────────
             $incomingMeleeEntries = $this->orderService->extractValidatedMeleeEntries($validated);
             $this->orderService->validateMeleeStockAvailability($incomingMeleeEntries, $order, $allowNegativeMelee);
 
-            // ✅ CRITICAL: Validate only NEWLY ADDED SKUs (existing ones are already reserved)
+            // ── Validate only NEWLY added diamond SKUs ────────────────────────
             $submittedSkus = $this->orderService->extractValidatedSkus($validated);
             $existingOrderSkus = $this->orderService->extractOrderSkus($order);
             $newlyAddedSkus = array_values(array_diff($submittedSkus, $existingOrderSkus));
@@ -914,19 +1002,20 @@ class OrderController extends Controller
                 if (!$skuCheck['available']) {
                     return $this->orderErrorResponse($request, $skuCheck['message']);
                 }
-
                 if (($skuCheck['type'] ?? null) === 'diamond' && isset($skuCheck['item'])) {
                     $newlyAddedDiamonds[] = $skuCheck['item'];
                 }
             }
 
-            // ⚡ PERFORMANCE: Upload files BEFORE transaction
+            // ── File uploads BEFORE transaction (performance) ─────────────────
             $newImages = $this->uploadService->uploadFromRequest($request, 'images', 'orders/images', 10);
             $newPdfs = $this->uploadService->uploadFromRequest($request, 'order_pdfs', 'orders/pdfs', 5, true);
 
+            // ─────────────────────────────────────────────────────────────────
             DB::beginTransaction();
+            // ─────────────────────────────────────────────────────────────────
 
-            // Normalize existing files
+            // ── Normalise existing files ──────────────────────────────────────
             $existingImages = $order->images;
             if (is_string($existingImages)) {
                 $existingImages = json_decode($existingImages, true) ?: [];
@@ -949,15 +1038,14 @@ class OrderController extends Controller
             }
             $existingPdfs = is_array($existingPdfs) ? $existingPdfs : [];
 
-            // Merge old + new files
             $order->images = array_merge($existingImages, $newImages);
             $order->order_pdfs = array_merge($existingPdfs, $newPdfs);
 
-            // Track primary SKU change for logs
+            // Track for logging
             $oldDiamondSku = $order->diamond_sku;
             $newDiamondSku = $validated['diamond_sku'] ?? '';
 
-            // Snapshot old values for audit log
+            // ── Snapshot old values BEFORE mutation (for audit log) ───────────
             $auditFields = [
                 'order_type' => 'Order Type',
                 'client_name' => 'Client Name',
@@ -994,14 +1082,18 @@ class OrderController extends Controller
                 'melee_entries' => 'Melee Entries',
                 'gold_net_weight' => 'Gold Net Weight',
             ];
+
+            // getOriginal() must be called BEFORE assignOrderFields() mutates the model
             $oldSnapshot = [];
             foreach (array_keys($auditFields) as $field) {
                 $oldSnapshot[$field] = $order->getOriginal($field);
             }
 
-            // Update fields
+            // ── Apply updated fields to model ─────────────────────────────────
             $this->orderService->assignOrderFields($order, $validated);
             $order->last_modified_by = Auth::guard('admin')->id();
+
+            // ── Payment logic ─────────────────────────────────────────────────
             $paymentSummary = $this->paymentService->normalizePaymentSummary($validated, (float) ($order->gross_sell ?? 0));
             $existingRecordedTotal = (float) $order->payments()->sum('amount');
             $hasPayments = $order->payments()->exists();
@@ -1051,11 +1143,11 @@ class OrderController extends Controller
                 }
             }
 
-            // Compute diff and log audit entry
+            // ── Build audit diff ──────────────────────────────────────────────
             $oldValues = [];
             $newValues = [];
 
-            // Pre-load foreign key names to prevent N+1 queries in audit loop
+            // Pre-load FK names (prevents N+1 in loop below)
             $fkData = [
                 'company_id' => Company::whereIn('id', array_unique(array_filter([$oldSnapshot['company_id'] ?? null, $order->company_id])))->pluck('name', 'id')->toArray(),
                 'factory_id' => Factory::whereIn('id', array_unique(array_filter([$oldSnapshot['factory_id'] ?? null, $order->factory_id])))->pluck('name', 'id')->toArray(),
@@ -1063,10 +1155,12 @@ class OrderController extends Controller
                 'ring_size_id' => RingSize::whereIn('id', array_unique(array_filter([$oldSnapshot['ring_size_id'] ?? null, $order->ring_size_id])))->pluck('name', 'id')->toArray(),
                 'setting_type_id' => SettingType::whereIn('id', array_unique(array_filter([$oldSnapshot['setting_type_id'] ?? null, $order->setting_type_id])))->pluck('name', 'id')->toArray(),
                 'earring_type_id' => ClosureType::whereIn('id', array_unique(array_filter([$oldSnapshot['earring_type_id'] ?? null, $order->earring_type_id])))->pluck('name', 'id')->toArray(),
-                'melee_diamond_id' => MeleeDiamond::with('category')->whereIn('id', array_unique(array_filter([$oldSnapshot['melee_diamond_id'] ?? null, $order->melee_diamond_id])))->get()->mapWithKeys(function ($item) {
-                    $name = ($item->category->name ?? 'Melee') . ' — ' . str_replace('-', ' ', $item->size_label ?? 'N/A');
-                    return [$item->id => $name];
-                })->toArray(),
+                'melee_diamond_id' => MeleeDiamond::with('category')
+                    ->whereIn('id', array_unique(array_filter([$oldSnapshot['melee_diamond_id'] ?? null, $order->melee_diamond_id])))
+                    ->get()
+                    ->mapWithKeys(fn($item) => [
+                        $item->id => ($item->category->name ?? 'Melee') . ' — ' . str_replace('-', ' ', $item->size_label ?? 'N/A')
+                    ])->toArray(),
             ];
 
             $fkResolvers = [
@@ -1078,11 +1172,13 @@ class OrderController extends Controller
                 'earring_type_id' => fn($id) => $id ? ($fkData['earring_type_id'][$id] ?? "ID:$id") : null,
                 'melee_diamond_id' => fn($id) => $id ? ($fkData['melee_diamond_id'][$id] ?? "ID:$id") : null,
             ];
+
             foreach ($auditFields as $field => $label) {
                 $oldVal = $oldSnapshot[$field];
                 $newVal = $order->$field;
                 $oldCmp = is_array($oldVal) ? json_encode($oldVal) : (string) $oldVal;
                 $newCmp = is_array($newVal) ? json_encode($newVal) : (string) $newVal;
+
                 if ($oldCmp !== $newCmp) {
                     if (isset($fkResolvers[$field])) {
                         $oldVal = $fkResolvers[$field]($oldVal);
@@ -1092,9 +1188,91 @@ class OrderController extends Controller
                     $newValues[$label] = $newVal;
                 }
             }
+
+            // ── Save order ────────────────────────────────────────────────────
             $order->save();
 
-            // Melee Stock Change Detection using service
+            // ─────────────────────────────────────────────────────────────────
+            // [FIX-7 + FIX-8 + FIX-9]
+            // Diamond status re-sync based on cancellation state change
+            // ─────────────────────────────────────────────────────────────────
+            $oldStatus = (string) ($oldSnapshot['diamond_status'] ?? '');
+            $newStatus = (string) ($order->diamond_status ?? '');
+
+            $wasAlreadyCancelled = in_array($oldStatus, $cancelledStatuses, true);
+            $isNowCancelled = in_array($newStatus, $cancelledStatuses, true);
+
+            // [FIX-7] Order was cancelled before, now it's active again (un-cancelled)
+            $wasJustUncancelled = $wasAlreadyCancelled && !$isNowCancelled;
+
+            // [FIX-8] Order was active before, now it's being cancelled via status field in update()
+            $wasJustCancelled = !$wasAlreadyCancelled && $isNowCancelled;
+
+            if ($wasJustUncancelled) {
+                // Collect all diamond SKUs on this order
+                $skusToSell = [];
+                if (!empty($order->diamond_skus)) {
+                    $skusToSell = $order->diamond_skus;
+                } elseif (!empty($order->diamond_sku)) {
+                    $skusToSell = [$order->diamond_sku];
+                }
+
+                foreach ($skusToSell as $sku) {
+                    $diamond = Diamond::where('sku', $sku)->first();
+                    if (!$diamond)
+                        continue;
+
+                    // [FIX-9] Race condition guard:
+                    // Diamond might have been assigned to another order
+                    // while this order was in cancelled state
+                    $alreadySoldElsewhere = Order::where('diamond_sku', $sku)
+                        ->where('id', '!=', $order->id)
+                        ->whereNotIn('diamond_status', $cancelledStatuses)
+                        ->exists();
+
+                    if ($alreadySoldElsewhere) {
+                        DB::rollBack();
+                        return $this->orderErrorResponse(
+                            $request,
+                            "Cannot un-cancel: Diamond SKU [{$sku}] was assigned to another order while this order was cancelled. Please remove it and choose a different diamond.",
+                            null,
+                            409 // Conflict
+                        );
+                    }
+
+                    // Safe to mark as sold again
+                    $diamond->update([
+                        'is_sold_out' => 'Sold',
+                        'sold_out_date' => now(),
+                        'sold_out_price' => $diamond->sold_out_price ?? 0,
+                    ]);
+                }
+            }
+
+            if ($wasJustCancelled) {
+                // Status changed to cancelled directly via update() (not via cancel() route)
+                // Free up the diamonds
+                $skusToFree = [];
+                if (!empty($order->diamond_skus)) {
+                    $skusToFree = $order->diamond_skus;
+                } elseif (!empty($order->diamond_sku)) {
+                    $skusToFree = [$order->diamond_sku];
+                }
+
+                foreach ($skusToFree as $sku) {
+                    $diamond = Diamond::where('sku', $sku)->first();
+                    if ($diamond && $diamond->is_sold_out === 'Sold') {
+                        $diamond->update([
+                            'is_sold_out' => 'In Stock',
+                            'sold_out_date' => null,
+                            'sold_out_price' => null,
+                        ]);
+                    }
+                }
+            }
+            // ── End Diamond Re-sync ───────────────────────────────────────────
+
+            // ── Melee stock diff ──────────────────────────────────────────────
             $oldMeleeEntries = $this->orderService->extractSnapshotMeleeEntries($oldSnapshot);
             $newMeleeEntries = $this->orderService->normalizeStoredMeleeEntries(
                 $order->melee_entries,
@@ -1103,84 +1281,72 @@ class OrderController extends Controller
                 $order->melee_carat,
                 $order->melee_price_per_ct
             );
+
             $updatedMeleeDiamondIds = array_values(array_unique(array_merge(
                 array_column($oldMeleeEntries, 'melee_diamond_id'),
                 array_column($newMeleeEntries, 'melee_diamond_id')
             )));
 
+            // [FIX-2] json_encode used as change FLAG only;
+            // actual per-entry diff handled inside applyMeleeStockDiff()
             $meleeChanged = json_encode($oldMeleeEntries) !== json_encode($newMeleeEntries);
 
             if ($meleeChanged) {
-                // Reverse old stock
-                if (!empty($oldMeleeEntries)) {
-                    $returnResult = $this->meleeStockService->returnForOrder($order->id, $oldMeleeEntries);
-                    if (!$returnResult['success']) {
-                        DB::rollBack();
-                        return $this->orderErrorResponse(
-                            $request,
-                            'Failed to return old stock: ' . $returnResult['message'],
-                            $returnResult['status'] ?? 422
-                        );
-                    }
-                }
+                $stockError = $this->applyMeleeStockDiff(
+                    $request,
+                    $order,
+                    $oldMeleeEntries,
+                    $newMeleeEntries,
+                    $allowNegativeMelee
+                );
 
-                // Deduct new stock
-                if (!empty($newMeleeEntries)) {
-                    $deductResult = $this->meleeStockService->deductForOrder($order->id, $newMeleeEntries, [
-                        'allow_negative' => $allowNegativeMelee,
-                    ]);
-                    if (!$deductResult['success']) {
-                        DB::rollBack();
-                        return $this->orderErrorResponse(
-                            $request,
-                            'Failed to deduct new stock: ' . $deductResult['message'],
-                            $deductResult['status'] ?? 422
-                        );
-                    }
+                if ($stockError !== null) {
+                    return $stockError; // DB already rolled back inside helper
                 }
             } else {
                 $updatedMeleeDiamondIds = array_values(array_unique(array_column($newMeleeEntries, 'melee_diamond_id')));
             }
 
-            // Log audit after save succeeds
+            // ── Audit log (after save succeeds) ───────────────────────────────
             if (!empty($oldValues) || !empty($newValues)) {
                 AuditLogger::log('updated', $order, Auth::guard('admin')->id(), $oldValues, $newValues);
             }
 
-            // ⚡ PERFORMANCE: Bulk update newly added diamonds
+            // ── Bulk update newly added diamonds ──────────────────────────────
             if (!empty($newlyAddedDiamonds)) {
                 $diamondPrices = $validated['diamond_prices'] ?? [];
-
                 foreach ($newlyAddedDiamonds as $diamond) {
                     $soldPriceUsd = (float) ($diamondPrices[$diamond->sku] ?? 0);
                     Diamond::where('id', $diamond->id)->update([
                         'is_sold_out' => 'Sold',
                         'sold_out_date' => now(),
                         'sold_out_price' => $soldPriceUsd,
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]);
                 }
             }
 
-            // ⚡ GOLD TRACING: Auto-log consumption if gold weight changes during update
+            // ── Gold tracing ──────────────────────────────────────────────────
             $oldWeight = (float) ($oldSnapshot['gold_net_weight'] ?? 0);
             $newWeight = (float) $order->gold_net_weight;
+
             if ($oldWeight !== $newWeight && $order->factory_id) {
                 $difference = $newWeight - $oldWeight;
-                if ($difference != 0) {
-                    // ✅ STOCK GUARD: Prevent consuming more gold than factory has
-                    if ($difference > 0) {
-                        $factory = Factory::find($order->factory_id);
-                        if ($factory) {
-                            $factoryStock = $factory->current_stock;
-                            if ($difference > $factoryStock) {
-                                DB::rollBack();
-                                $errorMsg = "Gold weight increase ({$difference}g) exceeds factory stock ({$factoryStock}g) for {$factory->name}. Available: {$factoryStock}g, max total weight: " . round($oldWeight + $factoryStock, 3) . "g.";
-                                return $this->orderErrorResponse($request, $errorMsg);
-                            }
+
+                if ($difference > 0) {
+                    $factory = Factory::find($order->factory_id);
+                    if ($factory) {
+                        $factoryStock = $factory->current_stock;
+                        if ($difference > $factoryStock) {
+                            DB::rollBack();
+                            $errorMsg = "Gold weight increase ({$difference}g) exceeds factory stock ({$factoryStock}g) for {$factory->name}. "
+                                . "Available: {$factoryStock}g, max total weight: " . round($oldWeight + $factoryStock, 3) . "g.";
+                            return $this->orderErrorResponse($request, $errorMsg);
                         }
                     }
+                }
 
+                if ($difference != 0) {
                     GoldDistribution::updateOrCreate(
                         ['order_id' => $order->id, 'type' => GoldDistribution::TYPE_CONSUMED],
                         [
@@ -1195,7 +1361,10 @@ class OrderController extends Controller
                 }
             }
 
+            // ─────────────────────────────────────────────────────────────────
             DB::commit();
+            // ─────────────────────────────────────────────────────────────────
+
             $meleeStockSummary = $this->meleeStockService->getStockSummary($updatedMeleeDiamondIds ?? []);
 
             Log::info('Order updated successfully', [
@@ -1204,17 +1373,21 @@ class OrderController extends Controller
                 'new_pdfs' => count($newPdfs),
                 'old_diamond_sku' => $oldDiamondSku,
                 'new_diamond_sku' => $newDiamondSku,
-                'updated_by' => Auth::guard('admin')->id()
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'was_just_uncancelled' => $wasJustUncancelled,
+                'was_just_cancelled' => $wasJustCancelled,
+                'melee_diff_applied' => $meleeChanged,
+                'updated_by' => Auth::guard('admin')->id(),
             ]);
 
-            // ⚡ PERFORMANCE: Queue update notifications
+            // ── Queue update notifications ─────────────────────────────────────
             if (!empty($newValues)) {
                 dispatch(function () use ($order, $oldValues, $newValues) {
                     $updatedBy = Admin::find($order->last_modified_by);
                     if (!$updatedBy)
                         return;
 
-                    // Notify all admins who have access to orders (excluding the updater)
                     $adminsToNotify = Admin::where('id', '!=', $updatedBy->id)
                         ->where(function ($q) {
                             $q->where('is_super', true)
@@ -1245,18 +1418,18 @@ class OrderController extends Controller
             return redirect()->route('orders.index')->with('success', $successMessage);
 
         } catch (ValidationException $e) {
-            if (DB::transactionLevel() > 0) {
+            if (DB::transactionLevel() > 0)
                 DB::rollBack();
-            }
             throw $e;
+
         } catch (\Exception $e) {
-            if (DB::transactionLevel() > 0) {
+            if (DB::transactionLevel() > 0)
                 DB::rollBack();
-            }
             Log::error('Order update failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
-                'admin_id' => Auth::guard('admin')->id()
+                'trace' => $e->getTraceAsString(),
+                'admin_id' => Auth::guard('admin')->id(),
             ]);
             return $this->orderErrorResponse($request, 'Failed to update order: ' . $e->getMessage(), null, 500);
         }
@@ -1721,38 +1894,45 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         $orderId = $order->id;
-        $deletedImages = 0;
-        $deletedPdfs = 0;
+
+        // [FIX-7] Collect file metadata BEFORE the transaction but do NOT delete yet.
+        // Cloudinary deletions happen only AFTER DB commit succeeds.
+        $imagesToDelete = [];
+        $pdfsToDelete = [];
+
+        $imagesRaw = $order->images;
+        $images = is_string($imagesRaw) ? json_decode($imagesRaw, true) : (is_array($imagesRaw) ? $imagesRaw : []);
+        foreach ($images as $image) {
+            if (isset($image['public_id'])) {
+                $imagesToDelete[] = $image['public_id'];
+            }
+        }
+
+        $pdfsRaw = $order->order_pdfs;
+        $pdfs = is_string($pdfsRaw) ? json_decode($pdfsRaw, true) : (is_array($pdfsRaw) ? $pdfsRaw : []);
+        foreach ($pdfs as $pdf) {
+            if (isset($pdf['public_id'])) {
+                $pdfsToDelete[] = $pdf['public_id'];
+            }
+        }
 
         try {
-            // Delete images from Cloudinary
-            $imagesRaw = $order->images;
-            $images = is_string($imagesRaw) ? json_decode($imagesRaw, true) : (is_array($imagesRaw) ? $imagesRaw : []);
-            foreach ($images as $image) {
-                if (isset($image['public_id'])) {
-                    $this->uploadService->delete($image['public_id'], 'image');
-                    $deletedImages++;
-                }
-            }
-
-            // Delete PDFs from Cloudinary
-            $pdfsRaw = $order->order_pdfs;
-            $pdfs = is_string($pdfsRaw) ? json_decode($pdfsRaw, true) : (is_array($pdfsRaw) ? $pdfsRaw : []);
-            foreach ($pdfs as $pdf) {
-                if (isset($pdf['public_id'])) {
-                    $this->uploadService->delete($pdf['public_id'], 'raw');
-                    $deletedPdfs++;
-                }
-            }
-
             DB::beginTransaction();
 
-            // Reverse Stock on Delete (if not already cancelled)
             $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
             if (!in_array($order->diamond_status, $cancelledStatuses)) {
+
+                // Reverse melee stock
                 $meleeEntries = $this->orderService->extractStoredMeleeEntries($order);
                 if (!empty($meleeEntries)) {
-                    $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
+                    // [FIX-5] try/catch inside the transaction
+                    try {
+                        $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        return back()->with('error', 'Exception returning melee stock before delete: ' . $e->getMessage());
+                    }
+
                     if (!$returnResult['success']) {
                         DB::rollBack();
                         return back()->with('error', 'Failed to return melee stock before delete: ' . $returnResult['message']);
@@ -1772,6 +1952,7 @@ class OrderController extends Controller
                         $diamond = Diamond::where('sku', $sku)->first();
                         if ($diamond && $diamond->is_sold_out === 'Sold') {
                             $diamond->update([
+                                'is_sold_out' => 'In Stock',   // [FIX-6] was missing
                                 'sold_out_date' => null,
                                 'sold_out_price' => null,
                             ]);
@@ -1783,24 +1964,53 @@ class OrderController extends Controller
             $order->delete();
             DB::commit();
 
+            // [FIX-7] Delete Cloudinary files AFTER successful DB commit.
+            // If these fail, the order is already deleted from DB, so just log — no rollback possible.
+            $deletedImages = 0;
+            $deletedPdfs = 0;
+
+            foreach ($imagesToDelete as $publicId) {
+                try {
+                    $this->uploadService->delete($publicId, 'image');
+                    $deletedImages++;
+                } catch (\Exception $e) {
+                    Log::warning('Failed to delete order image from Cloudinary after order delete', [
+                        'order_id' => $orderId,
+                        'public_id' => $publicId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            foreach ($pdfsToDelete as $publicId) {
+                try {
+                    $this->uploadService->delete($publicId, 'raw');
+                    $deletedPdfs++;
+                } catch (\Exception $e) {
+                    Log::warning('Failed to delete order PDF from Cloudinary after order delete', [
+                        'order_id' => $orderId,
+                        'public_id' => $publicId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             Log::info('Order deleted successfully', [
                 'order_id' => $orderId,
                 'deleted_images' => $deletedImages,
                 'deleted_pdfs' => $deletedPdfs,
-                'deleted_by' => Auth::guard('admin')->id()
+                'deleted_by' => Auth::guard('admin')->id(),
             ]);
 
-            return redirect()->route('orders.index')->with('success', 'Order and all associated files deleted successfully from Cloudinary.');
+            return redirect()->route('orders.index')
+                ->with('success', 'Order and all associated files deleted successfully.');
 
         } catch (\Exception $e) {
-            if (DB::transactionLevel() > 0) {
+            if (DB::transactionLevel() > 0)
                 DB::rollBack();
-            }
             Log::error('Order deletion failed', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
-                'deleted_images' => $deletedImages,
-                'deleted_pdfs' => $deletedPdfs
             ]);
             return back()->with('error', 'Failed to delete order: ' . $e->getMessage());
         }
@@ -1831,14 +2041,11 @@ class OrderController extends Controller
 
             $oldValues = ['diamond_status' => $order->diamond_status];
 
-            // Assign proper cancelled status based on type
-            if ($order->order_type === 'custom_jewellery') {
-                $order->diamond_status = 'j_order_cancelled';
-            } elseif ($order->order_type === 'custom_diamond') {
-                $order->diamond_status = 'd_order_cancelled';
-            } else {
-                $order->diamond_status = 'r_order_cancelled';
-            }
+            $order->diamond_status = match ($order->order_type) {
+                'custom_jewellery' => 'j_order_cancelled',
+                'custom_diamond' => 'd_order_cancelled',
+                default => 'r_order_cancelled',
+            };
 
             $order->cancel_reason = $validated['cancel_reason'];
             $order->cancelled_at = \Carbon\Carbon::now();
@@ -1854,7 +2061,14 @@ class OrderController extends Controller
             // Reverse melee diamond stock
             $meleeEntries = $this->orderService->extractStoredMeleeEntries($order);
             if (!empty($meleeEntries)) {
-                $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
+                // [FIX-5] try/catch so an exception still triggers rollback
+                try {
+                    $returnResult = $this->meleeStockService->returnForOrder($order->id, $meleeEntries);
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return back()->with('error', 'Exception returning melee stock: ' . $e->getMessage());
+                }
+
                 if (!$returnResult['success']) {
                     DB::rollBack();
                     return back()->with('error', 'Failed to return melee stock: ' . $returnResult['message']);
@@ -1874,6 +2088,7 @@ class OrderController extends Controller
                     $diamond = Diamond::where('sku', $sku)->first();
                     if ($diamond && $diamond->is_sold_out === 'Sold') {
                         $diamond->update([
+                            'is_sold_out' => 'In Stock',   // [FIX-4] was missing
                             'sold_out_date' => null,
                             'sold_out_price' => null,
                         ]);
@@ -1885,7 +2100,6 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // ⚡ PERFORMANCE: Queue cancellation notifications
             dispatch(function () use ($order) {
                 $superAdmins = Admin::where('is_super', true)->get();
                 $updatedBy = Admin::find($order->cancelled_by);
@@ -1902,7 +2116,7 @@ class OrderController extends Controller
             DB::rollBack();
             Log::error('Order cancellation failed', [
                 'order_id' => $order->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             return back()->with('error', 'Failed to cancel order: ' . $e->getMessage());
         }
