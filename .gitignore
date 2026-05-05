@@ -32,3 +32,4 @@ package-lock.json
 /.yoyo
 .yoyo/snapshot
 AGENTS.md
+/graphify-out/

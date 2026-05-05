@@ -13,7 +13,7 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Invoice::with('company');
+        $query = Invoice::with(['company', 'creator']);
 
         // Search filter
         if ($search = $request->get('search')) {
@@ -71,6 +71,7 @@ class InvoiceController extends Controller
                 'copy_type'
             ]);
             $invoiceData['include_terms_conditions'] = $request->boolean('include_terms_conditions');
+            $invoiceData['created_by'] = auth('admin')->id();
 
             $invoice = Invoice::create($invoiceData);
 

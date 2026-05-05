@@ -4,7 +4,7 @@
     "src": "node_modules/pdfjs-dist/build/pdf.worker.mjs"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DuKAQV-U.css",
+    "file": "assets/app-CyxNc5xz.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -13,7 +13,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-C3A7uTtH.js",
+    "file": "assets/app-DVWMb7iP.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -21,14 +21,14 @@
       "resources/js/components/MediaGallery.vue"
     ],
     "css": [
-      "assets/app-pcrlTQ7c.css"
+      "assets/app-Dtsjwtrm.css"
     ],
     "assets": [
       "assets/pdf.worker-xSiVJ7U_.mjs"
     ]
   },
   "resources/js/components/MediaGallery.vue": {
-    "file": "assets/MediaGallery-C8O1uM8i.js",
+    "file": "assets/MediaGallery-CbTsBxbk.js",
     "name": "MediaGallery",
     "src": "resources/js/components/MediaGallery.vue",
     "isDynamicEntry": true,
