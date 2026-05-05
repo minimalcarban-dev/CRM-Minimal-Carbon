@@ -1,4 +1,25 @@
 {
+  "_Chat-7SikdVp4.js": {
+    "file": "assets/Chat-7SikdVp4.js",
+    "name": "Chat",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "dynamicImports": [
+      "resources/js/components/MediaGallery.vue"
+    ],
+    "css": [
+      "assets/Chat-DSrXEwSt.css"
+    ],
+    "assets": [
+      "assets/pdf.worker-xSiVJ7U_.mjs"
+    ]
+  },
+  "_Chat-DSrXEwSt.css": {
+    "file": "assets/Chat-DSrXEwSt.css",
+    "src": "_Chat-DSrXEwSt.css"
+  },
   "node_modules/pdfjs-dist/build/pdf.worker.mjs": {
     "file": "assets/pdf.worker-xSiVJ7U_.mjs",
     "src": "node_modules/pdfjs-dist/build/pdf.worker.mjs"
@@ -13,27 +34,22 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DVWMb7iP.js",
+    "file": "assets/app-BN_5sdhl.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "resources/js/components/MediaGallery.vue"
-    ],
-    "css": [
-      "assets/app-Dtsjwtrm.css"
-    ],
-    "assets": [
-      "assets/pdf.worker-xSiVJ7U_.mjs"
+      "_Chat-7SikdVp4.js"
     ]
   },
   "resources/js/components/MediaGallery.vue": {
-    "file": "assets/MediaGallery-CbTsBxbk.js",
+    "file": "assets/MediaGallery-y0Lg77js.js",
     "name": "MediaGallery",
     "src": "resources/js/components/MediaGallery.vue",
     "isDynamicEntry": true,
     "imports": [
-      "resources/js/app.js"
+      "resources/js/app.js",
+      "_Chat-7SikdVp4.js"
     ],
     "css": [
       "assets/MediaGallery-BRQO4LuG.css"

@@ -1,13 +1,13 @@
 import "./bootstrap";
-import { createApp } from "vue";
-import Chat from "./components/Chat.vue";
+import { createApp, defineAsyncComponent } from "vue";
 import axios from "axios";
 
 // Make axios available in components
 const app = createApp({});
 app.config.globalProperties.$axios = axios;
 
-// Register components
+// Register components dynamically (Code Splitting)
+const Chat = defineAsyncComponent(() => import("./components/Chat.vue"));
 app.component("chat", Chat);
 
 // Mount the app when DOM is ready
