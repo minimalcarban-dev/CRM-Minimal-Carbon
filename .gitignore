@@ -32,3 +32,6 @@ package-lock.json
 /.yoyo
 .yoyo/snapshot
 AGENTS.md
+/.codex/
+/.graphifyignore
+/graphify-out/
