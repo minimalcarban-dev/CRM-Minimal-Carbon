@@ -169,10 +169,10 @@ class ShippingTrackingService
         try {
             // Step 1: Initiate Tracking Request
             $shipment = ['trackingId' => $number];
-            
+
             // ParcelsApp v3 requires destinationCountry for some carriers
             // 'Auto' is supported for automatic detection
-            $shipment['destinationCountry'] = 'Auto'; 
+            $shipment['destinationCountry'] = 'Auto';
 
             $initPayload = [
                 'shipments' => [
@@ -194,35 +194,46 @@ class ShippingTrackingService
                 ];
             }
 
-            $uuid = $initResponse->json()['uuid'] ?? null;
-            if (!$uuid) {
-                return [
-                    'success' => false,
-                    'message' => 'Failed to obtain tracking UUID from ParcelsApp.'
-                ];
-            }
+            $initBody = $initResponse->json();
 
-            // Step 2: Poll for Results (Short polling since it's a synchronous UI action)
-            $maxRetries = 5;
-            $retryDelay = 2; // seconds
+            // ParcelsApp may return data immediately (fromCache) or require polling via UUID
             $trackData = null;
 
-            for ($i = 0; $i < $maxRetries; $i++) {
-                sleep($retryDelay);
-                
-                $getResponse = Http::timeout(15)->get("https://parcelsapp.com/api/v3/shipments/tracking", [
-                    'uuid' => $uuid,
-                    'apiKey' => $apiKey
-                ]);
+            if (($initBody['done'] ?? false) === true && !empty($initBody['shipments'])) {
+                // Cached response — data is available immediately
+                $trackData = $initBody['shipments'][0] ?? null;
+                Log::info("ParcelsApp returned cached data for {$number}");
+            } else {
+                // Async response — poll using UUID
+                $uuid = $initBody['uuid'] ?? null;
+                if (!$uuid) {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to obtain tracking UUID from ParcelsApp.'
+                    ];
+                }
 
-                if ($getResponse->successful()) {
-                    $body = $getResponse->json();
-                    if (($body['done'] ?? false) === true) {
-                        $trackData = $body['shipments'][0] ?? null;
-                        break;
+                // Step 2: Poll for Results
+                $maxRetries = 5;
+                $retryDelay = 2; // seconds
+
+                for ($i = 0; $i < $maxRetries; $i++) {
+                    sleep($retryDelay);
+
+                    $getResponse = Http::timeout(15)->get("https://parcelsapp.com/api/v3/shipments/tracking", [
+                        'uuid' => $uuid,
+                        'apiKey' => $apiKey
+                    ]);
+
+                    if ($getResponse->successful()) {
+                        $body = $getResponse->json();
+                        if (($body['done'] ?? false) === true) {
+                            $trackData = $body['shipments'][0] ?? null;
+                            break;
+                        }
+                    } else {
+                        Log::warning("ParcelsApp Poll Attempt {$i} failed: " . $getResponse->status());
                     }
-                } else {
-                    Log::warning("ParcelsApp Poll Attempt {$i} failed: " . $getResponse->status());
                 }
             }
 
@@ -233,24 +244,25 @@ class ShippingTrackingService
                 ];
             }
 
-            $statusCode = $trackData['status_code'] ?? null;
+            // --- Parse the actual ParcelsApp v3 response format ---
 
-            // ParcelsApp statuses mapping
-            $statusMap = [
-                0 => 'Delivered',
-                2 => 'In transit',
-                3 => 'Pick up',
-                4 => 'Out for delivery',
-                7 => 'Exception',
-                8 => 'Info received',
-            ];
-            $readableStatus = $statusMap[$statusCode] ?? ($trackData['description'] ?? 'In transit');
+            // Status: ParcelsApp returns a string status field (e.g., "delivered", "transit", "pickup")
+            // It may also return a numeric status_code on some endpoints
+            $readableStatus = $this->parseParcelsAppStatus($trackData);
 
-            $carrierName = $trackData['carrier_code'] ?? 'Unknown';
-            $events = $trackData['events'] ?? [];
+            // Carrier: detected from detectedCarrier object, services array, or carriers array
+            $carrierName = $trackData['detectedCarrier']['name']
+                ?? $trackData['services'][0]['name']
+                ?? $trackData['carriers'][0]
+                ?? $trackData['carrier_code']
+                ?? 'Unknown';
+
+            // Events: ParcelsApp v3 uses "states" array (not "events")
+            // Each state has: date, status, location (optional), carrier
+            $states = $trackData['states'] ?? $trackData['events'] ?? [];
 
             $history = [];
-            foreach ($events as $checkpoint) {
+            foreach ($states as $checkpoint) {
                 $dateStr = $checkpoint['date'] ?? now()->toIso8601String();
                 try {
                     $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
@@ -260,17 +272,21 @@ class ShippingTrackingService
 
                 $history[] = [
                     'date' => $dateFormatted,
-                    'status' => $checkpoint['event'] ?? $readableStatus,
+                    'status' => $checkpoint['status'] ?? $checkpoint['event'] ?? $readableStatus,
                     'location' => $checkpoint['location'] ?? '',
-                    'description' => $checkpoint['additional'] ?? ''
+                    'description' => $checkpoint['additional'] ?? $checkpoint['status'] ?? ''
                 ];
             }
 
+            // If no states, use lastState as fallback
             if (empty($history)) {
+                $lastState = $trackData['lastState'] ?? null;
                 $history[] = [
-                    'date' => now()->format('d M Y, h:i A'),
-                    'status' => $readableStatus,
-                    'location' => '',
+                    'date' => $lastState
+                        ? Carbon::parse($lastState['date'])->format('d M Y, h:i A')
+                        : now()->format('d M Y, h:i A'),
+                    'status' => $lastState['status'] ?? $readableStatus,
+                    'location' => $lastState['location'] ?? '',
                     'description' => $trackData['description'] ?? 'Tracking initialized.'
                 ];
             }
@@ -295,6 +311,70 @@ class ShippingTrackingService
             ];
         }
     }
+
+    /**
+     * Parse the tracking status from ParcelsApp response.
+     * Handles both string-based status (v3 actual) and numeric status_code (documented).
+     */
+    private function parseParcelsAppStatus(array $trackData): string
+    {
+        // Primary: check string "status" field (actual API response format)
+        $statusString = strtolower(trim($trackData['status'] ?? ''));
+
+        $stringStatusMap = [
+            'delivered' => 'Delivered',
+            'transit' => 'In transit',
+            'in_transit' => 'In transit',
+            'in transit' => 'In transit',
+            'pickup' => 'Pick up',
+            'pick_up' => 'Pick up',
+            'out_for_delivery' => 'Out for delivery',
+            'outfordelivery' => 'Out for delivery',
+            'not_found' => 'Not found',
+            'notfound' => 'Not found',
+            'exception' => 'Exception',
+            'expired' => 'Expired',
+            'info_received' => 'Info received',
+            'inforeceived' => 'Info received',
+            'failed' => 'Failed attempt',
+        ];
+
+        if (!empty($statusString) && isset($stringStatusMap[$statusString])) {
+            return $stringStatusMap[$statusString];
+        }
+
+        // Fallback: check numeric status_code (some API versions)
+        $statusCode = $trackData['status_code'] ?? null;
+        if ($statusCode !== null) {
+            $numericStatusMap = [
+                0 => 'Delivered',
+                1 => 'Delivered',       // Frozen — no updates, effectively delivered
+                2 => 'In transit',
+                3 => 'Pick up',
+                4 => 'Out for delivery',
+                5 => 'Not found',
+                6 => 'Failed attempt',
+                7 => 'Exception',
+                8 => 'Info received',
+            ];
+
+            if (isset($numericStatusMap[$statusCode])) {
+                return $numericStatusMap[$statusCode];
+            }
+        }
+
+        // Last resort: try description, then capitalize status string, then Unknown
+        if (!empty($trackData['description'])) {
+            return $trackData['description'];
+        }
+
+        if (!empty($statusString)) {
+            return ucfirst($statusString);
+        }
+
+        return 'Unknown';
+    }
+
 
     /**
      * Legacy URL extraction (Fallback)
