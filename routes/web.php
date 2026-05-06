@@ -33,6 +33,7 @@ use App\Http\Controllers\AdminPermissionController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\DiamondController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\VglIntegrationController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ChatController;
@@ -105,6 +106,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             Route::post('/direct', [ChatController::class, 'direct']);
             Route::get('/channels/{channel}/messages', [ChatController::class, 'getMessages']);
             Route::post('/channels/{channel}/messages', [ChatController::class, 'sendMessage']);
+            Route::post('/channels/{channel}/typing', [ChatController::class, 'typing']);
             Route::post('/channels/{channel}/read', [ChatController::class, 'markAsRead']);
             Route::get('/channels/{channel}/sidebar', [ChatController::class, 'sidebar']);
             Route::get('/messages/search', [ChatController::class, 'searchMessages']);
@@ -316,6 +318,13 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::post('orders/{order}/sync-tracking', [OrderController::class, 'syncTracking'])
         ->name('orders.sync-tracking')
         ->middleware('admin.permission:orders.edit');
+
+    // ─────────────────────────────────────────────────────────────
+    // VGL Integration — Push order data to VGL for certificate creation
+    // ─────────────────────────────────────────────────────────────
+    Route::post('orders/{order}/push-to-vgl', [VglIntegrationController::class, 'pushOrder'])
+        ->name('orders.push-to-vgl')
+        ->middleware(['admin.permission:orders.edit', 'throttle:5,1']);
 
     // ─────────────────────────────────────────────────────────────
     // Client Dashboard Module
@@ -766,7 +775,8 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
 
     // Lead Actions
     Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])
-        ->name('leads.updateStatus');
+        ->name('leads.updateStatus')
+        ->middleware('admin.permission:leads.edit');
     Route::patch('leads/{lead}/priority', [LeadController::class, 'updatePriority'])
         ->name('leads.updatePriority')
         ->middleware('admin.permission:leads.edit');
@@ -1006,6 +1016,9 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             ->name('check-sku')
             ->middleware('admin.permission:jewellery_stock.view');
 
+        Route::get('/pricing-rates', [JewelleryStockController::class, 'pricingRates'])
+            ->name('pricing-rates');
+
         Route::get('/{jewellery_stock}', [JewelleryStockController::class, 'show'])
             ->name('show')
             ->middleware('admin.permission:jewellery_stock.view');
@@ -1121,5 +1134,8 @@ Route::prefix('webhook/meta')->group(function () {
 // ─────────────────────────────────────────────────────────────
 
 Route::post('webhook/17track', [TrackingWebhookController::class, 'handle17Track'])
+    ->withoutMiddleware([VerifyCsrfToken::class]);
+
+Route::post('webhook/parcelsapp', [TrackingWebhookController::class, 'handleParcelsApp'])
     ->withoutMiddleware([VerifyCsrfToken::class]);
 

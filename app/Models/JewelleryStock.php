@@ -17,7 +17,6 @@ class JewelleryStock extends Model
         'type',
         'name',
         'metal_type_id',
-        'metal_purity',
         'ring_size_id',
         'length',
         'width',
@@ -28,6 +27,7 @@ class JewelleryStock extends Model
         'low_stock_threshold',
         'purchase_price',
         'selling_price',
+        'discount_percent',
         'status',
         'description',
         'image_url',
@@ -40,10 +40,6 @@ class JewelleryStock extends Model
         'primary_stone_color_id',
         'primary_stone_clarity_id',
         'primary_stone_cut_id',
-        'side_stone_type_id',
-        'side_stone_weight',
-        'total_stone_weight',
-        'side_stone_count',
         'certificate_number',
         'certificate_type',
         'certificate_url',
@@ -51,11 +47,9 @@ class JewelleryStock extends Model
 
     protected $casts = [
         'weight' => 'decimal:3',
-        'primary_stone_weight' => 'decimal:3',
-        'side_stone_weight' => 'decimal:3',
-        'total_stone_weight' => 'decimal:3',
         'purchase_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
         'quantity' => 'integer',
         'low_stock_threshold' => 'integer',
         'images' => 'array',
@@ -69,13 +63,6 @@ class JewelleryStock extends Model
         parent::boot();
 
         static::saving(function ($item) {
-            $hasPrimaryWeight = $item->primary_stone_weight !== null && $item->primary_stone_weight !== '';
-            $hasSideWeight = $item->side_stone_weight !== null && $item->side_stone_weight !== '';
-            $primaryWeight = (float) ($item->primary_stone_weight ?? 0);
-            $sideWeight = (float) ($item->side_stone_weight ?? 0);
-            $hasStoneWeight = $hasPrimaryWeight || $hasSideWeight;
-            $item->total_stone_weight = $hasStoneWeight ? round($primaryWeight + $sideWeight, 3) : null;
-
             if ($item->quantity <= 0) {
                 $item->status = 'out_of_stock';
             } elseif ($item->quantity <= $item->low_stock_threshold) {
@@ -121,47 +108,57 @@ class JewelleryStock extends Model
 
     public function metalType()
     {
-        return $this->belongsTo(\App\Models\MetalType::class);
+        return $this->belongsTo(MetalType::class);
     }
 
     public function ringSize()
     {
-        return $this->belongsTo(\App\Models\RingSize::class);
+        return $this->belongsTo(RingSize::class);
     }
 
     public function closureType()
     {
-        return $this->belongsTo(\App\Models\ClosureType::class);
+        return $this->belongsTo(ClosureType::class);
     }
 
     public function primaryStoneType()
     {
-        return $this->belongsTo(\App\Models\StoneType::class, 'primary_stone_type_id');
+        return $this->belongsTo(StoneType::class, 'primary_stone_type_id');
     }
 
     public function primaryStoneShape()
     {
-        return $this->belongsTo(\App\Models\StoneShape::class, 'primary_stone_shape_id');
+        return $this->belongsTo(StoneShape::class, 'primary_stone_shape_id');
     }
 
     public function primaryStoneColor()
     {
-        return $this->belongsTo(\App\Models\StoneColor::class, 'primary_stone_color_id');
+        return $this->belongsTo(StoneColor::class, 'primary_stone_color_id');
     }
 
     public function primaryStoneClarity()
     {
-        return $this->belongsTo(\App\Models\DiamondClarity::class, 'primary_stone_clarity_id');
+        return $this->belongsTo(DiamondClarity::class, 'primary_stone_clarity_id');
     }
 
     public function primaryStoneCut()
     {
-        return $this->belongsTo(\App\Models\DiamondCut::class, 'primary_stone_cut_id');
+        return $this->belongsTo(DiamondCut::class, 'primary_stone_cut_id');
     }
 
-    public function sideStoneType()
+    public function sideStones()
     {
-        return $this->belongsTo(\App\Models\StoneType::class, 'side_stone_type_id');
+        return $this->hasMany(JewelleryStockSideStone::class);
+    }
+
+    public function pricingVariants()
+    {
+        return $this->hasMany(JewelleryStockPricing::class);
+    }
+
+    public function defaultPricingVariant()
+    {
+        return $this->hasOne(JewelleryStockPricing::class)->where('is_default_listing', true);
     }
 
     // ── Scopes ───────────────────────────────────────────────
@@ -179,5 +176,17 @@ class JewelleryStock extends Model
     public function scopeOutOfStock($query)
     {
         return $query->where('status', 'out_of_stock');
+    }
+
+    public function getDiscountedPriceAttribute()
+    {
+        $discount = (float) $this->discount_percent;
+        $price = (float) $this->selling_price;
+        
+        if ($discount <= 0) {
+            return $price;
+        }
+
+        return $price * (1 - ($discount / 100));
     }
 }

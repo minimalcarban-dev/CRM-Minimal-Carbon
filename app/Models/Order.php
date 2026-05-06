@@ -67,6 +67,9 @@ class Order extends Model
         'cancel_reason',
         'cancelled_at',
         'cancelled_by',
+        'vgl_pushed_at',
+        'vgl_push_status',
+        'vgl_crm_order_id',
     ];
 
     protected $casts = [
@@ -79,6 +82,7 @@ class Order extends Model
         'last_tracker_sync' => 'datetime',
         'dispatch_date' => 'date',
         'cancelled_at' => 'datetime',
+        'vgl_pushed_at' => 'datetime',
         'gross_sell' => 'decimal:2',
         'amount_received' => 'decimal:2',
         'amount_due' => 'decimal:2',
@@ -103,7 +107,7 @@ class Order extends Model
         return $this->belongsTo(Factory::class, 'factory_id');
     }
 
-    
+
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'submitted_by');

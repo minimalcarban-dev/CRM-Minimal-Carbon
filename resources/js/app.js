@@ -1,13 +1,13 @@
 import "./bootstrap";
-import { createApp } from "vue";
-import Chat from "./components/Chat.vue";
+import { createApp, defineAsyncComponent } from "vue";
 import axios from "axios";
 
 // Make axios available in components
 const app = createApp({});
 app.config.globalProperties.$axios = axios;
 
-// Register components
+// Register components dynamically (Code Splitting)
+const Chat = defineAsyncComponent(() => import("./components/Chat.vue"));
 app.component("chat", Chat);
 
 // Mount the app when DOM is ready
@@ -19,6 +19,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Make showToast available globally (defined in admin.blade.php but ensure it's accessible)
     if (typeof showToast !== "undefined") {
         window.showToast = showToast;
+    }
+
+    // Request notification permission on first user interaction
+    if ("Notification" in window && Notification.permission === "default") {
+        document.body.addEventListener("click", () => {
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        }, { once: true });
     }
 
     // --- NEW GLOBAL NOTIFICATION LOGIC ---

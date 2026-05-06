@@ -156,13 +156,13 @@ class DiamondsImport implements
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('diamonds', 'lot_no')
+                Rule::unique('diamonds', 'lot_no')->whereNull('deleted_at')
             ],
             'sku' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('diamonds', 'sku')
+                Rule::unique('diamonds', 'sku')->whereNull('deleted_at')
             ],
             'material' => 'nullable|string|max:255',
             'cut' => 'nullable|string|max:255',

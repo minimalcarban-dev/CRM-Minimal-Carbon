@@ -123,4 +123,149 @@ class TrackingWebhookController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Handle ParcelsApp (Global Parcel Tracking) Webhook
+     */
+    public function handleParcelsApp(Request $request)
+    {
+        $payload = $request->all();
+        Log::info('ParcelsApp Webhook received', ['uuid' => $payload['uuid'] ?? 'unknown']);
+
+        $shipments = $payload['shipments'] ?? [];
+        if (empty($shipments)) {
+            return response()->json(['success' => true, 'message' => 'No shipments in payload']);
+        }
+
+        foreach ($shipments as $trackData) {
+            $number = $trackData['trackingId'] ?? null;
+            if (!$number)
+                continue;
+
+            // Parse status — handle both string "status" (actual) and numeric "status_code"
+            $readableStatus = $this->parseParcelsAppWebhookStatus($trackData);
+
+            // Carrier: detected from detectedCarrier object, services array, or carriers array
+            $carrierName = $trackData['detectedCarrier']['name']
+                ?? $trackData['services'][0]['name']
+                ?? $trackData['carriers'][0]
+                ?? $trackData['carrier_code']
+                ?? null;
+
+            // Events: ParcelsApp v3 uses "states" array (not "events")
+            $states = $trackData['states'] ?? $trackData['events'] ?? [];
+
+            $history = [];
+            foreach ($states as $checkpoint) {
+                $dateStr = $checkpoint['date'] ?? now()->toIso8601String();
+                try {
+                    $dateFormatted = Carbon::parse($dateStr)->format('d M Y, h:i A');
+                } catch (\Exception $e) {
+                    $dateFormatted = $dateStr;
+                }
+
+                $history[] = [
+                    'date' => $dateFormatted,
+                    'status' => $checkpoint['status'] ?? $checkpoint['event'] ?? $readableStatus,
+                    'location' => $checkpoint['location'] ?? '',
+                    'description' => $checkpoint['additional'] ?? $checkpoint['status'] ?? ''
+                ];
+            }
+
+            // If no states, use lastState as fallback
+            if (empty($history)) {
+                $lastState = $trackData['lastState'] ?? null;
+                $history[] = [
+                    'date' => $lastState
+                        ? Carbon::parse($lastState['date'])->format('d M Y, h:i A')
+                        : now()->format('d M Y, h:i A'),
+                    'status' => $lastState['status'] ?? $readableStatus,
+                    'location' => $lastState['location'] ?? '',
+                    'description' => 'Tracking update received.'
+                ];
+            }
+
+            // Sort history descending (newest first)
+            usort($history, function ($a, $b) {
+                return strtotime($b['date']) - strtotime($a['date']);
+            });
+
+            // Update matching orders
+            $orders = Order::where('tracking_number', $number)->get();
+            foreach ($orders as $order) {
+                $updatedData = [
+                    'tracking_status' => $readableStatus,
+                    'tracking_history' => $history,
+                    'last_tracker_sync' => now(),
+                ];
+
+                if (empty($order->shipping_company_name) && !empty($carrierName)) {
+                    $updatedData['shipping_company_name'] = $carrierName;
+                }
+
+                $order->update($updatedData);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Parse the tracking status from ParcelsApp webhook payload.
+     * Handles both string-based status (v3 actual) and numeric status_code.
+     */
+    private function parseParcelsAppWebhookStatus(array $trackData): string
+    {
+        // Primary: check string "status" field (actual API response format)
+        $statusString = strtolower(trim($trackData['status'] ?? ''));
+        
+        $stringStatusMap = [
+            'delivered'    => 'Delivered',
+            'transit'      => 'In transit',
+            'in_transit'   => 'In transit',
+            'in transit'   => 'In transit',
+            'pickup'       => 'Pick up',
+            'pick_up'      => 'Pick up',
+            'out_for_delivery' => 'Out for delivery',
+            'outfordelivery'   => 'Out for delivery',
+            'not_found'    => 'Not found',
+            'notfound'     => 'Not found',
+            'exception'    => 'Exception',
+            'expired'      => 'Expired',
+            'info_received' => 'Info received',
+            'inforeceived' => 'Info received',
+            'failed'       => 'Failed attempt',
+        ];
+
+        if (!empty($statusString) && isset($stringStatusMap[$statusString])) {
+            return $stringStatusMap[$statusString];
+        }
+
+        // Fallback: check numeric status_code (some API versions)
+        $statusCode = $trackData['status_code'] ?? null;
+        if ($statusCode !== null) {
+            $numericStatusMap = [
+                0 => 'Delivered',
+                1 => 'Delivered',
+                2 => 'In transit',
+                3 => 'Pick up',
+                4 => 'Out for delivery',
+                5 => 'Not found',
+                6 => 'Failed attempt',
+                7 => 'Exception',
+                8 => 'Info received',
+            ];
+
+            if (isset($numericStatusMap[$statusCode])) {
+                return $numericStatusMap[$statusCode];
+            }
+        }
+
+        // Last resort
+        if (!empty($trackData['description'])) {
+            return $trackData['description'];
+        }
+
+        return !empty($statusString) ? ucfirst($statusString) : 'Unknown';
+    }
 }

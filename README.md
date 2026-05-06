@@ -9,27 +9,33 @@ A full-featured back-office admin panel built with **Laravel 11** for a jeweller
 This is an internal tool — not a customer-facing application. It is used by staff and administrators to:
 
 - **Create and track jewellery orders** across three types: Ready to Ship, Custom Diamond, and Custom Jewellery
-- **Communicate in real time** via a full-featured chat system built into the panel
+- **Jewellery Stock Management** with dynamic pricing matrices, gemstone details, and side-stone tracking
+- **Inventory Tracking** for Melee Diamonds (by category/weight) and Gold stocks
+- **Communicate in real time** via a full-featured chat system with typing indicators and threading
+- **Financial Operations** including multi-currency invoicing, expense tracking, and purchase management
+- **CRM & Lead Management** with SLA tracking and automated status updates
+- **Integrations** with Shopify, Meta (WhatsApp), and VGL Certificate systems
+- **Advanced Dashboard** providing real-time business intelligence with custom date filtering
 - **Manage access control** by assigning granular permissions to individual administrators
 - **Maintain product data** such as metal types, ring sizes, stone colors, setting types, and closure types
-- **Manage client companies** associated with orders
 
 ---
 
 ## Tech Stack
 
 | Layer             | Technology                       |
-| ----------------- | -------------------------------- |
+| ----------------- | :------------------------------- |
 | Backend Framework | Laravel 11 (PHP 8.2)             |
 | Database          | MySQL 8.0                        |
 | Frontend (Chat)   | Vue 3 (Composition API)          |
 | Real-time         | Laravel Echo + Pusher            |
 | Asset Bundling    | Vite                             |
 | CSS               | Bootstrap 5 + custom styling     |
+| Image Storage     | Cloudinary / Local Storage       |
+| Integrations      | Meta API, GMail API, 17Track     |
 | Queue             | Laravel Database Queues          |
 | Search            | Laravel Scout (database driver)  |
 | File Security     | ClamAV virus scanning (optional) |
-| Image Processing  | Intervention Image               |
 | Testing           | Pest PHP                         |
 | CI                | GitHub Actions                   |
 
@@ -57,8 +63,8 @@ This is an internal tool — not a customer-facing application. It is used by st
 
 Orders have three distinct types, each with a different form and field set:
 
-| Type                 | Key Fields                                                                                                      |
-| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Type                       | Key Fields                                                                                                      |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | **Ready to Ship**    | Client details, jewellery/diamond details, metal type, ring size, setting type, earring type, company, shipping |
 | **Custom Diamond**   | Client details, diamond specifications (4Cs), diamond status tracking, company, shipping                        |
 | **Custom Jewellery** | Client details, jewellery + optional diamond details, product specs, company, shipping                          |
@@ -77,18 +83,39 @@ A complete messaging system for admins, embedded in the panel:
 - **Group channels** — created by super admin, members managed by owner or super admin
 - **Direct messages** — one-on-one channels created on demand
 - **Real-time delivery** — messages broadcast via Pusher private channels using Laravel Echo
-- **Typing indicators** — whisper events sent while composing
+- **Typing indicators** — real-time "user is typing" feedback across channels
 - **Read receipts** — per-message read tracking with `last_read_at` pivot for accurate unread counts
-- **@Mentions** — inline autocomplete with member list; mention notifications broadcast to the mentioned admin's private notification channel
-- **Reply threading** — reply to any message with a preview chip; reply context stored in message metadata
-- **File attachments** — images and documents with configurable MIME type allowlist and size limits
-- **Virus scanning** — optional ClamAV integration for uploaded files; infected files are deleted before persisting
-- **Image thumbnails** — generated asynchronously via a queued job
-- **Link extraction** — URLs in messages are indexed to a separate table for efficient sidebar queries
-- **Channel sidebar** — shows channel info, member list, shared media (images), shared files, and shared links
-- **Message search** — search across channels the requesting admin belongs to
-- **Membership events** — admins are notified in real time when added to or removed from a channel
-- **Unread counts** — per-channel unread count based on `last_read_at` pivot timestamp
+- **@Mentions** — inline autocomplete with member list and push notifications
+- **Reply threading** — structured replies with context previews
+- **File attachments** — images and documents with virus scanning (ClamAV)
+- **Shared Media** — sidebar view of all images, files, and links shared in a channel
+- **Message search** — indexed search across accessible channels via Laravel Scout
+
+### Jewellery Stock Management
+
+A professional inventory system for finished jewellery items:
+
+- **Pricing Matrix** — Dynamic calculation of selling price based on metal type (Gold 10k/14k/18k, Platinum), weight, labor rates, and profit margins
+- **Gemstone Integration** — Detailed tracking of primary stones (carat, shape, color, clarity, cut)
+- **Side Stones Repeater** — Manage multiple side stone types and quantities per jewellery item
+- **Multi-Image Support** — Upload multiple product photos with Cloudinary hosting
+- **Real-time Rates** — Automatic calculation using current USD material rates per gram
+- **Discount Logic** — Support for percentage-based discounts with real-time price updates
+
+### Inventory & Financials
+
+- **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation
+- **Gold Tracking** — Manage gold stock levels and transactions across different purities
+- **Multi-Currency Invoices** — Generate professional invoices with support for different regions and currency symbols
+- **Expense & Purchase Tracking** — Centralized log of business expenses and inventory purchases
+- **Lead CRM** — Track potential client inquiries with 24-hour SLA monitoring and status pipeline
+
+### Advanced Dashboard
+
+- **Business Intelligence** — Real-time stat cards for Revenue, Orders, Diamond Sales, and Lead conversion
+- **Custom Date Filters** — Filter all dashboard metrics by specific date ranges
+- **Smart Alerts** — Automated notifications for overdue orders, package returns, and SLA breaches
+- **Activity Feed** — Live stream of administrative actions and system notifications
 
 ### Product Attribute Management
 
@@ -128,41 +155,42 @@ app/
   Http/Controllers/
     AdminAuthController.php       # Login, logout, rate limiting
     AdminController.php           # Admin CRUD, document uploads
-    AdminPermissionController.php # Permission assignment, chat.access sync
-    ChatController.php            # All chat API endpoints
+    DashboardController.php       # Analytics, date filters, alerts
+    ChatController.php            # All chat API endpoints (Typing, Mentions)
+    JewelleryStockController.php  # Jewellery inventory & pricing matrix
     OrderController.php           # Order CRUD, dynamic form partials
-    PermissionController.php      # Permission CRUD
-    [Attribute]Controller.php     # MetalType, RingSize, etc.
+    MeleeDiamondController.php    # Small diamond inventory management
+    GoldTrackingController.php    # Gold stock and purity tracking
+    InvoiceController.php         # Multi-currency invoice generation
+    LeadController.php            # Lead CRM and SLA tracking
+    ExpenseController.php         # Business expense management
   Models/
     Admin.php                     # Custom authenticatable, permission cache
     Channel.php                   # Chat channels with soft deletes
     Message.php                   # Chat messages with Scout search
-    MessageAttachment.php         # File attachments, auto-deletes on model delete
-    MessageLink.php               # Indexed URLs extracted from message bodies
+    JewelleryStock.php            # Jewellery items with pricing variants
+    MeleeDiamond.php              # Melee inventory records
     Order.php                     # Orders with JSON image/pdf columns
-    Permission.php                # Permission model with group cache
-  Events/
-    MessageSent.php               # Broadcast on new message
-    MessagesRead.php              # Broadcast on read receipt
-    UserMentioned.php             # Broadcast to mentioned admin
-    ChannelMembershipChanged.php  # Broadcast on add/remove from channel
-  Jobs/
-    ProcessChatAttachment.php     # Async thumbnail generation + re-scan
+    Lead.php                      # CRM leads with SLA timestamps
+    Invoice.php                   # Financial records with region symbols
   Services/
+    CloudinaryUploadService.php   # Image hosting integration
+    JewelleryPricingService.php   # Pricing matrix logic
+    JewelleryMaterialRateService.php # Real-time rate fetching
     VirusScanner.php              # ClamAV wrapper with fallback
 resources/
   js/
-    components/Chat.vue           # Full chat SPA component (Vue 3)
+    components/Chat.vue           # Optimized Chat SPA with Typing indicators
     bootstrap.js                  # Echo setup, global 401/403 handling
 routes/
   web.php                         # All admin routes with permission middleware
+  api.php                         # API endpoints for Chat and dynamic lookups
   channels.php                    # Broadcast channel authorization
 database/
-  migrations/                     # 20+ migrations including chat tables
+  migrations/                     # 40+ migrations including stock and lead tables
   seeders/
     PermissionSeeder.php          # Seeds all permission slugs
     SuperAdminSeeder.php          # Bootstrap super admin from env
-    ChatDefaultSeeder.php         # Creates General and Public channels
 ```
 
 ---
@@ -215,19 +243,20 @@ Set `CHAT_VIRUS_SCAN=true` in `.env` and ensure `clamscan` is available on your 
 
 ## Environment Variables Reference
 
-| Variable                                                 | Purpose                                       | Default                                                                |
-| -------------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
-| `DB_*`                                                   | Database connection                           | —                                                                      |
-| `BROADCAST_CONNECTION`                                   | Broadcasting driver (`pusher`, `log`, `null`) | `log`                                                                  |
-| `PUSHER_APP_KEY` / `PUSHER_APP_SECRET` / `PUSHER_APP_ID` | Pusher credentials                            | —                                                                      |
-| `VITE_PUSHER_APP_KEY` / `VITE_PUSHER_APP_CLUSTER`        | Client-side Pusher config                     | —                                                                      |
-| `QUEUE_CONNECTION`                                       | Queue driver                                  | `database`                                                             |
-| `CHAT_MAX_UPLOAD_MB`                                     | Max attachment size per file                  | `10`                                                                   |
-| `CHAT_ALLOWED_MIMES`                                     | Comma-separated MIME allowlist                | `image/jpeg,image/png,image/gif,image/webp,application/pdf,text/plain` |
-| `CHAT_VIRUS_SCAN`                                        | Enable ClamAV scanning                        | `false`                                                                |
-| `SUPER_ADMIN_EMAIL`                                      | Bootstrap super admin email                   | `superadmin@example.com`                                               |
-| `SUPER_ADMIN_PASSWORD`                                   | Bootstrap super admin password                | `ChangeMe!123!`                                                        |
-| `SESSION_SECURE_COOKIE`                                  | Require HTTPS for session cookie              | `true`                                                                 |
+| Variable                    | Purpose                                       | Default                    |
+| --------------------------- | --------------------------------------------- | -------------------------- |
+| `DB_*`                    | Database connection                           | —                         |
+| `BROADCAST_CONNECTION`    | Broadcasting driver (`pusher`, `log`)     | `log`                    |
+| `PUSHER_*`                | Pusher credentials                            | —                         |
+| `QUEUE_CONNECTION`        | Queue driver                                  | `database`               |
+| `CLOUDINARY_URL`          | Cloudinary image hosting URL                  | —                         |
+| `META_APP_SECRET`         | Meta API secret for WhatsApp/Webhooks         | —                         |
+| `GMAIL_CLIENT_ID`         | Google API client ID for GMail integration    | —                         |
+| `JEWELLERY_PLATINUM_RATE` | Overrides dynamic platinum pricing (per gram) | —                         |
+| `VGL_API_KEY`             | VGL Certificate system API key                | —                         |
+| `CHAT_MAX_UPLOAD_MB`      | Max attachment size per file                  | `10`                     |
+| `SUPER_ADMIN_EMAIL`       | Bootstrap super admin email                   | `superadmin@example.com` |
+| `SESSION_SECURE_COOKIE`   | Require HTTPS for session cookie              | `true`                   |
 
 ---
 

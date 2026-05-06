@@ -32,42 +32,44 @@
                     happening today.</p>
             </div>
             <div class="dash-header-meta">
-
-                {{-- Date range filter form --}}
                 <form id="dashDateForm" method="GET" action="{{ route('admin.dashboard') }}" class="dash-date-form">
-                    <input type="hidden" id="dashDateFrom" name="date_from" value="{{ $dateFrom ?? '' }}">
+                    <input type="hidden" id="dashDateFrom" name="date_from"
+                        value="{{ $dateFrom ? $dateFrom->toDateString() : '' }}">
+                    <input type="hidden" id="dashDateTo" name="date_to"
+                        value="{{ $dateTo ? $dateTo->toDateString() : '' }}">
+
                     <div id="dashDateRange" class="dash-date-picker {{ $hasRange ? 'active' : '' }}" tabindex="0"
                         role="button" aria-haspopup="dialog" aria-label="Select date range">
                         <i class="bi bi-calendar-range"></i>
                         <span id="dashDateLabel">
-                            @if($hasRange)
-                                {{ \Carbon\Carbon::parse($dateFrom)->format('M j, Y') }} —
-                                {{ \Carbon\Carbon::parse($dateTo)->format('M j, Y') }}
+                            @if ($hasRange)
+                                {{ $dateFrom->format('M j, Y') }} — {{ $dateTo->format('M j, Y') }}
                             @else
                                 Filter by date range
                             @endif
                         </span>
                         <i class="bi bi-chevron-down" style="margin-left:auto;font-size:0.75rem;opacity:0.6"></i>
                     </div>
-            </div>
 
-            @if($hasRange)
-                <a href="{{ route('admin.dashboard') }}" class="dash-clear-filter" title="Clear filter">
-                    <i class="bi bi-x-circle-fill"></i> Clear
-                </a>
-            @endif
-            </form>
+                    @if ($hasRange)
+                        <a href="{{ route('admin.dashboard') }}" class="dash-clear-filter" title="Clear filter">
+                            <i class="bi bi-x-circle-fill"></i> Clear
+                        </a>
+                    @endif
+                </form>
+            </div>
         </div>
     </div>
 
     {{-- ── ALERT BANNERS ─────────────────────────────────────────── --}}
-    @if(count($alerts) > 0)
+    @if (count($alerts) > 0)
         <div class="alert-stack">
-            @foreach($alerts as $alert)
+            @foreach ($alerts as $alert)
                 <div class="alert-banner alert-{{ $alert['type'] }}">
                     <i class="bi {{ $alert['icon'] }} alert-icon"></i>
                     <span class="alert-msg">{{ $alert['message'] }}</span>
-                    <a href="{{ $alert['link'] }}" class="alert-cta">{{ $alert['label'] }} <i class="bi bi-arrow-right"></i></a>
+                    <a href="{{ $alert['link'] }}" class="alert-cta">{{ $alert['label'] }} <i
+                            class="bi bi-arrow-right"></i></a>
                 </div>
             @endforeach
         </div>
@@ -77,7 +79,7 @@
     <div class="stats-grid">
 
         {{-- Today's Orders --}}
-        @if(auth()->guard('admin')->user()->canAccessAny(['orders.view']))
+        @if (auth()->guard('admin')->user()->canAccessAny(['orders.view']))
             <a href="{{ route('orders.index') }}" class="stat-card stat-indigo">
                 <div class="stat-icon-wrap">
                     <i class="bi bi-basket"></i>
@@ -85,7 +87,7 @@
                 <div class="stat-body">
                     <div class="stat-label">{{ $hasRange ? 'Orders in Range' : "Today's Orders" }}</div>
                     <div class="stat-val">{{ number_format($todayOrderCount) }}</div>
-                    @if($overdueOrders > 0)
+                    @if ($overdueOrders > 0)
                         <div class="stat-badge badge-danger">{{ $overdueOrders }} overdue</div>
                     @else
                         <div class="stat-badge badge-ok">All on track</div>
@@ -96,23 +98,24 @@
         @endif
 
         {{-- Today's Revenue --}}
-        @if(auth()->guard('admin')->user()->canAccessAny(['sales.view_all']))
-            <div class="stat-card stat-green">
+        @if (auth()->guard('admin')->user()->canAccessAny(['sales.view_all']))
+            <a href="{{ route('companies.all-sales-dashboard') }}" class="stat-card stat-green">
                 <div class="stat-icon-wrap">
                     <i class="bi bi-currency-dollar"></i>
                 </div>
                 <div class="stat-body">
                     <div class="stat-label">{{ $hasRange ? 'Revenue in Range' : "Today's Revenue" }}</div>
                     <div class="stat-val">{{ $todayRevenue > 0 ? '$' . number_format($todayRevenue, 0) : '—' }}</div>
-                    @if(!$hasRange)
+                    @if (!$hasRange)
                         <div class="stat-badge badge-muted">Month: ${{ number_format($monthRevenue, 0) }}</div>
                     @endif
                 </div>
-            </div>
+                <i class="bi bi-arrow-right stat-arrow"></i>
+            </a>
         @endif
 
         {{-- Diamonds in Stock --}}
-        @if(auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
+        @if (auth()->guard('admin')->user()->canAccessAny(['diamonds.view']))
             <a href="{{ route('diamond.index') }}" class="stat-card stat-purple">
                 <div class="stat-icon-wrap">
                     <i class="bi bi-gem"></i>
@@ -129,7 +132,7 @@
         @endif
 
         {{-- Active Leads / New Leads --}}
-        @if(auth()->guard('admin')->user()->canAccessAny(['leads.view']))
+        @if (auth()->guard('admin')->user()->canAccessAny(['leads.view']))
             <a href="{{ route('leads.index') }}" class="stat-card stat-amber">
                 <div class="stat-icon-wrap">
                     <i class="bi bi-inbox-fill"></i>
@@ -137,7 +140,7 @@
                 <div class="stat-body">
                     <div class="stat-label">New Leads</div>
                     <div class="stat-val">{{ number_format($leadStats['newLeads']) }}</div>
-                    @if($leadStats['slaBreached'] > 0)
+                    @if ($leadStats['slaBreached'] > 0)
                         <div class="stat-badge badge-danger">{{ $leadStats['slaBreached'] }} SLA breached</div>
                     @else
                         <div class="stat-badge badge-ok">SLAs met</div>
@@ -148,7 +151,7 @@
         @endif
 
         {{-- Invoices This Month --}}
-        @if(auth()->guard('admin')->user()->canAccessAny(['invoices.view']))
+        @if (auth()->guard('admin')->user()->canAccessAny(['invoices.view']))
             <a href="{{ route('invoices.index') }}" class="stat-card stat-blue">
                 <div class="stat-icon-wrap">
                     <i class="bi bi-receipt"></i>
@@ -156,14 +159,23 @@
                 <div class="stat-body">
                     <div class="stat-label">{{ $hasRange ? 'Invoices in Range' : 'Invoices This Month' }}</div>
                     <div class="stat-val">{{ number_format($invoiceStats?->count ?? 0) }}</div>
-                    <div class="stat-badge badge-muted">Total: ${{ number_format($invoiceStats?->total ?? 0, 0) }}</div>
+                    {{-- @if ($invoiceStats && isset($invoiceStats->breakdown) && $invoiceStats->breakdown->count() > 0)
+                        <div class="stat-breakdown">
+                            @foreach ($invoiceStats->breakdown as $item)
+                                <span
+                                    class="stat-badge badge-muted">{{ $item->symbol }}{{ number_format($item->total, 0) }}</span>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="stat-badge badge-muted">Total: $0</div>
+                    @endif --}}
                 </div>
                 <i class="bi bi-arrow-right stat-arrow"></i>
             </a>
         @endif
 
         {{-- Total Clients --}}
-        @if(auth()->guard('admin')->user()->canAccessAny(['clients.view']))
+        @if (auth()->guard('admin')->user()->canAccessAny(['clients.view']))
             <a href="{{ route('clients.index') }}" class="stat-card stat-teal">
                 <div class="stat-icon-wrap">
                     <i class="bi bi-people-fill"></i>
@@ -177,14 +189,11 @@
             </a>
         @endif
 
-    </div>{{-- /stats-grid --}}
+    </div>
 
     {{-- ── MAIN CONTENT ROW ──────────────────────────────────────── --}}
     <div class="dash-main-row">
-
-        {{-- LEFT: Welcome card + Quick Access --}}
         <div class="dash-left">
-
             {{-- Welcome Card --}}
             <div class="welcome-card">
                 <div class="welcome-top">
@@ -195,7 +204,7 @@
                     </div>
                 </div>
 
-                @if(session('error'))
+                @if (session('error'))
                     <div class="welcome-error">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                         <span><strong>Access Denied:</strong> {{ session('error') }}</span>
@@ -203,17 +212,17 @@
                 @endif
 
                 <div class="welcome-actions">
-                    @if(auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create']))
+                    @if (auth()->guard('admin')->user()->canAccessAny(['admins.view', 'admins.create']))
                         <a href="{{ route('admins.index') }}" class="welcome-btn welcome-btn-solid">
                             <i class="bi bi-people"></i> Manage Admins
                         </a>
                     @endif
-                    @if(auth()->guard('admin')->user()->canAccessAny(['permissions.view', 'permissions.create']))
+                    @if (auth()->guard('admin')->user()->canAccessAny(['permissions.view', 'permissions.create']))
                         <a href="{{ route('permissions.index') }}" class="welcome-btn welcome-btn-outline">
                             <i class="bi bi-shield-lock"></i> View Permissions
                         </a>
                     @endif
-                    @if(auth()->guard('admin')->user()->canAccessAny(['sales.view_all']))
+                    @if (auth()->guard('admin')->user()->canAccessAny(['sales.view_all']))
                         <a href="{{ route('companies.all-sales-dashboard') }}" class="welcome-btn welcome-btn-outline">
                             <i class="bi bi-graph-up-arrow"></i> Sales Dashboard
                         </a>
@@ -221,12 +230,13 @@
                 </div>
 
                 {{-- My Drafts Banner --}}
-                @if($myDraftCount > 0)
+                @if ($myDraftCount > 0)
                     <a href="{{ route('orders.drafts.index') }}" class="draft-banner">
                         <div class="draft-left">
                             <i class="bi bi-file-earmark-text-fill"></i>
                             <div>
-                                <div class="draft-title">{{ $myDraftCount }} Draft Order{{ $myDraftCount > 1 ? 's' : '' }}
+                                <div class="draft-title">{{ $myDraftCount }} Draft
+                                    Order{{ $myDraftCount > 1 ? 's' : '' }}
                                     Saved</div>
                                 <div class="draft-sub">Resume where you left off</div>
                             </div>
@@ -243,8 +253,7 @@
             </div>
 
             <div class="quick-grid">
-
-                @if(auth()->guard('admin')->user()->canAccessAny(['admins.create']))
+                @if (auth()->guard('admin')->user()->canAccessAny(['admins.create']))
                     <a href="{{ route('admins.create') }}" class="quick-card">
                         <div class="quick-icon qi-primary"><i class="bi bi-person-plus"></i></div>
                         <div class="quick-text">
@@ -255,7 +264,7 @@
                     </a>
                 @endif
 
-                @if(auth()->guard('admin')->user()->canAccessAny(['permissions.create']))
+                @if (auth()->guard('admin')->user()->canAccessAny(['permissions.create']))
                     <a href="{{ route('permissions.create') }}" class="quick-card">
                         <div class="quick-icon qi-success"><i class="bi bi-shield-plus"></i></div>
                         <div class="quick-text">
@@ -266,7 +275,7 @@
                     </a>
                 @endif
 
-                @if(auth()->guard('admin')->user()->canAccessAny(['orders.create']))
+                @if (auth()->guard('admin')->user()->canAccessAny(['orders.create']))
                     <a href="{{ route('orders.create') }}" class="quick-card">
                         <div class="quick-icon qi-warning"><i class="bi bi-basket"></i></div>
                         <div class="quick-text">
@@ -277,7 +286,7 @@
                     </a>
                 @endif
 
-                @if(auth()->guard('admin')->user()->canAccessAny(['diamonds.create']))
+                @if (auth()->guard('admin')->user()->canAccessAny(['diamonds.create']))
                     <a href="{{ route('diamond.create') }}" class="quick-card">
                         <div class="quick-icon qi-purple"><i class="bi bi-gem"></i></div>
                         <div class="quick-text">
@@ -288,7 +297,7 @@
                     </a>
                 @endif
 
-                @if(auth()->guard('admin')->user()->canAccessAny(['invoices.create']))
+                @if (auth()->guard('admin')->user()->canAccessAny(['invoices.create']))
                     <a href="{{ route('invoices.create') }}" class="quick-card">
                         <div class="quick-icon qi-blue"><i class="bi bi-receipt"></i></div>
                         <div class="quick-text">
@@ -299,7 +308,7 @@
                     </a>
                 @endif
 
-                @if(auth()->guard('admin')->user()->canAccessAny(['chat.access']))
+                @if (auth()->guard('admin')->user()->canAccessAny(['chat.access']))
                     <a href="{{ route('chat.index') }}" class="quick-card">
                         <div class="quick-icon qi-info"><i class="bi bi-chat-dots"></i></div>
                         <div class="quick-text">
@@ -310,18 +319,17 @@
                     </a>
                 @endif
 
-            </div>{{-- /quick-grid --}}
-        </div>{{-- /dash-left --}}
+            </div>
+        </div>
 
         {{-- RIGHT: Recent Activity --}}
         <div class="dash-right">
-
             {{-- Overdue Summary mini-cards --}}
-            @if($overdueOrders > 0 || $overduePackages > 0 || $leadStats['slaBreached'] > 0)
+            @if ($overdueOrders > 0 || $overduePackages > 0 || $leadStats['slaBreached'] > 0)
                 <div class="overdue-panel">
                     <div class="overdue-title"><i class="bi bi-exclamation-circle-fill"></i> Needs Attention</div>
 
-                    @if($overdueOrders > 0)
+                    @if ($overdueOrders > 0)
                         <a href="{{ route('orders.index', ['overdue' => 1]) }}" class="overdue-item">
                             <i class="bi bi-basket-fill" style="color:#ef4444"></i>
                             <span>{{ $overdueOrders }} overdue order{{ $overdueOrders > 1 ? 's' : '' }}</span>
@@ -329,7 +337,7 @@
                         </a>
                     @endif
 
-                    @if($overduePackages > 0)
+                    @if ($overduePackages > 0)
                         <a href="{{ route('packages.index') }}" class="overdue-item">
                             <i class="bi bi-box-seam-fill" style="color:#f59e0b"></i>
                             <span>{{ $overduePackages }} overdue package{{ $overduePackages > 1 ? 's' : '' }}</span>
@@ -337,7 +345,7 @@
                         </a>
                     @endif
 
-                    @if($leadStats['slaBreached'] > 0)
+                    @if ($leadStats['slaBreached'] > 0)
                         <a href="{{ route('leads.index') }}" class="overdue-item">
                             <i class="bi bi-clock-fill" style="color:#f59e0b"></i>
                             <span>{{ $leadStats['slaBreached'] }} SLA
@@ -357,14 +365,14 @@
                     <a href="{{ route('notifications.index') }}" class="activity-view-all">View all</a>
                 </div>
 
-                @if($recentActivity->isEmpty())
+                @if ($recentActivity->isEmpty())
                     <div class="activity-empty">
                         <i class="bi bi-bell-slash"></i>
                         <p>No recent activity</p>
                     </div>
                 @else
                     <div class="activity-list">
-                        @foreach($recentActivity as $item)
+                        @foreach ($recentActivity as $item)
                             @php
                                 $colorMap = [
                                     'red' => ['bg' => 'rgba(239,68,68,0.1)', 'color' => '#ef4444'],
@@ -377,18 +385,19 @@
                                 $c = $colorMap[$item->color] ?? $colorMap['gray'];
                             @endphp
                             <div class="activity-item {{ $item->read ? '' : 'activity-unread' }}">
-                                <div class="activity-icon-wrap" style="background:{{ $c['bg'] }};color:{{ $c['color'] }}">
+                                <div class="activity-icon-wrap"
+                                    style="background:{{ $c['bg'] }};color:{{ $c['color'] }}">
                                     <i class="bi {{ $item->icon }}"></i>
                                 </div>
                                 <div class="activity-body">
                                     <div class="activity-item-title">{{ Str::limit($item->title, 50) }}</div>
-                                    @if($item->message)
+                                    @if ($item->message)
                                         <div class="activity-item-msg">{{ Str::limit($item->message, 80) }}</div>
                                     @endif
                                 </div>
                                 <div class="activity-meta">
                                     <span class="activity-time">{{ $item->time }}</span>
-                                    @if(!$item->read)
+                                    @if (!$item->read)
                                         <span class="activity-dot"></span>
                                     @endif
                                 </div>
@@ -397,16 +406,12 @@
                     </div>
                 @endif
             </div>
-        </div>{{-- /dash-right --}}
-    </div>{{-- /dash-main-row --}}
+        </div>
+    </div>
 
-    </div>{{-- /dash-wrap --}}
+    </div>
 
     <style>
-        /* ═══════════════════════════════════════════
-                           DASHBOARD — v3.0
-                           Full dark mode support via [data-theme="dark"]
-                        ═══════════════════════════════════════════ */
         .dash-wrap {
             max-width: 1600px;
             margin: 0 auto;
@@ -732,6 +737,13 @@
         .badge-muted {
             background: var(--light-gray, #f1f5f9);
             color: var(--gray, #64748b);
+        }
+
+        .stat-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
         }
 
         .stat-arrow {
@@ -1275,9 +1287,7 @@
             border-color: #334155;
         }
 
-        /* ════════════════════════════════
-                           RESPONSIVE — MOBILE FIRST
-                        ════════════════════════════════ */
+        /* MOBILE RESPONSIVE CSS */
         @media (max-width: 1280px) {
             .stats-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -1533,7 +1543,7 @@
 
     @push('scripts')
         <script>
-            $(document).ready(function () {
+            $(document).ready(function() {
                 var initFrom = $('#dashDateFrom').val();
                 var initTo = $('#dashDateTo').val();
                 var startDate = initFrom ? moment(initFrom) : null;
@@ -1552,7 +1562,8 @@
                         'Last 7 Days': [moment().subtract(6, 'days'), moment()],
                         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
                         'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
+                            'month').endOf('month')],
                         'This Year': [moment().startOf('year'), moment()],
                     },
                     locale: {
@@ -1560,24 +1571,25 @@
                         applyLabel: 'Apply',
                         format: 'MMM D, YYYY'
                     }
-                }, function (start, end) {
+                }, function(start, end) {
                     // Update label + hidden inputs on pick
-                    $('#dashDateLabel').text(start.format('MMM D, YYYY') + ' \u2014 ' + end.format('MMM D, YYYY'));
+                    $('#dashDateLabel').text(start.format('MMM D, YYYY') + ' \u2014 ' + end.format(
+                        'MMM D, YYYY'));
                     $('#dashDateFrom').val(start.format('YYYY-MM-DD'));
                     $('#dashDateTo').val(end.format('YYYY-MM-DD'));
                     $('#dashDateRange').addClass('active');
                 });
 
                 // Apply -> submit form
-                $('#dashDateRange').on('apply.daterangepicker', function () {
+                $('#dashDateRange').on('apply.daterangepicker', function() {
                     if ($('#dashDateFrom').val() && $('#dashDateTo').val()) {
                         $('#dashDateForm').submit();
                     }
                 });
 
                 // Cancel -> clear and reload without params
-                $('#dashDateRange').on('cancel.daterangepicker', function () {
-                    window.location.href = '{{ route("admin.dashboard") }}';
+                $('#dashDateRange').on('cancel.daterangepicker', function() {
+                    window.location.href = '{{ route('admin.dashboard') }}';
                 });
             });
         </script>

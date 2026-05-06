@@ -18,7 +18,7 @@ class StoreJewelleryStockRequest extends FormRequest
             'type' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'metal_type_id' => 'required|exists:metal_types,id',
-            'metal_purity' => 'nullable|string|max:100',
+            'discount_percent' => 'nullable|numeric|min:0|max:100',
             'ring_size_id' => 'nullable|exists:ring_sizes,id',
             'length' => 'nullable|numeric|min:0',
             'width' => 'nullable|numeric|min:0',
@@ -32,7 +32,7 @@ class StoreJewelleryStockRequest extends FormRequest
             'description' => 'nullable|string|max:3000',
             'image_url' => 'nullable|string|max:500',
             'images' => 'nullable|array',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif,gif,heic,heif|max:10240',
+            'images.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,avif,gif,heic,heif,mp4,mov,avi,wmv|max:20480',
             'closure_type_id' => 'nullable|exists:closure_types,id',
             'primary_stone_type_id' => 'nullable|exists:stone_types,id',
             'primary_stone_weight' => 'nullable|numeric|min:0',
@@ -41,12 +41,37 @@ class StoreJewelleryStockRequest extends FormRequest
             'primary_stone_color_id' => 'nullable|exists:stone_colors,id',
             'primary_stone_clarity_id' => 'nullable|exists:diamond_clarities,id',
             'primary_stone_cut_id' => 'nullable|exists:diamond_cuts,id',
-            'side_stone_type_id' => 'nullable|exists:stone_types,id',
-            'side_stone_weight' => 'nullable|numeric|min:0',
-            'side_stone_count' => 'nullable|integer|min:0',
+            'side_stones' => 'nullable|array',
+            'side_stones.*.stone_type_id' => 'required|exists:stone_types,id',
+            'side_stones.*.weight' => 'nullable|numeric|min:0',
+            'side_stones.*.count' => 'nullable|integer|min:0',
+            'side_stones.*.stone_shape_id' => 'nullable|exists:stone_shapes,id',
+            'side_stones.*.stone_color_id' => 'nullable|exists:stone_colors,id',
+            'side_stones.*.stone_clarity_id' => 'nullable|exists:diamond_clarities,id',
+            'side_stones.*.stone_cut_id' => 'nullable|exists:diamond_cuts,id',
             'certificate_number' => 'nullable|string|max:255',
             'certificate_type' => 'nullable|string|max:100',
             'certificate_url' => 'nullable|string|max:2000',
+            'pricing_variants' => 'nullable|array',
+            'pricing_variants.*.net_weight_grams' => 'nullable|numeric|min:0',
+            'pricing_variants.*.stone_cost' => 'nullable|numeric|min:0',
+            'pricing_variants.*.extra_cost' => 'nullable|numeric|min:0',
+            'pricing_variants.*.labor_rate_usd_per_gram' => 'nullable|numeric|min:0',
+            'pricing_variants.*.commission_percent' => 'nullable|numeric|min:0|max:999',
+            'pricing_variants.*.profit_percent' => 'nullable|numeric|min:0|max:999',
+            'pricing_variants.*.sales_markup_percent' => 'nullable|numeric|min:0|max:999',
+            'pricing_variants.*.is_default_listing' => 'nullable|boolean',
+            'default_pricing_variant' => 'nullable|string|max:100',
+            'platinum_950_rate_usd_per_gram' => 'nullable|numeric|min:0',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'images.*.uploaded' => 'The file failed to upload. This usually means the file size exceeds the server\'s PHP limits (upload_max_filesize or post_max_size in php.ini).',
+            'images.*.max' => 'The file may not be larger than 20MB.',
+            'images.*.mimes' => 'The file must be an image or video (jpeg, png, jpg, webp, avif, gif, heic, heif, mp4, mov, avi, wmv).',
         ];
     }
 }

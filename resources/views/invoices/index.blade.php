@@ -133,6 +133,7 @@
                                 <th><i class="bi bi-currency-dollar"></i> Total</th>
                                 <th><i class="bi bi-globe"></i> Region</th>
                                 <th><i class="bi bi-flag"></i> Status</th>
+                                <th><i class="bi bi-person"></i> Created By</th>
                                 <th><i class="bi bi-gear"></i> Actions</th>
                             </tr>
                         </thead>
@@ -162,7 +163,7 @@
                                     </td>
                                     <td>
                                         <span class="amount-value">
-                                            {{ $inv->company->currency_symbol ?? '$' }}
+                                            {{ \App\Models\Invoice::REGIONS[$inv->invoice_region]['symbol'] ?? ($inv->company->currency_symbol ?? '$') }}
                                             {{ number_format($inv->total_invoice_value, 2) }}
                                         </span>
                                     </td>
@@ -204,6 +205,18 @@
                                                 {{ ucfirst($inv->status) }}
                                             </span>
                                         @endif
+                                    </td>
+                                    <td>
+                                        <div class="creator-info">
+                                            @if($inv->creator)
+                                                <div class="creator-avatar">
+                                                    {{ substr($inv->creator->name, 0, 1) }}
+                                                </div>
+                                                <span class="creator-name">{{ $inv->creator->name }}</span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="tracker-actions">
@@ -262,6 +275,30 @@
         </div>
     </div>
 
+    <style>
+        .creator-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
+        .creator-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
 
+        .creator-name {
+            font-weight: 500;
+            color: var(--dark);
+        }
+    </style>
 @endsection

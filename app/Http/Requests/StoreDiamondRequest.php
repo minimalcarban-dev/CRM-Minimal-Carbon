@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+use Illuminate\Validation\Rule;
+
 class StoreDiamondRequest extends FormRequest
 {
     /**
@@ -22,8 +24,18 @@ class StoreDiamondRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lot_no' => 'required|string|unique:diamonds,lot_no|max:255',
-            'sku' => 'required|string|unique:diamonds,sku|max:255',
+            'lot_no' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('diamonds', 'lot_no')->whereNull('deleted_at')
+            ],
+            'sku' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('diamonds', 'sku')->whereNull('deleted_at')
+            ],
             'material' => 'nullable|string|max:255',
             'cut' => 'nullable|string|max:255',
             'clarity' => 'nullable|string|max:255',

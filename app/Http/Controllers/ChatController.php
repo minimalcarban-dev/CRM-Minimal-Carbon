@@ -180,29 +180,32 @@ class ChatController extends Controller
         /** @var Admin $user */
         $user = Auth::guard('admin')->user();
 
-        // Load channels with users data (needed for calculating names)
+        // Load channels with users data, latest message and unread count in one go (Fix N+1)
         $channels = Channel::with([
             'users' => function ($q) {
                 $q->select('admins.id', 'name', 'is_super');
-            }
+            },
+            'latestMessage.sender:id,name'
         ])
+            ->withCount([
+                'messages as unread_count' => function ($query) use ($user) {
+                    $query->where('sender_id', '!=', $user->id)
+                        ->whereDoesntHave('reads', function ($q) use ($user) {
+                            $q->where('user_id', $user->id);
+                        });
+                }
+            ])
             ->whereHas('users', function ($query) use ($user) {
                 $query->where('admin_id', $user->id);
             })->get();
 
         // Add unread count and CALCULATE DYNAMIC NAME
         $channels->each(function ($channel) use ($user) {
-            $channel->unread_count = $channel->unreadCount($user);
             $channel->unread_messages_count = $channel->unread_count;
             $channel->can_manage_members = ($user->is_super || (int) $channel->created_by === (int) $user->id);
 
-            // Get last message for preview
-            $lastMessage = $channel->messages()
-                ->with('sender:id,name')
-                ->latest()
-                ->first();
-
-            $channel->last_message = $lastMessage;
+            // Use eager-loaded latest message
+            $channel->last_message = $channel->latestMessage;
 
             if ($channel->type === 'personal') {
                 $channel->name = $this->resolvePersonalDisplayName($channel->users, $user);
@@ -631,30 +634,22 @@ class ChatController extends Controller
                     }
 
                     // Store file
-                    // $path = $file->store('chat-attachments', 'public');
                     $path = $file->store('uploads/chat-attachments', 'public');
-                    $abs = Storage::disk('public')->path($path);
 
-                    // Virus scan
-                    $scan = $scanner->scan($abs);
-                    if (empty($scan['clean'])) {
-                        Storage::disk('public')->delete($path);
-                        continue;
-                    }
-
-                    // Save attachment record
+                    // Save attachment record (PENDING state)
                     $attachment = $message->attachments()->create([
                         'filename' => $originalName,
                         'path' => $path,
                         'mime_type' => $resolvedMime,
                         'size' => $file->getSize(),
+                        'status' => 'pending',
                     ]);
 
-                    // Process attachment safely (NO QUEUE)
+                    // Dispatch async processing (Virus scan + Cloudinary upload)
                     try {
-                        (new \App\Jobs\ProcessChatAttachment($attachment))->handle();
+                        \App\Jobs\ProcessChatAttachment::dispatch($attachment);
                     } catch (\Throwable $e) {
-                        Log::error('Attachment processing failed (non-blocking)', [
+                        Log::error('Failed to dispatch attachment job', [
                             'attachment_id' => $attachment->id,
                             'error' => $e->getMessage(),
                         ]);
@@ -688,7 +683,7 @@ class ChatController extends Controller
                 $bodyWithoutEmails = preg_replace($emailPattern, '', $body);
 
                 // Now find URLs in the cleaned text
-                $pattern = '/(?:https?:\/\/)?(?:www\.)?[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)+(?:\/[^\s<>()"\']*)?\b/i';
+                $pattern = '/\b(?:https?:\/\/|www\.)[^\s<>()"\']+|\b[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)*\.[a-z]{2,}\b(?:\/[^\s<>()"\']*)?/i';
 
                 if (preg_match_all($pattern, $bodyWithoutEmails, $matches)) {
                     $urls = array_unique($matches[0] ?? []);
@@ -736,6 +731,35 @@ class ChatController extends Controller
     }
 
     /**
+     * Broadcast typing indicator for a channel.
+     * Lightweight server-side approach — replaces client whispers that
+     * require "Enable client events" on Pusher dashboard.
+     */
+    public function typing(Channel $channel, Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+        if (!$admin || !$channel->hasMember($admin)) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        // Throttle: max 1 typing event per 1.5 seconds per user per channel
+        $cacheKey = "typing:{$admin->id}:{$channel->id}";
+        if (Cache::has($cacheKey)) {
+            return response()->json(['ok' => true]); // silently skip
+        }
+        Cache::put($cacheKey, true, 2); // expire after 2 seconds
+
+        broadcast(new \App\Events\UserTyping(
+            $admin->id,
+            $admin->name ?? 'Someone',
+            $channel->id,
+            $channel->name ?? ''
+        ))->toOthers();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * Get messages for a channel with pagination
      */
     public function getMessages(Channel $channel, Request $request)
@@ -750,7 +774,7 @@ class ChatController extends Controller
             ->whereNull('reply_to_id')
             ->with(['sender', 'attachments', 'reads', 'reactions', 'pins', 'savedBy'])
             ->latest()
-            ->paginate(5000);
+            ->paginate(50);
 
         $messages->getCollection()->transform(function (Message $message) use ($adminId) {
             return $this->decorateMessagePayload($message, (int) $adminId);
@@ -780,12 +804,13 @@ class ChatController extends Controller
                 })
                 ->get();
 
-            foreach ($unreadMessages as $message) {
-                $message->reads()->create([
-                    'user_id' => $user->id,
-                    'read_at' => now()
-                ]);
-            }
+            $now = now();
+            $inserts = $unreadMessages->map(fn($m) => [
+                'message_id' => $m->id,
+                'user_id' => $user->id,
+                'read_at' => $now,
+            ])->all();
+            DB::table('message_reads')->insertOrIgnore($inserts);
 
             // Persist read position for accurate unread counts across sessions
             $channel->users()->updateExistingPivot($user->id, [
@@ -1177,12 +1202,23 @@ class ChatController extends Controller
                         }
                         $originalName = 'attachment-' . Str::uuid() . ($extension !== '' ? ".{$extension}" : '');
                     }
-                    $reply->attachments()->create([
+                    $attachment = $reply->attachments()->create([
                         'filename' => $originalName,
                         'path' => $path,
                         'mime_type' => $mimeType,
-                        'size' => $file->getSize()
+                        'size' => $file->getSize(),
+                        'status' => 'pending',
                     ]);
+
+                    // Dispatch async processing
+                    try {
+                        ProcessChatAttachment::dispatch($attachment);
+                    } catch (\Throwable $e) {
+                        Log::error('Failed to dispatch thread attachment job', [
+                            'attachment_id' => $attachment->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
             }
 

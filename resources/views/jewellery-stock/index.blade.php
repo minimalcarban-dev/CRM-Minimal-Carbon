@@ -196,7 +196,12 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <strong style="color: #6366f1;">${{ number_format($item->selling_price, 2) }}</strong>
+                                    @if ($item->discount_percent > 0)
+                                        <div style="font-size: 0.75rem; text-decoration: line-through; color: var(--gray);">${{ number_format($item->selling_price, 2) }}</div>
+                                        <strong style="color: #10b981;">${{ number_format($item->discounted_price, 2) }}</strong>
+                                    @else
+                                        <strong style="color: #6366f1;">${{ number_format($item->selling_price, 2) }}</strong>
+                                    @endif
                                 </td>
                                 <td>
                                     @if ($item->status === 'in_stock')

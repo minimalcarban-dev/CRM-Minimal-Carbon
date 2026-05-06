@@ -41,7 +41,8 @@ class Invoice extends Model
         'total_invoice_value',
         'express_shipping',
         'status',
-        'copy_type'
+        'copy_type',
+        'created_by'
     ];
 
     public function company()
@@ -62,5 +63,10 @@ class Invoice extends Model
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(Admin::class, 'created_by');
     }
 }

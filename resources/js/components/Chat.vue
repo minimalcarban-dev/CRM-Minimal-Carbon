@@ -6,13 +6,8 @@
             <div class="sidebar-header">
                 <div class="search-wrapper">
                     <i class="bi bi-search search-icon"></i>
-                    <input
-                        type="text"
-                        v-model="searchQuery"
-                        @keyup="debounceSearch"
-                        placeholder="Search conversations..."
-                        class="search-input"
-                    />
+                    <input type="text" v-model="searchQuery" @keyup="debounceSearch"
+                        placeholder="Search conversations..." class="search-input" />
                 </div>
             </div>
 
@@ -27,15 +22,10 @@
                             groupChannels.length
                         }}</span>
                     </div>
-                    <div
-                        v-for="channel in groupChannels"
-                        :key="channel.id"
-                        @click="selectChannel(channel)"
-                        :class="[
-                            'channel-item',
-                            { active: currentChannel?.id === channel.id },
-                        ]"
-                    >
+                    <div v-for="channel in groupChannels" :key="channel.id" @click="selectChannel(channel)" :class="[
+                        'channel-item',
+                        { active: currentChannel?.id === channel.id },
+                    ]">
                         <div class="channel-avatar group">
                             <i class="bi bi-people"></i>
                         </div>
@@ -44,24 +34,26 @@
                                 <h5 class="channel-title">
                                     {{ channel.name }}
                                 </h5>
-                                <span
-                                    class="channel-time"
-                                    v-if="lastMessagePreview[channel.id]?.time"
-                                >
+                                <span class="channel-time" v-if="lastMessagePreview[channel.id]?.time">
                                     {{ lastMessagePreview[channel.id].time }}
                                 </span>
                             </div>
                             <div class="channel-preview-row">
-                                <p class="channel-preview">
+                                <p v-if="sidebarTypingLabel(channel.id)" class="channel-preview sidebar-typing-text">
+                                    <span class="sidebar-typing-dots">
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                    </span>
+                                    {{ sidebarTypingLabel(channel.id) }}
+                                </p>
+                                <p v-else class="channel-preview">
                                     {{
                                         lastMessagePreview[channel.id]?.text ||
                                         "No messages yet"
                                     }}
                                 </p>
-                                <span
-                                    v-if="channel.unread_messages_count"
-                                    class="unread-badge"
-                                >
+                                <span v-if="channel.unread_messages_count" class="unread-badge">
                                     {{ channel.unread_messages_count }}
                                 </span>
                             </div>
@@ -78,15 +70,10 @@
                             personalChannels.length
                         }}</span>
                     </div>
-                    <div
-                        v-for="channel in personalChannels"
-                        :key="channel.id"
-                        @click="selectChannel(channel)"
-                        :class="[
-                            'channel-item',
-                            { active: currentChannel?.id === channel.id },
-                        ]"
-                    >
+                    <div v-for="channel in personalChannels" :key="channel.id" @click="selectChannel(channel)" :class="[
+                        'channel-item',
+                        { active: currentChannel?.id === channel.id },
+                    ]">
                         <div class="channel-avatar personal">
                             {{ avatarInitials(channel.name) }}
                         </div>
@@ -95,74 +82,53 @@
                                 <h5 class="channel-title">
                                     {{ channel.name }}
                                 </h5>
-                                <span
-                                    class="channel-time"
-                                    v-if="lastMessagePreview[channel.id]?.time"
-                                >
+                                <span class="channel-time" v-if="lastMessagePreview[channel.id]?.time">
                                     {{ lastMessagePreview[channel.id].time }}
                                 </span>
                             </div>
                             <div class="channel-preview-row">
-                                <p class="channel-preview">
+                                <p v-if="sidebarTypingLabel(channel.id)" class="channel-preview sidebar-typing-text">
+                                    <span class="sidebar-typing-dots">
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                    </span>
+                                    {{ sidebarTypingLabel(channel.id) }}
+                                </p>
+                                <p v-else class="channel-preview">
                                     {{
                                         lastMessagePreview[channel.id]?.text ||
                                         "No messages yet"
                                     }}
                                 </p>
-                                <span
-                                    v-if="channel.unread_messages_count"
-                                    class="unread-badge"
-                                >
+                                <span v-if="channel.unread_messages_count" class="unread-badge">
                                     {{ channel.unread_messages_count }}
                                 </span>
                             </div>
                         </div>
-                        <button
-                            v-if="isSuperAdmin"
-                            class="channel-delete-btn"
-                            @click.stop="deleteChannel(channel.id)"
-                            title="Delete Conversation"
-                        >
+                        <button v-if="isSuperAdmin" class="channel-delete-btn" @click.stop="deleteChannel(channel.id)"
+                            title="Delete Conversation">
                             <i class="bi bi-trash3"></i>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-        <div
-            v-if="isMobile && mobileSidebarOpen"
-            class="mobile-sidebar-overlay"
-            @click="closeChannelList"
-        ></div>
+        <div v-if="isMobile && mobileSidebarOpen" class="mobile-sidebar-overlay" @click="closeChannelList"></div>
 
         <!-- Main Chat Area -->
-        <div
-            class="chat-main"
-            :class="{ 'sidebar-open-mobile': isMobile && mobileSidebarOpen }"
-            v-if="currentChannel"
-            :style="chatMainStyle"
-            @click="closeMenus"
-            @dragenter="onDragEnter"
-            @dragover="onDragOver"
-            @dragleave="onDragLeave"
-            @drop="onDrop"
-        >
+        <div class="chat-main" ref="chatMainRef" :class="{ 'sidebar-open-mobile': isMobile && mobileSidebarOpen }"
+            v-if="currentChannel" :style="chatMainStyle" @click="closeMenus" @dragenter="onDragEnter"
+            @dragover="onDragOver" @dragleave="onDragLeave" @drop="onDrop">
             <!-- Chat Header -->
             <div class="chat-header">
                 <div class="header-left">
-                    <button
-                        v-if="isMobile"
-                        class="btn-icon-secondary mobile-channels-toggle"
-                        @click="openChannelList"
-                        title="Open conversations"
-                    >
+                    <button v-if="isMobile" class="btn-icon-secondary mobile-channels-toggle" @click="openChannelList"
+                        title="Open conversations">
                         <i class="bi bi-list"></i>
                     </button>
                     <div class="header-avatar">
-                        <div
-                            v-if="isGroupChannel(currentChannel)"
-                            class="avatar-icon group"
-                        >
+                        <div v-if="isGroupChannel(currentChannel)" class="avatar-icon group">
                             <i class="bi bi-people"></i>
                         </div>
                         <div v-else class="avatar-icon personal">
@@ -172,60 +138,42 @@
                     </div>
                     <div class="header-info">
                         <h4 class="header-title">{{ currentChannel.name }}</h4>
-                        <p class="header-subtitle" v-if="typingLabel">
+                        <p class="header-subtitle typing-indicator" v-if="typingLabel">
+                            <span class="typing-dots">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </span>
                             {{ typingLabel }}
                         </p>
-                        <p
-                            class="header-subtitle"
-                            v-else-if="!isPersonalChannel && isSuperAdmin"
-                        >
+                        <p class="header-subtitle" v-else-if="!isPersonalChannel && isSuperAdmin">
                             {{ channelInfo.members?.length || 0 }} members
                         </p>
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button
-                        v-if="isSuperAdmin && !isMobile"
-                        class="btn-icon-primary"
-                        @click="openCreateChannel"
-                        title="New Channel"
-                    >
+                    <button v-if="isSuperAdmin && !isMobile" class="btn-icon-primary" @click="openCreateChannel"
+                        title="New Channel">
                         <i class="bi bi-plus-lg"></i>
                     </button>
-                    <button
-                        v-if="isSuperAdmin && !isMobile"
-                        class="btn-icon-secondary"
-                        @click="openManageMembers"
-                        title="Manage Members"
-                    >
+                    <button v-if="isSuperAdmin && !isMobile" class="btn-icon-secondary" @click="openManageMembers"
+                        title="Manage Members">
                         <i class="bi bi-people"></i>
                     </button>
-                    <button
-                        class="btn-icon-secondary"
-                        @click="toggleSavedPanel"
-                        :class="{ active: showSavedPanel }"
-                        title="Saved Messages"
-                    >
+                    <button class="btn-icon-secondary" @click="toggleSavedPanel" :class="{ active: showSavedPanel }"
+                        title="Saved Messages">
                         <i class="bi bi-bookmark"></i>
                     </button>
-                    <button
-                        class="btn-icon-secondary"
-                        @click="togglePinnedPanel"
-                        :class="{ active: showPinnedPanel }"
-                        title="Pinned Messages"
-                    >
+                    <button class="btn-icon-secondary" @click="togglePinnedPanel" :class="{ active: showPinnedPanel }"
+                        title="Pinned Messages">
                         <i class="bi bi-pin-angle"></i>
                         <span v-if="pinnedMessages.length" class="pin-count">{{
                             pinnedMessages.length
                         }}</span>
                     </button>
                     <!-- Toggle info sidebar -->
-                    <button
-                        class="btn-icon-secondary info-toggle-btn"
-                        :class="{ active: userInfoOpen }"
-                        @click="userInfoOpen = !userInfoOpen"
-                        title="Toggle Info"
-                    >
+                    <button class="btn-icon-secondary info-toggle-btn" :class="{ active: userInfoOpen }"
+                        @click="userInfoOpen = !userInfoOpen" title="Toggle Info">
                         <i class="bi bi-info-circle"></i>
                     </button>
                 </div>
@@ -242,11 +190,9 @@
             <div v-if="showPinnedPanel" class="pinned-panel">
                 <div class="pinned-header">
                     <i class="bi bi-pin-angle-fill"></i>
-                    <span
-                        >{{ pinnedMessages.length }} Pinned Message{{
-                            pinnedMessages.length === 1 ? "" : "s"
-                        }}</span
-                    >
+                    <span>{{ pinnedMessages.length }} Pinned Message{{
+                        pinnedMessages.length === 1 ? "" : "s"
+                        }}</span>
                     <button @click="showPinnedPanel = false" class="panel-close">
                         <i class="bi bi-x"></i>
                     </button>
@@ -255,12 +201,8 @@
                     <div v-if="!pinnedMessages.length" class="pinned-empty">
                         No pinned messages in this channel
                     </div>
-                    <div
-                        v-for="pin in pinnedMessages"
-                        :key="`pin-${pin.id}`"
-                        class="pinned-item"
-                        @click="scrollToMessageById(pin.id)"
-                    >
+                    <div v-for="pin in pinnedMessages" :key="`pin-${pin.id}`" class="pinned-item"
+                        @click="scrollToMessageById(pin.id)">
                         <div class="pinned-sender">{{ pin.sender }}</div>
                         <div class="pinned-body">
                             {{ pin.body?.slice(0, 100) || "Attachment" }}
@@ -281,12 +223,8 @@
                     <div v-if="!savedMessages.length" class="pinned-empty">
                         No saved messages yet
                     </div>
-                    <div
-                        v-for="saved in savedMessages"
-                        :key="`saved-${saved.id}`"
-                        class="pinned-item"
-                        @click="jumpToSavedMessage(saved)"
-                    >
+                    <div v-for="saved in savedMessages" :key="`saved-${saved.id}`" class="pinned-item"
+                        @click="jumpToSavedMessage(saved)">
                         <div class="pinned-sender">
                             {{ saved.sender }} · {{ saved.channel_name }}
                         </div>
@@ -303,9 +241,7 @@
                     <div class="search-results-header">
                         <div class="results-info">
                             <i class="bi bi-search"></i>
-                            <span
-                                >{{ searchResults.length }} results found</span
-                            >
+                            <span>{{ searchResults.length }} results found</span>
                         </div>
                         <button @click="clearSearch" class="btn-clear">
                             <i class="bi bi-x-lg"></i>
@@ -313,12 +249,8 @@
                         </button>
                     </div>
                     <div class="search-results-list">
-                        <div
-                            v-for="message in searchResults"
-                            :key="message.id"
-                            @click="scrollToMessage(message)"
-                            class="search-result-item"
-                        >
+                        <div v-for="message in searchResults" :key="message.id" @click="scrollToMessage(message)"
+                            class="search-result-item">
                             <div class="result-channel">
                                 {{ message.channel.name }}
                             </div>
@@ -352,11 +284,7 @@
                     <div v-else class="messages-list">
                         <!-- Load older messages -->
                         <div v-if="hasMoreMessages" class="load-older-messages">
-                            <button
-                                class="btn-load-older"
-                                :disabled="loadingMessages"
-                                @click="loadOlderMessages"
-                            >
+                            <button class="btn-load-older" :disabled="loadingMessages" @click="loadOlderMessages">
                                 {{
                                     loadingMessages
                                         ? "Loading..."
@@ -365,65 +293,45 @@
                             </button>
                         </div>
 
-                        <div
-                            v-for="(message, idx) in messages"
-                            :key="message.id"
-                            :data-message-id="message.id"
-                            class="message-wrapper"
-                        >
+                        <div v-for="(message, idx) in messages" :key="message.id" :data-message-id="message.id"
+                            class="message-wrapper">
                             <!-- Date Separator -->
-                            <div
-                                v-if="shouldShowDateSeparator(idx)"
-                                class="date-separator"
-                            >
+                            <div v-if="shouldShowDateSeparator(idx)" class="date-separator">
                                 <span class="date-label">{{
                                     dayLabel(message.created_at)
                                 }}</span>
                             </div>
 
                             <!-- Message -->
-                            <div
-                                :class="[
-                                    'message-group',
-                                    {
-                                        'own-message':
-                                            message.sender_id === userId,
-                                    },
-                                ]"
-                            >
+                            <div :class="[
+                                'message-group',
+                                {
+                                    'own-message':
+                                        message.sender_id === userId,
+                                },
+                            ]">
                                 <!-- Avatar (for received messages) -->
-                                <div
-                                    v-if="message.sender_id !== userId"
-                                    class="message-avatar"
-                                >
+                                <div v-if="message.sender_id !== userId" class="message-avatar">
                                     {{ avatarInitials(message.sender?.name) }}
                                 </div>
 
                                 <div class="message-content-wrapper">
                                     <!-- Sender Name -->
-                                    <div
-                                        v-if="
-                                            message.sender &&
-                                            message.sender_id !== userId
-                                        "
-                                        class="message-sender"
-                                    >
+                                    <div v-if="
+                                        message.sender &&
+                                        message.sender_id !== userId
+                                    " class="message-sender">
                                         {{ message.sender.name }}
                                     </div>
 
                                     <!-- Message Bubble -->
                                     <div class="message-bubble">
-                                        <div
-                                            v-if="message.metadata?.reply_to_id"
-                                            class="reply-inline rounded-2"
-                                            @click="
-                                                scrollToMessageById(
-                                                    message.metadata
-                                                        .reply_to_id,
-                                                )
-                                            "
-                                            title="Jump to original message"
-                                        >
+                                        <div v-if="message.metadata?.reply_to_id" class="reply-inline rounded-2" @click="
+                                            scrollToMessageById(
+                                                message.metadata
+                                                    .reply_to_id,
+                                            )
+                                            " title="Jump to original message">
                                             <div class="reply-inline-bar"></div>
                                             <div class="reply-inline-content">
                                                 <div class="reply-inline-title">
@@ -452,32 +360,25 @@
                                             </div>
                                         </div>
                                         <!-- Text Content -->
-                                        <div
-                                            v-if="hasRenderableMessageBody(message)"
-                                            class="message-text"
-                                            v-html="
-                                                formatMessageWithMentions(
-                                                    message,
-                                                )
-                                            "
-                                        ></div>
+                                        <div v-if="
+                                            hasRenderableMessageBody(
+                                                message,
+                                            )
+                                        " class="message-text" v-html="message.formattedBody"></div>
 
-                                        <div
-                                            v-if="getOrderReferences(message).length"
-                                            class="order-reference-stack"
-                                        >
-                                            <button
-                                                v-for="orderRef in getOrderReferences(message)"
-                                                :key="`${message.id}-${orderRef.id}`"
-                                                type="button"
-                                                class="order-reference-card"
-                                                :class="{
+                                        <div v-if="
+                                            getOrderReferences(message)
+                                                .length
+                                        " class="order-reference-stack">
+                                            <button v-for="orderRef in getOrderReferences(
+                                                message,
+                                            )" :key="`${message.id}-${orderRef.id}`" type="button"
+                                                class="order-reference-card" :class="{
                                                     'order-reference-card--missing':
                                                         !orderRef.order_url,
-                                                }"
-                                                :disabled="!orderRef.order_url"
-                                                @click="openOrderReference(orderRef)"
-                                            >
+                                                }" :disabled="!orderRef.order_url" @click="
+                                                    openOrderReference(orderRef)
+                                                    ">
                                                 <div class="order-reference-header">
                                                     <div class="order-reference-title">
                                                         <span class="order-reference-number">
@@ -489,10 +390,8 @@
                                                             Order
                                                         </span>
                                                     </div>
-                                                    <span
-                                                        class="order-reference-status"
-                                                        :class="`status-${orderRef.status_color || 'secondary'}`"
-                                                    >
+                                                    <span class="order-reference-status"
+                                                        :class="`status-${orderRef.status_color || 'secondary'}`">
                                                         {{
                                                             orderRef.status_label ||
                                                             "Unknown"
@@ -513,7 +412,7 @@
                                                                 {{
                                                                     orderRef.exists
                                                                         ? orderRef.client_name ||
-                                                                          "Unknown client"
+                                                                        "Unknown client"
                                                                         : "Order not found"
                                                                 }}
                                                             </span>
@@ -532,23 +431,20 @@
                                                                 {{
                                                                     orderRef.created_at
                                                                         ? formatOrderCreatedAt(
-                                                                              orderRef.created_at,
-                                                                          )
+                                                                            orderRef.created_at,
+                                                                        )
                                                                         : "Not available"
                                                                 }}
                                                             </span>
                                                         </div>
                                                     </div>
 
-                                                    <div
-                                                        v-if="
-                                                            orderRef.shipping_company_name ||
-                                                            orderRef.tracking_number ||
-                                                            orderRef.dispatch_date ||
-                                                            orderRef.tracking_status
-                                                        "
-                                                        class="order-reference-row"
-                                                    >
+                                                    <div v-if="
+                                                        orderRef.shipping_company_name ||
+                                                        orderRef.tracking_number ||
+                                                        orderRef.dispatch_date ||
+                                                        orderRef.tracking_status
+                                                    " class="order-reference-row">
                                                         <div class="order-reference-row-icon">
                                                             <i class="bi bi-truck"></i>
                                                         </div>
@@ -563,23 +459,17 @@
                                                                     "Tracking ready"
                                                                 }}
                                                             </span>
-                                                            <span
-                                                                v-if="
-                                                                    orderRef.tracking_number
-                                                                "
-                                                                class="order-reference-row-subvalue"
-                                                            >
+                                                            <span v-if="
+                                                                orderRef.tracking_number
+                                                            " class="order-reference-row-subvalue">
                                                                 Tracking:
                                                                 {{
                                                                     orderRef.tracking_number
                                                                 }}
                                                             </span>
-                                                            <span
-                                                                v-if="
-                                                                    orderRef.dispatch_date
-                                                                "
-                                                                class="order-reference-row-subvalue"
-                                                            >
+                                                            <span v-if="
+                                                                orderRef.dispatch_date
+                                                            " class="order-reference-row-subvalue">
                                                                 Dispatch:
                                                                 {{
                                                                     formatOrderCreatedAt(
@@ -615,59 +505,35 @@
                                             </div>
                                         </div> -->
 
-                                        <div
-                                            v-if="
-                                                message.attachments &&
-                                                message.attachments.length
-                                            "
-                                            class="message-attachments"
-                                        >
-                                            <div
-                                                v-for="attachment in message.attachments"
-                                                :key="attachment.id"
-                                                class="attachment-item"
-                                            >
+                                        <div v-if="
+                                            message.attachments &&
+                                            message.attachments.length
+                                        " class="message-attachments">
+                                            <div v-for="attachment in message.attachments" :key="attachment.id"
+                                                class="attachment-item">
                                                 <!-- IMAGE -->
-                                                <img
-                                                    v-if="isImage(attachment)"
-                                                    :src="attachment.url"
-                                                    class="attachment-image"
-                                                    @click="
+                                                <img v-if="isImage(attachment)" :src="attachment.url"
+                                                    class="attachment-image" @click="
                                                         openImageLightbox(
                                                             attachment,
                                                         )
-                                                    "
-                                                />
+                                                        " />
 
                                                 <!-- PDF / FILE -->
-                                                <div
-                                                    v-else-if="
-                                                        isPdf(attachment)
-                                                    "
-                                                    class="attachment-file attachment-pdf"
-                                                    @click="
-                                                        openPdfModal(attachment)
-                                                    "
-                                                >
-                                                    <i
-                                                        class="bi bi-file-pdf"
-                                                    ></i>
+                                                <div v-else-if="
+                                                    isPdf(attachment)
+                                                " class="attachment-file attachment-pdf" @click="
+                                                    openPdfModal(attachment)
+                                                    ">
+                                                    <i class="bi bi-file-pdf"></i>
                                                     <span>{{
                                                         attachment.filename
                                                     }}</span>
                                                 </div>
-                                                <a
-                                                    v-else
-                                                    :href="
-                                                        attachment.download_url
-                                                    "
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    class="attachment-file"
-                                                >
-                                                    <i
-                                                        class="bi bi-file-earmark"
-                                                    ></i>
+                                                <a v-else :href="attachment.download_url
+                                                    " target="_blank" rel="noopener noreferrer"
+                                                    class="attachment-file">
+                                                    <i class="bi bi-file-earmark"></i>
                                                     <span>{{
                                                         attachment.filename
                                                     }}</span>
@@ -675,37 +541,30 @@
                                             </div>
                                         </div>
 
-                                        <div
-                                            v-if="message.is_pinned"
-                                            class="pin-indicator"
-                                        >
+                                        <div v-if="message.is_pinned" class="pin-indicator">
                                             <i class="bi bi-pin-angle-fill"></i>
                                             Pinned
                                         </div>
                                     </div>
 
-                                    <div
-                                        v-if="groupedReactions(message).length"
-                                        class="reaction-bar"
-                                    >
-                                        <button
-                                            v-for="group in groupedReactions(message)"
-                                            :key="`${message.id}-${group.emoji}`"
-                                            class="reaction-chip"
-                                            :class="{ mine: group.my }"
-                                            @click.stop="reactToMessage(message, group.emoji)"
-                                        >
+                                    <div v-if="groupedReactions(message).length" class="reaction-bar">
+                                        <button v-for="group in groupedReactions(
+                                            message,
+                                        )" :key="`${message.id}-${group.emoji}`" class="reaction-chip"
+                                            :class="{ mine: group.my }" @click.stop="
+                                                reactToMessage(
+                                                    message,
+                                                    group.emoji,
+                                                )
+                                                ">
                                             {{ group.emoji }}
                                             <span>{{ group.count }}</span>
                                         </button>
                                     </div>
 
                                     <!-- Thread Indicator -->
-                                    <div
-                                        v-if="message.thread_count > 0"
-                                        class="thread-indicator"
-                                        @click.stop="openThread(message)"
-                                        style="
+                                    <div v-if="message.thread_count > 0" class="thread-indicator"
+                                        @click.stop="openThread(message)" style="
                                             display: flex;
                                             align-items: center;
                                             gap: 0.5rem;
@@ -717,17 +576,14 @@
                                             font-size: 0.75rem;
                                             color: var(--primary);
                                             width: fit-content;
-                                        "
-                                    >
+                                        ">
                                         <i class="bi bi-person-lines-fill"></i>
-                                        <span
-                                            >{{ message.thread_count }}
+                                        <span>{{ message.thread_count }}
                                             {{
                                                 message.thread_count === 1
                                                     ? "reply"
                                                     : "replies"
-                                            }}</span
-                                        >
+                                            }}</span>
                                         <i class="bi bi-chevron-right"></i>
                                     </div>
 
@@ -735,118 +591,82 @@
                                         <span class="message-time">
                                             {{ formatDate(message.created_at) }}
                                         </span>
-                                        <button
-                                            class="meta-action"
-                                            title="Reply Quote"
-                                            @click.stop="replyToMessage(message)"
-                                        >
+                                        <button class="meta-action" title="Reply Quote" @click.stop="
+                                            replyToMessage(message)
+                                            ">
                                             <i class="bi bi-reply"></i>
                                         </button>
 
                                         <div class="message-actions-float">
-                                            <button
-                                                class="meta-action"
-                                                title="React"
-                                                @click.stop="
-                                                    toggleReactionPicker(
-                                                        message.id,
-                                                    )
-                                                "
-                                            >
-                                                <i
-                                                    class="bi bi-emoji-smile"
-                                                ></i>
+                                            <button class="meta-action" title="React" @click.stop="
+                                                toggleReactionPicker(
+                                                    message.id,
+                                                )
+                                                ">
+                                                <i class="bi bi-emoji-smile"></i>
                                             </button>
-                                            <div
-                                                v-if="
-                                                    activeReactionPickerId ===
-                                                    message.id
-                                                "
-                                                class="message-reaction-picker"
-                                                @click.stop
-                                            >
-                                                <button
-                                                    v-for="emoji in QUICK_EMOJIS"
+                                            <div v-if="
+                                                activeReactionPickerId ===
+                                                message.id
+                                            " class="message-reaction-picker" @click.stop>
+                                                <button v-for="emoji in QUICK_EMOJIS"
                                                     :key="`reaction-picker-${message.id}-${emoji}`"
-                                                    class="reaction-picker-emoji"
-                                                    :title="emoji"
-                                                    @click.stop="
+                                                    class="reaction-picker-emoji" :title="emoji" @click.stop="
                                                         reactAndClose(
                                                             message,
                                                             emoji,
                                                         )
-                                                    "
-                                                >
+                                                        ">
                                                     {{ emoji }}
                                                 </button>
                                             </div>
                                             <!-- Thread Button — beside emoji reaction btn -->
-                                            <button
-                                                class="meta-action"
-                                                title="Reply in Thread"
-                                                @click.stop="openThread(message)"
-                                            >
+                                            <button class="meta-action" title="Reply in Thread" @click.stop="
+                                                openThread(message)
+                                                ">
                                                 <i class="bi bi-chat-text"></i>
                                             </button>
-                                            <button
-                                                class="meta-action"
-                                                title="More actions"
-                                                @click.stop="
-                                                    toggleMessageMenu(message.id)
-                                                "
-                                            >
+                                            <button class="meta-action" title="More actions" @click.stop="
+                                                toggleMessageMenu(
+                                                    message.id,
+                                                )
+                                                ">
                                                 <i class="bi bi-three-dots"></i>
                                             </button>
-                                            <div
-                                                v-if="
-                                                    activeMessageMenuId ===
-                                                    message.id
-                                                "
-                                                class="message-actions-menu"
-                                                @click.stop
-                                            >
-                                                <button
-                                                    class="message-actions-item"
-                                                    @click.stop="
-                                                        toggleSaveMessage(
-                                                            message,
-                                                        );
-                                                        closeMenus();
-                                                    "
-                                                >
-                                                    <i
-                                                        :class="
-                                                            message.is_saved
-                                                                ? 'bi bi-bookmark-fill'
-                                                                : 'bi bi-bookmark'
-                                                        "
-                                                    ></i>
+                                            <div v-if="
+                                                activeMessageMenuId ===
+                                                message.id
+                                            " class="message-actions-menu" @click.stop>
+                                                <button class="message-actions-item" @click.stop="
+                                                    toggleSaveMessage(
+                                                        message,
+                                                    );
+                                                closeMenus();
+                                                ">
+                                                    <i :class="message.is_saved
+                                                        ? 'bi bi-bookmark-fill'
+                                                        : 'bi bi-bookmark'
+                                                        "></i>
                                                     {{
                                                         message.is_saved
                                                             ? "Unsave"
                                                             : "Save"
                                                     }}
                                                 </button>
-                                                <button
-                                                    class="message-actions-item"
-                                                    @click.stop="
-                                                        message.is_pinned
-                                                            ? unpinMessage(
-                                                                  message,
-                                                              )
-                                                            : pinMessage(
-                                                                  message,
-                                                              );
-                                                        closeMenus();
-                                                    "
-                                                >
-                                                    <i
-                                                        :class="
-                                                            message.is_pinned
-                                                                ? 'bi bi-pin-angle-fill'
-                                                                : 'bi bi-pin-angle'
-                                                        "
-                                                    ></i>
+                                                <button class="message-actions-item" @click.stop="
+                                                    message.is_pinned
+                                                        ? unpinMessage(
+                                                            message,
+                                                        )
+                                                        : pinMessage(
+                                                            message,
+                                                        );
+                                                closeMenus();
+                                                ">
+                                                    <i :class="message.is_pinned
+                                                        ? 'bi bi-pin-angle-fill'
+                                                        : 'bi bi-pin-angle'
+                                                        "></i>
                                                     {{
                                                         message.is_pinned
                                                             ? "Unpin"
@@ -856,75 +676,50 @@
                                             </div>
                                         </div>
 
-                                        <span
-                                            v-if="message.sender_id === userId"
-                                            class="message-status"
-                                            :title="
-                                                readByOthers(message)
-                                                    ? 'Read'
-                                                    : 'Sent'
-                                            "
-                                        >
-                                            <i
-                                                v-if="readByOthers(message)"
-                                                class="bi bi-check-all read"
-                                            ></i>
-                                            <i
-                                                v-else
-                                                class="bi bi-check-all"
-                                            ></i>
+                                        <span v-if="message.sender_id === userId" class="message-status" :title="readByOthers(message)
+                                            ? 'Read'
+                                            : 'Sent'
+                                            ">
+                                            <i v-if="readByOthers(message)" class="bi bi-check-all read"></i>
+                                            <i v-else class="bi bi-check-all"></i>
                                         </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Typing Bubble in Chat Area (WhatsApp-style) -->
+                    <div v-if="typingLabel" class="typing-bubble-wrapper">
+                        <div class="typing-bubble">
+                            <div class="typing-bubble-dots">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                            <span class="typing-bubble-text">{{ typingLabel }}</span>
+                        </div>
+                    </div>
                 </template>
             </div>
 
             <!-- Scroll to Bottom Button -->
-            <button
-                v-if="showScrollDown"
-                @click="scrollToBottom"
-                class="scroll-to-bottom"
-                title="Scroll to latest"
-            >
+            <button v-if="showScrollDown" @click="scrollToBottom" class="scroll-to-bottom" title="Scroll to latest">
                 <i class="bi bi-arrow-down"></i>
             </button>
 
             <!-- Message Input -->
-            <div
-                class="message-input-container"
-                ref="inputContainer"
-                v-show="!(isMobile && userInfoOpen)"
-            >
-                <ChatInput
-                    v-model="newMessage"
-                    :placeholder="mobileInputPlaceholder"
-                    :files="attachmentFiles"
-                    :reply-to="replyTo"
-                    :emoji-picker-open="showEmojiPicker"
-                    :sending="isSending"
-                    :can-send="canSendMessage"
-                    :mention-open="mentionOpen"
-                    :mention-items="mentionItems"
-                    :mention-index="mentionIndex"
-                    :order-suggest-open="orderSuggestOpen"
-                    :order-suggest-items="orderSuggestItems"
-                    :order-suggest-index="orderSuggestIndex"
-                    textarea-ref="messageInput"
-                    file-input-ref="fileInput"
-                    @send="sendMessage"
-                    @attach-files="handleFiles"
-                    @remove-file="removeAttachment"
-                    @toggle-emoji="showEmojiPicker = !showEmojiPicker"
-                    @editor-input="onEditorInput"
-                    @editor-keydown="onKeyDownInEditor"
-                    @editor-paste="handlePaste"
-                    @pick-mention="pickMention"
-                    @pick-order="pickOrderSuggest"
-                    @cancel-reply="replyTo = null"
-                >
+            <div class="message-input-container" ref="inputContainer" v-show="!(isMobile && userInfoOpen)">
+                <ChatInput v-model="newMessage" :placeholder="mobileInputPlaceholder" :files="attachmentFiles"
+                    :reply-to="replyTo" :emoji-picker-open="showEmojiPicker" :sending="isSending"
+                    :can-send="canSendMessage" :mention-open="mentionOpen" :mention-items="mentionItems"
+                    :mention-index="mentionIndex" :order-suggest-open="orderSuggestOpen"
+                    :order-suggest-items="orderSuggestItems" :order-suggest-index="orderSuggestIndex"
+                    textarea-ref="messageInput" file-input-ref="fileInput" @send="sendMessage"
+                    @attach-files="handleFiles" @remove-file="removeAttachment"
+                    @toggle-emoji="showEmojiPicker = !showEmojiPicker" @editor-input="onEditorInput"
+                    @editor-keydown="onKeyDownInEditor" @editor-paste="handlePaste" @pick-mention="pickMention"
+                    @pick-order="pickOrderSuggest" @cancel-reply="replyTo = null">
                     <template #emoji-picker>
                         <EmojiPicker :data="emojiData" @emoji-select="appendEmoji" />
                     </template>
@@ -934,29 +729,16 @@
 
         <!-- Right Sidebar (Channel Info) -->
         <!-- Mobile Info Overlay Backdrop -->
-        <div
-            v-if="isMobile && userInfoOpen && !threadPanelOpen"
-            class="mobile-info-overlay"
-            @click="userInfoOpen = false"
-        ></div>
+        <div v-if="isMobile && userInfoOpen && !threadPanelOpen" class="mobile-info-overlay"
+            @click="userInfoOpen = false">
+        </div>
         <!-- Right Sidebar (Channel Info or Thread) -->
-        <div
-            class="info-sidebar"
-            v-if="shouldShowInfoSidebar"
-            :class="{ 'is-mobile': isMobile }"
-            :style="infoSidebarStyle"
-        >
+        <div class="info-sidebar" ref="infoSidebarRef" v-if="shouldShowInfoSidebar" :class="{ 'is-mobile': isMobile }"
+            :style="infoSidebarStyle">
             <!-- THREAD PANEL -->
-            <div
-                v-if="threadPanelOpen"
-                class="thread-panel"
-                style="width: 100%"
-            >
+            <div v-if="threadPanelOpen" class="thread-panel" style="width: 100%">
                 <!-- Resize Handle -->
-                <div
-                    class="thread-resize-handle"
-                    @mousedown="startResizeThread"
-                ></div>
+                <div class="thread-resize-handle" @mousedown="startResizeThread"></div>
 
                 <div class="thread-header">
                     <div class="thread-header-left">
@@ -976,10 +758,7 @@
 
                 <div class="thread-content" ref="threadContent">
                     <!-- Parent Message -->
-                    <div
-                        class="thread-parent-message"
-                        v-if="activeThreadMessage"
-                    >
+                    <div class="thread-parent-message" v-if="activeThreadMessage">
                         <div class="message-avatar">
                             {{
                                 avatarInitials(activeThreadMessage.sender?.name)
@@ -993,153 +772,122 @@
                                 }}</span>
                             </div>
                             <div class="message-bubble parent-bubble">
-                                <div
-                                    v-if="
-                                        hasRenderableMessageBody(
-                                            activeThreadMessage,
-                                        )
-                                    "
-                                    v-html="
-                                        formatMessageWithMentions(
-                                            activeThreadMessage,
-                                        )
-                                    "
-                                    class="message-text"
-                                ></div>
-                            <div
-                                v-if="
+                                <div v-if="
+                                    hasRenderableMessageBody(
+                                        activeThreadMessage,
+                                    )
+                                " v-html="activeThreadMessage.formattedBody" class="message-text"></div>
+                                <div v-if="
                                     getOrderReferences(activeThreadMessage)
                                         .length
-                                "
-                                class="order-reference-stack"
-                            >
-                                <button
-                                    v-for="orderRef in getOrderReferences(
+                                " class="order-reference-stack">
+                                    <button v-for="orderRef in getOrderReferences(
                                         activeThreadMessage,
-                                    )"
-                                    :key="`${activeThreadMessage.id}-${orderRef.id}`"
-                                    type="button"
-                                    class="order-reference-card"
-                                    :class="{
-                                        'order-reference-card--missing':
-                                            !orderRef.order_url,
-                                    }"
-                                    :disabled="!orderRef.order_url"
-                                    @click="openOrderReference(orderRef)"
-                                >
-                                    <div class="order-reference-header">
-                                        <div class="order-reference-title">
-                                            <span class="order-reference-number">
-                                                #{{ orderRef.display_number }}
-                                            </span>
-                                            <span class="order-reference-label-text">
-                                                Order
-                                            </span>
-                                        </div>
-                                        <span
-                                            class="order-reference-status"
-                                            :class="`status-${orderRef.status_color || 'secondary'}`"
-                                        >
-                                            {{
-                                                orderRef.status_label ||
-                                                "Unknown"
-                                            }}
-                                        </span>
-                                    </div>
-                                    <div class="order-reference-body">
-                                        <div class="order-reference-row">
-                                            <div class="order-reference-row-icon">
-                                                <i class="bi bi-person-badge"></i>
-                                            </div>
-                                            <div
-                                                class="order-reference-row-content"
-                                            >
-                                                <span class="order-reference-row-label">
-                                                    Client
-                                                </span>
-                                                <span class="order-reference-row-value">
-                                                    {{
-                                                        orderRef.exists
-                                                            ? orderRef.client_name ||
-                                                              "Unknown client"
-                                                            : "Order not found"
+                                    )" :key="`${activeThreadMessage.id}-${orderRef.id}`" type="button"
+                                        class="order-reference-card" :class="{
+                                            'order-reference-card--missing':
+                                                !orderRef.order_url,
+                                        }" :disabled="!orderRef.order_url" @click="openOrderReference(orderRef)">
+                                        <div class="order-reference-header">
+                                            <div class="order-reference-title">
+                                                <span class="order-reference-number">
+                                                    #{{
+                                                        orderRef.display_number
                                                     }}
                                                 </span>
-                                            </div>
-                                        </div>
-                                        <div class="order-reference-row">
-                                            <div class="order-reference-row-icon">
-                                                <i class="bi bi-calendar3"></i>
-                                            </div>
-                                            <div
-                                                class="order-reference-row-content"
-                                            >
-                                                <span class="order-reference-row-label">
-                                                    Created
-                                                </span>
-                                                <span class="order-reference-row-value">
-                                                    {{
-                                                        orderRef.created_at
-                                                            ? formatOrderCreatedAt(
-                                                                  orderRef.created_at,
-                                                              )
-                                                            : "Not available"
-                                                    }}
+                                                <span class="order-reference-label-text">
+                                                    Order
                                                 </span>
                                             </div>
+                                            <span class="order-reference-status"
+                                                :class="`status-${orderRef.status_color || 'secondary'}`">
+                                                {{
+                                                    orderRef.status_label ||
+                                                    "Unknown"
+                                                }}
+                                            </span>
                                         </div>
-                                        <div
-                                            v-if="
+                                        <div class="order-reference-body">
+                                            <div class="order-reference-row">
+                                                <div class="order-reference-row-icon">
+                                                    <i class="bi bi-person-badge"></i>
+                                                </div>
+                                                <div class="order-reference-row-content">
+                                                    <span class="order-reference-row-label">
+                                                        Client
+                                                    </span>
+                                                    <span class="order-reference-row-value">
+                                                        {{
+                                                            orderRef.exists
+                                                                ? orderRef.client_name ||
+                                                                "Unknown client"
+                                                                : "Order not found"
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="order-reference-row">
+                                                <div class="order-reference-row-icon">
+                                                    <i class="bi bi-calendar3"></i>
+                                                </div>
+                                                <div class="order-reference-row-content">
+                                                    <span class="order-reference-row-label">
+                                                        Created
+                                                    </span>
+                                                    <span class="order-reference-row-value">
+                                                        {{
+                                                            orderRef.created_at
+                                                                ? formatOrderCreatedAt(
+                                                                    orderRef.created_at,
+                                                                )
+                                                                : "Not available"
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div v-if="
                                                 orderRef.shipping_company_name ||
                                                 orderRef.tracking_number ||
                                                 orderRef.dispatch_date ||
                                                 orderRef.tracking_status
-                                            "
-                                            class="order-reference-row"
-                                        >
-                                            <div class="order-reference-row-icon">
-                                                <i class="bi bi-truck"></i>
-                                            </div>
-                                            <div
-                                                class="order-reference-row-content"
-                                            >
-                                                <span class="order-reference-row-label">
-                                                    Shipping
-                                                </span>
-                                                <span class="order-reference-row-value">
-                                                    {{
-                                                        orderRef.shipping_company_name ||
-                                                        orderRef.tracking_status ||
-                                                        "Tracking ready"
-                                                    }}
-                                                </span>
-                                                <span
-                                                    v-if="
+                                            " class="order-reference-row">
+                                                <div class="order-reference-row-icon">
+                                                    <i class="bi bi-truck"></i>
+                                                </div>
+                                                <div class="order-reference-row-content">
+                                                    <span class="order-reference-row-label">
+                                                        Shipping
+                                                    </span>
+                                                    <span class="order-reference-row-value">
+                                                        {{
+                                                            orderRef.shipping_company_name ||
+                                                            orderRef.tracking_status ||
+                                                            "Tracking ready"
+                                                        }}
+                                                    </span>
+                                                    <span v-if="
                                                         orderRef.tracking_number
-                                                    "
-                                                    class="order-reference-row-subvalue"
-                                                >
-                                                    Tracking:
-                                                    {{ orderRef.tracking_number }}
-                                                </span>
-                                                <span
-                                                    v-if="
+                                                    " class="order-reference-row-subvalue">
+                                                        Tracking:
+                                                        {{
+                                                            orderRef.tracking_number
+                                                        }}
+                                                    </span>
+                                                    <span v-if="
                                                         orderRef.dispatch_date
-                                                    "
-                                                    class="order-reference-row-subvalue"
-                                                >
-                                                    Dispatch:
-                                                    {{
-                                                        formatOrderCreatedAt(
-                                                            orderRef.dispatch_date,
-                                                        )
-                                                    }}
-                                                </span>
+                                                    " class="order-reference-row-subvalue">
+                                                        Dispatch:
+                                                        {{
+                                                            formatOrderCreatedAt(
+                                                                orderRef.dispatch_date,
+                                                            )
+                                                        }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </button>
-                            </div>
+                                    </button>
+                                </div>
                                 <!-- <div
                                     v-if="
                                         activeThreadMessage.attachments &&
@@ -1165,47 +913,29 @@
                                     </div>
                                 </div> -->
 
-                                <div
-                                    v-if="
-                                        activeThreadMessage.attachments &&
-                                        activeThreadMessage.attachments.length
-                                    "
-                                    class="message-attachments"
-                                >
-                                    <div
-                                        v-for="attachment in activeThreadMessage.attachments"
-                                        :key="attachment.id"
-                                        class="attachment-item"
-                                    >
-                                        <img
-                                            v-if="attachment.is_image"
-                                            :src="attachment.url"
-                                            class="attachment-image"
+                                <div v-if="
+                                    activeThreadMessage.attachments &&
+                                    activeThreadMessage.attachments.length
+                                " class="message-attachments">
+                                    <div v-for="attachment in activeThreadMessage.attachments" :key="attachment.id"
+                                        class="attachment-item">
+                                        <img v-if="attachment.is_image" :src="attachment.url" class="attachment-image"
                                             @click="
                                                 window.open(
                                                     attachment.url,
                                                     '_blank',
                                                 )
-                                            "
-                                        />
+                                                " />
 
-                                        <div
-                                            v-else-if="isPdf(attachment)"
-                                            class="attachment-file attachment-pdf"
-                                            @click="openPdfModal(attachment)"
-                                        >
+                                        <div v-else-if="isPdf(attachment)" class="attachment-file attachment-pdf"
+                                            @click="openPdfModal(attachment)">
                                             <i class="bi bi-file-pdf"></i>
                                             <span>{{
                                                 attachment.filename
                                             }}</span>
                                         </div>
-                                        <a
-                                            v-else
-                                            :href="attachment.download_url"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="attachment-file"
-                                        >
+                                        <a v-else :href="attachment.download_url" target="_blank"
+                                            rel="noopener noreferrer" class="attachment-file">
                                             <i class="bi bi-file-earmark"></i>
                                             <span>{{
                                                 attachment.filename
@@ -1223,11 +953,7 @@
 
                     <!-- Replies -->
                     <div class="thread-replies">
-                        <div
-                            v-for="reply in threadReplies"
-                            :key="reply.id"
-                            class="message-group"
-                        >
+                        <div v-for="reply in threadReplies" :key="reply.id" class="message-group">
                             <div class="message-avatar">
                                 {{ avatarInitials(reply.sender?.name) }}
                             </div>
@@ -1239,45 +965,32 @@
                                     }}</span>
                                 </div>
                                 <div class="message-bubble">
-                                    <div
-                                        v-if="
-                                            hasRenderableMessageBody(reply)
-                                        "
-                                        v-html="
-                                            formatMessageWithMentions(reply)
-                                        "
-                                        class="message-text"
-                                    ></div>
+                                    <div v-if="hasRenderableMessageBody(reply)" v-html="reply.formattedBody"
+                                        class="message-text"></div>
 
-                                    <div
-                                        v-if="getOrderReferences(reply).length"
-                                        class="order-reference-stack"
-                                    >
-                                        <button
-                                            v-for="orderRef in getOrderReferences(reply)"
-                                            :key="`${reply.id}-${orderRef.id}`"
-                                            type="button"
-                                            class="order-reference-card"
-                                            :class="{
+                                    <div v-if="getOrderReferences(reply).length" class="order-reference-stack">
+                                        <button v-for="orderRef in getOrderReferences(
+                                            reply,
+                                        )" :key="`${reply.id}-${orderRef.id}`" type="button"
+                                            class="order-reference-card" :class="{
                                                 'order-reference-card--missing':
                                                     !orderRef.order_url,
-                                            }"
-                                            :disabled="!orderRef.order_url"
-                                            @click="openOrderReference(orderRef)"
-                                        >
+                                            }" :disabled="!orderRef.order_url" @click="
+                                                openOrderReference(orderRef)
+                                                ">
                                             <div class="order-reference-header">
                                                 <div class="order-reference-title">
                                                     <span class="order-reference-number">
-                                                        #{{ orderRef.display_number }}
+                                                        #{{
+                                                            orderRef.display_number
+                                                        }}
                                                     </span>
                                                     <span class="order-reference-label-text">
                                                         Order
                                                     </span>
                                                 </div>
-                                                <span
-                                                    class="order-reference-status"
-                                                    :class="`status-${orderRef.status_color || 'secondary'}`"
-                                                >
+                                                <span class="order-reference-status"
+                                                    :class="`status-${orderRef.status_color || 'secondary'}`">
                                                     {{
                                                         orderRef.status_label ||
                                                         "Unknown"
@@ -1290,9 +1003,7 @@
                                                     <div class="order-reference-row-icon">
                                                         <i class="bi bi-person-badge"></i>
                                                     </div>
-                                                    <div
-                                                        class="order-reference-row-content"
-                                                    >
+                                                    <div class="order-reference-row-content">
                                                         <span class="order-reference-row-label">
                                                             Client
                                                         </span>
@@ -1300,7 +1011,7 @@
                                                             {{
                                                                 orderRef.exists
                                                                     ? orderRef.client_name ||
-                                                                      "Unknown client"
+                                                                    "Unknown client"
                                                                     : "Order not found"
                                                             }}
                                                         </span>
@@ -1311,9 +1022,7 @@
                                                     <div class="order-reference-row-icon">
                                                         <i class="bi bi-calendar3"></i>
                                                     </div>
-                                                    <div
-                                                        class="order-reference-row-content"
-                                                    >
+                                                    <div class="order-reference-row-content">
                                                         <span class="order-reference-row-label">
                                                             Created
                                                         </span>
@@ -1321,29 +1030,24 @@
                                                             {{
                                                                 orderRef.created_at
                                                                     ? formatOrderCreatedAt(
-                                                                          orderRef.created_at,
-                                                                      )
+                                                                        orderRef.created_at,
+                                                                    )
                                                                     : "Not available"
                                                             }}
                                                         </span>
                                                     </div>
                                                 </div>
 
-                                                <div
-                                                    v-if="
-                                                        orderRef.shipping_company_name ||
-                                                        orderRef.tracking_number ||
-                                                        orderRef.dispatch_date ||
-                                                        orderRef.tracking_status
-                                                    "
-                                                    class="order-reference-row"
-                                                >
+                                                <div v-if="
+                                                    orderRef.shipping_company_name ||
+                                                    orderRef.tracking_number ||
+                                                    orderRef.dispatch_date ||
+                                                    orderRef.tracking_status
+                                                " class="order-reference-row">
                                                     <div class="order-reference-row-icon">
                                                         <i class="bi bi-truck"></i>
                                                     </div>
-                                                    <div
-                                                        class="order-reference-row-content"
-                                                    >
+                                                    <div class="order-reference-row-content">
                                                         <span class="order-reference-row-label">
                                                             Shipping
                                                         </span>
@@ -1354,21 +1058,17 @@
                                                                 "Tracking ready"
                                                             }}
                                                         </span>
-                                                        <span
-                                                            v-if="
-                                                                orderRef.tracking_number
-                                                            "
-                                                            class="order-reference-row-subvalue"
-                                                        >
+                                                        <span v-if="
+                                                            orderRef.tracking_number
+                                                        " class="order-reference-row-subvalue">
                                                             Tracking:
-                                                            {{ orderRef.tracking_number }}
+                                                            {{
+                                                                orderRef.tracking_number
+                                                            }}
                                                         </span>
-                                                        <span
-                                                            v-if="
-                                                                orderRef.dispatch_date
-                                                            "
-                                                            class="order-reference-row-subvalue"
-                                                        >
+                                                        <span v-if="
+                                                            orderRef.dispatch_date
+                                                        " class="order-reference-row-subvalue">
                                                             Dispatch:
                                                             {{
                                                                 formatOrderCreatedAt(
@@ -1407,52 +1107,32 @@
                                         </div>
                                     </div> -->
 
-                                    <div
-                                        v-if="
-                                            reply.attachments &&
-                                            reply.attachments.length
-                                        "
-                                        class="message-attachments"
-                                    >
-                                        <div
-                                            v-for="attachment in reply.attachments"
-                                            :key="attachment.id"
-                                            class="attachment-item"
-                                        >
-                                            <img
-                                                v-if="attachment.is_image"
-                                                :src="attachment.url"
-                                                class="attachment-image"
-                                                @click="
+                                    <div v-if="
+                                        reply.attachments &&
+                                        reply.attachments.length
+                                    " class="message-attachments">
+                                        <div v-for="attachment in reply.attachments" :key="attachment.id"
+                                            class="attachment-item">
+                                            <img v-if="attachment.is_image" :src="attachment.url"
+                                                class="attachment-image" @click="
                                                     window.open(
                                                         attachment.url,
                                                         '_blank',
                                                     )
-                                                "
-                                            />
+                                                    " />
 
-                                            <div
-                                                v-else-if="isPdf(attachment)"
-                                                class="attachment-file attachment-pdf"
+                                            <div v-else-if="isPdf(attachment)" class="attachment-file attachment-pdf"
                                                 @click="
                                                     openPdfModal(attachment)
-                                                "
-                                            >
+                                                    ">
                                                 <i class="bi bi-file-pdf"></i>
                                                 <span>{{
                                                     attachment.filename
                                                 }}</span>
                                             </div>
-                                            <a
-                                                v-else
-                                                :href="attachment.download_url"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                class="attachment-file"
-                                            >
-                                                <i
-                                                    class="bi bi-file-earmark"
-                                                ></i>
+                                            <a v-else :href="attachment.download_url" target="_blank"
+                                                rel="noopener noreferrer" class="attachment-file">
+                                                <i class="bi bi-file-earmark"></i>
                                                 <span>{{
                                                     attachment.filename
                                                 }}</span>
@@ -1467,30 +1147,21 @@
 
                 <!-- Thread Input -->
                 <div class="thread-input-area">
-                    <ChatInput
-                        v-model="threadEditor.input.value"
-                        placeholder="Reply to thread... Use @ to mention"
-                        :files="threadReplyFiles"
-                        :emoji-picker-open="threadEditor.emojiPickerOpen.value"
-                        :sending="isSendingThread"
-                        :can-send="!!threadEditor.input.value.trim() || threadReplyFiles.length > 0"
-                        :mention-open="threadEditor.mentionOpen.value"
+                    <ChatInput v-model="threadEditor.input.value" placeholder="Reply to thread... Use @ to mention"
+                        :files="threadReplyFiles" :emoji-picker-open="threadEditor.emojiPickerOpen.value"
+                        :sending="isSendingThread" :can-send="!!threadEditor.input.value.trim() ||
+                            threadReplyFiles.length > 0
+                            " :mention-open="threadEditor.mentionOpen.value"
                         :mention-items="threadEditor.mentionItems.value"
-                        :mention-index="threadEditor.mentionIndex.value"
-                        :order-suggest-open="threadEditor.orderSuggestOpen.value"
-                        :order-suggest-items="threadEditor.orderSuggestItems.value"
-                        :order-suggest-index="threadEditor.orderSuggestIndex.value"
-                        textarea-ref="threadInput"
-                        file-input-ref="threadFileInput"
-                        @send="sendThreadReply"
-                        @attach-files="handleThreadFiles"
-                        @remove-file="removeThreadAttachment"
-                        @toggle-emoji="threadEditor.emojiPickerOpen.value = !threadEditor.emojiPickerOpen.value"
-                        @editor-input="threadEditor.onInput"
-                        @editor-keydown="threadEditor.onKeyDown"
-                        @pick-mention="threadEditor.pickMention"
-                        @pick-order="threadEditor.pickOrderSuggest"
-                    >
+                        :mention-index="threadEditor.mentionIndex.value" :order-suggest-open="threadEditor.orderSuggestOpen.value
+                            " :order-suggest-items="threadEditor.orderSuggestItems.value
+                                " :order-suggest-index="threadEditor.orderSuggestIndex.value
+                                " textarea-ref="threadInput" file-input-ref="threadFileInput" @send="sendThreadReply"
+                        @attach-files="handleThreadFiles" @remove-file="removeThreadAttachment" @toggle-emoji="
+                            threadEditor.emojiPickerOpen.value =
+                            !threadEditor.emojiPickerOpen.value
+                            " @editor-input="threadEditor.onInput" @editor-keydown="threadEditor.onKeyDown"
+                        @pick-mention="threadEditor.pickMention" @pick-order="threadEditor.pickOrderSuggest">
                         <template #emoji-picker>
                             <EmojiPicker :data="emojiData" @emoji-select="threadEditor.appendEmoji" />
                         </template>
@@ -1499,34 +1170,20 @@
             </div>
 
             <!-- EXISTING INFO PANEL -->
-            <div
-                v-else
-                class="channel-info-panel"
-                style="height: 100%; display: flex; flex-direction: column"
-            >
+            <div v-else class="channel-info-panel" style="height: 100%; display: flex; flex-direction: column">
                 <!-- Resize handle for info panel -->
-                <div
-                    class="info-resize-handle"
-                    @mousedown="startResizeInfo"
-                ></div>
+                <div class="info-resize-handle" @mousedown="startResizeInfo"></div>
                 <!-- Profile Card -->
                 <div class="info-profile">
                     <div class="profile-avatar-large">
-                        <div
-                            v-if="isGroupChannel(currentChannel)"
-                            class="avatar-large group"
-                        >
+                        <div v-if="isGroupChannel(currentChannel)" class="avatar-large group">
                             <i class="bi bi-people"></i>
                         </div>
                         <div v-else class="avatar-large personal">
                             {{ avatarInitials(currentChannel.name) }}
                         </div>
                     </div>
-                    <button
-                        class="btn-icon-secondary info-close-btn"
-                        @click="userInfoOpen = false"
-                        title="Close Info"
-                    >
+                    <button class="btn-icon-secondary info-close-btn" @click="userInfoOpen = false" title="Close Info">
                         <i class="bi bi-x-lg"></i>
                     </button>
                     <h4 class="profile-name">{{ currentChannel.name }}</h4>
@@ -1543,31 +1200,20 @@
                 <div class="info-sections">
                     <!-- About Section (hidden in personal DMs for normal admins) -->
                     <div class="info-section" v-if="showAboutSection">
-                        <button
-                            @click="togglePanel('info')"
-                            class="section-toggle"
-                        >
+                        <button @click="togglePanel('info')" class="section-toggle">
                             <div class="section-header-content">
                                 <i class="bi bi-info-circle"></i>
                                 <span>About</span>
                             </div>
-                            <i
-                                :class="[
-                                    'bi',
-                                    openPanel === 'info'
-                                        ? 'bi-chevron-up'
-                                        : 'bi-chevron-down',
-                                ]"
-                            ></i>
+                            <i :class="[
+                                'bi',
+                                openPanel === 'info'
+                                    ? 'bi-chevron-up'
+                                    : 'bi-chevron-down',
+                            ]"></i>
                         </button>
-                        <div
-                            v-show="openPanel === 'info'"
-                            class="section-content"
-                        >
-                            <div
-                                v-if="channelInfo.description"
-                                class="info-item"
-                            >
+                        <div v-show="openPanel === 'info'" class="section-content">
+                            <div v-if="channelInfo.description" class="info-item">
                                 <p>{{ channelInfo.description }}</p>
                             </div>
                             <div class="info-item">
@@ -1595,36 +1241,22 @@
 
                     <!-- Members Section (hidden in personal DMs for normal admins) -->
                     <div class="info-section" v-if="showMembersSection">
-                        <button
-                            @click="togglePanel('members')"
-                            class="section-toggle"
-                        >
+                        <button @click="togglePanel('members')" class="section-toggle">
                             <div class="section-header-content">
                                 <i class="bi bi-people"></i>
-                                <span
-                                    >Members ({{
-                                        channelInfo.members?.length || 0
-                                    }})</span
-                                >
+                                <span>Members ({{
+                                    channelInfo.members?.length || 0
+                                    }})</span>
                             </div>
-                            <i
-                                :class="[
-                                    'bi',
-                                    openPanel === 'members'
-                                        ? 'bi-chevron-up'
-                                        : 'bi-chevron-down',
-                                ]"
-                            ></i>
+                            <i :class="[
+                                'bi',
+                                openPanel === 'members'
+                                    ? 'bi-chevron-up'
+                                    : 'bi-chevron-down',
+                            ]"></i>
                         </button>
-                        <div
-                            v-show="openPanel === 'members'"
-                            class="section-content members-section-content"
-                        >
-                            <div
-                                v-for="member in channelInfo.members"
-                                :key="member.id"
-                                class="member-item"
-                            >
+                        <div v-show="openPanel === 'members'" class="section-content members-section-content">
+                            <div v-for="member in channelInfo.members" :key="member.id" class="member-item">
                                 <div class="member-avatar">
                                     {{ avatarInitials(member.name) }}
                                 </div>
@@ -1636,11 +1268,7 @@
                                         {{ member.email }}
                                     </p>
                                 </div>
-                                <button
-                                    class="btn-icon-secondary"
-                                    @click="startDirect(member.id)"
-                                    title="Message"
-                                >
+                                <button class="btn-icon-secondary" @click="startDirect(member.id)" title="Message">
                                     <i class="bi bi-chat-dots"></i>
                                 </button>
                             </div>
@@ -1649,31 +1277,20 @@
 
                     <!-- Media Section -->
                     <div class="info-section">
-                        <button
-                            @click="togglePanel('media')"
-                            class="section-toggle"
-                        >
+                        <button @click="togglePanel('media')" class="section-toggle">
                             <div class="section-header-content">
                                 <i class="bi bi-image"></i>
                                 <span>Media ({{ sidebarImages.length }})</span>
                             </div>
-                            <i
-                                :class="[
-                                    'bi',
-                                    openPanel === 'media'
-                                        ? 'bi-chevron-up'
-                                        : 'bi-chevron-down',
-                                ]"
-                            ></i>
+                            <i :class="[
+                                'bi',
+                                openPanel === 'media'
+                                    ? 'bi-chevron-up'
+                                    : 'bi-chevron-down',
+                            ]"></i>
                         </button>
-                        <div
-                            v-show="openPanel === 'media'"
-                            class="section-content"
-                        >
-                            <div
-                                v-if="!sidebarImages.length"
-                                class="empty-section"
-                            >
+                        <div v-show="openPanel === 'media'" class="section-content">
+                            <div v-if="!sidebarImages.length" class="empty-section">
                                 <i class="bi bi-image"></i>
                                 <p>No media yet</p>
                             </div>
@@ -1685,54 +1302,34 @@
 
                     <!-- Files Section -->
                     <div class="info-section">
-                        <button
-                            @click="togglePanel('files')"
-                            class="section-toggle"
-                        >
+                        <button @click="togglePanel('files')" class="section-toggle">
                             <div class="section-header-content">
                                 <i class="bi bi-file-earmark"></i>
                                 <span>Files ({{ sidebarFiles.length }})</span>
                             </div>
-                            <i
-                                :class="[
-                                    'bi',
-                                    openPanel === 'files'
-                                        ? 'bi-chevron-up'
-                                        : 'bi-chevron-down',
-                                ]"
-                            ></i>
+                            <i :class="[
+                                'bi',
+                                openPanel === 'files'
+                                    ? 'bi-chevron-up'
+                                    : 'bi-chevron-down',
+                            ]"></i>
                         </button>
-                        <div
-                            v-show="openPanel === 'files'"
-                            class="section-content"
-                        >
-                            <div
-                                v-if="!sidebarFiles.length"
-                                class="empty-section"
-                            >
+                        <div v-show="openPanel === 'files'" class="section-content">
+                            <div v-if="!sidebarFiles.length" class="empty-section">
                                 <i class="bi bi-file-earmark"></i>
                                 <p>No files yet</p>
                             </div>
-                            <div
-                                v-else
-                                v-for="file in sidebarFiles"
-                                :key="file.id"
-                                class="file-link"
-                                @click="
+                            <div v-else v-for="file in sidebarFiles" :key="file.id" class="file-link" @click="
+                                isPdf(file)
+                                    ? openPdfModal(file)
+                                    : openAttachment(file)
+                                " style="cursor: pointer">
+                                <i :class="[
+                                    'bi',
                                     isPdf(file)
-                                        ? openPdfModal(file)
-                                        : openAttachment(file)
-                                "
-                                style="cursor: pointer"
-                            >
-                                <i
-                                    :class="[
-                                        'bi',
-                                        isPdf(file)
-                                            ? 'bi-file-pdf'
-                                            : 'bi-file-earmark',
-                                    ]"
-                                ></i>
+                                        ? 'bi-file-pdf'
+                                        : 'bi-file-earmark',
+                                ]"></i>
                                 <span>{{ file.filename }}</span>
                             </div>
                         </div>
@@ -1740,42 +1337,25 @@
 
                     <!-- Links Section -->
                     <div class="info-section">
-                        <button
-                            @click="togglePanel('links')"
-                            class="section-toggle"
-                        >
+                        <button @click="togglePanel('links')" class="section-toggle">
                             <div class="section-header-content">
                                 <i class="bi bi-link-45deg"></i>
                                 <span>Links ({{ sidebarLinks.length }})</span>
                             </div>
-                            <i
-                                :class="[
-                                    'bi',
-                                    openPanel === 'links'
-                                        ? 'bi-chevron-up'
-                                        : 'bi-chevron-down',
-                                ]"
-                            ></i>
+                            <i :class="[
+                                'bi',
+                                openPanel === 'links'
+                                    ? 'bi-chevron-up'
+                                    : 'bi-chevron-down',
+                            ]"></i>
                         </button>
-                        <div
-                            v-show="openPanel === 'links'"
-                            class="section-content"
-                        >
-                            <div
-                                v-if="!sidebarLinks.length"
-                                class="empty-section"
-                            >
+                        <div v-show="openPanel === 'links'" class="section-content">
+                            <div v-if="!sidebarLinks.length" class="empty-section">
                                 <i class="bi bi-link-45deg"></i>
                                 <p>No links yet</p>
                             </div>
-                            <a
-                                v-else
-                                v-for="link in sidebarLinks"
-                                :key="link.message_id + '-' + link.url"
-                                :href="link.url"
-                                target="_blank"
-                                class="file-link"
-                            >
+                            <a v-else v-for="link in sidebarLinks" :key="link.message_id + '-' + link.url"
+                                :href="link.url" target="_blank" class="file-link">
                                 <i class="bi bi-link-45deg"></i>
                                 <span>{{ link.url }}</span>
                             </a>
@@ -1786,11 +1366,7 @@
         </div>
 
         <!-- Manage Members Modal -->
-        <div
-            v-if="manageOpen"
-            class="modal-overlay"
-            @click.self="manageOpen = false"
-        >
+        <div v-if="manageOpen" class="modal-overlay" @click.self="manageOpen = false">
             <div class="modal-container">
                 <div class="modal-header">
                     <h3 class="modal-title">
@@ -1804,44 +1380,28 @@
                 <div class="modal-body">
                     <div class="search-wrapper">
                         <i class="bi bi-search search-icon"></i>
-                        <input
-                            v-model="memberSearch"
-                            class="search-input"
-                            placeholder="Search members..."
-                        />
+                        <input v-model="memberSearch" class="search-input" placeholder="Search members..." />
                     </div>
                     <div v-if="membersLoading" class="loading-state">
                         <div class="spinner"></div>
                         <p>Loading members...</p>
                     </div>
                     <div v-else class="members-list">
-                        <label
-                            v-for="admin in members.filter((a) =>
-                                (a.name + ' ' + a.email)
-                                    .toLowerCase()
-                                    .includes(memberSearch.toLowerCase()),
-                            )"
-                            :key="admin.id"
-                            class="member-checkbox-item"
-                        >
-                            <input
-                                type="checkbox"
-                                :checked="memberIds.includes(admin.id)"
-                                :disabled="admin.id === userId"
-                                @change="toggleMember(admin.id)"
-                                class="member-checkbox"
-                            />
+                        <label v-for="admin in members.filter((a) =>
+                            (a.name + ' ' + a.email)
+                                .toLowerCase()
+                                .includes(memberSearch.toLowerCase()),
+                        )" :key="admin.id" class="member-checkbox-item">
+                            <input type="checkbox" :checked="memberIds.includes(admin.id)"
+                                :disabled="admin.id === userId" @change="toggleMember(admin.id)"
+                                class="member-checkbox" />
                             <div class="member-avatar small">
                                 {{ avatarInitials(admin.name) }}
                             </div>
                             <div class="member-details">
                                 <p class="member-name">
                                     {{ admin.name }}
-                                    <span
-                                        v-if="admin.id === userId"
-                                        class="you-badge"
-                                        >You</span
-                                    >
+                                    <span v-if="admin.id === userId" class="you-badge">You</span>
                                 </p>
                                 <p class="member-email">{{ admin.email }}</p>
                             </div>
@@ -1852,11 +1412,7 @@
                     <button @click="manageOpen = false" class="btn-secondary">
                         Cancel
                     </button>
-                    <button
-                        @click="saveMembers"
-                        class="btn-primary"
-                        :disabled="isSavingMembers"
-                    >
+                    <button @click="saveMembers" class="btn-primary" :disabled="isSavingMembers">
                         {{ isSavingMembers ? "Saving..." : "Save Changes" }}
                     </button>
                 </div>
@@ -1864,11 +1420,7 @@
         </div>
 
         <!-- Create Channel Modal -->
-        <div
-            v-if="createOpen"
-            class="modal-overlay"
-            @click.self="createOpen = false"
-        >
+        <div v-if="createOpen" class="modal-overlay" @click.self="createOpen = false">
             <div class="modal-container">
                 <div class="modal-header">
                     <h3 class="modal-title">
@@ -1882,60 +1434,36 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="form-label">Channel Name</label>
-                        <input
-                            v-model="createName"
-                            class="form-input"
-                            placeholder="Enter channel name"
-                        />
+                        <input v-model="createName" class="form-input" placeholder="Enter channel name" />
                     </div>
                     <div class="form-group">
                         <label class="form-label">Description (Optional)</label>
-                        <textarea
-                            v-model="createDescription"
-                            class="form-textarea"
-                            placeholder="Enter channel description"
-                            rows="3"
-                        ></textarea>
+                        <textarea v-model="createDescription" class="form-textarea"
+                            placeholder="Enter channel description" rows="3"></textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Add Members</label>
                         <div class="search-wrapper">
                             <i class="bi bi-search search-icon"></i>
-                            <input
-                                v-model="createSearch"
-                                class="search-input"
-                                placeholder="Search members..."
-                            />
+                            <input v-model="createSearch" class="search-input" placeholder="Search members..." />
                         </div>
                     </div>
                     <div class="members-list">
-                        <label
-                            v-for="admin in members.filter((a) =>
-                                (a.name + ' ' + a.email)
-                                    .toLowerCase()
-                                    .includes(createSearch.toLowerCase()),
-                            )"
-                            :key="admin.id"
-                            class="member-checkbox-item"
-                        >
-                            <input
-                                type="checkbox"
-                                :checked="createMemberIds.includes(admin.id)"
-                                :disabled="admin.id === userId"
-                                @change="toggleCreateMember(admin.id)"
-                                class="member-checkbox"
-                            />
+                        <label v-for="admin in members.filter((a) =>
+                            (a.name + ' ' + a.email)
+                                .toLowerCase()
+                                .includes(createSearch.toLowerCase()),
+                        )" :key="admin.id" class="member-checkbox-item">
+                            <input type="checkbox" :checked="createMemberIds.includes(admin.id)"
+                                :disabled="admin.id === userId" @change="toggleCreateMember(admin.id)"
+                                class="member-checkbox" />
                             <div class="member-avatar small">
                                 {{ avatarInitials(admin.name) }}
                             </div>
                             <div class="member-details">
                                 <p class="member-name">
                                     {{ admin.name }}
-                                    <span
-                                        v-if="admin.id === userId"
-                                        class="you-badge"
-                                        >You</span
-                                    >
+                                    <span v-if="admin.id === userId" class="you-badge">You</span>
                                 </p>
                                 <p class="member-email">{{ admin.email }}</p>
                             </div>
@@ -1946,11 +1474,7 @@
                     <button @click="createOpen = false" class="btn-secondary">
                         Cancel
                     </button>
-                    <button
-                        @click="saveCreateChannel"
-                        class="btn-primary"
-                        :disabled="isCreatingChannel"
-                    >
+                    <button @click="saveCreateChannel" class="btn-primary" :disabled="isCreatingChannel">
                         {{
                             isCreatingChannel ? "Creating..." : "Create Channel"
                         }}
@@ -1960,11 +1484,7 @@
         </div>
 
         <!-- PDF Viewer Modal -->
-        <div
-            v-if="pdfModalOpen"
-            class="pdf-modal-overlay"
-            @click.self="closePdfModal"
-        >
+        <div v-if="pdfModalOpen" class="pdf-modal-overlay" @click.self="closePdfModal">
             <div class="pdf-modal-container">
                 <div class="pdf-modal-header">
                     <div class="pdf-modal-title">
@@ -1972,18 +1492,10 @@
                         <span>{{ currentPdfFilename }}</span>
                     </div>
                     <div class="pdf-modal-actions">
-                        <button
-                            @click="downloadCurrentPdf"
-                            class="pdf-action-btn"
-                            title="Download"
-                        >
+                        <button @click="downloadCurrentPdf" class="pdf-action-btn" title="Download">
                             <i class="bi bi-download"></i>
                         </button>
-                        <button
-                            @click="closePdfModal"
-                            class="pdf-action-btn close-btn"
-                            title="Close"
-                        >
+                        <button @click="closePdfModal" class="pdf-action-btn close-btn" title="Close">
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
@@ -1993,46 +1505,23 @@
                         <div class="spinner"></div>
                         <p>Loading PDF...</p>
                     </div>
-                    <iframe
-                        v-show="!pdfLoading"
-                        ref="pdfIframe"
-                        :src="pdfViewerUrl"
-                        class="pdf-iframe"
-                        @load="onPdfIframeLoad"
-                        frameborder="0"
-                    ></iframe>
+                    <iframe v-show="!pdfLoading" ref="pdfIframe" :src="pdfViewerUrl" class="pdf-iframe"
+                        @load="onPdfIframeLoad" frameborder="0"></iframe>
                 </div>
             </div>
         </div>
 
         <!-- Image Lightbox Modal -->
-        <div
-            v-if="imageLightboxOpen"
-            class="image-lightbox-overlay"
-            @click.self="closeImageLightbox"
-            @keydown.esc="closeImageLightbox"
-            tabindex="-1"
-        >
-            <button
-                class="lightbox-close"
-                @click="closeImageLightbox"
-                title="Close"
-            >
+        <div v-if="imageLightboxOpen" class="image-lightbox-overlay" @click.self="closeImageLightbox"
+            @keydown.esc="closeImageLightbox" tabindex="-1">
+            <button class="lightbox-close" @click="closeImageLightbox" title="Close">
                 <i class="bi bi-x-lg"></i>
             </button>
-            <button
-                class="lightbox-download"
-                @click="downloadLightboxImage"
-                title="Download"
-            >
+            <button class="lightbox-download" @click="downloadLightboxImage" title="Download">
                 <i class="bi bi-download"></i>
             </button>
-            <img
-                v-if="currentLightboxImage"
-                :src="currentLightboxImage.url || currentLightboxImage.path"
-                :alt="currentLightboxImage.filename || 'Image'"
-                class="lightbox-image"
-            />
+            <img v-if="currentLightboxImage" :src="currentLightboxImage.url || currentLightboxImage.path"
+                :alt="currentLightboxImage.filename || 'Image'" class="lightbox-image" />
         </div>
     </div>
 </template>
@@ -2051,19 +1540,26 @@ import {
 import axios from "axios";
 import { format } from "date-fns";
 import debounce from "lodash/debounce";
-import DOMPurify from "dompurify";
-import MediaGallery from "./MediaGallery.vue";
+import throttle from "lodash/throttle";
+import { defineAsyncComponent } from "vue";
+const MediaGallery = defineAsyncComponent(() => import("./MediaGallery.vue"));
 import ChatInput from "./ChatInput.vue";
 import { Picker as EmojiMartPicker } from "emoji-mart";
 import emojiData from "@emoji-mart/data";
 import * as pdfjsLib from "pdfjs-dist";
 import { useChatEditor } from "../composables/useChatEditor";
+import { useChatMessages } from "../composables/useChatMessages";
+import { useChatUI } from "../composables/useChatUI";
+import { useChatWebsockets } from "../composables/useChatWebsockets";
+import {
+    avatarInitials,
+    formatDate,
+    formatMessageBody,
+} from "../composables/useChatFormatting";
 
 // Set PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.mjs",
-    import.meta.url,
-).toString();
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.449/pdf.worker.min.mjs";
 
 const EmojiPicker = defineComponent({
     name: "EmojiPicker",
@@ -2099,7 +1595,13 @@ export default {
         // State declarations
         const channels = ref([]);
         const currentChannel = ref(null);
-        const messages = ref([]);
+        const {
+            messages,
+            page,
+            hasMoreMessages,
+            loadingMessages,
+            resetMessagePagination,
+        } = useChatMessages();
         const lastMessagePreview = ref({});
         const searchResults = ref([]);
         const searchQuery = ref("");
@@ -2119,9 +1621,8 @@ export default {
         const messageInput = ref(null);
         const threadInput = ref(null);
         const inputContainer = ref(null);
-        const page = ref(1);
-        const hasMoreMessages = ref(true);
-        const loadingMessages = ref(false);
+        const chatMainRef = ref(null);
+        const infoSidebarRef = ref(null);
         const showScrollDown = ref(false);
         const isDragging = ref(false);
         const activeMessageMenuId = ref(null);
@@ -2135,7 +1636,17 @@ export default {
         const sidebarFiles = ref([]);
         const sidebarLinks = ref([]);
         const typingUsers = ref({});
+        const sidebarTypingUsers = ref({});  // { channelId: { userId: { name, at } } }
         const lastTypingSentAt = ref(0);
+        const {
+            globalListenerChannelIds,
+            activeListenerChannelIds,
+            typingTimeouts,
+            sidebarTypingTimeouts,
+            clearTypingTimeout,
+            clearSidebarTypingTimeout,
+            clearAllTypingTimeouts,
+        } = useChatWebsockets();
         const showEmojiPicker = ref(false);
         const pinnedMessages = ref([]);
         const showPinnedPanel = ref(false);
@@ -2159,12 +1670,31 @@ export default {
         const createDescription = ref("");
         const createSearch = ref("");
         const createMemberIds = ref([]);
-        const openPanel = ref("info");
         const viewportWidth = ref(
             typeof window !== "undefined" ? window.innerWidth : 1280,
         );
         const isMobile = computed(() => viewportWidth.value <= 768);
-        const mobileSidebarOpen = ref(false);
+        const {
+            mobileSidebarOpen,
+            threadPanelOpen,
+            threadPanelWidth,
+            infoPanelWidth,
+            userInfoOpen,
+            isResizingThread,
+            isResizingInfo,
+            resizeStartX,
+            resizeStartWidth,
+            resizeInfoStartX,
+            resizeInfoStartWidth,
+            openPanel,
+            leftSidebarWidth,
+            infoSidebarWidth,
+            chatMainStyle,
+            infoSidebarStyle,
+            setSidebarCssWidth,
+            openChannelList,
+            closeChannelList,
+        } = useChatUI({ isMobile, viewportWidth, currentChannel });
         const deepLinkChannelId = ref(null);
         const deepLinkMessageId = ref(null);
         const deepLinkOpenThread = ref(false);
@@ -2188,32 +1718,9 @@ export default {
         const currentLightboxImage = ref(null);
 
         // Utility Functions
-        const avatarInitials = (name) => {
-            if (!name) return "?";
-            const parts = name.trim().split(/\s+/);
-            return (
-                (parts[0]?.[0] || "") + (parts[1]?.[0] || "")
-            ).toUpperCase();
-        };
-
         const isGroupChannel = (c) => {
             const t = (c?.type || "").toLowerCase();
             return t === "group" || t === "public";
-        };
-
-        const formatDate = (date) => {
-            if (!date) return "";
-            try {
-                const options = {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "Asia/Kolkata",
-                    hour12: false,
-                };
-                return new Date(date).toLocaleString("en-IN", options);
-            } catch {
-                return "";
-            }
         };
 
         const formatFullDate = (date) => {
@@ -2476,14 +1983,6 @@ export default {
         };
 
         // Computed Properties
-        const SIDEBAR_WIDTH = 320;
-        const leftSidebarWidth = computed(() => {
-            if (isMobile.value) return 0;
-            if (viewportWidth.value <= 1024) return 280;
-            if (viewportWidth.value <= 1200) return 300;
-            return SIDEBAR_WIDTH;
-        });
-
         const groupChannels = computed(() =>
             channels.value.filter(isGroupChannel),
         );
@@ -2522,18 +2021,12 @@ export default {
             () => !isPersonalChannel.value,
         );
         const typingLabel = computed(() => {
-            const now = Date.now();
-            Object.keys(typingUsers.value).forEach((uid) => {
-                if (now - typingUsers.value[uid].at > 3500)
-                    delete typingUsers.value[uid];
-            });
             const users = Object.values(typingUsers.value).filter(Boolean);
             if (!users.length) return "";
 
             const names = users.map((x) => x.name).filter(Boolean);
-            const nameStr = `${names.slice(0, 2).join(", ")}${
-                names.length > 2 ? ` +${names.length - 2}` : ""
-            }`;
+            const nameStr = `${names.slice(0, 2).join(", ")}${names.length > 2 ? ` +${names.length - 2}` : ""
+                }`;
             const channelName = users[0]?.channelName;
             const channelNote =
                 channelName && channelName !== currentChannel.value?.name
@@ -2542,6 +2035,91 @@ export default {
             const verb = names.length > 1 ? "are" : "is";
             return `${nameStr} ${verb} typing${channelNote}...`;
         });
+
+        // Sidebar typing label for any channel (used in sidebar preview)
+        // IMPORTANT: This is called during render — must be pure read-only, no mutations
+        const sidebarTypingLabel = (channelId) => {
+            // For current channel, read from typingUsers
+            if (currentChannel.value?.id === channelId) {
+                const users = Object.values(typingUsers.value).filter(Boolean);
+                if (!users.length) return '';
+                const names = users.map((x) => x.name).filter(Boolean);
+                return `${names.slice(0, 2).join(', ')}${names.length > 2 ? ` +${names.length - 2}` : ''} typing...`;
+            }
+
+            // For other channels, read from sidebarTypingUsers (no mutations!)
+            const channelTypers = sidebarTypingUsers.value[channelId];
+            if (!channelTypers) return '';
+
+            const users = Object.values(channelTypers).filter(Boolean);
+            if (!users.length) return '';
+
+            const names = users.map((x) => x.name).filter(Boolean);
+            return `${names.slice(0, 2).join(', ')}${names.length > 2 ? ` +${names.length - 2}` : ''} typing...`;
+        };
+
+        const expireTypingUser = (userId) => {
+            clearTypingTimeout(userId);
+            const next = { ...typingUsers.value };
+            delete next[userId];
+            typingUsers.value = next;
+        };
+
+        const markTypingUser = (event) => {
+            typingUsers.value = {
+                ...typingUsers.value,
+                [event.userId]: {
+                    name: event.name || "Someone",
+                    channelName: event.channelName || "",
+                    at: Date.now(),
+                },
+            };
+            clearTypingTimeout(event.userId);
+            typingTimeouts.set(
+                event.userId,
+                setTimeout(() => expireTypingUser(event.userId), 3500),
+            );
+        };
+
+        const expireSidebarTypingUser = (channelId, userId) => {
+            const key = `${channelId}:${userId}`;
+            clearSidebarTypingTimeout(key);
+            const current = sidebarTypingUsers.value[channelId] || {};
+            const nextChannelTypers = { ...current };
+            delete nextChannelTypers[userId];
+
+            const next = { ...sidebarTypingUsers.value };
+            if (Object.keys(nextChannelTypers).length) {
+                next[channelId] = nextChannelTypers;
+            } else {
+                delete next[channelId];
+            }
+            sidebarTypingUsers.value = next;
+        };
+
+        const markSidebarTypingUser = (channelId, event) => {
+            const existing = sidebarTypingUsers.value[channelId] || {};
+            sidebarTypingUsers.value = {
+                ...sidebarTypingUsers.value,
+                [channelId]: {
+                    ...existing,
+                    [event.userId]: {
+                        name: event.name || "Someone",
+                        at: Date.now(),
+                    },
+                },
+            };
+
+            const key = `${channelId}:${event.userId}`;
+            clearSidebarTypingTimeout(key);
+            sidebarTypingTimeouts.set(
+                key,
+                setTimeout(
+                    () => expireSidebarTypingUser(channelId, event.userId),
+                    3500,
+                ),
+            );
+        };
 
         const groupedReactions = (message) => {
             if (!Array.isArray(message?.reactions)) return [];
@@ -2559,7 +2137,25 @@ export default {
                 ? message.attachments
                 : [];
             message.reads = Array.isArray(message.reads) ? message.reads : [];
+            message.formattedBody = formatMessageBody(message, {
+                getMembers: currentMembers,
+                getOrderReferences,
+            });
             return message;
+        };
+
+        const refreshFormattedMessages = () => {
+            messages.value = messages.value.map((message) =>
+                applyMessageDefaults(message),
+            );
+            if (activeThreadMessage.value) {
+                activeThreadMessage.value = applyMessageDefaults(
+                    activeThreadMessage.value,
+                );
+            }
+            threadReplies.value = threadReplies.value.map((reply) =>
+                applyMessageDefaults(reply),
+            );
         };
 
         const reactToMessage = async (message, emoji) => {
@@ -2640,7 +2236,9 @@ export default {
             if (!message?.id) return;
             try {
                 if (message.is_saved) {
-                    await axios.delete(`/admin/chat/messages/${message.id}/save`);
+                    await axios.delete(
+                        `/admin/chat/messages/${message.id}/save`,
+                    );
                     message.is_saved = false;
                 } else {
                     await axios.post(`/admin/chat/messages/${message.id}/save`);
@@ -2674,7 +2272,9 @@ export default {
 
         const jumpToSavedMessage = async (saved) => {
             if (!saved?.id) return;
-            const inCurrentChannel = messages.value.some((m) => m.id === saved.id);
+            const inCurrentChannel = messages.value.some(
+                (m) => m.id === saved.id,
+            );
             showSavedPanel.value = false;
             if (inCurrentChannel) {
                 scrollToMessageById(saved.id);
@@ -2821,9 +2421,10 @@ export default {
         const pickOrderSuggest = (order) => {
             if (!order?.id) return;
             // Use activeElement since textarea is now inside ChatInput component
-            const textarea = document.activeElement?.tagName === 'TEXTAREA'
-                ? document.activeElement
-                : messageInput.value;
+            const textarea =
+                document.activeElement?.tagName === "TEXTAREA"
+                    ? document.activeElement
+                    : messageInput.value;
             const val = newMessage.value;
             const caret = textarea?.selectionStart ?? val.length;
             const before = val.slice(0, caret);
@@ -2833,20 +2434,18 @@ export default {
 
             const prefix = orderMatch[1] || "";
             const insert = `${prefix}#${order.id} `;
-            newMessage.value =
-                before.replace(/(^|\s)#(\w*)$/, insert) + after;
+            newMessage.value = before.replace(/(^|\s)#(\w*)$/, insert) + after;
             orderSuggestOpen.value = false;
             orderSuggestItems.value = [];
             orderSuggestQuery.value = "";
 
             nextTick(() => {
                 try {
-                    const pos = (
-                        before.replace(/(^|\s)#(\w*)$/, "") + insert
-                    ).length;
+                    const pos = (before.replace(/(^|\s)#(\w*)$/, "") + insert)
+                        .length;
                     textarea.focus();
                     textarea.setSelectionRange(pos, pos);
-                } catch (_) {}
+                } catch (_) { }
             });
         };
 
@@ -2881,8 +2480,8 @@ export default {
             const text = message.body?.trim()
                 ? message.body.trim().slice(0, 40)
                 : message.attachments?.length
-                  ? "📎 Attachment"
-                  : "";
+                    ? "📎 Attachment"
+                    : "";
             const time = message.created_at
                 ? format(new Date(message.created_at), "HH:mm")
                 : "";
@@ -2895,9 +2494,7 @@ export default {
             markAsRead = true,
         ) => {
             if (reset) {
-                messages.value = [];
-                page.value = 1;
-                hasMoreMessages.value = true;
+                resetMessagePagination();
             }
             if (!hasMoreMessages.value) return false;
 
@@ -2914,7 +2511,11 @@ export default {
                 const pageMessages = apiMessages
                     .slice()
                     .reverse()
-                    .map((m) => applyMessageDefaults(m));
+                    .map((m) => applyMessageDefaults(m))
+                    .sort(
+                        (a, b) =>
+                            new Date(a.created_at) - new Date(b.created_at),
+                    );
 
                 if (reset) {
                     messages.value = pageMessages;
@@ -2957,7 +2558,7 @@ export default {
                 } else {
                     window.showToast?.(
                         error?.response?.data?.message ||
-                            "Failed to load messages",
+                        "Failed to load messages",
                     );
                     if (import.meta.env.DEV)
                         console.error("Error loading messages:", error);
@@ -2971,6 +2572,8 @@ export default {
         const selectChannel = async (channel) => {
             currentChannel.value = channel;
             typingUsers.value = {};
+            typingTimeouts.forEach((timeout) => clearTimeout(timeout));
+            typingTimeouts.clear();
             showEmojiPicker.value = false;
             orderSuggestOpen.value = false;
             mentionOpen.value = false;
@@ -3050,17 +2653,14 @@ export default {
                     { headers: { "Content-Type": "multipart/form-data" } },
                 );
 
-                messages.value.push({
+                const sentMessage = applyMessageDefaults({
                     ...data,
                     attachments: Array.isArray(data.attachments)
                         ? data.attachments
                         : [],
                     reads: Array.isArray(data.reads) ? data.reads : [],
                 });
-                applyMessageDefaults(messages.value[messages.value.length - 1]);
-                messages.value.sort(
-                    (a, b) => new Date(a.created_at) - new Date(b.created_at),
-                );
+                messages.value.push(sentMessage);
                 updatePreview(currentChannel.value.id, data);
 
                 newMessage.value = "";
@@ -3115,7 +2715,7 @@ export default {
             nextTick(() => {
                 try {
                     messageInput.value?.focus();
-                } catch (_) {}
+                } catch (_) { }
             });
         };
 
@@ -3244,12 +2844,16 @@ export default {
                 }
                 if (e.key === "ArrowUp") {
                     orderSuggestIndex.value =
-                        (orderSuggestIndex.value - 1 + orderSuggestItems.value.length) %
+                        (orderSuggestIndex.value -
+                            1 +
+                            orderSuggestItems.value.length) %
                         orderSuggestItems.value.length;
                     return;
                 }
                 if (e.key === "Enter" || e.key === "Tab") {
-                    pickOrderSuggest(orderSuggestItems.value[orderSuggestIndex.value]);
+                    pickOrderSuggest(
+                        orderSuggestItems.value[orderSuggestIndex.value],
+                    );
                     return;
                 }
                 if (e.key === "Escape") {
@@ -3259,7 +2863,11 @@ export default {
             }
 
             // When no popover is open, handle Enter key
-            if (!mentionOpen.value && !orderSuggestOpen.value && e.key === "Enter") {
+            if (
+                !mentionOpen.value &&
+                !orderSuggestOpen.value &&
+                e.key === "Enter"
+            ) {
                 // Shift+Enter = new line (allow default behavior)
                 if (e.shiftKey) {
                     return;
@@ -3273,9 +2881,10 @@ export default {
         const pickMention = (m) => {
             if (!m) return;
             // Use activeElement since textarea is now inside ChatInput component
-            const textarea = document.activeElement?.tagName === 'TEXTAREA'
-                ? document.activeElement
-                : messageInput.value;
+            const textarea =
+                document.activeElement?.tagName === "TEXTAREA"
+                    ? document.activeElement
+                    : messageInput.value;
             const val = newMessage.value;
             const caret = textarea?.selectionStart ?? val.length;
             const before = val.slice(0, caret);
@@ -3295,7 +2904,7 @@ export default {
                     ).length;
                     textarea.focus();
                     textarea.setSelectionRange(pos, pos);
-                } catch (_) {}
+                } catch (_) { }
             });
             pendingMentionIds.value.add(m.id);
             mentionOpen.value = false;
@@ -3330,115 +2939,12 @@ export default {
         //   });
         // };
 
-        const formatMessageWithMentions = (message) => {
-            if (!message?.body) return "";
-            try {
-                const text = message.body;
-
-                // 1. Escape HTML characters first
-                let content = text
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;");
-
-                // 2. FIRST: Protect email addresses by replacing them with placeholders
-                // This prevents emails like user@gmail.com from being split
-                const emailRegex =
-                    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-                const emails = [];
-                content = content.replace(emailRegex, (match) => {
-                    emails.push(match);
-                    return `__EMAIL_PLACEHOLDER_${emails.length - 1}__`;
-                });
-
-                // 3. THEN: Convert URLs to links (emails are now protected)
-                const urlRegex =
-                    /(?:https?:\/\/)?(?:www\.)?[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)+(?:\/[^\s<>()"']*)?/gi;
-                content = content.replace(urlRegex, (url) => {
-                    let href = url;
-                    if (!/^https?:\/\//i.test(url)) {
-                        href = "https://" + url;
-                    }
-                    return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${url}</a>`;
-                });
-
-                // 4. FINALLY: Restore email addresses (as plain text)
-                emails.forEach((email, index) => {
-                    content = content.replace(
-                        `__EMAIL_PLACEHOLDER_${index}__`,
-                        email,
-                    );
-                });
-
-                // 5. Format Mentions
-                try {
-                    const members = currentMembers ? currentMembers() : [];
-                    if (members.length > 0) {
-                        const memberNames = members
-                            .map((m) => m.name)
-                            .sort((a, b) => b.length - a.length);
-
-                        const escapeRegExp = (string) =>
-                            string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                        const pattern = new RegExp(
-                            `(@)(${memberNames
-                                .map(escapeRegExp)
-                                .join("|")})\\b`,
-                            "g",
-                        );
-
-                        content = content.replace(
-                            pattern,
-                            (match, prefix, name) => {
-                                return `<span class="mention-token">${prefix}${name}</span>`;
-                            },
-                        );
-                    }
-                } catch (e) {
-                    // Ignore mention format errors
-                }
-
-                // 6. Format order references as clickable order links
-                try {
-                    const orderRefs = getOrderReferences(message);
-                    if (orderRefs.length > 0) {
-                        const orderRefMap = new Map(
-                            orderRefs.map((ref) => [
-                                String(ref.display_number ?? ref.id),
-                                ref,
-                            ]),
-                        );
-                        const orderPattern = /(^|[^\w])#(\d+)\b/g;
-                        content = content.replace(
-                            orderPattern,
-                            (match, prefix, orderNumber) => {
-                                const ref = orderRefMap.get(
-                                    String(orderNumber),
-                                );
-                                if (!ref) return match;
-
-                                if (!ref.order_url) {
-                                    return `${prefix}<span class="order-reference-token order-reference-token--missing">#${orderNumber}</span>`;
-                                }
-
-                                return `${prefix}<a href="${ref.order_url}" class="order-reference-token" target="_self" rel="noopener noreferrer">#${orderNumber}</a>`;
-                            },
-                        );
-                    }
-                } catch (e) {
-                    // Ignore order reference format errors
-                }
-
-                // 7. Sanitize final HTML to prevent XSS
-                return DOMPurify.sanitize(content, {
-                    ALLOWED_TAGS: ["span", "a"],
-                    ALLOWED_ATTR: ["class", "href", "target", "rel"],
-                });
-            } catch (e) {
-                console.error("Message formatting failed", e);
-                return message.body || "";
-            }
-        };
+        const formatMessageWithMentions = (message) =>
+            message?.formattedBody ||
+            formatMessageBody(message, {
+                getMembers: currentMembers,
+                getOrderReferences,
+            });
 
         const loadSidebar = async (channelId) => {
             if (!channelId) return;
@@ -3460,6 +2966,7 @@ export default {
                 sidebarLinks.value = Array.isArray(data.links)
                     ? data.links
                     : [];
+                refreshFormattedMessages();
             } catch (e) {
                 if (import.meta.env.DEV)
                     console.error("Failed to load sidebar", e);
@@ -3541,7 +3048,7 @@ export default {
                 url.searchParams.delete("message_id");
                 url.searchParams.delete("open_thread");
                 window.history.replaceState({}, "", url.toString());
-            } catch (_) {}
+            } catch (_) { }
         };
 
         const scrollToMessage = async (message) => {
@@ -3624,7 +3131,8 @@ export default {
             if (!currentChannel.value?.id) return;
             if (
                 deepLinkChannelId.value &&
-                Number(currentChannel.value.id) !== Number(deepLinkChannelId.value)
+                Number(currentChannel.value.id) !==
+                Number(deepLinkChannelId.value)
             ) {
                 return;
             }
@@ -3677,7 +3185,7 @@ export default {
             }
         };
 
-        const onScrollMessages = async () => {
+        const onScrollMessages = throttle(async () => {
             const el = messageContainer.value;
             if (!el) return;
             const nearBottom =
@@ -3708,7 +3216,7 @@ export default {
                         newScrollHeight - prevScrollHeight + prevScrollTop;
                 }
             }
-        };
+        }, 150);
 
         const sameDay = (a, b) => {
             const da = new Date(a),
@@ -3748,17 +3256,12 @@ export default {
             const now = Date.now();
             if (now - lastTypingSentAt.value < 1500) return;
             lastTypingSentAt.value = now;
-            if (currentChannel.value?.id && window.Echo) {
-                try {
-                    window.Echo.private(
-                        `chat.channel.${currentChannel.value.id}`,
-                    ).whisper("typing", {
-                        userId: props.userId,
-                        name: window?.authAdminName || "Someone",
-                        channelId: currentChannel.value.id,
-                        channelName: currentChannel.value.name || "",
-                    });
-                } catch (e) {}
+            if (currentChannel.value?.id) {
+                // Use server-side broadcasting instead of Pusher client events (whispers)
+                // Whispers require "Enable client events" in Pusher dashboard settings
+                // Server-side approach uses the same broadcast mechanism as MessageSent — always works
+                axios.post(`/admin/chat/channels/${currentChannel.value.id}/typing`)
+                    .catch(() => { }); // fire-and-forget, no need to block UI
             }
         };
 
@@ -3915,7 +3418,7 @@ export default {
             }
             try {
                 await checkCreateCapability();
-            } catch (e) {}
+            } catch (e) { }
             createOpen.value = true;
             createName.value = "";
             createDescription.value = "";
@@ -3989,7 +3492,6 @@ export default {
         };
 
         // Thread Logic
-        const threadPanelOpen = ref(false);
         const activeThreadMessage = ref(null);
         const threadReplies = ref([]);
         const threadLoading = ref(false);
@@ -3997,73 +3499,53 @@ export default {
 
         // Thread Editor Composable — isolated state, no sharing with main chat
         const threadEditor = useChatEditor({
-            type: 'thread',
+            type: "thread",
             getMembers: currentMembers,
             onSend: () => sendThreadReply(),
             onTyping: null, // threads don't broadcast typing indicator
             textareaRef: threadInput,
             fetchOrderSuggestions: async (q) => {
-                const { data } = await axios.get('/admin/chat/orders/suggest', { params: { q } });
+                const { data } = await axios.get("/admin/chat/orders/suggest", {
+                    params: { q },
+                });
                 return data?.orders || [];
             },
         });
 
-        // Thread Panel Resize
-        const threadPanelWidth = ref(420); // Default width
-        const isResizingThread = ref(false);
-        const resizeStartX = ref(0);
-        const resizeStartWidth = ref(0);
-        // Info Panel (channel info) Resize & Visibility
-        const infoPanelWidth = ref(320); // Default info sidebar width
-        const isResizingInfo = ref(false);
-        const resizeInfoStartX = ref(0);
-        const resizeInfoStartWidth = ref(0);
-        const userInfoOpen = ref(true);
-        const infoSidebarWidth = computed(() => {
-            if (isMobile.value) {
-                return threadPanelOpen.value
-                    ? viewportWidth.value
-                    : userInfoOpen.value
-                      ? Math.min(380, Math.max(280, viewportWidth.value - 24))
-                      : 0;
-            }
-            if (threadPanelOpen.value) return threadPanelWidth.value;
-            return userInfoOpen.value ? Math.max(0, infoPanelWidth.value) : 0;
-        });
-        const chatMainStyle = computed(() => {
-            if (isMobile.value) return { width: "100%" };
-            return {
-                width: `calc(100% - ${leftSidebarWidth.value}px - ${Math.max(
-                    0,
-                    infoSidebarWidth.value,
-                )}px)`,
-            };
-        });
-        const infoSidebarStyle = computed(() => ({
-            width: `${Math.max(0, infoSidebarWidth.value)}px`,
-        }));
-        const openChannelList = () => {
-            if (!isMobile.value) return;
-            mobileSidebarOpen.value = true;
+        // Thread and info panel resizing
+        let pendingSidebarWidth = null;
+        let resizeAnimationFrame = null;
+        let liveInfoPanelWidth = infoPanelWidth.value;
+        let liveThreadPanelWidth = threadPanelWidth.value;
+        const applyLiveSidebarWidth = (width) => {
+            setSidebarCssWidth(width);
         };
-        const closeChannelList = () => {
-            mobileSidebarOpen.value = false;
+        const scheduleLiveSidebarWidth = (width) => {
+            pendingSidebarWidth = width;
+            if (resizeAnimationFrame) return;
+
+            resizeAnimationFrame = requestAnimationFrame(() => {
+                resizeAnimationFrame = null;
+                applyLiveSidebarWidth(pendingSidebarWidth);
+            });
         };
-        const handleViewportChange = () => {
+        const handleViewportChange = throttle(() => {
             if (typeof window === "undefined") return;
             viewportWidth.value = window.innerWidth;
+            setSidebarCssWidth(infoSidebarWidth.value);
             if (viewportWidth.value <= 768) {
                 mobileSidebarOpen.value = !currentChannel.value;
                 if (threadPanelOpen.value) userInfoOpen.value = true;
             } else {
                 mobileSidebarOpen.value = false;
             }
-        };
+        }, 150);
 
         const startResizeThread = (e) => {
             isResizingThread.value = true;
             resizeStartX.value = e.clientX;
             resizeStartWidth.value = threadPanelWidth.value;
+            liveThreadPanelWidth = threadPanelWidth.value;
 
             document.addEventListener("mousemove", handleResizeThread);
             document.addEventListener("mouseup", stopResizeThread);
@@ -4076,6 +3558,7 @@ export default {
             isResizingInfo.value = true;
             resizeInfoStartX.value = e.clientX;
             resizeInfoStartWidth.value = infoPanelWidth.value;
+            liveInfoPanelWidth = infoPanelWidth.value;
 
             document.addEventListener("mousemove", handleResizeInfo);
             document.addEventListener("mouseup", stopResizeInfo);
@@ -4087,11 +3570,18 @@ export default {
             if (!isResizingInfo.value) return;
             const delta = resizeInfoStartX.value - e.clientX;
             const newWidth = resizeInfoStartWidth.value + delta;
-            infoPanelWidth.value = Math.max(240, Math.min(900, newWidth));
+            liveInfoPanelWidth = Math.max(240, Math.min(900, newWidth));
+            scheduleLiveSidebarWidth(liveInfoPanelWidth);
         };
 
         const stopResizeInfo = () => {
             isResizingInfo.value = false;
+            if (resizeAnimationFrame) {
+                cancelAnimationFrame(resizeAnimationFrame);
+                resizeAnimationFrame = null;
+            }
+            infoPanelWidth.value = liveInfoPanelWidth;
+            applyLiveSidebarWidth(liveInfoPanelWidth);
             document.removeEventListener("mousemove", handleResizeInfo);
             document.removeEventListener("mouseup", stopResizeInfo);
             document.body.style.cursor = "";
@@ -4105,11 +3595,18 @@ export default {
             const newWidth = resizeStartWidth.value + delta;
 
             // Min width: 300px, Max width: 800px
-            threadPanelWidth.value = Math.max(300, Math.min(800, newWidth));
+            liveThreadPanelWidth = Math.max(300, Math.min(800, newWidth));
+            scheduleLiveSidebarWidth(liveThreadPanelWidth);
         };
 
         const stopResizeThread = () => {
             isResizingThread.value = false;
+            if (resizeAnimationFrame) {
+                cancelAnimationFrame(resizeAnimationFrame);
+                resizeAnimationFrame = null;
+            }
+            threadPanelWidth.value = liveThreadPanelWidth;
+            applyLiveSidebarWidth(liveThreadPanelWidth);
             document.removeEventListener("mousemove", handleResizeThread);
             document.removeEventListener("mouseup", stopResizeThread);
             document.body.style.cursor = "";
@@ -4158,6 +3655,7 @@ export default {
         onMounted(() => {
             handleViewportChange();
             userInfoOpen.value = isMobile.value ? false : showSidebar.value;
+            setSidebarCssWidth(infoSidebarWidth.value);
         });
 
         const closeThread = () => {
@@ -4197,9 +3695,11 @@ export default {
             });
             // Forward mention IDs so backend can send mention notifications
             if (threadEditor.pendingMentionIds.value.size) {
-                Array.from(threadEditor.pendingMentionIds.value).forEach((id) => {
-                    formData.append("metadata[mentions][]", String(id));
-                });
+                Array.from(threadEditor.pendingMentionIds.value).forEach(
+                    (id) => {
+                        formData.append("metadata[mentions][]", String(id));
+                    },
+                );
             }
 
             try {
@@ -4274,7 +3774,7 @@ export default {
                         if (perm === "granted") show();
                     });
                 }
-            } catch (_) {}
+            } catch (_) { }
         };
 
         // Play notification sound
@@ -4306,8 +3806,8 @@ export default {
                     const beep = new Audio(
                         "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAA=",
                     );
-                    beep.play().catch(() => {});
-                } catch (_) {}
+                    beep.play().catch(() => { });
+                } catch (_) { }
             }
         };
 
@@ -4318,21 +3818,20 @@ export default {
                 console.warn("Echo is not defined, skipping WebSocket setup");
                 return;
             }
+            const numericChannelId = Number(channelId);
+            if (activeListenerChannelIds.has(numericChannelId)) {
+                return;
+            }
 
             try {
+                activeListenerChannelIds.add(numericChannelId);
                 return window.Echo.private(`chat.channel.${channelId}`)
                     .listen("MessageSent", (e) => {
-                        if (import.meta.env.DEV)
-                            console.log("Broadcasting Event Received:", e);
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (e?.message?.sender_id === props.userId) return;
 
                         // Handle Thread Replies
                         if (e.message.reply_to_id) {
-                            if (import.meta.env.DEV)
-                                console.log("Thread reply detected", {
-                                    msgReplyId: e.message.reply_to_id,
-                                    activeId: activeThreadMessage.value?.id,
-                                });
                             // 1. If looking at this thread, add it
                             if (
                                 activeThreadMessage.value?.id ==
@@ -4381,10 +3880,6 @@ export default {
                                 : [],
                         });
                         messages.value.push(incomingMessage);
-                        messages.value.sort(
-                            (a, b) =>
-                                new Date(a.created_at) - new Date(b.created_at),
-                        );
                         updatePreview(channelId, incomingMessage);
 
                         const senderName =
@@ -4408,12 +3903,18 @@ export default {
                         scrollToBottom();
                     })
                     .listen("MessageReacted", (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (!e?.message_id) return;
                         const applyReactionToMessage = (targetMessage) => {
-                            if (!targetMessage || targetMessage.id !== e.message_id)
+                            if (
+                                !targetMessage ||
+                                targetMessage.id !== e.message_id
+                            )
                                 return;
 
-                            const existing = Array.isArray(targetMessage.reactions)
+                            const existing = Array.isArray(
+                                targetMessage.reactions,
+                            )
                                 ? [...targetMessage.reactions]
                                 : [];
                             const idx = existing.findIndex(
@@ -4434,7 +3935,8 @@ export default {
                                     });
                                 }
                             } else if (e.action === "removed" && idx >= 0) {
-                                const nextCount = (existing[idx].count || 1) - 1;
+                                const nextCount =
+                                    (existing[idx].count || 1) - 1;
                                 if (nextCount > 0) {
                                     existing[idx] = {
                                         ...existing[idx],
@@ -4470,11 +3972,15 @@ export default {
                         }
                     })
                     .listen("MessagePinned", async (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (!e?.message_id) return;
 
                         const isPinned = e.action === "pinned";
                         const applyPinToMessage = (targetMessage) => {
-                            if (!targetMessage || targetMessage.id !== e.message_id)
+                            if (
+                                !targetMessage ||
+                                targetMessage.id !== e.message_id
+                            )
                                 return;
                             targetMessage.is_pinned = isPinned;
                         };
@@ -4504,15 +4010,13 @@ export default {
                             await loadPinnedMessages();
                         }
                     })
-                    .listenForWhisper("typing", (e) => {
+                    .listen(".UserTyping", (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         if (!e || e.userId === props.userId) return;
-                        typingUsers.value[e.userId] = {
-                            name: e.name || "Someone",
-                            channelName: e.channelName || "",
-                            at: Date.now(),
-                        };
+                        markTypingUser(e);
                     })
                     .listen("MessagesRead", (e) => {
+                        if (Number(currentChannel.value?.id) !== numericChannelId) return;
                         messages.value = messages.value.map((message) => {
                             if (
                                 !message.reads.some(
@@ -4528,6 +4032,7 @@ export default {
                         });
                     });
             } catch (e) {
+                activeListenerChannelIds.delete(numericChannelId);
                 console.error("WebSocket setup failed", e);
             }
         };
@@ -4539,26 +4044,14 @@ export default {
                 return;
             }
 
-            console.log(
-                "[Chat] Setting up global listeners for",
-                channels.value.length,
-                "channels",
-            );
-
             channels.value.forEach((channel) => {
-                // Skip the current channel - it's already handled by setupChannelListeners
-                if (
-                    currentChannel.value &&
-                    channel.id === currentChannel.value.id
-                ) {
-                    console.log(
-                        "[Chat] Skipping current channel:",
-                        channel.name,
-                    );
+                const numericChannelId = Number(channel.id);
+                if (globalListenerChannelIds.has(numericChannelId)) {
                     return;
                 }
 
                 try {
+                    globalListenerChannelIds.add(numericChannelId);
                     window.Echo.private(`chat.channel.${channel.id}`).listen(
                         "MessageSent",
                         (e) => {
@@ -4567,11 +4060,6 @@ export default {
 
                             // If this is NOT the current channel
                             if (currentChannel.value?.id !== channel.id) {
-                                console.log(
-                                    "[Chat] Message received in other channel:",
-                                    channel.name,
-                                );
-
                                 // Increment unread count
                                 const ch = channels.value.find(
                                     (c) => c.id === channel.id,
@@ -4579,12 +4067,6 @@ export default {
                                 if (ch) {
                                     ch.unread_messages_count =
                                         (ch.unread_messages_count || 0) + 1;
-                                    console.log(
-                                        "[Chat] Unread count for",
-                                        ch.name,
-                                        ":",
-                                        ch.unread_messages_count,
-                                    );
                                 }
 
                                 // Update preview
@@ -4603,25 +4085,33 @@ export default {
                                     notificationMessage = `New message in ${channelName}`;
                                 }
 
-                                console.log(
-                                    "[Chat] Showing notification:",
-                                    notificationMessage,
-                                );
-
                                 if (typeof window.showToast === "function") {
                                     window.showToast(notificationMessage);
                                 }
 
-                                // Play sound
-                                playNotificationSound();
+                                notifyIfBackground(
+                                    channel.id,
+                                    senderName,
+                                    channelName,
+                                );
+
+                                // Play sound (only if notifyIfBackground skips it due to permissions)
+                                if (
+                                    !("Notification" in window) ||
+                                    Notification.permission === "denied"
+                                ) {
+                                    playNotificationSound();
+                                }
                             }
                         },
-                    );
-                    console.log(
-                        "[Chat] Listener setup for channel:",
-                        channel.name,
-                    );
+                    )
+                        .listen(".UserTyping", (e) => {
+                            if (!e || e.userId === props.userId) return;
+                            if (Number(currentChannel.value?.id) === numericChannelId) return;
+                            markSidebarTypingUser(channel.id, e);
+                        });
                 } catch (err) {
+                    globalListenerChannelIds.delete(numericChannelId);
                     console.error(
                         `Failed to setup listener for channel ${channel.id}`,
                         err,
@@ -4651,12 +4141,21 @@ export default {
                         (e) => {
                             if (!e || !e.channelId || !e.action) return;
                             if (e.action === "removed") {
-                                if (currentChannel.value?.id === e.channelId) {
-                                    try {
-                                        window.Echo.leave(
-                                            `chat.channel.${e.channelId}`,
-                                        );
-                                    } catch (_) {}
+                                try {
+                                    window.Echo.leave(
+                                        `chat.channel.${e.channelId}`,
+                                    );
+                                    globalListenerChannelIds.delete(
+                                        Number(e.channelId),
+                                    );
+                                    activeListenerChannelIds.delete(
+                                        Number(e.channelId),
+                                    );
+                                } catch (_) { }
+                                if (
+                                    Number(currentChannel.value?.id) ===
+                                    Number(e.channelId)
+                                ) {
                                     currentChannel.value = null;
                                 }
                                 channels.value = channels.value.filter(
@@ -4671,7 +4170,7 @@ export default {
                         },
                     );
                 }
-            } catch (_) {}
+            } catch (_) { }
 
             if (currentChannel.value?.id) {
                 setupChannelListeners(currentChannel.value.id);
@@ -4689,12 +4188,34 @@ export default {
         onBeforeUnmount(() => {
             window.removeEventListener("resize", handleViewportChange);
             window.removeEventListener("paste", handlePaste);
+            if (window.Echo) {
+                const channelIds = new Set([
+                    ...globalListenerChannelIds,
+                    ...activeListenerChannelIds,
+                ]);
+                channelIds.forEach((channelId) => {
+                    try {
+                        window.Echo.leave(`chat.channel.${channelId}`);
+                    } catch (_) { }
+                });
+                globalListenerChannelIds.clear();
+                activeListenerChannelIds.clear();
+            }
             if (messageContainer.value) {
                 messageContainer.value.removeEventListener(
                     "scroll",
                     onScrollMessages,
                 );
             }
+            clearAllTypingTimeouts();
+            if (resizeAnimationFrame) {
+                cancelAnimationFrame(resizeAnimationFrame);
+                resizeAnimationFrame = null;
+            }
+            document.removeEventListener("mousemove", handleResizeThread);
+            document.removeEventListener("mouseup", stopResizeThread);
+            document.removeEventListener("mousemove", handleResizeInfo);
+            document.removeEventListener("mouseup", stopResizeInfo);
         });
 
         // Adjust messages container bottom padding dynamically based on input container height
@@ -4703,15 +4224,17 @@ export default {
             try {
                 if (!window.ResizeObserver) return;
                 if (!_resizeObserver) {
-                    _resizeObserver = new ResizeObserver(() => {
-                        nextTick(adjustMessagePadding);
-                    });
+                    _resizeObserver = new ResizeObserver(
+                        debounce(() => {
+                            nextTick(adjustMessagePadding);
+                        }, 50),
+                    );
                 }
                 if (inputContainer.value) {
                     _resizeObserver.disconnect();
                     _resizeObserver.observe(inputContainer.value);
                 }
-            } catch (_) {}
+            } catch (_) { }
         };
 
         const adjustMessagePadding = () => {
@@ -4751,7 +4274,7 @@ export default {
                     _resizeObserver.unobserve(inputContainer.value);
                     _resizeObserver.disconnect();
                 }
-            } catch (_) {}
+            } catch (_) { }
             window.removeEventListener("resize", adjustMessagePadding);
         });
 
@@ -4774,14 +4297,10 @@ export default {
         );
 
         watch(currentChannel, (newChannel, oldChannel) => {
-            if (oldChannel?.id && window.Echo) {
-                try {
-                    window.Echo.leave(`chat.channel.${oldChannel.id}`);
-                } catch (_) {}
-            }
             if (newChannel?.id) {
                 setupChannelListeners(newChannel.id);
                 if (isMobile.value) mobileSidebarOpen.value = false;
+                setSidebarCssWidth(infoSidebarWidth.value);
                 nextTick(() => {
                     ensureInputResizeObserver();
                     adjustMessagePadding();
@@ -4789,6 +4308,10 @@ export default {
             } else if (isMobile.value) {
                 mobileSidebarOpen.value = true;
             }
+        });
+
+        watch([infoSidebarWidth, leftSidebarWidth], () => {
+            setSidebarCssWidth(infoSidebarWidth.value);
         });
 
         watch(
@@ -4804,7 +4327,8 @@ export default {
                     if (deepLinkChannelId.value) {
                         channelToSelect = list.find(
                             (c) =>
-                                Number(c.id) === Number(deepLinkChannelId.value),
+                                Number(c.id) ===
+                                Number(deepLinkChannelId.value),
                         );
                     }
 
@@ -4828,7 +4352,7 @@ export default {
                         if (
                             deepLinkChannelId.value &&
                             Number(channelToSelect?.id || list[0]?.id) !==
-                                Number(deepLinkChannelId.value)
+                            Number(deepLinkChannelId.value)
                         ) {
                             deepLinkConsumed.value = true;
                             clearDeepLinkParamsFromUrl();
@@ -4854,6 +4378,8 @@ export default {
             attachmentFiles,
             messageContainer,
             inputContainer,
+            chatMainRef,
+            infoSidebarRef,
             messageInput,
             replyTo,
             showScrollDown,
@@ -4883,6 +4409,7 @@ export default {
             createSearch,
             createMemberIds,
             typingLabel,
+            sidebarTypingLabel,
             showEmojiPicker,
             pinnedMessages,
             showPinnedPanel,
@@ -5040,7 +4567,6 @@ export default {
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-
     display: flex;
     height: 100%;
     background: white;
@@ -5399,6 +4925,166 @@ export default {
     margin: 0.125rem 0 0;
 }
 
+/* Typing Indicator (WhatsApp-style) */
+.header-subtitle.typing-indicator {
+    color: #25d366;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    animation: typingFadeIn 0.2s ease-out;
+}
+
+.typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.typing-dots .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #25d366;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dots .dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-dots .dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+.typing-dots .dot:nth-child(3) {
+    animation-delay: 0s;
+}
+
+@keyframes typingBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes typingFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Chat Area Typing Bubble (WhatsApp-style) ─────────────────── */
+.typing-bubble-wrapper {
+    display: flex;
+    padding: 0.25rem 1.25rem 0.75rem;
+    animation: typingFadeIn 0.25s ease-out;
+}
+
+.typing-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f0f2f5;
+    border-radius: 18px 18px 18px 4px;
+    padding: 0.65rem 1rem;
+    max-width: 300px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .typing-bubble {
+    background: rgba(30, 41, 59, 0.85);
+}
+
+.typing-bubble-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.typing-bubble-dots .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #25d366;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-bubble-dots .dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-bubble-dots .dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+.typing-bubble-dots .dot:nth-child(3) {
+    animation-delay: 0s;
+}
+
+.typing-bubble-text {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    font-weight: 500;
+    font-style: italic;
+}
+
+[data-theme="dark"] .typing-bubble-text {
+    color: #94a3b8;
+}
+
+/* ── Sidebar Typing Indicator ─────────────────────────────────── */
+.sidebar-typing-text {
+    color: #25d366 !important;
+    font-weight: 500 !important;
+    font-style: italic;
+    display: flex !important;
+    align-items: center;
+    gap: 0.3rem;
+    animation: typingFadeIn 0.2s ease-out;
+}
+
+.sidebar-typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.sidebar-typing-dots .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #25d366;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.sidebar-typing-dots .dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.sidebar-typing-dots .dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+.sidebar-typing-dots .dot:nth-child(3) {
+    animation-delay: 0s;
+}
+
 .header-actions {
     display: flex;
     gap: 0.5rem;
@@ -5664,10 +5350,12 @@ export default {
 .message-bubble {
     background: linear-gradient(135deg, #eef6ff, #f6f6fb);
     border-radius: 10px;
-    padding: 6px 15px; /* <--- Reduces vertical space significantly */
+    padding: 6px 15px;
+    /* <--- Reduces vertical space significantly */
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
-    min-height: auto; /* Ensures it doesn't force a minimum height */
+    min-height: auto;
+    /* Ensures it doesn't force a minimum height */
 }
 
 .own-message .message-bubble {
@@ -5768,8 +5456,9 @@ export default {
     width: 100%;
     text-align: left;
     border: 1px solid rgba(99, 102, 241, 0.16);
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 249, 255, 0.88));
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.92),
+            rgba(247, 249, 255, 0.88));
     border-radius: 16px;
     padding: 0.95rem 1rem 0.9rem;
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
@@ -5781,8 +5470,9 @@ export default {
 }
 
 .own-message .order-reference-card {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 244, 255, 0.9));
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.94),
+            rgba(239, 244, 255, 0.9));
 }
 
 .order-reference-card:hover:not(:disabled) {
@@ -6127,7 +5817,7 @@ export default {
     font-weight: 500;
 }
 
-.own-message + .message-time-outside {
+.own-message+.message-time-outside {
     justify-content: flex-end;
     color: var(--gray-600);
 }
@@ -6309,7 +5999,8 @@ export default {
 .input-with-suggestions {
     position: relative;
     flex: 1;
-    min-width: 0; /* CRITICAL: prevents textarea intrinsic width from breaking flex container causing right-padding to disappear on mobile */
+    min-width: 0;
+    /* CRITICAL: prevents textarea intrinsic width from breaking flex container causing right-padding to disappear on mobile */
 }
 
 .mention-popover {
@@ -6362,10 +6053,13 @@ export default {
 }
 
 :deep(.mention-token) {
-    background-color: #e0e7ff; /* Light Purple Background */
-    color: #4338ca; /* Dark Purple Text */
+    background-color: #e0e7ff;
+    /* Light Purple Background */
+    color: #4338ca;
+    /* Dark Purple Text */
     padding: 2px 6px;
-    border-radius: 6px; /* Rounded Corners */
+    border-radius: 6px;
+    /* Rounded Corners */
     font-weight: 600;
     display: inline-block;
     line-height: 1.2;
@@ -6374,7 +6068,8 @@ export default {
 }
 
 :deep(.mention-token:hover) {
-    background-color: #c7d2fe; /* Darker on hover */
+    background-color: #c7d2fe;
+    /* Darker on hover */
     cursor: pointer;
 }
 
@@ -6398,6 +6093,7 @@ export default {
         opacity: 0;
         transform: translateY(4px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -6583,13 +6279,16 @@ export default {
 }
 
 @keyframes highlightPulse {
+
     0%,
     100% {
         background: transparent;
     }
+
     25% {
         background: #fef3c7;
     }
+
     50% {
         background: #fef3c7;
     }
@@ -6791,7 +6490,7 @@ export default {
     text-overflow: ellipsis;
 }
 
-.section-toggle > i {
+.section-toggle>i {
     flex-shrink: 0;
 }
 
@@ -7519,7 +7218,8 @@ export default {
     .btn-send {
         width: 40px;
         height: 40px;
-        border-radius: 50%; /* Make it perfectly circular on mobile for modern HIG/MD3 look */
+        border-radius: 50%;
+        /* Make it perfectly circular on mobile for modern HIG/MD3 look */
         padding: 0;
         margin: 0;
     }
@@ -7527,7 +7227,8 @@ export default {
     .message-textarea {
         font-size: 1rem;
         line-height: 1.45;
-        padding: 0.5rem 0.2rem; /* reduce inner padding so it doesn't constrain flex */
+        padding: 0.5rem 0.2rem;
+        /* reduce inner padding so it doesn't constrain flex */
     }
 
     .info-sidebar.is-mobile {
@@ -7656,22 +7357,26 @@ export default {
 
 .thread-header {
     padding: 1rem;
-    padding-left: 1.5rem; /* Extra padding for resize handle */
+    padding-left: 1.5rem;
+    /* Extra padding for resize handle */
     border-bottom: 1px solid var(--gray-200);
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
 }
+
 .thread-content {
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
-    padding-left: 1.5rem; /* Extra padding for resize handle */
+    padding-left: 1.5rem;
+    /* Extra padding for resize handle */
     width: 100%;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
 }
+
 .thread-divider {
     padding: 1rem;
     padding-left: 1.5rem;
@@ -7679,13 +7384,16 @@ export default {
     font-size: 0.8rem;
     color: var(--gray-500);
 }
+
 .thread-input-area {
     padding: 1rem;
-    padding-left: 1.5rem; /* Extra padding for resize handle */
+    padding-left: 1.5rem;
+    /* Extra padding for resize handle */
     /* border-top: 1px solid var(--gray-200);
     background: white;
     width: 100%; */
 }
+
 .thread-indicator {
     display: flex;
     align-items: center;
@@ -7700,6 +7408,7 @@ export default {
     width: fit-content;
     transition: all 0.2s;
 }
+
 .thread-indicator:hover {
     background: var(--primary);
     color: white;
@@ -7726,7 +7435,8 @@ export default {
     padding: 1rem;
     background-color: var(--gray-50);
     border-bottom: 1px solid var(--gray-200);
-    display: flex; /* Ensure flex for avatar alignment */
+    display: flex;
+    /* Ensure flex for avatar alignment */
     gap: 1rem;
 }
 
@@ -7822,6 +7532,7 @@ export default {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -7844,6 +7555,7 @@ export default {
         transform: translateY(20px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -8306,3 +8018,7 @@ export default {
     cursor: not-allowed;
 }
 </style>
+
+
+
+

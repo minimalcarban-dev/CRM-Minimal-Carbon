@@ -20,3 +20,9 @@ Schedule::command(sprintf('email:sync --limit=%d', (int) config('gmail.sync.per_
 Schedule::command('diamonds:sync-duration --chunk=500')
     ->dailyAt('02:15')
     ->withoutOverlapping();
+
+// Safe background queue processing for shared cPanel hosting
+// It processes any pending jobs and stops. Max time ensures it doesn't run endlessly.
+Schedule::command('queue:work --stop-when-empty --max-time=240 --memory=128 --tries=3')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

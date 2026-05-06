@@ -7,9 +7,17 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Cloudinary\Cloudinary;
 use Cloudinary\Api\Upload\UploadApi;
+use App\Services\VirusScanner;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
-class ProcessChatAttachment
+class ProcessChatAttachment implements ShouldQueue
 {
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     protected MessageAttachment $attachment;
 
     public function __construct(MessageAttachment $attachment)
@@ -22,12 +30,33 @@ class ProcessChatAttachment
         try {
             $disk = Storage::disk('public');
             $localPath = $disk->path($this->attachment->path);
-            // Save local storage path BEFORE overwriting with Cloudinary URL
-            $localStoragePath = $this->attachment->path;
-
+            
             if (!file_exists($localPath)) {
+                Log::warning('Attachment file not found for processing', ['attachment_id' => $this->attachment->id, 'path' => $localPath]);
                 return;
             }
+
+            // Virus scan (moved from controller to job)
+            $scanner = app(VirusScanner::class);
+            $scan = $scanner->scan($localPath);
+            
+            if (empty($scan['clean'])) {
+                Log::warning('Infected file detected in chat attachment', [
+                    'attachment_id' => $this->attachment->id,
+                    'filename' => $this->attachment->filename,
+                    'scan_result' => $scan
+                ]);
+
+                // Delete the infected file
+                $disk->delete($this->attachment->path);
+
+                // Mark attachment as infected
+                $this->attachment->update(['status' => 'infected']);
+                return;
+            }
+
+            // Save local storage path BEFORE overwriting with Cloudinary URL
+            $localStoragePath = $this->attachment->path;
 
             // Initialize Cloudinary using env/config (same approach as other controllers)
             $cloudinary = new Cloudinary([
@@ -75,18 +104,8 @@ class ProcessChatAttachment
             }
 
             $secureUrl = $result['secure_url'] ?? null;
-            // $secureUrl = null;
-
-            // if (($result['resource_type'] ?? null) === 'raw') {
-            //     $cloudName = config('cloudinary.cloud_name');
-            //     // $secureUrl = "https://res.cloudinary.com/{$cloudName}/raw/upload/{$result['public_id']}";
-            //     $secureUrl = "https://res.cloudinary.com/{$cloudName}/raw/upload/{$result['public_id']}.pdf";
-            // } else {
-            //     $secureUrl = $result['secure_url'] ?? null;
-            // }
             $resultPublicId = $result['public_id'] ?? $publicId;
             $resourceType = $result['resource_type'] ?? ($isImage ? 'image' : 'raw');
-            $resultFormat = $result['format'] ?? pathinfo($this->attachment->filename, PATHINFO_EXTENSION) ?? null;
 
             $thumbnailUrl = null;
             if ($isImage && $resultPublicId) {
@@ -95,12 +114,13 @@ class ProcessChatAttachment
                 $thumbnailUrl = "https://res.cloudinary.com/{$cloudName}/image/upload/c_fit,w_200,h_200/{$resultPublicId}.{$format}";
             }
 
-            // Update attachment to point to Cloudinary
+            // Update attachment to point to Cloudinary and mark as processed
             $this->attachment->update([
                 'path' => $secureUrl,
                 'thumbnail_path' => $isImage ? $thumbnailUrl : null,
+                'status' => 'processed',
                 'metadata' => [
-                    'public_id' => $result['public_id'],
+                    'public_id' => $resultPublicId,
                     'resource_type' => $resourceType,
                     'format' => $result['format'] ?? null,
                     'type' => $isPdf ? 'PDF' : ($isImage ? 'Image' : 'File'),
@@ -124,6 +144,7 @@ class ProcessChatAttachment
             Log::error('Attachment handle failed', [
                 'attachment_id' => $this->attachment->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }
