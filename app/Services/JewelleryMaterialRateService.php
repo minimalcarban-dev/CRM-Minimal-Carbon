@@ -18,15 +18,15 @@ class JewelleryMaterialRateService
         protected GoldRateService $goldRateService
     ) {}
 
-    public function currentRates(): array
+    public function currentRates(bool $force = false): array
     {
-        $usdRate = $this->usdRate();
-        $gold = $this->goldRateService->getRateForDate(now()->toDateString());
+        $usdRate = $this->usdRate($force);
+        $gold = $this->goldRateService->getRateForDate(now()->toDateString(), $force);
         $rawInrPerGram = (float) ($gold['rate_inr_per_gram'] ?? 0);
         $rawUsdPerGram = $rawInrPerGram * $usdRate;
         $adjustedInrPerGram = $rawInrPerGram * (1 + (self::GOLD_MARKUP_PERCENT / 100));
         $adjustedUsdPerGram = $adjustedInrPerGram * $usdRate;
-        $silverInrPerGram = $this->silverInrPerGram();
+        $silverInrPerGram = $this->silverInrPerGram($force);
         $silverUsdPerGram = $silverInrPerGram * $usdRate;
         $platinum950UsdPerGram = $this->getPlatinumRate($rawUsdPerGram);
 
@@ -49,9 +49,14 @@ class JewelleryMaterialRateService
         ];
     }
 
-    protected function usdRate(): float
+    protected function usdRate(bool $force = false): float
     {
-        return Cache::remember('currency_usd_inr_jewellery_pricing', 3600, function () {
+        $cacheKey = 'currency_usd_inr_jewellery_pricing';
+        if ($force) {
+            Cache::forget($cacheKey);
+        }
+
+        return Cache::remember($cacheKey, 3600, function () {
             try {
                 $response = Http::withoutVerifying()
                     ->timeout(8)
@@ -79,9 +84,14 @@ class JewelleryMaterialRateService
         return (float) AppSetting::get($key, (string) $default);
     }
 
-    private function silverInrPerGram(): float
+    private function silverInrPerGram(bool $force = false): float
     {
-        return Cache::remember('jewellery_pricing_silver_inr_per_gram', 1800, function () {
+        $cacheKey = 'jewellery_pricing_silver_inr_per_gram';
+        if ($force) {
+            Cache::forget($cacheKey);
+        }
+
+        return Cache::remember($cacheKey, 1800, function () {
             try {
                 $response = Http::withoutVerifying()
                     ->timeout(8)

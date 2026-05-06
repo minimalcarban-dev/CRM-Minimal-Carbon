@@ -91,16 +91,13 @@ A complete messaging system for admins, embedded in the panel:
 - **Shared Media** — sidebar view of all images, files, and links shared in a channel
 - **Message search** — indexed search across accessible channels via Laravel Scout
 
-### Jewellery Stock Management
-
-A professional inventory system for finished jewellery items:
-
-- **Pricing Matrix** — Dynamic calculation of selling price based on metal type (Gold 10k/14k/18k, Platinum), weight, labor rates, and profit margins
-- **Gemstone Integration** — Detailed tracking of primary stones (carat, shape, color, clarity, cut)
-- **Side Stones Repeater** — Manage multiple side stone types and quantities per jewellery item
-- **Multi-Image Support** — Upload multiple product photos with Cloudinary hosting
-- **Real-time Rates** — Automatic calculation using current USD material rates per gram
-- **Discount Logic** — Support for percentage-based discounts with real-time price updates
+- **Jewellery Stock Management** — A professional inventory system for finished jewellery items:
+    - **Pricing Matrix** — Dynamic calculation of selling price based on metal price (Gold 10k/14k/18k, Platinum), weight, labor rates, and profit margins.
+    - **Live Rate Synchronization** — Real-time fetching of gold and silver rates with a multi-tiered fallback strategy (Custom API → Navkar Proxy → Coinbase). Includes a "Force Refresh" mechanism to bypass server-side caching (60s gold, 30m silver, 1h USD) for instant pricing accuracy.
+    - **Weight Terminology Standardization** — System-wide use of "Net Weight" for physical jewellery weight (replacing legacy "Gross Weight" labels) to ensure consistency across inventory, pricing matrices, and order views.
+    - **Gemstone Integration** — Detailed tracking of primary stones (carat weight, price, shape, color, clarity, cut).
+    - **Side Stones Repeater** — Manage multiple side stone types, weights, and prices per jewellery item.
+    - **Auto-Pricing Sync** — Real-time calculation of total stone investment (weight + price) with automatic injection into the 'Stone Cost' field across all pricing matrix variants for accurate margin calculation.
 
 ### Inventory & Financials
 
@@ -304,12 +301,46 @@ Channel authorization happens at `/admin/broadcasting/auth`, protected by the `a
 
 ## Maintenance Commands
 
+### Inventory & Stock Management
 | Command | Purpose |
 |---------|----------|
-| `php artisan melee:repair --dry-run` | Preview melee stock repairs (duplicates + drift) |
-| `php artisan melee:repair` | Execute stock repair (clean duplicates + fix levels) |
-| `php artisan melee:repair --skip-duplicates` | Only fix stock levels without cleaning duplicates |
-| `php artisan melee:repair --skip-stock` | Only clean duplicate transactions |
+| `php artisan melee:repair` | Clean duplicate transactions and recalibrate melee stock levels. |
+| `php artisan melee:repair --dry-run` | Preview stock repairs without applying changes. |
+| `php artisan melee:recalculate` | Re-sum all transactions to fix drift in `available_weight`. |
+| `php artisan diamonds:recalculate-profits` | Recalculate profit margins for all diamond stock based on latest purchase/sell data. |
+| `php artisan diamonds:sync-duration` | Update the `days_in_stock` metric for all active inventory. |
+
+### Logistics & Orders
+| Command | Purpose |
+|---------|----------|
+| `php artisan orders:sync-tracking` | Sync tracking status for a specific order via 17Track/Meta. |
+| `php artisan tracking:sync-all` | Batch sync tracking for all orders in 'shipped' status. |
+| `php artisan orders:reminders` | Send automated WhatsApp/Email reminders for pending client actions. |
+| `php artisan clients:sync` | Refresh client metadata and order history counts. |
+
+### Financials & Sales
+| Command | Purpose |
+|---------|----------|
+| `php artisan sync:purchase-expenses` | Ensure every Diamond Purchase has a matching Expense record. |
+| `php artisan archive:daily-sales` | Aggregate daily totals into the `sales_archives` table for dashboard performance. |
+
+### Security & System
+| Command | Purpose |
+|---------|----------|
+| `php artisan device:approve {email}` | Emergency: Generate a trust token for an admin locked out by IP/Device restriction. |
+| `php artisan ip:reset` | Clear all IP restriction logs (useful during office network migrations). |
+| `graphify update .` | Update the local knowledge graph (Graphify) after major code changes. |
+
+### Standard Lifecycle
+| Command | Purpose |
+|---------|----------|
+| `composer install` | Install PHP dependencies. |
+| `npm install` | Install Node.js dependencies. |
+| `php artisan migrate --seed` | Refresh database schema and seed essential data. |
+| `php artisan storage:link` | Create symbolic link for public file access (Required for images). |
+| `php artisan queue:work` | Start the background worker for chat, notifications, and PDF processing. |
+| `php artisan test` | Run the full Pest test suite. |
+| `npm run build` | Compile production assets (Vite). |
 
 ---
 

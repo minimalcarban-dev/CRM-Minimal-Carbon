@@ -123,7 +123,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Gross Weight (g)</label>
+                            <label class="form-label">Net Weight (g)</label>
                             <input type="number" name="weight" class="form-control" step="0.001" placeholder="0.000"
                                 value="{{ old('weight', $jewelleryStock->weight) }}">
                         </div>
@@ -209,17 +209,26 @@
                 <div class="section-body">
 
                     <div
-                        style="margin-bottom: 1.5rem; background: rgba(139, 92, 246, 0.05); padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.15); display: flex; justify-content: space-between; align-items: center;">
+                        style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 2px solid rgba(139, 92, 246, 0.1); padding-bottom: 1rem;">
                         <div>
                             <h4
                                 style="margin: 0; font-size: 0.95rem; color: #6d28d9; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                                Total Carat Weight</h4>
+                                Total Carat Weight & Stone Cost</h4>
                             <p style="margin: 0; font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">Combined weight
-                                of primary and all secondary stones</p>
+                                & price of primary and all secondary stones</p>
                         </div>
-                        <div>
-                            <span id="total_carat_weight_display"
-                                style="font-size: 1.5rem; font-weight: 800; color: #6d28d9;">0.000 cts</span>
+                        <div style="display: flex; gap: 2rem; align-items: center;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Total Weight</div>
+                                <span id="total_carat_weight_display"
+                                    style="font-size: 1.5rem; font-weight: 800; color: #6d28d9;">0.000 cts</span>
+                            </div>
+                            <div style="width: 1px; height: 2rem; background: rgba(139, 92, 246, 0.2);"></div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Total Price</div>
+                                <span id="total_stone_price_display"
+                                    style="font-size: 1.5rem; font-weight: 800; color: #10b981;">$0.00</span>
+                            </div>
                         </div>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
@@ -247,6 +256,12 @@
                                     <input type="number" name="primary_stone_weight" class="form-control"
                                         step="0.001" placeholder="0.000 cts"
                                         value="{{ old('primary_stone_weight', $jewelleryStock->primary_stone_weight) }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Price/Ct ($)</label>
+                                    <input type="number" name="primary_stone_price" class="form-control"
+                                        step="0.01" placeholder="0.00"
+                                        value="{{ old('primary_stone_price', $jewelleryStock->primary_stone_price) }}">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Shape</label>
@@ -297,6 +312,14 @@
                                                 {{ $clarity->name }}</option>
                                         @endforeach
                                     </select>
+                                </div>
+                            </div>
+                            {{-- Primary Stone Subtotal --}}
+                            <div style="margin-top: 1rem; padding: 0.5rem 0; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(99, 102, 241, 0.1);">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.04em;"><i class="bi bi-gem" style="margin-right: 0.3rem;"></i>Primary Stone Total</span>
+                                <div style="display: flex; gap: 1.5rem; align-items: center;">
+                                    <span style="font-size: 0.85rem; color: #4f46e5; font-weight: 600;">Wt: <span id="primary_stone_total_weight">0.000</span> cts</span>
+                                    <span style="font-size: 0.85rem; color: #10b981; font-weight: 600;">Price: $<span id="primary_stone_total_price">0.00</span></span>
                                 </div>
                             </div>
                         </div>
@@ -554,29 +577,88 @@
         });
 
         function calculateTotalCaratWeight() {
-            let total = 0;
-            const primary = document.querySelector('input[name="primary_stone_weight"]');
-            if (primary && primary.value) {
-                const w = parseFloat(primary.value);
-                if (!isNaN(w) && w > 0) total += w;
+            let totalWeight = 0;
+            let totalPrice = 0;
+
+            // Primary stone weight & price
+            const primaryWeightInput = document.querySelector('input[name="primary_stone_weight"]');
+            const primaryPriceInput = document.querySelector('input[name="primary_stone_price"]');
+            let pW = 0, pP = 0, pTotal = 0;
+            
+            if (primaryWeightInput && primaryWeightInput.value) {
+                pW = parseFloat(primaryWeightInput.value) || 0;
             }
-            const sideStones = document.querySelectorAll('input[name^="side_stones"][name$="[weight]"]');
-            sideStones.forEach(input => {
-                if (input.value) {
-                    const w = parseFloat(input.value);
-                    if (!isNaN(w) && w > 0) total += w;
+            if (primaryPriceInput && primaryPriceInput.value) {
+                pP = parseFloat(primaryPriceInput.value) || 0;
+            }
+            
+            if (pW > 0) {
+                totalWeight += pW;
+                pTotal = pW * pP;
+                totalPrice += pTotal;
+            }
+
+            // Primary stone subtotal display
+            const pWtEl = document.getElementById('primary_stone_total_weight');
+            const pPrEl = document.getElementById('primary_stone_total_price');
+            if (pWtEl) pWtEl.innerText = pW.toFixed(3);
+            if (pPrEl) pPrEl.innerText = pTotal.toFixed(2);
+
+            // Side stones
+            let sideWeight = 0, sidePriceTotal = 0;
+            const sideStoneWeights = document.querySelectorAll('input[name^="side_stones"][name$="[weight]"]');
+            sideStoneWeights.forEach(input => {
+                const name = input.name;
+                const priceName = name.replace('[weight]', '[price]');
+                const pInput = document.querySelector(`input[name="${priceName}"]`);
+                
+                let w = 0, p = 0, rowTotal = 0;
+                if (input.value) w = parseFloat(input.value) || 0;
+                if (pInput && pInput.value) p = parseFloat(pInput.value) || 0;
+                
+                if (w > 0) {
+                    totalWeight += w;
+                    sideWeight += w;
+                    rowTotal = w * p;
+                    sidePriceTotal += rowTotal;
+                    totalPrice += rowTotal;
                 }
             });
-            const display = document.getElementById('total_carat_weight_display');
-            if (display) {
-                display.innerText = total.toFixed(3) + ' cts';
+
+            // Side stones subtotal display
+            const sWtEl = document.getElementById('side_stones_total_weight');
+            const sPrEl = document.getElementById('side_stones_total_price');
+            if (sWtEl) sWtEl.innerText = sideWeight.toFixed(3);
+            if (sPrEl) sPrEl.innerText = sidePriceTotal.toFixed(2);
+
+            // Grand total display
+            const weightDisplay = document.getElementById('total_carat_weight_display');
+            if (weightDisplay) {
+                weightDisplay.innerText = totalWeight.toFixed(3) + ' cts';
+            }
+            const priceDisplay = document.getElementById('total_stone_price_display');
+            if (priceDisplay) {
+                priceDisplay.innerText = '$' + totalPrice.toFixed(2);
+            }
+
+            // Auto-fill stone_cost in ALL pricing matrix rows
+            const stoneCostInputs = document.querySelectorAll('.pricing-row [data-field="stone_cost"]');
+            stoneCostInputs.forEach(input => {
+                input.value = totalPrice.toFixed(2);
+            });
+
+            // Recalculate pricing matrix
+            if (typeof calculateJewelleryPricing === 'function') {
+                calculateJewelleryPricing();
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             document.body.addEventListener('input', (e) => {
-                if (e.target.name === 'primary_stone_weight' || (e.target.name && e.target.name.startsWith(
-                        'side_stones') && e.target.name.endsWith('[weight]'))) {
+                if (e.target.name === 'primary_stone_weight' ||
+                    e.target.name === 'primary_stone_price' ||
+                    (e.target.name && e.target.name.startsWith('side_stones') &&
+                     (e.target.name.endsWith('[weight]') || e.target.name.endsWith('[price]')))) {
                     calculateTotalCaratWeight();
                 }
             });

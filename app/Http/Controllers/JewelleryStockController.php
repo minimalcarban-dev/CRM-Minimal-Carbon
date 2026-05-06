@@ -383,7 +383,7 @@ class JewelleryStockController extends Controller
         ]);
     }
 
-    public function pricingRates()
+    public function pricingRates(Request $request)
     {
         $admin = auth('admin')->user();
         $defaults = $this->pricingService->defaultsFor($admin);
@@ -391,7 +391,8 @@ class JewelleryStockController extends Controller
             $defaults['profit_percent'] = null;
         }
 
-        $rates = $this->materialRateService->currentRates();
+        $force = (bool) $request->query('refresh');
+        $rates = $this->materialRateService->currentRates($force);
         $envPlatinumRate = env('JEWELLERY_PLATINUM_RATE');
         $rates['is_platinum_locked'] = $envPlatinumRate !== null && $envPlatinumRate !== '';
 

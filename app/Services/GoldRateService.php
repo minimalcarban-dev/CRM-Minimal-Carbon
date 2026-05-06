@@ -28,7 +28,7 @@ class GoldRateService
      * - is_live: bool
      * - message: string|null
      */
-    public function getRateForDate(string $date): array
+    public function getRateForDate(string $date, bool $force = false): array
     {
         $targetDate = Carbon::parse($date)->toDateString();
         $today = now()->toDateString();
@@ -47,7 +47,7 @@ class GoldRateService
         }
 
         if ($targetDate === $today) {
-            $live = $this->fetchLiveInrRate();
+            $live = $this->fetchLiveInrRate($force);
 
             if ($live['success']) {
                 $this->upsertSnapshot(
@@ -119,9 +119,14 @@ class GoldRateService
     /**
      * Fetch live INR gold rate from Navkar proxy.
      */
-    public function fetchLiveInrRate(): array
+    public function fetchLiveInrRate(bool $force = false): array
     {
-        return Cache::remember('gold_rate_live_inr_v3', self::LIVE_CACHE_SECONDS, function () {
+        $cacheKey = 'gold_rate_live_inr_v3';
+        if ($force) {
+            Cache::forget($cacheKey);
+        }
+
+        return Cache::remember($cacheKey, self::LIVE_CACHE_SECONDS, function () {
 
             // 1. Primary: Custom API (Solid JSON)
             try {

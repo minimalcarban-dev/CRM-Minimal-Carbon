@@ -36,6 +36,7 @@ class JewelleryStock extends Model
         'closure_type_id',
         'primary_stone_type_id',
         'primary_stone_weight',
+        'primary_stone_price',
         'primary_stone_count',
         'primary_stone_measurement',
         'primary_stone_shape_id',

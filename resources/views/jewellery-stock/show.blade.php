@@ -734,7 +734,7 @@
                     </div>
                     @if($jewelleryStock->weight)
                         <div class="stat-tile">
-                            <p class="tile-label">Gross Weight</p>
+                            <p class="tile-label">Net Weight</p>
                             <p class="tile-value">{{ number_format((float) $jewelleryStock->weight, 3) }} g</p>
                         </div>
                     @endif
@@ -871,11 +871,35 @@
 
                 @if ($jewelleryStock->primary_stone_type_id || $jewelleryStock->sideStones->isNotEmpty())
                     <section class="tracker-table-card detail-card">
-                        <div class="card-head">
-                            <span class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
-                                <i class="bi bi-diamond-half"></i>
-                            </span>
-                            <h3 class="card-title">Component Gemstones</h3>
+                        <div class="card-head" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                                    <i class="bi bi-diamond-half"></i>
+                                </span>
+                                <h3 class="card-title">Component Gemstones</h3>
+                            </div>
+                            <div style="display: flex; gap: 1.5rem; background: rgba(139, 92, 246, 0.08); padding: 0.5rem 1rem; border-radius: 10px; border: 1px solid rgba(139, 92, 246, 0.15);">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.65rem; color: #6b7280; text-transform: uppercase; font-weight: 800;">Total Weight</div>
+                                    <span style="font-size: 0.95rem; font-weight: 850; color: #6d28d9;">
+                                        {{ number_format((float)$jewelleryStock->primary_stone_weight + $jewelleryStock->sideStones->sum('weight'), 3) }} cts
+                                    </span>
+                                </div>
+                                <div style="width: 1px; height: 1.5rem; background: rgba(139, 92, 246, 0.2);"></div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.65rem; color: #6b7280; text-transform: uppercase; font-weight: 800;">Total Cost</div>
+                                    <span style="font-size: 0.95rem; font-weight: 850; color: #10b981;">
+                                        @php
+                                            $pTotal = (float)$jewelleryStock->primary_stone_weight * (float)$jewelleryStock->primary_stone_price;
+                                            $sTotal = 0;
+                                            foreach($jewelleryStock->sideStones as $ss) {
+                                                $sTotal += (float)$ss->weight * (float)$ss->price;
+                                            }
+                                        @endphp
+                                        ${{ number_format($pTotal + $sTotal, 2) }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="stone-grid">
@@ -891,6 +915,16 @@
                                                 <div>
                                                     <p class="fact-label">Weight</p>
                                                     <p class="fact-value">{{ $jewelleryStock->primary_stone_weight }} cts</p>
+                                                </div>
+                                            @endif
+                                            @if($jewelleryStock->primary_stone_price)
+                                                <div>
+                                                    <p class="fact-label">Price/Ct</p>
+                                                    <p class="fact-value">${{ number_format((float)$jewelleryStock->primary_stone_price, 2) }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="fact-label">Stone Total</p>
+                                                    <p class="fact-value" style="color: #10b981;">${{ number_format((float)$jewelleryStock->primary_stone_weight * (float)$jewelleryStock->primary_stone_price, 2) }}</p>
                                                 </div>
                                             @endif
                                             @if($jewelleryStock->primary_stone_shape_id)
@@ -933,6 +967,16 @@
                                                 <div>
                                                     <p class="fact-label">Weight</p>
                                                     <p class="fact-value">{{ $stone->weight }} cts</p>
+                                                </div>
+                                            @endif
+                                            @if($stone->price)
+                                                <div>
+                                                    <p class="fact-label">Price/Ct</p>
+                                                    <p class="fact-value">${{ number_format((float)$stone->price, 2) }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="fact-label">Stone Total</p>
+                                                    <p class="fact-value" style="color: #10b981;">${{ number_format((float)$stone->weight * (float)$stone->price, 2) }}</p>
                                                 </div>
                                             @endif
                                             @if($stone->count)

@@ -156,7 +156,7 @@
                             <th><i class="bi bi-collection"></i> Type</th>
                             <th><i class="bi bi-palette"></i> Metal</th>
                             <th><i class="bi bi-vinyl"></i> Ring Size</th>
-                            <th><i class="bi bi-speedometer"></i> Weight</th>
+                            <th><i class="bi bi-speedometer"></i> Net Weight</th>
                             <th><i class="bi bi-box-seam"></i> Qty</th>
                             <th><i class="bi bi-cash"></i> Purchase</th>
                             <th><i class="bi bi-cash-stack"></i> Selling</th>

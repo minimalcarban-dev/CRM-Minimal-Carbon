@@ -25,6 +25,15 @@
             </div>
         @endforelse
     </div>
+
+    {{-- Side Stones Subtotal --}}
+    <div style="margin-top: 1rem; padding: 0.5rem 0; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(99, 102, 241, 0.1);">
+        <span style="font-size: 0.8rem; font-weight: 700; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.04em;"><i class="bi bi-diamonds" style="margin-right: 0.3rem;"></i>Side Stones Total</span>
+        <div style="display: flex; gap: 1.5rem; align-items: center;">
+            <span style="font-size: 0.85rem; color: #4f46e5; font-weight: 600;">Wt: <span id="side_stones_total_weight">0.000</span> cts</span>
+            <span style="font-size: 0.85rem; color: #10b981; font-weight: 600;">Price: $<span id="side_stones_total_price">0.00</span></span>
+        </div>
+    </div>
 </div>
 
 <template id="side_stone_row_template">
