@@ -246,6 +246,16 @@ class OrderController extends Controller
             $query->where('diamond_status', $request->diamond_status);
         }
 
+        if ($request->filled('tracking_status')) {
+            $trackingStatusMap = [
+                'in_transit' => 'In Transit',
+                'out_for_delivery' => 'Out for Delivery',
+                'delivered' => 'Delivered',
+            ];
+            $dbStatus = $trackingStatusMap[$request->tracking_status] ?? $request->tracking_status;
+            $query->where('tracking_status', $dbStatus);
+        }
+
         if ($request->filled('priority_status')) {
             $query->where('note', $request->priority_status);
         }
@@ -826,82 +836,35 @@ class OrderController extends Controller
         array $newMeleeEntries,
         bool $allowNegativeMelee
     ): ?JsonResponse {
-        // Build a mutable copy of new entries for matching
-        $newCopy = $newMeleeEntries;
-        $entriesToReturn = [];
-
-        foreach ($oldMeleeEntries as $oldEntry) {
-            $foundMatch = false;
-
-            foreach ($newCopy as $i => $newEntry) {
-                // [FIX-2] Float comparison uses epsilon for ALL float fields, including price_per_ct
-                $sameId = ($oldEntry['melee_diamond_id'] === $newEntry['melee_diamond_id']); // [FIX-2] strict ===
-                $samePieces = ($oldEntry['pieces'] == $newEntry['pieces']);
-                $sameCarat = abs((float) ($oldEntry['avg_carat_per_piece'] ?? 0) - (float) ($newEntry['avg_carat_per_piece'] ?? 0)) < 0.00001;
-                $samePrice = abs((float) ($oldEntry['price_per_ct'] ?? 0) - (float) ($newEntry['price_per_ct'] ?? 0)) < 0.00001; // [FIX-2] was bare ==
-
-                if ($sameId && $samePieces && $sameCarat && $samePrice) {
-                    unset($newCopy[$i]);
-                    $foundMatch = true;
-                    break;
-                }
-            }
-
-            if (!$foundMatch) {
-                $entriesToReturn[] = $oldEntry;
-            }
+        // [FIX-10] Use net-quantity-based diffing instead of entry-by-entry matching.
+        // The old approach returned ALL old entries and re-deducted ALL new entries,
+        // causing duplicate transaction records for unchanged entries.
+        try {
+            $diffResult = $this->meleeStockService->adjustForOrderDiff(
+                $order->id,
+                $oldMeleeEntries,
+                $newMeleeEntries,
+                ['allow_negative' => $allowNegativeMelee]
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->orderErrorResponse($request, 'Exception applying stock diff: ' . $e->getMessage(), null, 500);
         }
 
-        // Entries remaining in $newCopy are genuinely new/changed
-        $entriesToDeduct = array_values($newCopy);
-
-        // Return only the entries that were actually removed or changed
-        if (!empty($entriesToReturn)) {
-            // [FIX-3] try/catch so an exception still triggers rollback
-            try {
-                $returnResult = $this->meleeStockService->returnForOrder($order->id, $entriesToReturn);
-            } catch (\Exception $e) {
-                DB::rollBack();
-                return $this->orderErrorResponse($request, 'Exception returning old stock: ' . $e->getMessage(), null, 500);
-            }
-
-            if (!$returnResult['success']) {
-                DB::rollBack();
-                // [FIX-1] Pass null for $draft, validated int for $status
-                return $this->orderErrorResponse(
-                    $request,
-                    'Failed to return old stock: ' . $returnResult['message'],
-                    null,                                                      // [FIX-1] was passing int as $draft
-                    $this->safeHttpStatus($returnResult['status'] ?? 422)      // [FIX-8]
-                );
-            }
+        if (!$diffResult['success']) {
+            DB::rollBack();
+            return $this->orderErrorResponse(
+                $request,
+                'Failed to apply stock diff: ' . $diffResult['message'],
+                null,
+                $this->safeHttpStatus($diffResult['status'] ?? 422)
+            );
         }
 
-        // Deduct only the entries that are genuinely new/changed
-        if (!empty($entriesToDeduct)) {
-            // [FIX-3] try/catch
-            try {
-                $deductResult = $this->meleeStockService->deductForOrder($order->id, $entriesToDeduct, [
-                    'allow_negative' => $allowNegativeMelee,
-                ]);
-            } catch (\Exception $e) {
-                DB::rollBack();
-                return $this->orderErrorResponse($request, 'Exception deducting new stock: ' . $e->getMessage(), null, 500);
-            }
-
-            if (!$deductResult['success']) {
-                DB::rollBack();
-                return $this->orderErrorResponse(
-                    $request,
-                    'Failed to deduct new stock: ' . $deductResult['message'],
-                    null,
-                    $this->safeHttpStatus($deductResult['status'] ?? 422)      // [FIX-8]
-                );
-            }
-        }
-
-        return null; // null = success, no early-return response needed
+        return null; // Success — no error response
     }
+
+
     private function orderErrorResponse(Request $request, string $message, ?OrderDraft $draft = null, int $status = 422)
     {
         if ($request->ajax() || $request->wantsJson()) {

@@ -368,3 +368,65 @@ rg -n "melee_stock_refresh|storage|applyMeleeStockSummary" resources\views
 - Browser-level manual click-through test is turn mein run nahi hua.
 - Backend parse, route boot, aur Blade compile verification ho chuki hai.
 - Agar aap chaho to next step mein main local browser automation ya manual QA checklist bhi add kar sakta hoon.
+
+---
+
+### 10. [FIX-10] Duplicate transactions aur stock drift — Net-quantity diffing fix
+
+**Problem**
+
+- Order edit karte waqt `applyMeleeStockDiff()` unchanged melee entries ko bhi return+re-deduct kar raha tha
+- Isse duplicate `melee_transactions` records ban rahe the (20+ groups, 37 total duplicate records)
+- 25 melee diamonds ka `available_pieces` drifted tha (total -139 pieces missing on worst diamond #198)
+- Transaction table mein same order ke liye 3-4x OUT entries dikh rahi thi
+
+**Root Cause**
+
+- Purana `applyMeleeStockDiff()` entry-by-entry float comparison karta tha (avg_carat_per_piece, price_per_ct)
+- Jab koi NEW entry add hoti thi order mein, purani unchanged entries ko match karna fail ho jata tha
+- Result: unchanged entries return → re-deduct hoti thi (net zero but duplicate transactions ban jaati)
+- Stock levels directly update bhi hote the service mein → leading to cumulative drift
+
+**Fix Applied**
+
+1. `MeleeStockService::adjustForOrderDiff()` — Naya method jo per-diamond net-quantity aggregation use karta hai
+   - Purani entries ka total pieces per diamond compute karo
+   - Nayi entries ka total pieces per diamond compute karo
+   - Delta = new - old → positive = deduct, negative = return, zero = skip
+   - Ek hi transaction per diamond, sirf actual change ke liye
+
+2. `OrderController::applyMeleeStockDiff()` — Rewritten to delegate to `adjustForOrderDiff()`
+   - Purana fragile float comparison logic hata diya
+   - Ab sirf `adjustForOrderDiff()` call hota hai
+
+3. `RepairMeleeStock` artisan command — Data repair tool
+   - Phase 1: Duplicate transactions identify + remove (oldest keep, baaki delete)
+   - Phase 2: `available_pieces` recalculate from cleaned transaction ledger
+   - `--dry-run` flag for safe preview
+
+**Data Repair Results (2026-05-06)**
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Duplicate transaction groups | 30 | 0 |
+| Duplicate records removed | 37 | — |
+| Diamonds with stock drift | 25 | 0 |
+| Worst drift (Diamond #198) | -139 pcs | 0 |
+
+**Files Changed**
+
+- `app/Services/MeleeStockService.php` — Added `adjustForOrderDiff()`
+- `app/Http/Controllers/OrderController.php` — Rewrote `applyMeleeStockDiff()`
+- `app/Console/Commands/RepairMeleeStock.php` — New repair command
+
+**Verification Command**
+
+```bash
+php artisan melee:repair --dry-run
+```
+
+**Future Prevention**
+
+- Net-quantity diffing ensures unchanged entries are NEVER touched
+- No more return+re-deduct for entries that didn't change
+- Single transaction per diamond per edit operation

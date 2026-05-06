@@ -160,6 +160,11 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="form-group" id="thicknessSection" style="display: none;">
+                            <label class="form-label">Thickness</label>
+                            <input type="text" name="thickness" class="form-control" value="{{ old('thickness') }}"
+                                placeholder="e.g. 1.5mm">
+                        </div>
                         <div class="form-group" id="lengthSection">
                             <label class="form-label">Length (inch/cm)</label>
                             <input type="number" name="length" class="form-control" step="0.1"
@@ -247,6 +252,11 @@
                                                 {{ $shape->name }}</option>
                                         @endforeach
                                     </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Measurement</label>
+                                    <input type="text" name="primary_stone_measurement" class="form-control"
+                                        placeholder="e.g. 5x3 mm" value="{{ old('primary_stone_measurement') }}">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Cut Grade</label>
@@ -375,47 +385,51 @@
 
 @push('scripts')
     <script>
-        function updateCategoryFields() {
-            const category = document.getElementById('categorySelect').value;
-            const ringSize = document.getElementById('ringSizeSection');
-            const length = document.getElementById('lengthSection');
-            const width = document.getElementById('widthSection');
-            const diameter = document.getElementById('diameterSection');
-            const bale = document.getElementById('baleSection');
-            const closure = document.getElementById('closureSection');
+        const categorySelect = document.getElementById('categorySelect');
+        const dimensionsCard = document.getElementById('dimensionsCard');
+        const ringSizeSection = document.getElementById('ringSizeSection');
+        const thicknessSection = document.getElementById('thicknessSection');
+        const lengthSection = document.getElementById('lengthSection');
+        const widthSection = document.getElementById('widthSection');
+        const diameterSection = document.getElementById('diameterSection');
+        const baleSection = document.getElementById('baleSection');
+        const closureSection = document.getElementById('closureSection');
 
-            [ringSize, length, width, diameter, bale, closure].forEach(el => {
+        function updateCategoryFields() {
+            const category = categorySelect.value;
+            [ringSizeSection, thicknessSection, lengthSection, widthSection, diameterSection, baleSection, closureSection].forEach(el => {
                 if (el) el.style.display = 'none';
             });
 
             switch (category) {
                 case 'ring':
-                    if (ringSize) ringSize.style.display = 'block';
-                    if (width) width.style.display = 'block';
+                    if (ringSizeSection) ringSizeSection.style.display = 'block';
+                    if (thicknessSection) thicknessSection.style.display = 'block';
+                    if (widthSection) widthSection.style.display = 'block';
                     break;
                 case 'earrings':
-                    if (closure) closure.style.display = 'block';
-                    if (width) width.style.display = 'block';
-                    if (length) length.style.display = 'block';
+                    if (closureSection) closureSection.style.display = 'block';
+                    if (widthSection) widthSection.style.display = 'block';
+                    if (lengthSection) lengthSection.style.display = 'block';
                     break;
                 case 'necklace':
                 case 'bracelet':
-                    if (length) length.style.display = 'block';
-                    if (width) width.style.display = 'block';
-                    if (closure) closure.style.display = 'block';
+                    if (lengthSection) lengthSection.style.display = 'block';
+                    if (widthSection) widthSection.style.display = 'block';
+                    if (closureSection) closureSection.style.display = 'block';
                     break;
                 case 'pendant':
-                    if (width) width.style.display = 'block';
-                    if (length) length.style.display = 'block';
-                    if (bale) bale.style.display = 'block';
+                    if (widthSection) widthSection.style.display = 'block';
+                    if (lengthSection) lengthSection.style.display = 'block';
+                    if (baleSection) baleSection.style.display = 'block';
                     break;
                 case 'bangle':
-                    if (diameter) diameter.style.display = 'block';
-                    if (width) width.style.display = 'block';
+                    if (diameterSection) diameterSection.style.display = 'block';
+                    if (widthSection) widthSection.style.display = 'block';
                     break;
                 default:
-                    if (width) width.style.display = 'block';
-                    if (length) length.style.display = 'block';
+                    if (widthSection) widthSection.style.display = 'block';
+                    if (lengthSection) lengthSection.style.display = 'block';
             }
         }
 
