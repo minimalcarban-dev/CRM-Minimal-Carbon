@@ -339,6 +339,13 @@
                     @endforeach
                 </select>
 
+                <select name="tracking_status" class="filter-select">
+                    <option value="">All Tracking Statuses</option>
+                    <option value="in_transit" {{ request('tracking_status') == 'in_transit' ? 'selected' : '' }}>In Transit</option>
+                    <option value="out_for_delivery" {{ request('tracking_status') == 'out_for_delivery' ? 'selected' : '' }}>Out for Delivery</option>
+                    <option value="delivered" {{ request('tracking_status') == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                </select>
+
                 <select name="diamond_status" class="filter-select">
                     <option value="">All Diamond Status</option>
 
@@ -464,6 +471,27 @@
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
                         const filterForm = document.getElementById('orderFilterForm');
+                        
+                        // Clean up empty inputs before form submission so URL stays clean
+                        function cleanEmptyInputs() {
+                            const elements = filterForm.elements;
+                            for (let i = 0; i < elements.length; i++) {
+                                if (elements[i].name && !elements[i].value) {
+                                    elements[i].disabled = true;
+                                }
+                            }
+                        }
+
+                        const originalSubmit = filterForm.submit;
+                        filterForm.submit = function() {
+                            cleanEmptyInputs();
+                            originalSubmit.call(filterForm);
+                        };
+
+                        filterForm.addEventListener('submit', function() {
+                            cleanEmptyInputs();
+                        });
+
                         const orderTypeSelect = document.querySelector('select[name="order_type"]');
                         const statusSelect = document.querySelector('select[name="diamond_status"]');
                         const statusOptions = statusSelect.querySelectorAll('.status-option');
@@ -774,25 +802,9 @@
                     }
                 </script>
 
-                <button type="submit" class="btn-filter">
-                    <i class="bi bi-funnel"></i>
-                    <span>Filter</span>
-                </button>
 
-                @if (
-                        request('search') ||
-                        request('order_type') ||
-                        request('factory_id') ||
-                        request('company_id') ||
-                        request('diamond_status') ||
-                        request('date_from') ||
-                        request('date_to') ||
-                        request('sort') ||
-                        request('overdue') ||
-                        request('cancelled') ||
-                        request('shipped') ||
-                        request('in_transit')
-                    )
+
+                @if (count(array_filter(request()->except('page'), fn($val) => $val !== null && $val !== '')) > 0)
                     <a href="{{ route('orders.index') }}" class="btn-reset">
                         <i class="bi bi-arrow-counterclockwise"></i>
                         <span>Reset</span>
@@ -1041,13 +1053,13 @@
                                                 <div>
                                                     <strong
                                                         style="font-size: 0.7rem; color: #6366f1; display: block;">Jewellery:</strong>
-                                                    <div style="white-space: pre-wrap;">{{ trim($order->jewellery_details) }}</div>
+                                                    <div class="truncated-text" title="{{ $order->jewellery_details }}" style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ trim($order->jewellery_details) }}</div>
                                                 </div>
                                             @endif
                                             @if ($order->diamond_details)
                                                 <div>
                                                     <strong style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
-                                                    <div style="white-space: pre-wrap;">{{ trim($order->diamond_details) }}</div>
+                                                    <div class="truncated-text" title="{{ $order->diamond_details }}" style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ trim($order->diamond_details) }}</div>
                                                 </div>
                                             @endif
                                             @if (!$order->jewellery_details && !$order->diamond_details)

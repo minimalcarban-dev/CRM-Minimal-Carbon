@@ -3,6 +3,7 @@
     $currentShapeId = old("side_stones.$index.stone_shape_id", data_get($stone, 'stone_shape_id'));
     $currentWeight = old("side_stones.$index.weight", data_get($stone, 'weight'));
     $currentCount = old("side_stones.$index.count", data_get($stone, 'count'));
+    $currentMeasurement = old("side_stones.$index.measurement", data_get($stone, 'measurement'));
     $currentCutId = old("side_stones.$index.stone_cut_id", data_get($stone, 'stone_cut_id'));
     $currentColorId = old("side_stones.$index.stone_color_id", data_get($stone, 'stone_color_id'));
     $currentClarityId = old("side_stones.$index.stone_clarity_id", data_get($stone, 'stone_clarity_id'));
@@ -30,6 +31,10 @@
                 <option value="{{ $ss->id }}" {{ $currentShapeId == $ss->id ? 'selected' : '' }}>{{ $ss->name }}</option>
                 @endforeach
             </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Measurement</label>
+            <input type="text" name="side_stones[{{ $index }}][measurement]" class="form-control" value="{{ $currentMeasurement }}" placeholder="e.g. 2x2 mm">
         </div>
         <div class="form-group">
             <label class="form-label">Weight (cts)</label>

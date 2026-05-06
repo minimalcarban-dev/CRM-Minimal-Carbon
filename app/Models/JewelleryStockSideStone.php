@@ -12,6 +12,7 @@ class JewelleryStockSideStone extends Model
         'stone_type_id',
         'weight',
         'count',
+        'measurement',
         'stone_shape_id',
         'stone_color_id',
         'stone_clarity_id',

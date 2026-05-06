@@ -104,7 +104,7 @@ A professional inventory system for finished jewellery items:
 
 ### Inventory & Financials
 
-- **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation
+- **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation. Atomic stock deduction/return with net-quantity diffing during order edits (prevents duplicate transactions).
 - **Gold Tracking** — Manage gold stock levels and transactions across different purities
 - **Multi-Currency Invoices** — Generate professional invoices with support for different regions and currency symbols
 - **Expense & Purchase Tracking** — Centralized log of business expenses and inventory purchases
@@ -177,7 +177,10 @@ app/
     CloudinaryUploadService.php   # Image hosting integration
     JewelleryPricingService.php   # Pricing matrix logic
     JewelleryMaterialRateService.php # Real-time rate fetching
+    MeleeStockService.php         # Atomic melee stock operations (deduct, return, diff)
     VirusScanner.php              # ClamAV wrapper with fallback
+  Console/Commands/
+    RepairMeleeStock.php          # One-time stock repair tool (php artisan melee:repair)
 resources/
   js/
     components/Chat.vue           # Optimized Chat SPA with Typing indicators
@@ -296,6 +299,17 @@ Vue component updates messages array and scrolls
 ```
 
 Channel authorization happens at `/admin/broadcasting/auth`, protected by the `admin` guard and channel membership check in `routes/channels.php`.
+
+---
+
+## Maintenance Commands
+
+| Command | Purpose |
+|---------|----------|
+| `php artisan melee:repair --dry-run` | Preview melee stock repairs (duplicates + drift) |
+| `php artisan melee:repair` | Execute stock repair (clean duplicates + fix levels) |
+| `php artisan melee:repair --skip-duplicates` | Only fix stock levels without cleaning duplicates |
+| `php artisan melee:repair --skip-stock` | Only clean duplicate transactions |
 
 ---
 

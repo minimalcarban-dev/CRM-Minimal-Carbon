@@ -79,9 +79,15 @@
 
                         <div class="form-group">
                             <label for="diamond_type" class="form-label">Diamond Type</label>
-                            <input type="text" class="form-control" id="diamond_type" name="diamond_type"
-                                value="{{ old('diamond_type', $diamond->diamond_type) }}"
-                                placeholder="e.g., Natural, Lab-created">
+                            <select id="diamond_type" name="diamond_type" class="form-control themed-select">
+                                <option value="">-- Select Stone Type --</option>
+                                @foreach ($stoneTypes ?? [] as $stype)
+                                    <option value="{{ $stype->name }}"
+                                        {{ strcasecmp(old('diamond_type', $diamond->diamond_type), $stype->name) == 0 ? 'selected' : '' }}>
+                                        {{ $stype->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                             <div class="form-hint">
                                 <i class="bi bi-info-circle"></i>
                                 Type of diamond (Natural/Lab-created)
@@ -190,18 +196,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="material" class="form-label">Material</label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-layers input-icon"></i>
-                                <input type="text" class="form-control" id="material" name="material"
-                                    value="{{ old('material', $diamond->material) }}" placeholder="e.g., Gold, Platinum">
-                            </div>
-                            <div class="form-hint">
-                                <i class="bi bi-info-circle"></i>
-                                Material composition (optional)
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>

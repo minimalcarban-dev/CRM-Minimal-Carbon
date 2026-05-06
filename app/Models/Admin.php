@@ -63,28 +63,79 @@ class Admin extends Authenticatable
             ->withTimestamps();
     }
 
+    public function isGodAdmin(): bool
+    {
+        return $this->email === 'superadmin@example.com';
+    }
+
     public function hasPermission(string $slug): bool
     {
-        if ($this->is_super) {
+        if ($this->isGodAdmin()) {
             return true;
+        }
+
+        if ($this->is_super) {
+            // List of strict prefixes that super admin shouldn't bypass
+            $strictPrefixes = ['purchases.', 'expenses.', 'gold-tracking.', 'factories.', 'sales.'];
+            $isStrict = false;
+            foreach ($strictPrefixes as $prefix) {
+                if (str_starts_with($slug, $prefix)) {
+                    $isStrict = true;
+                    break;
+                }
+            }
+            if (!$isStrict) {
+                return true;
+            }
         }
 
         return in_array($slug, $this->cachedPermissionSlugs(), true);
     }
 
     /**
-     * Check if admin has permission explicitly assigned (no super admin bypass).
+     * Check if admin has permission explicitly assigned (or is God admin).
      * Use this for sensitive features like sales that require explicit assignment even for super admins.
      */
     public function hasExplicitPermission(string $slug): bool
     {
+        if ($this->isGodAdmin()) {
+            return true;
+        }
         return in_array($slug, $this->cachedPermissionSlugs(), true);
+    }
+
+    public function hasAnyExplicitPermission(array $slugs): bool
+    {
+        if ($this->isGodAdmin()) {
+            return true;
+        }
+
+        $cached = $this->cachedPermissionSlugs();
+
+        foreach ($slugs as $slug) {
+            if (in_array($slug, $cached, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function hasAnyPermission(array $slugs): bool
     {
-        if ($this->is_super) {
+        if ($this->isGodAdmin()) {
             return true;
+        }
+
+        if ($this->is_super) {
+            // Check if all requested slugs are strict. If even one is non-strict, super admin bypasses.
+            // Or better: check each slug independently using hasPermission
+            foreach ($slugs as $slug) {
+                if ($this->hasPermission($slug)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         $cached = $this->cachedPermissionSlugs();
@@ -133,12 +184,7 @@ class Admin extends Authenticatable
 
     public function canAccessAny(array $slugs): bool
     {
-        // Agar Super Admin hai, toh hamesha access de do
-        if ($this->is_super) {
-            return true;
-        }
-
-        // Agar Super Admin nahi hai, toh check karo ki in permissions mein se koi bhi hai ya nahi
+        // hasAnyPermission now correctly handles the god admin bypass vs regular superadmin logic
         return $this->hasAnyPermission($slugs);
     }
 

@@ -177,6 +177,184 @@ class MeleeStockService
     }
 
     /**
+     * Apply net stock diff between old and new melee entries for an order update.
+     *
+     * Instead of returning ALL old entries and re-deducting ALL new entries (which
+     * causes duplicate transactions), this method aggregates pieces per diamond_id
+     * and only creates transactions for the NET change.
+     *
+     * @param int   $orderId
+     * @param array $oldEntries  Normalized old melee entries (from snapshot)
+     * @param array $newEntries  Normalized new melee entries (from form)
+     * @param array $options     ['allow_negative' => bool]
+     * @return array{success: bool, message: string, diamond_ids: int[]}
+     */
+    public function adjustForOrderDiff(int $orderId, array $oldEntries, array $newEntries, array $options = []): array
+    {
+        $allowNegative = (bool) ($options['allow_negative'] ?? false);
+
+        // Aggregate pieces per diamond_id for old and new
+        $oldPiecesByDiamond = [];
+        $oldCaratByDiamond = [];
+        foreach ($this->normalizeEntries($oldEntries) as $e) {
+            $id = $e['melee_diamond_id'];
+            $oldPiecesByDiamond[$id] = ($oldPiecesByDiamond[$id] ?? 0) + $e['pieces'];
+            $oldCaratByDiamond[$id] = ($oldCaratByDiamond[$id] ?? 0) + round($e['pieces'] * ($e['avg_carat_per_piece'] ?? 0), 3);
+        }
+
+        $newPiecesByDiamond = [];
+        $newCaratByDiamond = [];
+        foreach ($this->normalizeEntries($newEntries) as $e) {
+            $id = $e['melee_diamond_id'];
+            $newPiecesByDiamond[$id] = ($newPiecesByDiamond[$id] ?? 0) + $e['pieces'];
+            $newCaratByDiamond[$id] = ($newCaratByDiamond[$id] ?? 0) + round($e['pieces'] * ($e['avg_carat_per_piece'] ?? 0), 3);
+        }
+
+        // Compute delta per diamond
+        $allIds = array_unique(array_merge(
+            array_keys($oldPiecesByDiamond),
+            array_keys($newPiecesByDiamond)
+        ));
+
+        $deltas = [];
+        foreach ($allIds as $diamondId) {
+            $oldPcs = $oldPiecesByDiamond[$diamondId] ?? 0;
+            $newPcs = $newPiecesByDiamond[$diamondId] ?? 0;
+            $delta = $newPcs - $oldPcs;
+
+            if ($delta === 0) {
+                continue; // No change for this diamond — skip entirely
+            }
+
+            $oldCarat = $oldCaratByDiamond[$diamondId] ?? 0;
+            $newCarat = $newCaratByDiamond[$diamondId] ?? 0;
+            $caratDelta = round($newCarat - $oldCarat, 3);
+
+            $deltas[$diamondId] = [
+                'pieces_delta' => $delta,
+                'carat_delta' => $caratDelta,
+            ];
+        }
+
+        if (empty($deltas)) {
+            return [
+                'success' => true,
+                'message' => 'No net stock change needed.',
+                'diamond_ids' => array_map('intval', $allIds),
+            ];
+        }
+
+        try {
+            return DB::transaction(function () use ($orderId, $deltas, $allowNegative) {
+                // Lock all affected diamonds
+                $diamonds = MeleeDiamond::with('category')
+                    ->whereIn('id', array_keys($deltas))
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                $transactions = [];
+                $touchedDiamonds = collect();
+
+                foreach ($deltas as $diamondId => $delta) {
+                    /** @var MeleeDiamond|null $diamond */
+                    $diamond = $diamonds->get($diamondId);
+
+                    if (!$diamond) {
+                        return [
+                            'success' => false,
+                            'status' => 422,
+                            'message' => "Melee diamond ID {$diamondId} not found.",
+                        ];
+                    }
+
+                    $piecesDelta = $delta['pieces_delta'];
+                    $caratDelta = $delta['carat_delta'];
+
+                    if ($piecesDelta > 0) {
+                        // Need MORE stock → deduct
+                        if (!$allowNegative && (int) $diamond->available_pieces < $piecesDelta) {
+                            return [
+                                'success' => false,
+                                'status' => 422,
+                                'message' => $this->buildInsufficientStockMessage($diamond, $piecesDelta),
+                            ];
+                        }
+
+                        $diamond->available_pieces -= $piecesDelta;
+                        $diamond->available_carat_weight -= abs($caratDelta);
+                        $diamond->save();
+
+                        $transactions[] = [
+                            'melee_diamond_id' => $diamond->id,
+                            'transaction_type' => 'out',
+                            'pieces' => $piecesDelta,
+                            'carat_weight' => abs($caratDelta),
+                            'reference_type' => 'order',
+                            'reference_id' => $orderId,
+                            'created_by' => $this->resolveActorId(),
+                            'notes' => "Stock adjusted (net +{$piecesDelta}pcs used) for Order #{$orderId}",
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    } else {
+                        // Need LESS stock → return
+                        $returnPieces = abs($piecesDelta);
+                        $returnCarats = abs($caratDelta);
+
+                        $diamond->available_pieces += $returnPieces;
+                        $diamond->available_carat_weight += $returnCarats;
+                        $diamond->save();
+
+                        $transactions[] = [
+                            'melee_diamond_id' => $diamond->id,
+                            'transaction_type' => 'in',
+                            'pieces' => $returnPieces,
+                            'carat_weight' => $returnCarats,
+                            'reference_type' => 'order',
+                            'reference_id' => $orderId,
+                            'created_by' => $this->resolveActorId(),
+                            'notes' => "Stock adjusted (net -{$returnPieces}pcs returned) for Order #{$orderId}",
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+
+                    $touchedDiamonds->put($diamond->id, $diamond);
+                }
+
+                if (!empty($transactions)) {
+                    MeleeTransaction::insert($transactions);
+                    $this->notifyLowStockIfNeeded($touchedDiamonds);
+                }
+
+                Log::info('Melee stock diff applied for order', [
+                    'order_id' => $orderId,
+                    'deltas' => $deltas,
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Stock diff applied successfully.',
+                    'diamond_ids' => $touchedDiamonds->keys()->all(),
+                ];
+            });
+        } catch (\Throwable $e) {
+            Log::error('Melee stock diff failed', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+                'deltas' => $deltas,
+            ]);
+
+            return [
+                'success' => false,
+                'status' => 500,
+                'message' => 'Failed to apply stock diff: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Validate if requested stock is available using current database values.
      *
      * @param array<int, array<string, mixed>> $entries
