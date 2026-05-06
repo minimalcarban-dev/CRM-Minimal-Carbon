@@ -54,7 +54,7 @@ return [
 
     // VGL Certificate Project — API Integration
     'vgl' => [
-        'base_url' => env('VGL_API_URL', 'http://localhost:8001'),
+        'base_url' => env('VGL_API_URL', 'https://api.vgllab.com/'),
         'api_key'  => env('VGL_API_KEY'),
     ],
 

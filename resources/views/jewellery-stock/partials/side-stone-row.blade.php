@@ -2,6 +2,7 @@
     $currentStoneTypeId = old("side_stones.$index.stone_type_id", data_get($stone, 'stone_type_id'));
     $currentShapeId = old("side_stones.$index.stone_shape_id", data_get($stone, 'stone_shape_id'));
     $currentWeight = old("side_stones.$index.weight", data_get($stone, 'weight'));
+    $currentPrice = old("side_stones.$index.price", data_get($stone, 'price'));
     $currentCount = old("side_stones.$index.count", data_get($stone, 'count'));
     $currentMeasurement = old("side_stones.$index.measurement", data_get($stone, 'measurement'));
     $currentCutId = old("side_stones.$index.stone_cut_id", data_get($stone, 'stone_cut_id'));
@@ -9,9 +10,9 @@
     $currentClarityId = old("side_stones.$index.stone_clarity_id", data_get($stone, 'stone_clarity_id'));
 @endphp
 
-<div class="side-stone-row mb-3 p-3 border rounded bg-light position-relative">
-    <button type="button" class="btn btn-sm btn-outline-danger position-absolute" style="top:10px;right:10px;" onclick="removeSideStoneRow(this)">
-        <i class="bi bi-trash"></i>
+<div class="side-stone-row mb-4 pb-4 position-relative" style="border-bottom: 1px dashed rgba(0,0,0,0.12);">
+    <button type="button" class="btn btn-sm btn-link text-danger position-absolute" style="top: -15px; right: -10px; z-index: 10;" onclick="removeSideStoneRow(this)" title="Remove Stone">
+        <i class="bi bi-x-circle-fill" style="font-size: 1.1rem;"></i>
     </button>
     <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:1rem;">
         <div class="form-group">
@@ -39,6 +40,10 @@
         <div class="form-group">
             <label class="form-label">Weight (cts)</label>
             <input type="number" name="side_stones[{{ $index }}][weight]" class="form-control" step="0.001" value="{{ $currentWeight }}" placeholder="0.000">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Price/Ct ($)</label>
+            <input type="number" name="side_stones[{{ $index }}][price]" class="form-control" step="0.01" value="{{ $currentPrice }}" placeholder="0.00">
         </div>
         <div class="form-group">
             <label class="form-label">Count</label>

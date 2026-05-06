@@ -105,7 +105,7 @@
                 <button type="button" class="btn-secondary-custom" onclick="copyPricingValue('extra_cost')">
                     <i class="bi bi-copy"></i> Copy Extra To All
                 </button>
-                <button type="button" class="btn-secondary-custom" onclick="fetchJewelleryPricingRates()">
+                <button type="button" class="btn-secondary-custom" onclick="fetchJewelleryPricingRates(true)">
                     <i class="bi bi-arrow-repeat"></i> Refresh Rate
                 </button>
             </div>
@@ -307,11 +307,12 @@
             calculateJewelleryPricing();
         }
 
-        async function fetchJewelleryPricingRates() {
+        async function fetchJewelleryPricingRates(force = false) {
             const status = document.getElementById('pricingRateStatus');
             try {
                 status.innerText = 'Fetching live gold and silver rates...';
-                const response = await fetch(window.jewelleryPricingRatesUrl, {
+                const url = force ? `${window.jewelleryPricingRatesUrl}?refresh=1` : window.jewelleryPricingRatesUrl;
+                const response = await fetch(url, {
                     headers: {
                         'Accept': 'application/json'
                     }

@@ -10,7 +10,10 @@
             >
                 <i class="bi bi-paperclip"></i>
                 <span>{{ file.name }}</span>
-                <button @click="$emit('remove-file', index)" class="remove-attachment">
+                <button
+                    @click="$emit('remove-file', index)"
+                    class="remove-attachment"
+                >
                     <i class="bi bi-x"></i>
                 </button>
             </div>
@@ -25,13 +28,17 @@
                 </div>
                 <div class="reply-bar-content">
                     <div class="reply-bar-title">
-                        Replying to {{ replyTo.sender?.name || 'message' }}
+                        Replying to {{ replyTo.sender?.name || "message" }}
                     </div>
                     <div class="reply-bar-preview">
-                        "{{ replyTo.body?.slice(0, 80) || 'Attachment' }}"
+                        "{{ replyTo.body?.slice(0, 80) || "Attachment" }}"
                     </div>
                 </div>
-                <button class="reply-bar-cancel" @click="$emit('cancel-reply')" title="Cancel reply">
+                <button
+                    class="reply-bar-cancel"
+                    @click="$emit('cancel-reply')"
+                    title="Cancel reply"
+                >
                     <i class="bi bi-x"></i>
                 </button>
             </div>
@@ -47,19 +54,31 @@
                 />
 
                 <!-- Attach Button -->
-                <button @click="fileInputEl.click()" class="btn-attach" title="Attach files">
+                <button
+                    @click="fileInputEl.click()"
+                    class="btn-attach"
+                    title="Attach files"
+                >
                     <i class="bi bi-paperclip"></i>
                 </button>
 
                 <!-- Emoji Button -->
-                <button @click.stop="$emit('toggle-emoji')" class="btn-attach" title="Emoji">
+                <button
+                    @click.stop="$emit('toggle-emoji')"
+                    class="btn-attach"
+                    title="Emoji"
+                >
                     <i class="bi bi-emoji-smile"></i>
                 </button>
 
                 <!-- Textarea + Popovers Wrapper -->
                 <div class="input-with-suggestions" @click.stop>
                     <!-- Emoji Picker slot -->
-                    <div v-if="emojiPickerOpen" class="emoji-mart-wrapper" @click.stop>
+                    <div
+                        v-if="emojiPickerOpen"
+                        class="emoji-mart-wrapper"
+                        @click.stop
+                    >
                         <slot name="emoji-picker" />
                     </div>
 
@@ -71,20 +90,31 @@
                         :placeholder="placeholder"
                         style="width: 100%"
                         rows="1"
-                        @input="$emit('update:modelValue', $event.target.value); $emit('editor-input', $event)"
+                        @input="
+                            $emit('update:modelValue', $event.target.value);
+                            $emit('editor-input', $event);
+                        "
                         @keydown="$emit('editor-keydown', $event)"
                         @paste="$emit('editor-paste', $event)"
                     ></textarea>
 
                     <!-- Mention Popover -->
-                    <div v-if="mentionOpen && mentionItems.length" class="mention-popover">
+                    <div
+                        v-if="mentionOpen && mentionItems.length"
+                        class="mention-popover"
+                    >
                         <div
                             v-for="(m, i) in mentionItems"
                             :key="m.id"
-                            :class="['mention-item', { active: i === mentionIndex }]"
+                            :class="[
+                                'mention-item',
+                                { active: i === mentionIndex },
+                            ]"
                             @mousedown.prevent="$emit('pick-mention', m)"
                         >
-                            <span class="mention-avatar">{{ avatarInitials(m.name) }}</span>
+                            <span class="mention-avatar">{{
+                                avatarInitials(m.name)
+                            }}</span>
                             <div class="mention-info">
                                 <div class="mention-name">{{ m.name }}</div>
                                 <div class="mention-email">{{ m.email }}</div>
@@ -93,19 +123,25 @@
                     </div>
 
                     <!-- Order Suggestion Popover -->
-                    <div v-if="orderSuggestOpen && orderSuggestItems.length" class="mention-popover order-suggest-popover">
+                    <div
+                        v-if="orderSuggestOpen && orderSuggestItems.length"
+                        class="mention-popover order-suggest-popover"
+                    >
                         <div
                             v-for="(order, i) in orderSuggestItems"
                             :key="`order-${order.id}`"
-                            :class="['mention-item', { active: i === orderSuggestIndex }]"
+                            :class="[
+                                'mention-item',
+                                { active: i === orderSuggestIndex },
+                            ]"
                             @mousedown.prevent="$emit('pick-order', order)"
                         >
                             <span class="mention-avatar">#</span>
                             <div class="mention-info">
                                 <div class="mention-name">#{{ order.id }}</div>
                                 <div class="mention-email">
-                                    {{ order.client_name || 'Unknown client' }}
-                                    · {{ order.status_label || 'Unknown' }}
+                                    {{ order.client_name || "Unknown client" }}
+                                    · {{ order.status_label || "Unknown" }}
                                 </div>
                             </div>
                         </div>
@@ -127,14 +163,17 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref } from "vue";
 
 export default {
-    name: 'ChatInput',
+    name: "ChatInput",
 
     props: {
-        modelValue: { type: String, default: '' },
-        placeholder: { type: String, default: 'Type a message... Use @ to mention' },
+        modelValue: { type: String, default: "" },
+        placeholder: {
+            type: String,
+            default: "Type a message... Use @ to mention",
+        },
         files: { type: Array, default: () => [] },
         replyTo: { type: Object, default: null },
         emojiPickerOpen: { type: Boolean, default: false },
@@ -146,21 +185,21 @@ export default {
         orderSuggestOpen: { type: Boolean, default: false },
         orderSuggestItems: { type: Array, default: () => [] },
         orderSuggestIndex: { type: Number, default: 0 },
-        containerClass: { type: String, default: '' },
+        containerClass: { type: String, default: "" },
     },
 
     emits: [
-        'update:modelValue',
-        'send',
-        'attach-files',
-        'remove-file',
-        'toggle-emoji',
-        'editor-input',
-        'editor-keydown',
-        'editor-paste',
-        'pick-mention',
-        'pick-order',
-        'cancel-reply',
+        "update:modelValue",
+        "send",
+        "attach-files",
+        "remove-file",
+        "toggle-emoji",
+        "editor-input",
+        "editor-keydown",
+        "editor-paste",
+        "pick-mention",
+        "pick-order",
+        "cancel-reply",
     ],
 
     setup() {
@@ -168,9 +207,11 @@ export default {
         const textareaEl = ref(null);
 
         const avatarInitials = (name) => {
-            if (!name) return '?';
+            if (!name) return "?";
             const parts = name.trim().split(/\s+/);
-            return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase();
+            return (
+                (parts[0]?.[0] || "") + (parts[1]?.[0] || "")
+            ).toUpperCase();
         };
 
         return { fileInputEl, textareaEl, avatarInitials };
@@ -228,7 +269,9 @@ export default {
     line-height: 1;
 }
 
-.remove-attachment:hover { background: #ef4444; }
+.remove-attachment:hover {
+    background: #ef4444;
+}
 
 /* ── Reply Bar — top section inside input-box-wrapper ── */
 .reply-bar {
@@ -242,9 +285,20 @@ export default {
     border-radius: 18.5px 18.5px 0 0;
 }
 
-.reply-bar-icon { color: #6366f1; font-size: 1rem; flex-shrink: 0; }
-.reply-bar-content { flex: 1; min-width: 0; }
-.reply-bar-title { font-size: 0.78rem; font-weight: 600; color: #6366f1; }
+.reply-bar-icon {
+    color: #6366f1;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.reply-bar-content {
+    flex: 1;
+    min-width: 0;
+}
+.reply-bar-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6366f1;
+}
 .reply-bar-preview {
     font-size: 0.8rem;
     color: #6b7280;
@@ -264,7 +318,9 @@ export default {
     transition: color 0.2s;
     flex-shrink: 0;
 }
-.reply-bar-cancel:hover { color: #374151; }
+.reply-bar-cancel:hover {
+    color: #374151;
+}
 
 /* ── Unified Input Box ───────────────────────────────────── */
 .input-box-wrapper {
@@ -277,7 +333,10 @@ export default {
         0 8px 22px rgba(15, 23, 42, 0.08),
         0 1px 2px rgba(15, 23, 42, 0.08);
     overflow: visible; /* Must stay visible — popovers (emoji/mentions) escape upward */
-    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s,
+        background-color 0.3s;
 }
 
 [data-theme="dark"] .input-box-wrapper {
@@ -326,7 +385,9 @@ export default {
     font-size: 1.15rem;
     flex-shrink: 0;
 }
-.btn-attach:hover { background: #f1f5ff; }
+.btn-attach:hover {
+    background: #f1f5ff;
+}
 
 .btn-send {
     width: 46px;
@@ -348,7 +409,10 @@ export default {
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
-.btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 /* ── Textarea ────────────────────────────────────────────── */
 .input-with-suggestions {
@@ -374,7 +438,9 @@ export default {
     display: block;
     box-sizing: border-box;
 }
-.message-textarea:focus { outline: none; }
+.message-textarea:focus {
+    outline: none;
+}
 
 /* ── Emoji Picker ────────────────────────────────────────── */
 .emoji-mart-wrapper {
@@ -412,7 +478,9 @@ export default {
     transition: background 0.15s;
 }
 .mention-item:hover,
-.mention-item.active { background: #eef2ff; }
+.mention-item.active {
+    background: #eef2ff;
+}
 
 .mention-avatar {
     width: 32px;
@@ -428,7 +496,10 @@ export default {
     flex-shrink: 0;
 }
 
-.mention-info { flex: 1; min-width: 0; }
+.mention-info {
+    flex: 1;
+    min-width: 0;
+}
 .mention-name {
     font-size: 0.875rem;
     font-weight: 600;
