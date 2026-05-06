@@ -26,6 +26,12 @@ class SyncOrderTracking extends Command
      */
     public function handle(\App\Services\ShippingTrackingService $trackingService)
     {
+        // Verify API key is available before processing
+        if (!config('services.parcelsapp.api_key')) {
+            $this->error('PARCELSAPP_API_KEY is not set in .env! Tracking sync cannot proceed.');
+            return 1;
+        }
+
         $this->info('Starting tracking synchronization...');
 
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
@@ -34,6 +40,11 @@ class SyncOrderTracking extends Command
             ->where(function ($q) use ($shippedStatuses) {
                 $q->whereIn('diamond_status', $shippedStatuses)
                     ->orWhere('tracking_status', 'In Transit')
+                    ->orWhere('tracking_status', 'In transit')
+                    ->orWhere('tracking_status', 'Out for delivery')
+                    ->orWhere('tracking_status', 'Pick up')
+                    ->orWhere('tracking_status', 'Info received')
+                    ->orWhere('tracking_status', 'Unknown')
                     ->orWhereNull('tracking_status');
             })
             ->where('tracking_status', '!=', 'Delivered')
