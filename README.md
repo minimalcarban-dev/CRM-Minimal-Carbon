@@ -99,6 +99,7 @@ A complete messaging system for admins, embedded in the panel:
     - **Gemstone Integration** — Detailed tracking of primary stones (carat weight, price, shape, color, clarity, cut).
     - **Side Stones Repeater** — Manage multiple side stone types, weights, and prices per jewellery item.
     - **Auto-Pricing Sync** — Real-time calculation of total stone investment (weight + price) with automatic injection into the 'Stone Cost' field across all pricing matrix variants for accurate margin calculation.
+    - **Pricing Visibility Controls** — `jewellery_stock.view_pricing` gates purchase cost, component gemstone cost, per-carat stone prices, and stone totals on jewellery detail pages; `jewellery_stock.view_profit` separately gates profit and margin output.
 
 ### Inventory & Financials
 
