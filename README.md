@@ -74,6 +74,7 @@ Orders have three distinct types, each with a different form and field set:
 - PDF compression via Ghostscript for files over 10 MB
 - Diamond status tracking: processed → completed → diamond_purchased → factory_making → diamond_completed
 - Shipping details with tracking number and URL
+- Order index tracking summary card showing In Transit, Out for Delivery, and Delivered shipment totals, with each count linking to its matching tracking-status filter even when those orders are already shipped
 - Searchable order list with filter by type and diamond status
 
 ### Real-Time Chat

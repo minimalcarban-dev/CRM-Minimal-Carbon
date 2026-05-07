@@ -194,21 +194,47 @@
                 </div>
             </a>
 
-            {{-- In Transit Orders --}}
-            @php $inTransitHref = request('in_transit') === '1' ? route('orders.index', request()->except(['in_transit', 'page'])) : route('orders.index', array_merge(request()->except(['page', 'order_type', 'diamond_status', 'shipped']), ['in_transit' => '1'])); @endphp
-            <a href="{{ $inTransitHref }}"
-                class="stat-card stat-card-warning {{ request('in_transit') === '1' ? 'active-filter' : '' }}">
+            {{-- Tracking Summary --}}
+            @php
+                $trackingBaseParams = request()->except(['page', 'in_transit', 'shipped', 'tracking_status']);
+                $trackingLinks = [
+                    'in_transit' => route('orders.index', array_merge($trackingBaseParams, ['tracking_status' => 'in_transit'])),
+                    'out_for_delivery' => route('orders.index', array_merge($trackingBaseParams, ['tracking_status' => 'out_for_delivery'])),
+                    'delivered' => route('orders.index', array_merge($trackingBaseParams, ['tracking_status' => 'delivered'])),
+                ];
+            @endphp
+            <div class="stat-card stat-card-warning tracking-summary-card {{ request('tracking_status') ? 'active-filter' : '' }}"
+                aria-label="Tracking summary">
                 <div class="stat-icon" style="background: rgba(251,191,36,0.18); color: #fbbf24;">
                     <i class="bi bi-geo-alt"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">In Transit</div>
-                    <div class="stat-value">{{ $inTransitCount ?? 0 }}</div>
+                    <div class="stat-label">Tracking</div>
+                    <div class="tracking-metrics">
+                        <a href="{{ $trackingLinks['in_transit'] }}"
+                            class="tracking-metric {{ request('tracking_status') === 'in_transit' ? 'active' : '' }}"
+                            title="Show In Transit orders">
+                            <span class="tracking-metric-label">Transit</span>
+                            <span class="tracking-metric-value">{{ $trackingStatusCounts['in_transit'] ?? 0 }}</span>
+                        </a>
+                        <a href="{{ $trackingLinks['out_for_delivery'] }}"
+                            class="tracking-metric {{ request('tracking_status') === 'out_for_delivery' ? 'active' : '' }}"
+                            title="Show Out for Delivery orders">
+                            <span class="tracking-metric-label">Out</span>
+                            <span class="tracking-metric-value">{{ $trackingStatusCounts['out_for_delivery'] ?? 0 }}</span>
+                        </a>
+                        <a href="{{ $trackingLinks['delivered'] }}"
+                            class="tracking-metric {{ request('tracking_status') === 'delivered' ? 'active' : '' }}"
+                            title="Show Delivered orders">
+                            <span class="tracking-metric-label">Delivered</span>
+                            <span class="tracking-metric-value">{{ $trackingStatusCounts['delivered'] ?? 0 }}</span>
+                        </a>
+                    </div>
                     <div class="stat-trend">
-                        <i class="bi bi-broadcast"></i> Live Tracking
+                        <i class="bi bi-broadcast"></i> Click a count to filter
                     </div>
                 </div>
-            </a>
+            </div>
 
             {{-- Today's Sales (Clickable to toggle Company Progress) - Only visible with sales.view permission --}}
             @if (auth('admin')->user()->hasExplicitPermission('sales.view'))
@@ -1600,6 +1626,57 @@
         }
 
         /* Icon color variants — all rgba so dark mode works */
+        .tracking-summary-card .stat-content {
+            overflow: visible;
+        }
+
+        .tracking-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.35rem;
+            margin-top: 0.2rem;
+        }
+
+        .tracking-metric {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.14rem;
+            padding: 0.28rem 0.18rem;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none !important;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .tracking-metric:hover,
+        .tracking-metric.active {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.24);
+            transform: translateY(-1px);
+        }
+
+        .tracking-metric-label {
+            color: var(--gray);
+            font-size: 0.58rem;
+            font-weight: 700;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .tracking-metric-value {
+            color: var(--dark);
+            font-size: clamp(1rem, 1.55vw, 1.25rem);
+            font-weight: 700;
+            line-height: 1;
+        }
+
         .stat-card-primary .stat-icon {
             background: rgba(99, 102, 241, 0.13);
             color: #818cf8;
@@ -4063,6 +4140,45 @@
         .custom-row span.badge-item {
             padding: 7.8px 12px;
             font-size: 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid .tracking-summary-card {
+                min-height: 90px;
+            }
+
+            .tracking-metrics {
+                gap: 0.3rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid .tracking-summary-card {
+                min-height: 128px;
+            }
+
+            .tracking-metrics {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                margin-top: 0.35rem;
+            }
+
+            .tracking-metric {
+                align-items: center;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 0.18rem 0.35rem;
+            }
+
+            .tracking-metric-label {
+                font-size: 0.68rem;
+                text-transform: none;
+            }
+
+            .tracking-metric-value {
+                font-size: 1rem;
+            }
         }
     </style>
 

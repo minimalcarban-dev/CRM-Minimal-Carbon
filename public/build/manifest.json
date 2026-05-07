@@ -1,6 +1,6 @@
 {
-  "_Chat-7SikdVp4.js": {
-    "file": "assets/Chat-7SikdVp4.js",
+  "_Chat-C33pk_-u.js": {
+    "file": "assets/Chat-C33pk_-u.js",
     "name": "Chat",
     "isDynamicEntry": true,
     "imports": [
@@ -10,22 +10,15 @@
       "resources/js/components/MediaGallery.vue"
     ],
     "css": [
-      "assets/Chat-DSrXEwSt.css"
-    ],
-    "assets": [
-      "assets/pdf.worker-xSiVJ7U_.mjs"
+      "assets/Chat-XaHJ7U5O.css"
     ]
   },
-  "_Chat-DSrXEwSt.css": {
-    "file": "assets/Chat-DSrXEwSt.css",
-    "src": "_Chat-DSrXEwSt.css"
-  },
-  "node_modules/pdfjs-dist/build/pdf.worker.mjs": {
-    "file": "assets/pdf.worker-xSiVJ7U_.mjs",
-    "src": "node_modules/pdfjs-dist/build/pdf.worker.mjs"
+  "_Chat-XaHJ7U5O.css": {
+    "file": "assets/Chat-XaHJ7U5O.css",
+    "src": "_Chat-XaHJ7U5O.css"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CyxNc5xz.css",
+    "file": "assets/app-BJFvV8Ef.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -34,22 +27,22 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BN_5sdhl.js",
+    "file": "assets/app-CMBUKUwa.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "_Chat-7SikdVp4.js"
+      "_Chat-C33pk_-u.js"
     ]
   },
   "resources/js/components/MediaGallery.vue": {
-    "file": "assets/MediaGallery-y0Lg77js.js",
+    "file": "assets/MediaGallery-BzWdnGs9.js",
     "name": "MediaGallery",
     "src": "resources/js/components/MediaGallery.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_Chat-7SikdVp4.js"
+      "_Chat-C33pk_-u.js"
     ],
     "css": [
       "assets/MediaGallery-BRQO4LuG.css"
