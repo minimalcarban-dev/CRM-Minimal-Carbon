@@ -87,8 +87,8 @@ class VglIntegrationController extends Controller
             // Reference data (displayed in VGL but won't auto-fill certificate form)
             // Reference data — VGL validates 'client_email' as 'email' format,
             // so we must NOT send masked values. Send null to avoid validation failure.
-            'client_email'   => null,
-            'client_mobile'  => null,
+            'client_email' => null,
+            'client_mobile' => null,
             'diamond_skus' => $skus,
             'company_name' => optional($order->company)->name,
             'special_notes' => $order->special_notes,
@@ -169,15 +169,15 @@ class VglIntegrationController extends Controller
         try {
             AuditLog::create([
                 'auditable_type' => Order::class,
-                'auditable_id'   => $order->id,
-                'user_id'        => auth('admin')->id(),
-                'event'          => 'vgl_push_' . $result,
-                'old_values'     => [],
-                'new_values'     => [
+                'auditable_id' => $order->id,
+                'user_id' => auth('admin')->id(),
+                'event' => 'vgl_push_' . $result,
+                'old_values' => [],
+                'new_values' => [
                     'vgl_result' => $result,
-                    'details'    => $details,
+                    'details' => $details,
                 ],
-                'created_at'     => now(),
+                'created_at' => now(),
             ]);
         } catch (\Exception $e) {
             // Don't let audit log failure break the main flow
