@@ -885,20 +885,22 @@
                                         {{ number_format((float)$jewelleryStock->primary_stone_weight + $jewelleryStock->sideStones->sum('weight'), 3) }} cts
                                     </span>
                                 </div>
-                                <div style="width: 1px; height: 1.5rem; background: rgba(139, 92, 246, 0.2);"></div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 0.65rem; color: #6b7280; text-transform: uppercase; font-weight: 800;">Total Cost</div>
-                                    <span style="font-size: 0.95rem; font-weight: 850; color: #10b981;">
-                                        @php
-                                            $pTotal = (float)$jewelleryStock->primary_stone_weight * (float)$jewelleryStock->primary_stone_price;
-                                            $sTotal = 0;
-                                            foreach($jewelleryStock->sideStones as $ss) {
-                                                $sTotal += (float)$ss->weight * (float)$ss->price;
-                                            }
-                                        @endphp
-                                        ${{ number_format($pTotal + $sTotal, 2) }}
-                                    </span>
-                                </div>
+                                @if ($canViewPricing)
+                                    <div style="width: 1px; height: 1.5rem; background: rgba(139, 92, 246, 0.2);"></div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 0.65rem; color: #6b7280; text-transform: uppercase; font-weight: 800;">Total Cost</div>
+                                        <span style="font-size: 0.95rem; font-weight: 850; color: #10b981;">
+                                            @php
+                                                $pTotal = (float)$jewelleryStock->primary_stone_weight * (float)$jewelleryStock->primary_stone_price;
+                                                $sTotal = 0;
+                                                foreach($jewelleryStock->sideStones as $ss) {
+                                                    $sTotal += (float)$ss->weight * (float)$ss->price;
+                                                }
+                                            @endphp
+                                            ${{ number_format($pTotal + $sTotal, 2) }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body">
@@ -917,7 +919,7 @@
                                                     <p class="fact-value">{{ $jewelleryStock->primary_stone_weight }} cts</p>
                                                 </div>
                                             @endif
-                                            @if($jewelleryStock->primary_stone_price)
+                                            @if($canViewPricing && $jewelleryStock->primary_stone_price)
                                                 <div>
                                                     <p class="fact-label">Price/Ct</p>
                                                     <p class="fact-value">${{ number_format((float)$jewelleryStock->primary_stone_price, 2) }}</p>
@@ -969,7 +971,7 @@
                                                     <p class="fact-value">{{ $stone->weight }} cts</p>
                                                 </div>
                                             @endif
-                                            @if($stone->price)
+                                            @if($canViewPricing && $stone->price)
                                                 <div>
                                                     <p class="fact-label">Price/Ct</p>
                                                     <p class="fact-value">${{ number_format((float)$stone->price, 2) }}</p>

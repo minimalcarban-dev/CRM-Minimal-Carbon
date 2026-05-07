@@ -4,6 +4,7 @@ use App\Models\Admin;
 use App\Models\JewelleryStock;
 use App\Models\MetalType;
 use App\Models\Permission;
+use App\Models\StoneType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -48,7 +49,12 @@ function makeJewelleryStockItem(string $sku, float $purchasePrice = 4321.99, flo
         'is_active' => true,
     ]);
 
-    return JewelleryStock::create([
+    $stoneType = StoneType::create([
+        'name' => 'Test Stone ' . $sku,
+        'is_active' => true,
+    ]);
+
+    $item = JewelleryStock::create([
         'sku' => $sku,
         'type' => 'other',
         'name' => 'Test Jewellery ' . $sku,
@@ -59,8 +65,20 @@ function makeJewelleryStockItem(string $sku, float $purchasePrice = 4321.99, flo
         'low_stock_threshold' => 3,
         'purchase_price' => $purchasePrice,
         'selling_price' => $sellingPrice,
+        'primary_stone_type_id' => $stoneType->id,
+        'primary_stone_weight' => 1.000,
+        'primary_stone_price' => 123.45,
         'description' => 'Test item',
     ]);
+
+    $item->sideStones()->create([
+        'stone_type_id' => $stoneType->id,
+        'weight' => 2.000,
+        'price' => 67.89,
+        'count' => 4,
+    ]);
+
+    return $item;
 }
 
 beforeEach(function () {
@@ -88,6 +106,12 @@ it('hides jewellery pricing in index and detail when admin lacks jewellery_stock
     $show = $this->actingAs($viewer, 'admin')->get(route('jewellery-stock.show', $item));
     $show->assertOk();
     $show->assertDontSee('4,321.99');
+    $show->assertDontSee('123.45');
+    $show->assertDontSee('67.89');
+    $show->assertDontSee('259.23');
+    $show->assertDontSee('Price/Ct');
+    $show->assertDontSee('Stone Total');
+    $show->assertDontSee('Total Cost');
     $show->assertSee('Restricted');
 });
 
@@ -105,6 +129,9 @@ it('shows jewellery pricing in index and detail when admin has jewellery_stock.v
     $show = $this->actingAs($viewer, 'admin')->get(route('jewellery-stock.show', $item));
     $show->assertOk();
     $show->assertSee('4,321.99');
+    $show->assertSee('123.45');
+    $show->assertSee('67.89');
+    $show->assertSee('259.23');
 });
 
 it('shows jewellery pricing to super admin', function () {
@@ -122,25 +149,37 @@ it('shows jewellery pricing to super admin', function () {
 
 it('keeps jewellery detail form columns in sync with the database schema', function () {
     expect(Schema::hasColumns('jewellery_stocks', [
-        'metal_purity',
         'closure_type_id',
         'length',
         'width',
         'diameter',
+        'thickness',
         'bale_size',
         'primary_stone_type_id',
         'primary_stone_weight',
+        'primary_stone_price',
         'primary_stone_count',
+        'primary_stone_measurement',
         'primary_stone_shape_id',
         'primary_stone_color_id',
         'primary_stone_clarity_id',
         'primary_stone_cut_id',
-        'side_stone_type_id',
-        'side_stone_weight',
-        'side_stone_count',
         'certificate_number',
         'certificate_type',
         'certificate_url',
         'images',
+    ]))->toBeTrue();
+
+    expect(Schema::hasColumns('jewellery_stock_side_stones', [
+        'jewellery_stock_id',
+        'stone_type_id',
+        'weight',
+        'price',
+        'count',
+        'measurement',
+        'stone_shape_id',
+        'stone_color_id',
+        'stone_clarity_id',
+        'stone_cut_id',
     ]))->toBeTrue();
 });
