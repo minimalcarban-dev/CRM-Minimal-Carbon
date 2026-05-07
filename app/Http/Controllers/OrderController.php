@@ -107,10 +107,19 @@ class OrderController extends Controller
             ->whereIn('diamond_status', $shippedStatuses)
             ->count();
 
-        // Count In Transit orders based on tracking_status
-        $inTransitCount = (clone $baseQuery)
-            ->where('tracking_status', 'In Transit')
-            ->count();
+        // Count tracking statuses for the summary card using the same filtered base query.
+        $trackingStatusRows = (clone $baseQuery)
+            ->selectRaw('LOWER(tracking_status) as normalized_status, COUNT(*) as total')
+            ->whereNotNull('tracking_status')
+            ->groupBy(DB::raw('LOWER(tracking_status)'))
+            ->pluck('total', 'normalized_status')
+            ->toArray();
+
+        $trackingStatusCounts = [
+            'in_transit' => (int) ($trackingStatusRows['in transit'] ?? 0),
+            'out_for_delivery' => (int) ($trackingStatusRows['out for delivery'] ?? 0),
+            'delivered' => (int) ($trackingStatusRows['delivered'] ?? 0),
+        ];
 
         // Count cancelled orders (before excluding)
         $cancelledOrdersCount = (clone $baseQuery)
@@ -207,8 +216,8 @@ class OrderController extends Controller
         $query = clone $baseQuery;
 
         $statusQuickViewActive = ($request->filled('shipped') && $request->shipped == '1')
-            || ($request->filled('in_transit') && $request->in_transit == '1')
-            || ($request->filled('cancelled') && $request->cancelled == '1');
+            || ($request->filled('cancelled') && $request->cancelled == '1')
+            || $request->filled('tracking_status');
 
         $sort = trim((string) $request->input('sort', ''));
         if ($sort === '') {
@@ -226,11 +235,9 @@ class OrderController extends Controller
         // If shipped filter is applied, show only shipped orders
         if ($request->filled('shipped') && $request->shipped == '1') {
             $query->whereIn('diamond_status', $shippedStatuses);
-        } elseif ($request->filled('in_transit') && $request->in_transit == '1') {
-            $query->where('tracking_status', 'In Transit');
         } elseif ($request->filled('cancelled') && $request->cancelled == '1') {
             $query->whereIn('diamond_status', $cancelledStatuses);
-        } else {
+        } elseif (!$request->filled('tracking_status')) {
             // Otherwise, hide shipped and cancelled orders from main listing
             $query->where(function ($q) use ($shippedStatuses, $cancelledStatuses) {
                 $q->whereNotIn('diamond_status', array_merge($shippedStatuses, $cancelledStatuses))
@@ -248,12 +255,12 @@ class OrderController extends Controller
 
         if ($request->filled('tracking_status')) {
             $trackingStatusMap = [
-                'in_transit' => 'In Transit',
-                'out_for_delivery' => 'Out for Delivery',
-                'delivered' => 'Delivered',
+                'in_transit' => 'in transit',
+                'out_for_delivery' => 'out for delivery',
+                'delivered' => 'delivered',
             ];
             $dbStatus = $trackingStatusMap[$request->tracking_status] ?? $request->tracking_status;
-            $query->where('tracking_status', $dbStatus);
+            $query->whereRaw('LOWER(tracking_status) = ?', [strtolower($dbStatus)]);
         }
 
         if ($request->filled('priority_status')) {
@@ -368,7 +375,7 @@ class OrderController extends Controller
             'overdueOrdersCount',
             'shipTodayCount',
             'shipTomorrowCount',
-            'inTransitCount',
+            'trackingStatusCounts',
             'todaysSales',
             'monthSales',
             'todaysOrderCount',
