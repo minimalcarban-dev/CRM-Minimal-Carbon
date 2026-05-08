@@ -3,6 +3,46 @@
 @section('title', 'Gold Tracking')
 
 @section('content')
+    @push('styles')
+        <style>
+            /* Order Link Styling */
+            .tracker-page .order-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: #6366f1 !important;
+                text-decoration: none;
+                font-weight: 600;
+                padding: 0.35rem 0.75rem;
+                background: rgba(99, 102, 241, 0.08);
+                border-radius: 8px;
+                border: 1px solid rgba(99, 102, 241, 0.2);
+                transition: all 0.2s ease;
+                white-space: nowrap;
+                margin: 2px 0;
+            }
+
+            .tracker-page .order-link i {
+                font-size: 0.9rem;
+                transition: transform 0.2s ease;
+            }
+
+            .tracker-page .order-link:hover {
+                background: #6366f1 !important;
+                color: white !important;
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+                transform: translateY(-1px);
+            }
+
+            .tracker-page .order-link:hover i {
+                transform: translate(2px, -2px);
+            }
+
+            .tracker-page .order-link:active {
+                transform: translateY(0);
+            }
+        </style>
+    @endpush
     <div class="diamond-management-container tracker-page">
         <!-- Page Header -->
         <div class="page-header">
@@ -278,7 +318,10 @@
                                     @elseif($txn['type'] === 'return')
                                         ← {{ $txn['from_to'] }}
                                     @elseif($txn['type'] === 'consumed')
-                                        Order #{{ $txn['order_id'] ?? '' }} ({{ $txn['from_to'] }})
+                                        <a href="{{ route('orders.show', $txn['order_id']) }}" class="order-link" title="View Order Detail">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                            Order #{{ $txn['order_id'] ?? '' }} ({{ $txn['from_to'] }})
+                                        </a>
                                     @endif
                                 </td>
                                 <td>
