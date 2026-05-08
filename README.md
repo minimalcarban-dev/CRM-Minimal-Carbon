@@ -104,7 +104,7 @@ A complete messaging system for admins, embedded in the panel:
 ### Inventory & Financials
 
 - **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation. Atomic stock deduction/return with net-quantity diffing during order edits (prevents duplicate transactions).
-- **Gold Tracking** — Manage gold stock levels and transactions across different purities
+- **Gold Tracking** — Manage gold stock levels and transactions across different purities. Features a unified transaction log with styled links to orders for consumed gold, allowing administrators to jump directly from a tracking entry to the relevant order details.
 - **Multi-Currency Invoices** — Generate professional invoices with support for different regions and currency symbols
 - **Expense & Purchase Tracking** — Centralized log of business expenses and inventory purchases
 - **Lead CRM** — Track potential client inquiries with 24-hour SLA monitoring and status pipeline
