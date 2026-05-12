@@ -2661,10 +2661,16 @@
                                         if (!isset($reached['delivered']))
                                             $reached['delivered'] = $latestEvent;
                                     } else {
-                                        // Erase premature delivered triggers from loose keywords
+                                        // Erase premature delivered triggers from loose keywords (e.g. "leg completed")
                                         if ($highestIndexReached === 4) {
-                                            $highestIndexReached = 3;
                                             unset($reached['delivered']);
+                                            // Find the actual highest valid state reached
+                                            $highestIndexReached = 0;
+                                            foreach ($milestoneKeys as $idx => $k) {
+                                                if (isset($reached[$k]) && $idx < 4) {
+                                                    $highestIndexReached = max($highestIndexReached, $idx);
+                                                }
+                                            }
                                         }
                                     }
 

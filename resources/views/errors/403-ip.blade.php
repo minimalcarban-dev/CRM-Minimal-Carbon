@@ -5,8 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>403 Access Denied - Security Alert</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/Luxurious-Logo.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/Luxurious-Logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/diamond-3.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/diamond-3.png') }}">
     <style>
         /* ── Reset & Base ── */
         *,
@@ -917,7 +917,8 @@
                     <div class="radar-glow"></div>
 
                     <div class="lock-box">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 1.5C9.24 1.5 7 3.74 7 6.5V9H17V6.5C17 3.74 14.76 1.5 12 1.5Z"
                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                             <path
@@ -1002,8 +1003,7 @@
                                 onblur="this.style.borderColor='var(--border)'">
                             <textarea id="req-reason" placeholder="Reason for access (optional)" rows="2"
                                 style="padding:10px 14px; border-radius:6px; border:1px solid var(--border); background:var(--inner-bg); color:var(--text); font-family:inherit; font-size:13px; outline:none; resize:vertical; transition:border 0.2s;"
-                                onfocus="this.style.borderColor='var(--primary)'"
-                                onblur="this.style.borderColor='var(--border)'"></textarea>
+                                onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                         </div>
                         <div class="btn-row">
                             <button class="btn-primary" onclick="submitAccessRequest()">
@@ -1011,8 +1011,8 @@
                                 <span class="btn-arrow" id="btn-arrow">→</span>
                             </button>
                             <button class="btn-secondary" onclick="window.history.back()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4-4 4-4h12a2 2 0 0 1 2 2z" />
                                 </svg>
                                 <span>Go Back</span>
@@ -1024,7 +1024,8 @@
                     <div id="request-feedback" style="display:none; text-align:center; padding:24px 0;">
                         <div id="feedback-icon" style="font-size:40px; margin-bottom:12px;"></div>
                         <div id="feedback-title" style="font-weight:700; font-size:16px; margin-bottom:8px;"></div>
-                        <div id="feedback-msg" style="font-size:13px; color:var(--text-muted); line-height:1.6;"></div>
+                        <div id="feedback-msg" style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+                        </div>
                     </div>
                 </div>
 
@@ -1064,7 +1065,7 @@
             xhr.setRequestHeader('Accept', 'application/json');
             xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
 
-            xhr.onload = function () {
+            xhr.onload = function() {
                 var data = JSON.parse(xhr.responseText);
                 var formContainer = document.getElementById('request-form-container');
                 var feedback = document.getElementById('request-feedback');
@@ -1081,11 +1082,12 @@
                     document.getElementById('feedback-icon').textContent = '⚠️';
                     document.getElementById('feedback-title').textContent = 'Request Failed';
                     document.getElementById('feedback-title').style.color = 'var(--primary)';
-                    document.getElementById('feedback-msg').textContent = data.message || 'Something went wrong. Please try again later.';
+                    document.getElementById('feedback-msg').textContent = data.message ||
+                        'Something went wrong. Please try again later.';
                 }
             };
 
-            xhr.onerror = function () {
+            xhr.onerror = function() {
                 btn.disabled = false;
                 btn.style.opacity = '1';
                 btnText.textContent = 'REQUEST ACCESS';
@@ -1093,7 +1095,10 @@
                 alert('Network error. Please try again.');
             };
 
-            xhr.send(JSON.stringify({ name: name, reason: reason }));
+            xhr.send(JSON.stringify({
+                name: name,
+                reason: reason
+            }));
         }
     </script>
 </body>

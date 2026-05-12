@@ -1201,7 +1201,7 @@
                             @endphp
                             <img src="{{ $sig }}" alt="Signature">
                         @else
-                            <img src="{{ asset('images/signature.svg') }}" alt="Signature">
+                            <img src="{{ asset('images/main-signature.png') }}" alt="Signature">
                         @endif
                     </div>
                     <div class="signature-info">

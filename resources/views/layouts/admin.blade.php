@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel')</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/Luxurious-Logo.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/Luxurious-Logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/diamond-3.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/diamond-3.png') }}">
 
     <!-- Set global admin data for JavaScript -->
     <script>
@@ -2852,7 +2852,7 @@
             <div class="logo-section">
                 <a href="{{ route('admin.dashboard') }}"
                     style="display:flex; align-items:center; gap:0.5rem; text-decoration:none;">
-                    <img src="{{ asset('images/Luxurious-Logo.png') }}" alt="Logo" class="logo-icon">
+                    <img src="{{ asset('images/diamond.png') }}" alt="Logo" class="logo-icon">
                     <span class="logo-text">Carbon</span>
                 </a>
             </div>
@@ -4484,8 +4484,8 @@
 
     <script>
         /* ══════════════════════════════════════
-                        ENHANCEMENTS JS
-            ══════════════════════════════════════ */
+                            ENHANCEMENTS JS
+                ══════════════════════════════════════ */
 
         // ── DARK MODE ──
         const darkBtn = document.getElementById('darkModeBtn');
@@ -4682,16 +4682,16 @@
             container.innerHTML = groups.map(g => `
             <div class="cmd-group-label">${g}</div>
             ${filtered.filter(i => i.group === g).map((item, idx) => `
-                        <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
-                            <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
-                                <i class="bi ${item.icon}"></i>
-                            </div>
-                            <div class="cmd-item-text">
-                                <div>${item.label}</div>
-                                <div class="cmd-item-hint">${item.hint}</div>
-                            </div>
-                        </a>
-                    `).join('')}
+                            <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
+                                <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
+                                    <i class="bi ${item.icon}"></i>
+                                </div>
+                                <div class="cmd-item-text">
+                                    <div>${item.label}</div>
+                                    <div class="cmd-item-hint">${item.hint}</div>
+                                </div>
+                            </a>
+                        `).join('')}
         `).join('') ||
                 '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:0.875rem;">No results found</div>';
         }
