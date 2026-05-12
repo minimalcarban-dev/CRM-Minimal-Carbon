@@ -415,15 +415,7 @@ class OrderService
 
         $order->product_other = $validated['product_other'] ?? '';
         $order->special_notes = $validated['special_notes'] ?? '';
-        $order->shipping_company_name = $validated['shipping_company_name'] ?? '';
-        $order->tracking_number = $validated['tracking_number'] ?? '';
-
-        $trackingUrl = $validated['tracking_url'] ?? '';
-        if (empty($trackingUrl) && !empty($order->tracking_number) && !empty($order->shipping_company_name)) {
-            $trackingService = new ShippingTrackingService();
-            $trackingUrl = $trackingService->generateTrackingUrl($order->shipping_company_name, $order->tracking_number);
-        }
-        $order->tracking_url = $trackingUrl;
+        $this->assignShippingFields($order, $validated);
 
         $order->gold_detail_id = !empty($validated['gold_detail_id']) ? $validated['gold_detail_id'] : null;
         $order->ring_size_id = !empty($validated['ring_size_id']) ? $validated['ring_size_id'] : null;
@@ -479,6 +471,24 @@ class OrderService
             }
         }
 
+        $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
+    }
+
+    /**
+     * Assign shipping-related fields to Order model using the same normalization rules everywhere.
+     */
+    public function assignShippingFields(Order $order, array $validated): void
+    {
+        $order->shipping_company_name = trim((string) ($validated['shipping_company_name'] ?? ''));
+        $order->tracking_number = trim((string) ($validated['tracking_number'] ?? ''));
+
+        $trackingUrl = trim((string) ($validated['tracking_url'] ?? ''));
+        if ($trackingUrl === '' && $order->tracking_number !== '' && $order->shipping_company_name !== '') {
+            $trackingService = new ShippingTrackingService();
+            $trackingUrl = (string) $trackingService->generateTrackingUrl($order->shipping_company_name, $order->tracking_number);
+        }
+
+        $order->tracking_url = $trackingUrl;
         $order->dispatch_date = !empty($validated['dispatch_date']) ? $validated['dispatch_date'] : null;
     }
 }

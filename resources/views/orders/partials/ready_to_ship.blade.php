@@ -513,7 +513,7 @@
                             <label class="form-label-modern">
                                 <span class="label-content">
                                     <span class="label-icon"><i class="bi bi-heptagon-half"></i></span>
-                                    <span class="label-text">Gold Net Weight (g)</span>
+                                    <span class="label-text">Gold Pure Weight (g)</span>
                                 </span>
                                 <span class="optional-badge"
                                     style="background: linear-gradient(135deg, var(--warning), #d97706); color: white;">Internal</span>

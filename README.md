@@ -59,6 +59,7 @@ This is an internal tool — not a customer-facing application. It is used by st
 - Permission assignment UI with category grouping and select-all controls
 - Automatic General channel membership when `chat.access` is granted; membership removed when revoked
 
+
 ### Order Management
 
 Orders have three distinct types, each with a different form and field set:
@@ -74,8 +75,12 @@ Orders have three distinct types, each with a different form and field set:
 - PDF compression via Ghostscript for files over 10 MB
 - Diamond status tracking: processed → completed → diamond_purchased → factory_making → diamond_completed
 - Shipping details with tracking number and URL
+- Order index header now surfaces compact clickable Total Orders and Total Shipped metrics beside the action buttons, while the stats strip focuses on Ready to Ship, Custom Diamond, Custom Jewellery, Tracking, and Today's Sales.
 - Order index tracking summary card showing In Transit, Out for Delivery, and Delivered shipment totals, with each count linking to its matching tracking-status filter even when those orders are already shipped
 - Searchable order list with filter by type and diamond status
+- Order index status updates now feature a clickable status badge that directly triggers the update dropdown, combining visibility and control into a single clean interaction.
+- Order index shipping can now be added or edited inline through a reusable modal, without leaving the listing page
+- Manual shipping edits, manual status changes, tracker syncs, and tracking webhooks all append to the existing `audit_logs`-backed order history timeline
 
 ### Real-Time Chat
 
@@ -319,6 +324,7 @@ Channel authorization happens at `/admin/broadcasting/auth`, protected by the `a
 | `php artisan tracking:sync-all` | Batch sync tracking for all orders in 'shipped' status. |
 | `php artisan orders:reminders` | Send automated WhatsApp/Email reminders for pending client actions. |
 | `php artisan clients:sync` | Refresh client metadata and order history counts. |
+| Order history timeline | Uses `audit_logs` as the single source of truth for order-status, shipping, and tracking activity history. |
 
 ### Financials & Sales
 | Command | Purpose |

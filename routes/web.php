@@ -242,6 +242,12 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::get('orders/form/{type}', [OrderController::class, 'loadFormPartial'])
         ->name('orders.loadFormPartial')
         ->middleware('admin.permission:orders.create');
+    Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])
+        ->name('orders.update-status')
+        ->middleware('admin.permission:orders.edit');
+    Route::post('orders/{order}/shipping', [OrderController::class, 'updateShipping'])
+        ->name('orders.shipping.update')
+        ->middleware('admin.permission:orders.edit');
 
     // ─────────────────────────────────────────────────────────────
     // Order Drafts Module (MUST be before {order} wildcard routes!)
