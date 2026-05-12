@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Services\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -104,9 +105,13 @@ class TrackingWebhookController extends Controller
                 return strtotime($b['date']) - strtotime($a['date']);
             });
 
+            // Promote status from events when API top-level status is stale
+            $readableStatus = $this->promoteStatusFromEvents($readableStatus, $history);
+
             // Update matching orders
             $orders = Order::where('tracking_number', $number)->get();
             foreach ($orders as $order) {
+                $oldSnapshot = $this->captureTrackingSnapshot($order);
                 $updatedData = [
                     'tracking_status' => $readableStatus,
                     'tracking_history' => $history,
@@ -118,6 +123,7 @@ class TrackingWebhookController extends Controller
                 }
 
                 $order->update($updatedData);
+                $this->logTrackingAuditChanges($order->fresh(), $oldSnapshot, 'tracking_webhook_updated');
             }
         }
 
@@ -190,9 +196,13 @@ class TrackingWebhookController extends Controller
                 return strtotime($b['date']) - strtotime($a['date']);
             });
 
+            // Promote status from events when API top-level status is stale
+            $readableStatus = $this->promoteStatusFromEvents($readableStatus, $history);
+
             // Update matching orders
             $orders = Order::where('tracking_number', $number)->get();
             foreach ($orders as $order) {
+                $oldSnapshot = $this->captureTrackingSnapshot($order);
                 $updatedData = [
                     'tracking_status' => $readableStatus,
                     'tracking_history' => $history,
@@ -204,6 +214,7 @@ class TrackingWebhookController extends Controller
                 }
 
                 $order->update($updatedData);
+                $this->logTrackingAuditChanges($order->fresh(), $oldSnapshot, 'tracking_webhook_updated');
             }
         }
 
@@ -228,6 +239,7 @@ class TrackingWebhookController extends Controller
             'pick_up'      => 'Pick up',
             'out_for_delivery' => 'Out for delivery',
             'outfordelivery'   => 'Out for delivery',
+            'out for delivery' => 'Out for delivery',
             'not_found'    => 'Not found',
             'notfound'     => 'Not found',
             'exception'    => 'Exception',
@@ -267,5 +279,105 @@ class TrackingWebhookController extends Controller
         }
 
         return !empty($statusString) ? ucfirst($statusString) : 'Unknown';
+    }
+
+    private function captureTrackingSnapshot(Order $order): array
+    {
+        return [
+            'shipping_company_name' => $order->shipping_company_name,
+            'tracking_number' => $order->tracking_number,
+            'tracking_status' => $order->tracking_status,
+            'tracking_history' => $order->tracking_history,
+            'last_tracker_sync' => optional($order->last_tracker_sync)->toIso8601String(),
+        ];
+    }
+
+    private function logTrackingAuditChanges(Order $order, array $oldSnapshot, string $event): void
+    {
+        $fieldLabels = [
+            'shipping_company_name' => 'Shipping Company',
+            'tracking_number' => 'Tracking Number',
+            'tracking_status' => 'Tracking Status',
+            'tracking_history' => 'Tracking History',
+            'last_tracker_sync' => 'Last Tracker Sync',
+        ];
+
+        $oldValues = [];
+        $newValues = [];
+
+        foreach ($fieldLabels as $field => $label) {
+            $oldValue = $oldSnapshot[$field] ?? null;
+            $newValue = $field === 'last_tracker_sync'
+                ? optional($order->last_tracker_sync)->toIso8601String()
+                : $order->{$field};
+
+            $oldCompare = is_array($oldValue) ? json_encode($oldValue) : (string) $oldValue;
+            $newCompare = is_array($newValue) ? json_encode($newValue) : (string) $newValue;
+
+            if ($oldCompare !== $newCompare) {
+                $oldValues[$label] = $oldValue;
+                $newValues[$label] = $newValue;
+            }
+        }
+
+        if (!empty($oldValues) || !empty($newValues)) {
+            AuditLogger::log($event, $order, null, $oldValues, $newValues);
+        }
+    }
+    private function promoteStatusFromEvents(string $currentStatus, array $history): string
+    {
+        $hierarchy = [
+            'Not found'        => 0,
+            'Info received'    => 1,
+            'Pick up'          => 2,
+            'In transit'       => 3,
+            'Out for delivery' => 4,
+            'Delivered'        => 5,
+        ];
+
+        $currentRank = $hierarchy[$currentStatus] ?? -1;
+
+        $promotionKeywords = [
+            'Out for delivery' => [
+                'out for delivery', 'out_for_delivery', 'outfordelivery',
+                'out for del', 'delivering', 'with delivery courier',
+                'out for del.', 'on vehicle for delivery',
+            ],
+            'Delivered' => [
+                'delivered', 'shipment delivered', 'successfully delivered',
+                'delivery confirmed', 'received by',
+            ],
+        ];
+
+        $recentEvents = array_slice($history, 0, 5);
+        $promotedStatus = $currentStatus;
+        $promotedRank   = $currentRank;
+
+        foreach ($recentEvents as $event) {
+            $combined = strtolower(
+                ($event['status'] ?? '') . ' ' . ($event['description'] ?? '')
+            );
+
+            foreach ($promotionKeywords as $targetStatus => $keywords) {
+                $targetRank = $hierarchy[$targetStatus] ?? -1;
+                if ($targetRank <= $promotedRank) {
+                    continue;
+                }
+
+                foreach ($keywords as $kw) {
+                    if (str_contains($combined, $kw)) {
+                        $promotedStatus = $targetStatus;
+                        $promotedRank   = $targetRank;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if ($promotedStatus !== $currentStatus) {
+            Log::info("Webhook: Tracking status promoted from '{$currentStatus}' to '{$promotedStatus}' based on event scan");
+        }
+
+        return $promotedStatus;
     }
 }

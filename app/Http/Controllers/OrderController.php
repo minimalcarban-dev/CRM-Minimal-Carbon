@@ -17,6 +17,7 @@ use App\Models\Client;
 use App\Notifications\OrderUpdatedNotification;
 use App\Notifications\OrderCancelledNotification;
 use App\Services\AuditLogger;
+use App\Services\StatusTransitionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -69,15 +70,6 @@ class OrderController extends Controller
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
         $baseQuery = Order::query()->with(['company', 'creator', 'factoryRelation']);
-
-        // Super admin sees all orders, regular admin sees only their submitted orders
-        // Unless they have 'orders.view_team' permission which allows viewing team orders
-        if (!$admin->is_super) {
-            // Check if admin has view_team permission
-            if (!$admin->hasPermission('orders.view_team')) {
-                $baseQuery->where('submitted_by', $admin->id);
-            }
-        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -359,6 +351,12 @@ class OrderController extends Controller
         $orders = $query->paginate(20);
         $factories = Factory::orderBy('name')->get();
         $companies = Company::where('status', 'active')->orderBy('name')->get();
+        $statusTransitionService = app(StatusTransitionService::class);
+        $statusFlowOptions = [
+            'ready_to_ship' => $statusTransitionService->getValidStatuses('ready_to_ship'),
+            'custom_diamond' => $statusTransitionService->getValidStatuses('custom_diamond'),
+            'custom_jewellery' => $statusTransitionService->getValidStatuses('custom_jewellery'),
+        ];
 
         // Mark all unread order-created notifications as read for this admin
         $admin->unreadNotifications()
@@ -381,7 +379,8 @@ class OrderController extends Controller
             'todaysOrderCount',
             'companySalesStats',
             'factories',
-            'companies'
+            'companies',
+            'statusFlowOptions'
         ));
     }
 
@@ -1739,6 +1738,11 @@ class OrderController extends Controller
             $result = $trackingService->syncOrderTracking($order);
 
             if (request()->ajax() || request()->expectsJson()) {
+                if ($result['success']) {
+                    $order->refresh();
+                    $result['order'] = $this->buildOrderShippingPayload($order);
+                }
+
                 return response()->json($result);
             }
 
@@ -2250,5 +2254,325 @@ class OrderController extends Controller
                 );
             }
         })->afterResponse();
+    }
+
+    /**
+     * Update order status via explicit status selection.
+     */
+    public function updateStatus(Request $request, Order $order)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if (!$admin->is_super && !$admin->hasPermission('orders.edit')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to update order status.'
+            ], 403);
+        }
+
+        $this->enforceOrderViewAccess($order, $admin);
+
+        $validated = $request->validate([
+            'status' => 'required|string',
+        ]);
+
+        try {
+            $statusTransitionService = new StatusTransitionService();
+            $currentStatus = (string) ($order->diamond_status ?? '');
+            $orderType = $order->order_type;
+            $newStatus = trim((string) $validated['status']);
+            $validStatuses = $statusTransitionService->getValidStatuses($orderType);
+
+            if (!in_array($newStatus, $validStatuses, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid status selected for this order type.'
+                ], 422);
+            }
+
+            if ($newStatus === $currentStatus) {
+                $statusUi = $this->buildOrderStatusUiPayload($order->diamond_status);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status already selected.',
+                    'status' => $order->diamond_status,
+                    'status_label' => $statusUi['status_label'],
+                    'status_color' => $statusUi['status_color'],
+                    'status_icon' => $statusUi['status_icon'],
+                ]);
+            }
+
+            $cancelledStatuses = $this->getCancelledStatuses();
+            $wasCancelled = in_array($currentStatus, $cancelledStatuses, true);
+            $isCancelled = in_array($newStatus, $cancelledStatuses, true);
+            $skus = $this->extractOrderSkusForStock($order);
+
+            if ($wasCancelled && !$isCancelled) {
+                foreach ($skus as $sku) {
+                    $alreadySoldElsewhere = Order::where(function ($query) use ($sku) {
+                        $query->where('diamond_sku', $sku);
+
+                        if ($this->supportsJsonContains()) {
+                            $query->orWhereJsonContains('diamond_skus', $sku);
+                        }
+                    })
+                        ->where('id', '!=', $order->id)
+                        ->whereNotIn('diamond_status', $cancelledStatuses)
+                        ->exists();
+
+                    if ($alreadySoldElsewhere) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Cannot move this cancelled order back to an active status because diamond SKU [{$sku}] is already assigned to another active order.",
+                        ], 409);
+                    }
+                }
+            }
+
+            DB::transaction(function () use ($order, $newStatus, $admin, $currentStatus, $wasCancelled, $isCancelled, $skus) {
+                $order->diamond_status = $newStatus;
+                $order->last_modified_by = $admin->id;
+                $order->save();
+
+                if (!$wasCancelled && $isCancelled) {
+                    foreach ($skus as $sku) {
+                        $diamond = Diamond::where('sku', $sku)->first();
+                        if ($diamond && $diamond->is_sold_out === 'Sold') {
+                            $diamond->update([
+                                'is_sold_out' => 'In Stock',
+                                'sold_out_date' => null,
+                                'sold_out_price' => null,
+                            ]);
+                        }
+                    }
+                }
+
+                if ($wasCancelled && !$isCancelled) {
+                    foreach ($skus as $sku) {
+                        $diamond = Diamond::where('sku', $sku)->first();
+                        if (!$diamond) {
+                            continue;
+                        }
+
+                        $diamond->update([
+                            'is_sold_out' => 'Sold',
+                            'sold_out_date' => now(),
+                            'sold_out_price' => $diamond->sold_out_price ?? 0,
+                        ]);
+                    }
+                }
+
+                AuditLogger::log('updated', $order, $admin->id, [
+                    'Diamond Status' => $this->formatStatusLabel($currentStatus),
+                ], [
+                    'Diamond Status' => $this->formatStatusLabel($newStatus),
+                ]);
+            });
+
+            $statusUi = $this->buildOrderStatusUiPayload($newStatus);
+
+            Log::info('Order status updated via dropdown', [
+                'order_id' => $order->id,
+                'old_status' => $currentStatus,
+                'new_status' => $newStatus,
+                'updated_by' => $admin->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status updated successfully',
+                'status' => $newStatus,
+                'status_label' => $statusUi['status_label'],
+                'status_color' => $statusUi['status_color'],
+                'status_icon' => $statusUi['status_icon'],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update order status', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update shipping details from the orders index modal.
+     */
+    public function updateShipping(Request $request, Order $order)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if (!$admin->is_super && !$admin->hasPermission('orders.edit')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to update shipping.'
+            ], 403);
+        }
+
+        $this->enforceOrderViewAccess($order, $admin);
+
+        $validated = $request->validate([
+            'shipping_company_name' => 'nullable|string|max:191',
+            'tracking_number' => 'nullable|string|max:191',
+            'tracking_url' => 'nullable|url|max:1000',
+            'dispatch_date' => 'nullable|date',
+        ]);
+
+        $auditLabels = [
+            'shipping_company_name' => 'Shipping Company',
+            'tracking_number' => 'Tracking Number',
+            'tracking_url' => 'Tracking URL',
+            'dispatch_date' => 'Dispatch Date',
+        ];
+
+        try {
+            $oldSnapshot = [];
+            foreach (array_keys($auditLabels) as $field) {
+                $oldSnapshot[$field] = $order->getOriginal($field);
+            }
+
+            $this->orderService->assignShippingFields($order, $validated);
+
+            $oldValues = [];
+            $newValues = [];
+
+            foreach ($auditLabels as $field => $label) {
+                $oldValue = $oldSnapshot[$field];
+                $newValue = $order->{$field};
+
+                $oldCompare = $field === 'dispatch_date'
+                    ? (string) optional($oldValue ? \Illuminate\Support\Carbon::parse($oldValue) : null)->toDateString()
+                    : (string) $oldValue;
+                $newCompare = $field === 'dispatch_date'
+                    ? (string) optional($newValue ? \Illuminate\Support\Carbon::parse($newValue) : null)->toDateString()
+                    : (string) $newValue;
+
+                if ($oldCompare !== $newCompare) {
+                    $oldValues[$label] = $field === 'dispatch_date'
+                        ? ($oldValue ? \Illuminate\Support\Carbon::parse($oldValue)->format('d M Y') : null)
+                        : $oldValue;
+                    $newValues[$label] = $field === 'dispatch_date'
+                        ? ($newValue ? \Illuminate\Support\Carbon::parse($newValue)->format('d M Y') : null)
+                        : $newValue;
+                }
+            }
+
+            if (!empty($oldValues) || !empty($newValues)) {
+                $order->last_modified_by = $admin->id;
+                $order->save();
+
+                AuditLogger::log('updated', $order, $admin->id, $oldValues, $newValues);
+            } else {
+                $order->refresh();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => !empty($newValues) ? 'Shipping updated successfully.' : 'No shipping changes detected.',
+                'order' => $this->buildOrderShippingPayload($order->fresh()),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update shipping details', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update shipping: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function getCancelledStatuses(): array
+    {
+        return ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+    }
+
+    private function extractOrderSkusForStock(Order $order): array
+    {
+        if (!empty($order->diamond_skus) && is_array($order->diamond_skus)) {
+            return array_values(array_filter($order->diamond_skus));
+        }
+
+        if (!empty($order->diamond_sku)) {
+            return [$order->diamond_sku];
+        }
+
+        return [];
+    }
+
+    private function formatStatusLabel(?string $status): string
+    {
+        $status = trim((string) $status);
+
+        if ($status === '') {
+            return 'N/A';
+        }
+
+        return (string) ($this->buildOrderStatusUiPayload($status)['status_label'] ?? 'N/A');
+    }
+
+    private function buildOrderStatusUiPayload(?string $status): array
+    {
+        $payload = $this->formatOrderDiscussionStatusPayload($status);
+        $iconMap = [
+            'r_order_in_process' => 'bi-arrow-repeat',
+            'r_order_shipped' => 'bi-truck',
+            'r_order_cancelled' => 'bi-x-circle',
+            'd_diamond_in_discuss' => 'bi-chat-dots',
+            'd_diamond_in_making' => 'bi-tools',
+            'd_diamond_completed' => 'bi-gem',
+            'd_diamond_in_certificate' => 'bi-file-earmark-text',
+            'd_order_shipped' => 'bi-truck',
+            'd_order_cancelled' => 'bi-x-circle',
+            'j_diamond_in_progress' => 'bi-gem',
+            'j_diamond_completed' => 'bi-check-circle',
+            'j_diamond_in_discuss' => 'bi-chat-dots',
+            'j_cad_in_progress' => 'bi-pencil-square',
+            'j_cad_done' => 'bi-file-check',
+            'j_order_completed' => 'bi-award',
+            'j_order_in_qc' => 'bi-search',
+            'j_qc_done' => 'bi-check-all',
+            'j_order_shipped' => 'bi-truck',
+            'j_order_hold' => 'bi-pause-circle',
+            'j_order_cancelled' => 'bi-x-circle',
+        ];
+
+        return [
+            'status_key' => $payload['status_key'],
+            'status_label' => $payload['status_label'],
+            'status_color' => $payload['status_color'],
+            'status_icon' => $iconMap[$payload['status_key']] ?? 'bi-circle',
+        ];
+    }
+
+    private function buildOrderShippingPayload(Order $order): array
+    {
+        return [
+            'id' => $order->id,
+            'shipping_company_name' => $order->shipping_company_name,
+            'tracking_number' => $order->tracking_number,
+            'tracking_url' => $order->tracking_url,
+            'tracking_status' => $order->tracking_status,
+            'tracking_history' => $order->tracking_history ?? [],
+            'dispatch_date' => optional($order->dispatch_date)->format('Y-m-d'),
+            'dispatch_date_label' => optional($order->dispatch_date)->format('d M Y'),
+            'has_shipping_details' => filled($order->shipping_company_name) || filled($order->tracking_number) || filled($order->tracking_url) || filled($order->dispatch_date),
+        ];
+    }
+
+    private function supportsJsonContains(): bool
+    {
+        $driver = DB::connection()->getDriverName();
+
+        return in_array($driver, ['mysql', 'pgsql', 'sqlite'], true);
     }
 }

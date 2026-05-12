@@ -86,47 +86,49 @@
                         $draftCount = \App\Models\OrderDraft::where('admin_id', auth()->guard('admin')->id())
                             ->notExpired()
                             ->count();
+                        $headerTotalOrdersHref = route('orders.index', request()->except(['order_type', 'page']));
+                        $headerShippedHref = request('shipped') === '1'
+                            ? route('orders.index', request()->except(['shipped', 'page']))
+                            : route('orders.index', array_merge(request()->except(['page', 'order_type', 'diamond_status', 'in_transit']), ['shipped' => '1']));
                     @endphp
-                    @if ($draftCount > 0)
-                        <a href="{{ route('orders.drafts.index') }}" class="btn-drafts-custom">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span>Drafts</span>
-                            <span class="draft-count-badge">{{ $draftCount }}</span>
+                    <div class="header-actions">
+                        @if ($draftCount > 0)
+                            <a href="{{ route('orders.drafts.index') }}" class="btn-drafts-custom">
+                                <i class="bi bi-file-earmark-text"></i>
+                                <span>Drafts</span>
+                                <span class="draft-count-badge">{{ $draftCount }}</span>
+                            </a>
+                        @endif
+                        <a href="{{ route('orders.sync-all-tracking') }}" class="btn-primary-custom" id="btnSyncAll"
+                            style="background: #6366f1;">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>Sync All</span>
                         </a>
-                    @endif
-                    <a href="{{ route('orders.sync-all-tracking') }}" class="btn-primary-custom" id="btnSyncAll"
-                        style="background: #6366f1;">
-                        <i class="bi bi-arrow-repeat"></i>
-                        <span>Sync All</span>
-                    </a>
-                    <a href="{{ route('orders.create') }}" class="btn-primary-custom">
-                        <i class="bi bi-plus-circle"></i>
-                        <span>Create Order</span>
-                    </a>
+                        <a href="{{ route('orders.create') }}" class="btn-primary-custom">
+                            <i class="bi bi-plus-circle"></i>
+                            <span>Create Order</span>
+                        </a>
+                    </div>
+                    <div class="header-stats" aria-label="Order summary filters">
+                        <a href="{{ $headerTotalOrdersHref }}"
+                            class="header-stat-item {{ request('order_type') ? '' : 'active' }}"
+                            title="Show all order types">
+                            <span class="header-stat-label">Total Orders:</span>
+                            <span class="header-stat-value">{{ $totalOrders }}</span>
+                        </a>
+                        <a href="{{ $headerShippedHref }}"
+                            class="header-stat-item {{ request('shipped') === '1' ? 'active' : '' }}"
+                            title="{{ request('shipped') === '1' ? 'Clear shipped filter' : 'Show shipped orders' }}">
+                            <span class="header-stat-label">Total Shipped:</span>
+                            <span class="header-stat-value">{{ $shippedOrdersCount ?? 0 }}</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Stats Cards -->
         <div class="stats-grid">
-            {{-- Total Orders - clicking clears order_type filter --}}
-            @php
-                $baseParams = request()->except(['order_type', 'page']);
-            @endphp
-            <a href="{{ route('orders.index', $baseParams) }}"
-                class="stat-card stat-card-primary {{ request('order_type') ? '' : 'active-filter' }}">
-                <div class="stat-icon">
-                    <i class="bi bi-cart-check"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Total Orders</div>
-                    <div class="stat-value">{{ $totalOrders }}</div>
-                    <div class="stat-trend">
-                        <i class="bi bi-graph-up"></i> All orders
-                    </div>
-                </div>
-            </a>
-
             {{-- Ready to Ship --}}
             @php $paramsReady = array_merge(request()->except(['page']), ['order_type' => 'ready_to_ship']); @endphp
             @php $readyHref = request('order_type') === 'ready_to_ship' ? route('orders.index', request()->except(['order_type', 'page'])) : route('orders.index', $paramsReady); @endphp
@@ -174,22 +176,6 @@
                     <div class="stat-value">{{ $orderTypeCounts['custom_jewellery'] ?? 0 }}</div>
                     <div class="stat-trend">
                         <i class="bi bi-hammer"></i> Crafted
-                    </div>
-                </div>
-            </a>
-
-            {{-- Total Shipped Orders --}}
-            @php $shippedHref = request('shipped') === '1' ? route('orders.index', request()->except(['shipped', 'page'])) : route('orders.index', array_merge(request()->except(['page', 'order_type', 'diamond_status', 'in_transit']), ['shipped' => '1'])); @endphp
-            <a href="{{ $shippedHref }}"
-                class="stat-card stat-card-dark {{ request('shipped') === '1' ? 'active-filter' : '' }}">
-                <div class="stat-icon">
-                    <i class="bi bi-truck"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">Total Shipped</div>
-                    <div class="stat-value">{{ $shippedOrdersCount ?? 0 }}</div>
-                    <div class="stat-trend">
-                        <i class="bi bi-check-all"></i> Delivered
                     </div>
                 </div>
             </a>
@@ -982,11 +968,26 @@
                                                     $statusKey = $order->diamond_status ?? 'processed';
                                                     $color = $statusColors[$statusKey] ?? 'secondary';
                                                     $icon = $statusIcons[$statusKey] ?? 'bi-circle';
+                                                    $statusOptions = $statusFlowOptions[$order->order_type] ?? [];
                                                 @endphp
-                                                <span class="badge-item badge-status status-{{ $color }}">
-                                                    <i class="bi {{ $icon }}"></i>
-                                                    {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}
-                                                </span>
+                                                <div class="order-status-control">
+                                                    <span class="badge-item badge-status status-{{ $color }} order-status-badge"
+                                                        id="status-badge-{{ $order->id }}">
+                                                        <i class="bi {{ $icon }} status-icon"></i>
+                                                        <span class="status-label">{{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}</span>
+                                                        <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.8;"></i>
+                                                    </span>
+                                                    <select class="status-dropdown-select"
+                                                        data-order-id="{{ $order->id }}"
+                                                        data-current-status="{{ $order->diamond_status }}">
+                                                        @foreach ($statusOptions as $statusOption)
+                                                            <option value="{{ $statusOption }}"
+                                                                {{ $order->diamond_status === $statusOption ? 'selected' : '' }}>
+                                                                {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $statusOption))) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
 
                                                 {{-- Company --}}
                                                 @if ($order->company)
@@ -1141,16 +1142,30 @@
                                         </div>
                                     </td>
                                     <td>
-                                        @if ($order->shipping_company_name || $order->tracking_number)
-                                            <div class="shipping-info-cell">
+                                        @php
+                                            $shippingState = [
+                                                'id' => $order->id,
+                                                'shipping_company_name' => $order->shipping_company_name,
+                                                'tracking_number' => $order->tracking_number,
+                                                'tracking_url' => $order->tracking_url,
+                                                'tracking_status' => $order->tracking_status,
+                                                'tracking_history' => $order->tracking_history ?? [],
+                                                'dispatch_date' => optional($order->dispatch_date)->format('Y-m-d'),
+                                                'dispatch_date_label' => optional($order->dispatch_date)->format('d M Y'),
+                                                'has_shipping_details' => filled($order->shipping_company_name) || filled($order->tracking_number) || filled($order->tracking_url) || filled($order->dispatch_date),
+                                            ];
+                                        @endphp
+                                        <div class="shipping-info-cell" id="shipping-cell-{{ $order->id }}"
+                                            data-shipping-state='@json($shippingState)'>
+                                            @if ($order->shipping_company_name || $order->tracking_number)
                                                 <div class="shipping-main">
                                                     <span class="shipping-company">{{ $order->shipping_company_name }}</span>
                                                     @if ($order->tracking_number)
-                                                        <a href="javascript:void(0)" class="tracking-number-link"
-                                                            onclick="showTrackingHistory({{ $order->id }}, {{ json_encode($order->tracking_number) }}, {{ json_encode($order->shipping_company_name) }}, {{ json_encode($order->tracking_history) }}, {{ json_encode($order->tracking_url) }})"
+                                                        <button type="button" class="tracking-number-link tracking-link-btn"
+                                                            onclick="showTrackingHistoryByOrder({{ $order->id }})"
                                                             title="Click to view history">
                                                             {{ $order->tracking_number }}
-                                                        </a>
+                                                        </button>
                                                     @endif
 
                                                     @if ($order->tracking_number && ($order->shipping_company_name || $order->tracking_url))
@@ -1166,10 +1181,16 @@
                                                         {{ $order->tracking_status }}
                                                     </div>
                                                 @endif
-                                            </div>
-                                        @else
-                                            <span class="text-muted">&mdash;</span>
-                                        @endif
+                                            @else
+                                                <span class="text-muted shipping-empty-placeholder">&mdash;</span>
+                                            @endif
+
+                                            <button type="button" class="shipping-action-btn"
+                                                onclick="openShippingModal({{ $order->id }})">
+                                                <i class="bi bi-truck"></i>
+                                                <span>{{ $shippingState['has_shipping_details'] ? 'Edit Shipping' : 'Add Shipping' }}</span>
+                                            </button>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="creator-info">
@@ -1318,6 +1339,62 @@
         </div>
     </div>
 
+    <div class="modal fade" id="shippingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow shipping-modal-shell">
+                <div class="modal-header border-0 shipping-modal-header">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1">
+                            <i class="bi bi-truck me-2"></i><span id="shippingModalTitle">Add Shipping</span>
+                        </h5>
+                        <p class="mb-0 text-muted small">Update shipping details directly from the order list.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="shippingModalForm">
+                    <div class="modal-body shipping-modal-body">
+                        <input type="hidden" id="shippingModalOrderId" value="">
+                        <div class="mb-3">
+                            <label for="shippingCompanyInput" class="form-label">Shipping Company</label>
+                            <select id="shippingCompanyInput" name="shipping_company_name" class="form-select">
+                                <option value="">Select Carrier</option>
+                                <option value="Aramex">Aramex</option>
+                                <option value="USPS">USPS</option>
+                                <option value="DHL">DHL</option>
+                                <option value="FedEx">FedEx</option>
+                                <option value="UPS">UPS</option>
+                                <option value="EMS / Speed Post">EMS / Speed Post</option>
+                                <option value="UPS - Ground">UPS - Ground</option>
+                                <option value="UPS - DDP">UPS - DDP</option>
+                                <option value="LP Service">LP Service</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="trackingNumberInput" class="form-label">Tracking Number</label>
+                            <input type="text" id="trackingNumberInput" name="tracking_number" class="form-control"
+                                placeholder="Enter tracking number">
+                        </div>
+                        <div class="mb-3">
+                            <label for="trackingUrlInput" class="form-label">Tracking URL</label>
+                            <input type="url" id="trackingUrlInput" name="tracking_url" class="form-control"
+                                placeholder="https://...">
+                        </div>
+                        <div class="mb-0">
+                            <label for="dispatchDateInput" class="form-label">Dispatch Date</label>
+                            <input type="date" id="dispatchDateInput" name="dispatch_date" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 shipping-modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="shippingModalSaveBtn">
+                            <i class="bi bi-save me-1"></i>Save Shipping
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- CSS -->
     <style>
         * {
@@ -1423,7 +1500,56 @@
         .header-right {
             display: flex;
             gap: 0.75rem;
+            align-items: flex-end;
+            flex-direction: column;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .header-stats {
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 180px;
+            padding-top: 0.65rem;
+            text-align: right;
+        }
+
+        .header-stat-item {
+            align-items: baseline;
+            border-radius: 8px;
+            color: var(--gray);
+            display: inline-flex;
+            gap: 0.35rem;
+            justify-content: flex-end;
+            padding: 0.15rem 0.25rem;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .header-stat-item:hover,
+        .header-stat-item.active {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary);
+            transform: translateX(-2px);
+        }
+
+        .header-stat-label {
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .header-stat-value {
+            color: var(--primary);
+            font-size: 1rem;
+            font-weight: 800;
         }
 
         .btn-drafts-custom {
@@ -2427,12 +2553,47 @@
             padding: 0.35rem 0.6rem;
         }
 
+        .order-status-control {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .status-dropdown-select {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+            min-width: 0;
+            padding: 0;
+            border: none;
+            appearance: none;
+        }
+
+        .status-dropdown-select:disabled {
+            cursor: wait;
+        }
+
+        .order-status-badge {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .order-status-control:hover .order-status-badge {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
         /* Shipping Column Styles */
         .shipping-info-cell {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
-            min-width: 150px;
+            gap: 0.45rem;
+            min-width: 190px;
         }
 
         .shipping-main {
@@ -2455,6 +2616,12 @@
             text-decoration: underline dotted;
             cursor: pointer;
             transition: color 0.2s;
+        }
+
+        .tracking-link-btn {
+            background: none;
+            border: none;
+            padding: 0;
         }
 
         .tracking-number-link:hover {
@@ -2525,6 +2692,65 @@
         .shipping-status-label.status-unknown {
             background: #f1f5f9;
             color: #475569;
+        }
+
+        .shipping-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            width: fit-content;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            background: rgba(59, 130, 246, 0.08);
+            color: #1d4ed8;
+            border-radius: 999px;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .shipping-action-btn:hover {
+            background: rgba(59, 130, 246, 0.14);
+            color: #1e40af;
+        }
+
+        .shipping-modal-shell {
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .shipping-modal-header,
+        .shipping-modal-footer {
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.96));
+            padding: 1rem 1.25rem;
+        }
+
+        .shipping-modal-body {
+            padding: 1.25rem;
+        }
+
+        @keyframes statusToastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes statusToastSlideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(12px);
+            }
         }
 
         /* Tracking History Modal */
@@ -3569,8 +3795,8 @@
         .image-preview-popover {
             position: fixed;
             z-index: 20000;
-            width: 220px;
-            height: 220px;
+            width: 440px;
+            height: 440px;
             border-radius: 14px;
             border: 1px solid rgba(15, 23, 42, 0.12);
             background: #fff;
@@ -3959,6 +4185,22 @@
                 display: flex;
                 gap: 0.45rem;
                 flex-wrap: wrap;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-stats {
+                min-width: 0;
+                width: 100%;
+                text-align: left;
+            }
+
+            .header-stat-item {
+                justify-content: space-between;
+                width: 100%;
             }
 
             .header-right .btn-primary-custom,
@@ -4382,7 +4624,6 @@
 
             // Tracking Support Functions
             async function syncTracking(orderId, btn) {
-                const icon = btn.querySelector('i');
                 btn.classList.add('spinning');
                 btn.disabled = true;
 
@@ -4400,20 +4641,22 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        // Refresh current page to show updated info
-                        window.location.reload();
+                        if (result.order) {
+                            updateShippingCell(result.order);
+                        }
+
+                        showOrdersToast(result.message || 'Tracking synced successfully.', 'success');
                     } else {
                         let errorMsg = result.message;
                         if (errorMsg && (errorMsg.toLowerCase().includes('no tracking') || errorMsg.toLowerCase().includes('information at this time') || errorMsg.toLowerCase().includes('still being processed'))) {
                             errorMsg = "Tracking scan initiated. Global Parcel Tracking is querying the carrier. Please wait 15-30 seconds and click Sync again to see the live status.";
                         }
-                        alert(errorMsg);
-                        btn.classList.remove('spinning');
-                        btn.disabled = false;
+                        showOrdersToast(errorMsg || 'Failed to sync tracking data.', 'error');
                     }
                 } catch (error) {
                     console.error('Sync failed:', error);
-                    alert('Failed to sync tracking data. Please try again.');
+                    showOrdersToast('Failed to sync tracking data. Please try again.', 'error');
+                } finally {
                     btn.classList.remove('spinning');
                     btn.disabled = false;
                 }
@@ -4432,9 +4675,87 @@
                 });
             }
 
+            function getShippingState(orderId) {
+                const cell = document.getElementById(`shipping-cell-${orderId}`);
+                if (!cell) {
+                    return null;
+                }
+
+                try {
+                    return JSON.parse(cell.dataset.shippingState || '{}');
+                } catch (error) {
+                    console.error('Failed to parse shipping state', error);
+                    return null;
+                }
+            }
+
+            function setShippingState(orderId, state) {
+                const cell = document.getElementById(`shipping-cell-${orderId}`);
+                if (!cell) {
+                    return;
+                }
+
+                cell.dataset.shippingState = JSON.stringify(state);
+            }
+
+            function renderShippingCell(order) {
+                const hasCompany = !!order.shipping_company_name;
+                const hasTrackingNumber = !!order.tracking_number;
+                const hasTrackingLink = hasTrackingNumber && (hasCompany || !!order.tracking_url);
+                const hasShippingDetails = !!order.has_shipping_details;
+                const trackingStatusClass = order.tracking_status
+                    ? `status-${String(order.tracking_status).toLowerCase().replace(/\s+/g, '_')}`
+                    : '';
+
+                const mainContent = hasCompany || hasTrackingNumber
+                    ? `
+                        <div class="shipping-main">
+                            ${hasCompany ? `<span class="shipping-company">${escapeHtml(order.shipping_company_name)}</span>` : ''}
+                            ${hasTrackingNumber ? `<button type="button" class="tracking-number-link tracking-link-btn" onclick="showTrackingHistoryByOrder(${order.id})" title="Click to view history">${escapeHtml(order.tracking_number)}</button>` : ''}
+                            ${hasTrackingLink ? `<button class="btn-sync-inline" onclick="syncTracking(${order.id}, this)" title="Sync Tracking"><i class="bi bi-arrow-repeat"></i></button>` : ''}
+                        </div>
+                        ${order.tracking_status ? `<div class="shipping-status-label ${trackingStatusClass}">${escapeHtml(order.tracking_status)}</div>` : ''}
+                    `
+                    : '<span class="text-muted shipping-empty-placeholder">&mdash;</span>';
+
+                return `
+                    ${mainContent}
+                    <button type="button" class="shipping-action-btn" onclick="openShippingModal(${order.id})">
+                        <i class="bi bi-truck"></i>
+                        <span>${hasShippingDetails ? 'Edit Shipping' : 'Add Shipping'}</span>
+                    </button>
+                `;
+            }
+
+            function updateShippingCell(order) {
+                const cell = document.getElementById(`shipping-cell-${order.id}`);
+                if (!cell) {
+                    return;
+                }
+
+                setShippingState(order.id, order);
+                cell.innerHTML = renderShippingCell(order);
+            }
+
+            function showTrackingHistoryByOrder(orderId) {
+                const state = getShippingState(orderId);
+                if (!state) {
+                    showOrdersToast('Tracking details not found for this order.', 'error');
+                    return;
+                }
+
+                showTrackingHistory(
+                    orderId,
+                    state.tracking_number,
+                    state.shipping_company_name,
+                    state.tracking_history,
+                    state.tracking_url
+                );
+            }
+
             function showTrackingHistory(orderId, trackingNumber, carrier, history, trackingUrl) {
                 document.getElementById('modalTrackingNumber').textContent = trackingNumber;
-                document.getElementById('modalCarrierName').textContent = carrier;
+                document.getElementById('modalCarrierName').textContent = carrier || '-';
 
                 const container = document.getElementById('trackingHistoryContainer');
                 container.innerHTML = '';
@@ -4487,6 +4808,125 @@
                 modal.show();
             }
 
+            const shippingModalElement = document.getElementById('shippingModal');
+            const shippingModal = shippingModalElement ? new bootstrap.Modal(shippingModalElement) : null;
+
+            function ensureCarrierOption(value) {
+                const select = document.getElementById('shippingCompanyInput');
+                if (!select || !value) {
+                    return;
+                }
+
+                const exists = Array.from(select.options).some(option => option.value === value);
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    option.dataset.dynamic = '1';
+                    select.appendChild(option);
+                }
+            }
+
+            function openShippingModal(orderId) {
+                const state = getShippingState(orderId);
+                if (!state || !shippingModal) {
+                    showOrdersToast('Shipping details could not be loaded.', 'error');
+                    return;
+                }
+
+                document.getElementById('shippingModalOrderId').value = orderId;
+                document.getElementById('shippingModalTitle').textContent = state.has_shipping_details ? 'Edit Shipping' : 'Add Shipping';
+
+                ensureCarrierOption(state.shipping_company_name);
+
+                document.getElementById('shippingCompanyInput').value = state.shipping_company_name || '';
+                document.getElementById('trackingNumberInput').value = state.tracking_number || '';
+                document.getElementById('trackingUrlInput').value = state.tracking_url || '';
+                document.getElementById('dispatchDateInput').value = state.dispatch_date || '';
+
+                shippingModal.show();
+            }
+
+            async function submitShippingModal(event) {
+                event.preventDefault();
+
+                const orderId = document.getElementById('shippingModalOrderId').value;
+                const saveBtn = document.getElementById('shippingModalSaveBtn');
+                const form = event.currentTarget;
+
+                if (!orderId) {
+                    showOrdersToast('Order not found for shipping update.', 'error');
+                    return;
+                }
+
+                const payload = {
+                    shipping_company_name: document.getElementById('shippingCompanyInput').value,
+                    tracking_number: document.getElementById('trackingNumberInput').value,
+                    tracking_url: document.getElementById('trackingUrlInput').value,
+                    dispatch_date: document.getElementById('dispatchDateInput').value,
+                };
+
+                saveBtn.disabled = true;
+                const originalHtml = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/shipping`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Failed to update shipping.');
+                    }
+
+                    updateShippingCell(result.order);
+                    showOrdersToast(result.message || 'Shipping updated successfully.', 'success');
+                    shippingModal.hide();
+                    form.reset();
+                } catch (error) {
+                    console.error('Shipping update failed:', error);
+                    showOrdersToast(error.message || 'Failed to update shipping.', 'error');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalHtml;
+                }
+            }
+
+            const shippingModalForm = document.getElementById('shippingModalForm');
+            if (shippingModalForm) {
+                shippingModalForm.addEventListener('submit', submitShippingModal);
+            }
+
+            function showOrdersToast(message, type = 'info') {
+                const toastId = 'orders-toast-' + Date.now();
+                const bgColor = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
+
+                const toastHTML = `
+                    <div id="${toastId}" class="position-fixed ${bgColor} text-white px-3 py-2 rounded" style="bottom: 20px; right: 20px; z-index: 99999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: statusToastSlideIn 0.3s ease; font-size: 0.875rem;">
+                        ${escapeHtml(message)}
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', toastHTML);
+
+                setTimeout(() => {
+                    const toast = document.getElementById(toastId);
+                    if (toast) {
+                        toast.style.animation = 'statusToastSlideOut 0.3s ease';
+                        setTimeout(() => toast.remove(), 300);
+                    }
+                }, 3000);
+            }
+
             // Cancel Order Modal Logic
             function openCancelModal(orderId, clientName) {
                 document.getElementById('cancelOrderId').value = orderId;
@@ -4495,6 +4935,70 @@
                 const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
                 modal.show();
             }
+
+            document.querySelectorAll('.status-dropdown-select').forEach(select => {
+                select.addEventListener('change', async function () {
+                    const orderId = this.dataset.orderId;
+                    const previousStatus = this.dataset.currentStatus || '';
+                    const nextStatus = this.value;
+                    const badge = document.getElementById(`status-badge-${orderId}`);
+
+                    if (!orderId || !nextStatus || nextStatus === previousStatus) {
+                        return;
+                    }
+
+                    this.disabled = true;
+                    if (badge) {
+                        badge.style.opacity = '0.65';
+                    }
+
+                    try {
+                        const response = await fetch(`/admin/orders/${orderId}/update-status`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({ status: nextStatus })
+                        });
+
+                        const result = await response.json();
+
+                        if (!response.ok || !result.success) {
+                            throw new Error(result.message || 'Failed to update status.');
+                        }
+
+                        this.dataset.currentStatus = result.status || nextStatus;
+
+                        if (badge) {
+                            badge.className = badge.className.replace(/status-\w+/, `status-${result.status_color || 'secondary'}`);
+
+                            const icon = badge.querySelector('.status-icon');
+                            if (icon) {
+                                icon.className = `bi ${result.status_icon || 'bi-circle'} status-icon`;
+                            }
+
+                            const label = badge.querySelector('.status-label');
+                            if (label) {
+                                label.textContent = result.status_label || 'N/A';
+                            }
+                        }
+
+                        showOrdersToast(result.message || 'Status updated successfully.', 'success');
+                    } catch (error) {
+                        console.error('Status update error:', error);
+                        this.value = previousStatus;
+                        showOrdersToast(error.message || 'Failed to update status.', 'error');
+                    } finally {
+                        this.disabled = false;
+                        if (badge) {
+                            badge.style.opacity = '1';
+                        }
+                    }
+                });
+            });
         </script>
     @endpush
 

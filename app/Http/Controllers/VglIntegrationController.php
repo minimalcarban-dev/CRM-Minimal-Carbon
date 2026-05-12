@@ -106,7 +106,7 @@ class VglIntegrationController extends Controller
                     'X-API-Key' => config('services.vgl.api_key'),
                     'X-Idempotency-Key' => 'crm-order-' . $order->id . '-' . $order->updated_at->timestamp, // M2 FIX
                 ])
-                ->post(config('services.vgl.base_url') . '/api/external/orders', $payload);
+                ->post(rtrim(config('services.vgl.base_url'), '/') . '/api/external/orders', $payload);
 
             if ($response->successful()) {
                 $vglData = $response->json();
