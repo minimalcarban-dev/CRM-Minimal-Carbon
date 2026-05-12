@@ -658,6 +658,30 @@
 
                 {{-- Action Dropdown Menu Handler --}}
                 <script>
+                    // Global dropdown management
+                    window.allDropdowns = [];
+                    window.closeAllPortals = (e) => {
+                        // If the event is happening inside a portal menu, don't close it
+                        if (e && e.target && e.target.closest && e.target.closest('.action-portal-menu, .status-portal-menu')) {
+                            return;
+                        }
+
+                        const portals = document.querySelectorAll('.action-portal-menu, .status-portal-menu');
+                        if (portals.length > 0) {
+                            portals.forEach(portal => portal.remove());
+                            document.querySelectorAll('.order-status-badge, [id^="actionBtn"]').forEach(el => el.classList.remove('active'));
+                            // Force close state on all dropdown instances
+                            if (window.allDropdowns) {
+                                window.allDropdowns.forEach(d => { d.isOpen = false; });
+                            }
+                        }
+                    };
+
+                    // Listen for any scroll event in the capture phase
+                    window.addEventListener('scroll', window.closeAllPortals, true);
+                    window.addEventListener('wheel', window.closeAllPortals, { capture: true, passive: true });
+                    document.addEventListener('scroll', window.closeAllPortals, true);
+
                     document.addEventListener('DOMContentLoaded', function () {
                         // Portal-based dropdown renderer - renders menu at body level to escape overflow
                         class ActionDropdownPortal {
@@ -702,14 +726,7 @@
 
                             open() {
                                 // Close all other open dropdowns
-                                document.querySelectorAll('.action-portal-menu').forEach(portal => {
-                                    if (portal !== this.portalElement) {
-                                        portal.remove();
-                                    }
-                                });
-                                document.querySelectorAll('[id^="actionBtn"]').forEach(btn => {
-                                    btn.classList.remove('active');
-                                });
+                                window.closeAllPortals();
 
                                 // Create portal element
                                 this.portalElement = document.createElement('div');
@@ -766,16 +783,106 @@
                             }
                         }
 
+                        // Status Dropdown Portal - renders status menu at body level
+                        class StatusDropdownPortal {
+                            constructor(btnElement, menuElement) {
+                                this.btn = btnElement;
+                                this.menu = menuElement;
+                                this.orderId = btnElement.getAttribute('data-order-id');
+                                this.portalElement = null;
+                                this.isOpen = false;
+
+                                this.init();
+                            }
+
+                            init() {
+                                this.btn.addEventListener('click', (e) => this.toggle(e));
+                                document.addEventListener('click', (e) => this.handleOutsideClick(e));
+                                document.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Escape' && this.isOpen) this.close();
+                                });
+                            }
+
+                            toggle(e) {
+                                e.stopPropagation();
+                                if (this.isOpen) this.close();
+                                else this.open();
+                            }
+
+                            open() {
+                                // Close all other open dropdowns
+                                window.closeAllPortals();
+
+                                this.portalElement = document.createElement('div');
+                                this.portalElement.className = 'status-portal-menu';
+
+                                const clonedMenu = this.menu.cloneNode(true);
+                                clonedMenu.style.display = 'block';
+
+                                const rect = this.btn.getBoundingClientRect();
+                                this.portalElement.style.position = 'fixed';
+                                this.portalElement.style.top = (rect.bottom + 8) + 'px';
+                                this.portalElement.style.left = rect.left + 'px';
+                                this.portalElement.style.zIndex = '99999';
+
+                                this.portalElement.appendChild(clonedMenu);
+                                document.body.appendChild(this.portalElement);
+
+                                // Attach click handlers to cloned items
+                                this.portalElement.querySelectorAll('.status-menu-item').forEach(item => {
+                                    item.addEventListener('click', async (e) => {
+                                        e.preventDefault();
+                                        const nextStatus = item.getAttribute('data-status');
+                                        const previousStatus = this.btn.getAttribute('data-current-status');
+
+                                        if (nextStatus === previousStatus) {
+                                            this.close();
+                                            return;
+                                        }
+
+                                        await window.performStatusUpdate(this.orderId, nextStatus, this.btn);
+                                        this.close();
+                                    });
+                                });
+
+                                this.btn.classList.add('active');
+                                this.isOpen = true;
+                            }
+
+                            close() {
+                                if (this.portalElement) {
+                                    this.portalElement.remove();
+                                    this.portalElement = null;
+                                }
+                                this.btn.classList.remove('active');
+                                this.isOpen = false;
+                            }
+
+                            handleOutsideClick(e) {
+                                const isClickOnBtn = e.target.closest(`#statusBtn${this.orderId}`);
+                                const isClickOnPortal = e.target.closest('.status-portal-menu');
+
+                                if (!isClickOnBtn && !isClickOnPortal && this.isOpen) {
+                                    this.close();
+                                }
+                            }
+                        }
+
                         // Initialize all action dropdowns
                         const actionButtons = document.querySelectorAll('[id^="actionBtn"]');
-                        const dropdowns = new Map();
+                        const statusButtons = document.querySelectorAll('[id^="statusBtn"]');
+                        const dropdowns = [];
 
                         actionButtons.forEach(btn => {
                             const orderId = btn.getAttribute('data-order-id');
                             const menu = document.getElementById(`actionMenu${orderId}`);
-                            if (menu) {
-                                dropdowns.set(orderId, new ActionDropdownPortal(btn, menu));
-                            }
+                            if (menu) dropdowns.push(new ActionDropdownPortal(btn, menu));
+                        });
+
+                        statusButtons.forEach(btn => {
+                            const orderId = btn.getAttribute('data-order-id');
+                            const menu = document.getElementById(`statusMenu${orderId}`);
+                            if (menu) dropdowns.push(new StatusDropdownPortal(btn, menu));
                         });
 
                         // Close all dropdowns on escape
@@ -784,6 +891,15 @@
                                 dropdowns.forEach(dropdown => dropdown.close());
                             }
                         });
+
+                        window.allDropdowns = dropdowns;
+
+                        // Specifically target the main scrolling containers just in case
+                        const mainContent = document.getElementById('mainContent');
+                        if (mainContent) mainContent.addEventListener('scroll', window.closeAllPortals);
+                        
+                        const tableContainer = document.querySelector('.table-container');
+                        if (tableContainer) tableContainer.addEventListener('scroll', window.closeAllPortals);
                     });
 
                     // Delete order function
@@ -970,23 +1086,31 @@
                                                     $icon = $statusIcons[$statusKey] ?? 'bi-circle';
                                                     $statusOptions = $statusFlowOptions[$order->order_type] ?? [];
                                                 @endphp
-                                                <div class="order-status-control">
+                                                <div class="order-status-control" id="statusControl{{ $order->id }}">
                                                     <span class="badge-item badge-status status-{{ $color }} order-status-badge"
-                                                        id="status-badge-{{ $order->id }}">
+                                                        id="statusBtn{{ $order->id }}"
+                                                        data-order-id="{{ $order->id }}">
                                                         <i class="bi {{ $icon }} status-icon"></i>
                                                         <span class="status-label">{{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}</span>
                                                         <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.8;"></i>
                                                     </span>
-                                                    <select class="status-dropdown-select"
-                                                        data-order-id="{{ $order->id }}"
-                                                        data-current-status="{{ $order->diamond_status }}">
+                                                    <div class="status-custom-dropdown" id="statusMenu{{ $order->id }}">
                                                         @foreach ($statusOptions as $statusOption)
-                                                            <option value="{{ $statusOption }}"
-                                                                {{ $order->diamond_status === $statusOption ? 'selected' : '' }}>
-                                                                {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $statusOption))) }}
-                                                            </option>
+                                                            @php
+                                                                $optColor = $statusColors[$statusOption] ?? 'secondary';
+                                                                $optIcon = $statusIcons[$statusOption] ?? 'bi-circle';
+                                                                $optLabel = ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $statusOption)));
+                                                                $isActive = $order->diamond_status === $statusOption;
+                                                            @endphp
+                                                            <button type="button" 
+                                                                class="status-menu-item {{ $isActive ? 'active' : '' }}"
+                                                                data-status="{{ $statusOption }}"
+                                                                data-order-id="{{ $order->id }}">
+                                                                <i class="bi {{ $optIcon }} text-{{ $optColor }}"></i>
+                                                                <span>{{ $optLabel }}</span>
+                                                            </button>
                                                         @endforeach
-                                                    </select>
+                                                    </div>
                                                 </div>
 
                                                 {{-- Company --}}
@@ -2436,19 +2560,74 @@
         }
 
         /* Portal menu - rendered at body level to escape overflow */
-        .action-portal-menu {
+        .action-portal-menu,
+        .status-portal-menu {
             position: fixed;
             z-index: 99999;
             background: transparent;
             pointer-events: auto;
         }
 
-        .action-portal-menu .action-dropdown-menu {
+        .action-portal-menu .action-dropdown-menu,
+        .status-portal-menu .status-custom-dropdown {
             display: block !important;
             position: absolute;
             top: 0;
             right: 0;
             margin: 0;
+        }
+
+        .status-custom-dropdown {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
+            min-width: 220px;
+            z-index: 99999;
+            overflow: hidden;
+            animation: statusMenuFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+            padding: 6px;
+        }
+
+        @keyframes statusMenuFadeIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .status-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .status-menu-item:hover {
+            background: var(--light-gray);
+            color: var(--primary);
+        }
+
+        .status-menu-item.active {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary);
+        }
+
+        .status-menu-item i {
+            font-size: 1.1rem;
+            width: 20px;
+            display: flex;
+            justify-content: center;
         }
 
         .orders-table {
@@ -2560,18 +2739,7 @@
         }
 
         .status-dropdown-select {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 10;
-            min-width: 0;
-            padding: 0;
-            border: none;
-            appearance: none;
+            display: none; /* Hide native select completely */
         }
 
         .status-dropdown-select:disabled {
@@ -2579,13 +2747,21 @@
         }
 
         .order-status-badge {
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            user-select: none;
         }
 
-        .order-status-control:hover .order-status-badge {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
+        .order-status-badge:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1.5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .order-status-badge.active {
+            filter: brightness(0.95);
+            transform: translateY(0.5px);
+            box-shadow: none;
         }
 
         /* Shipping Column Styles */
@@ -3583,8 +3759,7 @@
         .order-details-column {
             display: flex;
             flex-direction: column;
-            gap: 5px;
-            /* align-items: flex-start; */
+            gap: 8px; /* Increased from 5px */
             padding-left: 5px;
         }
 
@@ -3654,16 +3829,18 @@
         .badge-status {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            padding: 5px 12px 5px 8px;
-            border-radius: 6px;
-            font-size: 11.5px;
+            gap: 8px;
+            padding: 6px 14px 6px 10px;
+            border-radius: 8px;
+            font-size: 12.5px;
             font-weight: 700;
             line-height: 1;
             white-space: nowrap;
             background: rgb(29 63 173);
             backdrop-filter: blur(4px);
             border: 1.5px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .badge-status i {
@@ -4936,69 +5113,59 @@
                 modal.show();
             }
 
-            document.querySelectorAll('.status-dropdown-select').forEach(select => {
-                select.addEventListener('change', async function () {
-                    const orderId = this.dataset.orderId;
-                    const previousStatus = this.dataset.currentStatus || '';
-                    const nextStatus = this.value;
-                    const badge = document.getElementById(`status-badge-${orderId}`);
+            window.performStatusUpdate = async function (orderId, nextStatus, badge) {
+                if (!orderId || !nextStatus) return;
 
-                    if (!orderId || !nextStatus || nextStatus === previousStatus) {
-                        return;
+                const previousStatus = badge.dataset.currentStatus || '';
+                badge.style.opacity = '0.65';
+                badge.style.pointerEvents = 'none';
+
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/update-status`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ status: nextStatus })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Failed to update status.');
                     }
 
-                    this.disabled = true;
+                    badge.dataset.currentStatus = result.status || nextStatus;
+
                     if (badge) {
-                        badge.style.opacity = '0.65';
-                    }
+                        // Update class
+                        badge.className = badge.className.replace(/status-\w+/, `status-${result.status_color || 'secondary'}`);
 
-                    try {
-                        const response = await fetch(`/admin/orders/${orderId}/update-status`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: JSON.stringify({ status: nextStatus })
-                        });
-
-                        const result = await response.json();
-
-                        if (!response.ok || !result.success) {
-                            throw new Error(result.message || 'Failed to update status.');
+                        // Update icon
+                        const icon = badge.querySelector('.status-icon');
+                        if (icon) {
+                            icon.className = `bi ${result.status_icon || 'bi-circle'} status-icon`;
                         }
 
-                        this.dataset.currentStatus = result.status || nextStatus;
-
-                        if (badge) {
-                            badge.className = badge.className.replace(/status-\w+/, `status-${result.status_color || 'secondary'}`);
-
-                            const icon = badge.querySelector('.status-icon');
-                            if (icon) {
-                                icon.className = `bi ${result.status_icon || 'bi-circle'} status-icon`;
-                            }
-
-                            const label = badge.querySelector('.status-label');
-                            if (label) {
-                                label.textContent = result.status_label || 'N/A';
-                            }
-                        }
-
-                        showOrdersToast(result.message || 'Status updated successfully.', 'success');
-                    } catch (error) {
-                        console.error('Status update error:', error);
-                        this.value = previousStatus;
-                        showOrdersToast(error.message || 'Failed to update status.', 'error');
-                    } finally {
-                        this.disabled = false;
-                        if (badge) {
-                            badge.style.opacity = '1';
+                        // Update label
+                        const label = badge.querySelector('.status-label');
+                        if (label) {
+                            label.textContent = result.status_label || 'N/A';
                         }
                     }
-                });
-            });
+
+                    showOrdersToast(result.message || 'Status updated successfully.', 'success');
+                } catch (error) {
+                    console.error('Status update error:', error);
+                    showOrdersToast(error.message || 'Failed to update status.', 'error');
+                } finally {
+                    badge.style.opacity = '1';
+                    badge.style.pointerEvents = 'auto';
+                }
+            };
         </script>
     @endpush
 

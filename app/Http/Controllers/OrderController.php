@@ -353,9 +353,9 @@ class OrderController extends Controller
         $companies = Company::where('status', 'active')->orderBy('name')->get();
         $statusTransitionService = app(StatusTransitionService::class);
         $statusFlowOptions = [
-            'ready_to_ship' => $statusTransitionService->getValidStatuses('ready_to_ship'),
-            'custom_diamond' => $statusTransitionService->getValidStatuses('custom_diamond'),
-            'custom_jewellery' => $statusTransitionService->getValidStatuses('custom_jewellery'),
+            'ready_to_ship' => array_filter($statusTransitionService->getValidStatuses('ready_to_ship'), fn($s) => !str_ends_with($s, '_cancelled')),
+            'custom_diamond' => array_filter($statusTransitionService->getValidStatuses('custom_diamond'), fn($s) => !str_ends_with($s, '_cancelled')),
+            'custom_jewellery' => array_filter($statusTransitionService->getValidStatuses('custom_jewellery'), fn($s) => !str_ends_with($s, '_cancelled')),
         ];
 
         // Mark all unread order-created notifications as read for this admin
@@ -2369,6 +2369,26 @@ class OrderController extends Controller
                     'Diamond Status' => $this->formatStatusLabel($newStatus),
                 ]);
             });
+
+            // ── Queue update notifications ─────────────────────────────────────
+            dispatch(function () use ($order, $currentStatus, $newStatus, $admin) {
+                $adminsToNotify = Admin::where('id', '!=', $admin->id)
+                    ->where(function ($q) {
+                        $q->where('is_super', true)
+                            ->orWhereHas('permissions', function ($pq) {
+                                $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                            });
+                    })->get();
+
+                if ($adminsToNotify->isNotEmpty()) {
+                    Notification::send($adminsToNotify, new OrderUpdatedNotification(
+                        $order,
+                        $admin,
+                        ['Diamond Status' => $this->formatStatusLabel($currentStatus)],
+                        ['Diamond Status' => $this->formatStatusLabel($newStatus)]
+                    ));
+                }
+            })->afterResponse();
 
             $statusUi = $this->buildOrderStatusUiPayload($newStatus);
 

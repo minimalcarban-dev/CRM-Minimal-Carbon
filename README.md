@@ -78,7 +78,9 @@ Orders have three distinct types, each with a different form and field set:
 - Order index header now surfaces compact clickable Total Orders and Total Shipped metrics beside the action buttons, while the stats strip focuses on Ready to Ship, Custom Diamond, Custom Jewellery, Tracking, and Today's Sales.
 - Order index tracking summary card showing In Transit, Out for Delivery, and Delivered shipment totals, with each count linking to its matching tracking-status filter even when those orders are already shipped
 - Searchable order list with filter by type and diamond status
-- Order index status updates now feature a clickable status badge that directly triggers the update dropdown, combining visibility and control into a single clean interaction.
+- Order index status updates now feature a premium portal-based custom dropdown that provides a theme-consistent UI with icons and smooth animations. Additionally, status changes now trigger real-time notifications to other relevant administrators, ensuring team-wide synchronization.
+- **Enhanced Dropdown Stability**: Implemented a global portal manager that prevents menu clipping and ensures dropdowns automatically close on scroll or when interacting with other elements, providing a rock-solid desktop-like experience.
+- **Notification Testing**: Verified the automated status update notification pipeline with dedicated feature tests (`tests/Feature/OrderStatusNotificationTest.php`) ensuring reliable delivery to administrators.
 - Order index shipping can now be added or edited inline through a reusable modal, without leaving the listing page
 - Manual shipping edits, manual status changes, tracker syncs, and tracking webhooks all append to the existing `audit_logs`-backed order history timeline
 
