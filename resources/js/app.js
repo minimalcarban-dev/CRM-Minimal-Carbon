@@ -23,11 +23,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Request notification permission on first user interaction
     if ("Notification" in window && Notification.permission === "default") {
-        document.body.addEventListener("click", () => {
-            if (Notification.permission === "default") {
-                Notification.requestPermission();
-            }
-        }, { once: true });
+        document.body.addEventListener(
+            "click",
+            () => {
+                if (Notification.permission === "default") {
+                    Notification.requestPermission();
+                }
+            },
+            { once: true },
+        );
     }
 
     // --- NEW GLOBAL NOTIFICATION LOGIC ---
@@ -55,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const show = () => {
             const notification = new Notification(title, {
-                icon: "/images/Luxurious-Logo.png", // Ensure this path is correct
+                icon: "/images/diamond-3.png", // Ensure this path is correct
                 ...options,
             });
             // Optional: navigate to a URL on click
@@ -92,12 +96,20 @@ document.addEventListener("DOMContentLoaded", () => {
             const nType = String(notif?.type || "");
 
             if (title.includes("cancel")) {
-                return { icon: "bi-x-circle-fill", color: "red", tag: "Cancelled" };
+                return {
+                    icon: "bi-x-circle-fill",
+                    color: "red",
+                    tag: "Cancelled",
+                };
             }
             if (title.includes("diamond") && title.includes("sold")) {
                 return { icon: "bi-gem", color: "purple", tag: "Sold Out" };
             }
-            if (nType === "App\\Notifications\\DiamondAssignedNotification" || title.includes("diamond") || title.includes("melee")) {
+            if (
+                nType === "App\\Notifications\\DiamondAssignedNotification" ||
+                title.includes("diamond") ||
+                title.includes("melee")
+            ) {
                 return { icon: "bi-gem", color: "purple", tag: "Diamond" };
             }
             if (nType === "App\\Notifications\\ChatMentionNotification") {
@@ -110,16 +122,43 @@ document.addEventListener("DOMContentLoaded", () => {
                 return { icon: "bi-download", color: "blue", tag: "Export" };
             }
             if (title.includes("reminder")) {
-                return { icon: "bi-alarm-fill", color: "amber", tag: "Reminder" };
+                return {
+                    icon: "bi-alarm-fill",
+                    color: "amber",
+                    tag: "Reminder",
+                };
             }
-            if (title.includes("updated") || title.includes("update") || nType === "App\\Notifications\\OrderUpdatedNotification") {
-                return { icon: "bi-arrow-repeat", color: "blue", tag: "Updated" };
+            if (
+                title.includes("updated") ||
+                title.includes("update") ||
+                nType === "App\\Notifications\\OrderUpdatedNotification"
+            ) {
+                return {
+                    icon: "bi-arrow-repeat",
+                    color: "blue",
+                    tag: "Updated",
+                };
             }
-            if (title.includes("created") || title.includes("new order") || nType === "App\\Notifications\\OrderCreatedNotification") {
-                return { icon: "bi-plus-circle-fill", color: "green", tag: "New Order" };
+            if (
+                title.includes("created") ||
+                title.includes("new order") ||
+                nType === "App\\Notifications\\OrderCreatedNotification"
+            ) {
+                return {
+                    icon: "bi-plus-circle-fill",
+                    color: "green",
+                    tag: "New Order",
+                };
             }
-            if (title.includes("discussion") || nType === "App\\Notifications\\OrderDiscussionNotification") {
-                return { icon: "bi-chat-left-text-fill", color: "blue", tag: "Discussion" };
+            if (
+                title.includes("discussion") ||
+                nType === "App\\Notifications\\OrderDiscussionNotification"
+            ) {
+                return {
+                    icon: "bi-chat-left-text-fill",
+                    color: "blue",
+                    tag: "Discussion",
+                };
             }
             return { icon: "bi-bell-fill", color: "gray", tag: "Alert" };
         };
@@ -160,8 +199,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     const visual = getNotificationVisual(e);
                     const safeTitle = escapeHtml(e.title || "Notification");
-                    const safeMessage = escapeHtml(e.message || "New notification");
-                    const safePreview = e.message_preview ? escapeHtml(e.message_preview) : "";
+                    const safeMessage = escapeHtml(
+                        e.message || "New notification",
+                    );
+                    const safePreview = e.message_preview
+                        ? escapeHtml(e.message_preview)
+                        : "";
 
                     item.innerHTML = `
                     <div class="notification-icon notif-icon-${visual.color}">
@@ -175,9 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         <p class="notification-message">
                             ${safeMessage}
                         </p>
-                        ${safePreview
-                            ? `<p class="notification-preview">${safePreview}</p>`
-                            : ""
+                        ${
+                            safePreview
+                                ? `<p class="notification-preview">${safePreview}</p>`
+                                : ""
                         }
                         <div class="notification-time"><i class="bi bi-clock"></i> Just now</div>
                     </div>
@@ -238,7 +282,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 4. Update Order Unread Badge for new order notifications
                 const nType = String(e.type || "");
                 if (nType === "App\\Notifications\\OrderCreatedNotification") {
-                    const orderBadge = document.getElementById("orderUnreadBadge");
+                    const orderBadge =
+                        document.getElementById("orderUnreadBadge");
                     if (orderBadge) {
                         let currentCount = parseInt(orderBadge.innerText) || 0;
                         currentCount++;
@@ -299,8 +344,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Show in-app toast
                         if (typeof window.showToast === "function") {
                             window.showToast(
-                                `New message from ${e.message.sender?.name || "someone"
-                                }`
+                                `New message from ${
+                                    e.message.sender?.name || "someone"
+                                }`,
                             );
                         }
 
@@ -350,7 +396,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Function to fetch order unread count
     const fetchOrderUnreadCount = async () => {
         try {
-            const response = await window.axios.get("/admin/orders/unread-count");
+            const response = await window.axios.get(
+                "/admin/orders/unread-count",
+            );
             const count = response.data.unread_count || 0;
 
             const orderBadge = document.getElementById("orderUnreadBadge");
@@ -396,7 +444,7 @@ window.playNotificationSound = () => {
             const beep = new Audio(
                 "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAA=",
             );
-            beep.play().catch(() => { });
-        } catch (_) { }
+            beep.play().catch(() => {});
+        } catch (_) {}
     }
 };

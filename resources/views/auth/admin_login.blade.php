@@ -147,7 +147,7 @@
 
             <div class="auth-form bg-white">
                 <div class="mb-3 text-center">
-                    <img src="{{ asset('images/Luxurious-Logo.png') }}" alt="logo" style="height:44px;object-fit:contain;"
+                    <img src="{{ asset('images/diamond-3.png') }}" alt="logo" style="height:44px;object-fit:contain;"
                         onerror="this.style.display='none'">
                 </div>
                 <h4 class="mb-1">Super Admin Login</h4>
@@ -158,13 +158,14 @@
 
                     <div class="mb-3 form-floating-icon">
                         <i class="bi bi-envelope-fill"></i>
-                        <input type="email" name="email" class="form-control" placeholder="Email" value="{{ old('email') }}"
-                            required>
+                        <input type="email" name="email" class="form-control" placeholder="Email"
+                            value="{{ old('email') }}" required>
                     </div>
 
                     <div class="mb-3 form-floating-icon position-relative">
                         <i class="bi bi-lock-fill"></i>
-                        <input id="pw" type="password" name="password" class="form-control" placeholder="Password" required>
+                        <input id="pw" type="password" name="password" class="form-control" placeholder="Password"
+                            required>
                         <button type="button" id="togglePw" class="btn btn-sm btn-light position-absolute"
                             style="right:8px;top:50%;transform:translateY(-50%);">Show</button>
                     </div>
@@ -189,19 +190,29 @@
 
 @push('scripts')
     <script>
-        (function () {
+        (function() {
             const pw = document.getElementById('pw');
             const btn = document.getElementById('togglePw');
             if (btn && pw) {
-                btn.addEventListener('click', function () {
-                    if (pw.type === 'password') { pw.type = 'text'; btn.textContent = 'Hide'; }
-                    else { pw.type = 'password'; btn.textContent = 'Show'; }
+                btn.addEventListener('click', function() {
+                    if (pw.type === 'password') {
+                        pw.type = 'text';
+                        btn.textContent = 'Hide';
+                    } else {
+                        pw.type = 'password';
+                        btn.textContent = 'Show';
+                    }
                 });
             }
             // small entrance stagger
             document.querySelectorAll('.animate-up').forEach((el) => {
-                el.style.opacity = 0; el.style.transform = 'translateY(12px)';
-                requestAnimationFrame(() => { el.style.transition = 'all .45s cubic-bezier(.2,.9,.2,1)'; el.style.opacity = 1; el.style.transform = 'none'; });
+                el.style.opacity = 0;
+                el.style.transform = 'translateY(12px)';
+                requestAnimationFrame(() => {
+                    el.style.transition = 'all .45s cubic-bezier(.2,.9,.2,1)';
+                    el.style.opacity = 1;
+                    el.style.transform = 'none';
+                });
             });
         })();
     </script>
