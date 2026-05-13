@@ -654,14 +654,6 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
         <section class="tracker-table-card product-board">
             <div class="gallery-panel">
                 <div class="hero-image" @if ($primaryImage) onclick='openImageViewer(@json($primaryImage), @json($jewelleryStock->name))' @endif>

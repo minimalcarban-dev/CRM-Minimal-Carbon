@@ -115,6 +115,12 @@ A complete messaging system for admins, embedded in the panel:
 - **Multi-Currency Invoices** — Generate professional invoices with support for different regions and currency symbols
 - **Expense & Purchase Tracking** — Centralized log of business expenses and inventory purchases
 - **Lead CRM** — Track potential client inquiries with 24-hour SLA monitoring and status pipeline
+- **Shipment Investigation Module** — Specialized workspace for identifying and resolving stalled shipments:
+    - **Bento-grid Workspace** — A modern, high-density dashboard that fits perfectly within the viewport, providing a centralized view of investigation data.
+    - **Admin Timeline** — Internal audit log and communication channel for administrators to document progress and collaborate on resolutions.
+    - **Tracking History** — Integrated view of carrier events, allowing admins to cross-reference shipment status without leaving the module.
+    - **Workflow Automation** — Permission-gated lifecycle (Pending → In Progress → Carrier Contacted → Resolved) with automated identifications for stalled packages.
+    - **Premium Aesthetics** — Optimized with hidden scrollbars, glassmorphism headers, and smooth transitions for a state-of-the-art admin experience.
 
 ### Advanced Dashboard
 
@@ -122,6 +128,7 @@ A complete messaging system for admins, embedded in the panel:
 - **Custom Date Filters** — Filter all dashboard metrics by specific date ranges
 - **Smart Alerts** — Automated notifications for overdue orders, package returns, and SLA breaches
 - **Activity Feed** — Live stream of administrative actions and system notifications
+- **Global Toast Notifications** — Modern, high-performance "Sonner-style" toast system (using Toastify-js) providing instant feedback for CRUD actions, errors, and real-time alerts across the entire platform. Includes custom styling for success, error, and warning states with a premium desktop-like aesthetic.
 
 ### Product Attribute Management
 

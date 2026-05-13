@@ -1083,25 +1083,10 @@
 
                 // Toast notification helper
                 function showToastNotification(message, type) {
+                    let toastType = type;
+                    if (toastType === 'danger') toastType = 'error';
                     if (typeof showToast === 'function') {
-                        showToast(message);
-                    } else {
-                        // Fallback toast
-                        var toast = document.createElement('div');
-                        toast.style.cssText = 'position:fixed;top:20px;right:20px;background:' +
-                            (type === 'success' ? '#10b981' : '#6366f1') +
-                            ';color:white;padding:1rem 1.5rem;border-radius:12px;' +
-                            'box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;' +
-                            'font-weight:600;animation:slideIn 0.3s ease;';
-                        toast.textContent = message;
-                        document.body.appendChild(toast);
-
-                        setTimeout(function() {
-                            toast.style.animation = 'slideOut 0.3s ease';
-                            setTimeout(function() {
-                                document.body.removeChild(toast);
-                            }, 300);
-                        }, 3000);
+                        showToast(message, 3000, toastType);
                     }
                 }
 

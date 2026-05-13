@@ -934,19 +934,12 @@
                             if (response.ok && data.success) {
                                 broadcastMeleeStockRefresh(form, data, formData);
 
-                                if (window.Swal) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success!',
-                                        text: data.message,
-                                        timer: 1800,
-                                        showConfirmButton: false
-                                    }).then(() => {
-                                        window.location.href = data.redirect || '/admin/orders';
-                                    });
-                                } else {
-                                    window.location.href = data.redirect || '/admin/orders';
+                                if (typeof showToast === 'function') {
+                                    showToast(data.message, 3000, 'success');
                                 }
+                                setTimeout(() => {
+                                    window.location.href = data.redirect || '/admin/orders';
+                                }, 1000);
                                 return;
                             }
 

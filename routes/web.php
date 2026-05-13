@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClosureTypeController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FactoryController;
 use App\Http\Controllers\GoldTrackingController;
+use App\Http\Controllers\InvestigationController;
 use App\Http\Controllers\JewelleryCalculatorController;
+use App\Http\Controllers\JewelleryPriceCalculatorController;
 use App\Http\Controllers\JewelleryStockController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MeleeCategoryController;
@@ -13,6 +16,7 @@ use App\Http\Controllers\MeleeDiamondController;
 use App\Http\Controllers\MetalTypeController;
 use App\Http\Controllers\MetaSettingsController;
 use App\Http\Controllers\MetaWebhookController;
+use App\Http\Controllers\OrderDraftController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\RingSizeController;
@@ -255,35 +259,35 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::prefix('orders/drafts')->name('orders.drafts.')->middleware('admin.permission:orders.create')->group(
         function () {
             // Drafts listing page
-            Route::get('/', [\App\Http\Controllers\OrderDraftController::class, 'index'])
+            Route::get('/', [OrderDraftController::class, 'index'])
                 ->name('index');
 
             // AJAX: Auto-save draft
-            Route::post('/save', [\App\Http\Controllers\OrderDraftController::class, 'save'])
+            Route::post('/save', [OrderDraftController::class, 'save'])
                 ->name('save');
 
             // AJAX: Get draft count for badge
-            Route::get('/count', [\App\Http\Controllers\OrderDraftController::class, 'count'])
+            Route::get('/count', [OrderDraftController::class, 'count'])
                 ->name('count');
 
             // AJAX: Get current admin's drafts for notification popup
-            Route::get('/my-drafts', [\App\Http\Controllers\OrderDraftController::class, 'myDrafts'])
+            Route::get('/my-drafts', [OrderDraftController::class, 'myDrafts'])
                 ->name('my-drafts');
 
             // Resume editing a draft
-            Route::get('/{draft}/resume', [\App\Http\Controllers\OrderDraftController::class, 'resume'])
+            Route::get('/{draft}/resume', [OrderDraftController::class, 'resume'])
                 ->name('resume');
 
             // Preview draft
-            Route::get('/{draft}', [\App\Http\Controllers\OrderDraftController::class, 'show'])
+            Route::get('/{draft}', [OrderDraftController::class, 'show'])
                 ->name('show');
 
             // Delete draft
-            Route::delete('/{draft}', [\App\Http\Controllers\OrderDraftController::class, 'destroy'])
+            Route::delete('/{draft}', [OrderDraftController::class, 'destroy'])
                 ->name('destroy');
 
             // AJAX: Delete draft
-            Route::delete('/{draft}/ajax', [\App\Http\Controllers\OrderDraftController::class, 'ajaxDestroy'])
+            Route::delete('/{draft}/ajax', [OrderDraftController::class, 'ajaxDestroy'])
                 ->name('ajax-destroy');
         }
     );
@@ -324,6 +328,28 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     Route::post('orders/{order}/sync-tracking', [OrderController::class, 'syncTracking'])
         ->name('orders.sync-tracking')
         ->middleware('admin.permission:orders.edit');
+    Route::get('orders/{order}/shipping-data', [OrderController::class, 'getShipping'])
+        ->name('orders.get-shipping')
+        ->middleware('admin.permission:orders.view');
+
+    // ─────────────────────────────────────────────────────────────
+    // Shipment Investigations
+    // ─────────────────────────────────────────────────────────────
+    Route::get('investigations', [InvestigationController::class, 'index'])
+        ->name('investigations.index')
+        ->middleware('admin.permission:investigations.view');
+    Route::get('investigations/{investigation}/fragment', [InvestigationController::class, 'fragment'])
+        ->name('investigations.fragment')
+        ->middleware('admin.permission:investigations.view');
+    Route::post('orders/{order}/investigation', [InvestigationController::class, 'start'])
+        ->name('investigations.start')
+        ->middleware('admin.permission:investigations.edit');
+    Route::post('investigations/{investigation}/notes', [InvestigationController::class, 'addNote'])
+        ->name('investigations.add-note')
+        ->middleware('admin.permission:investigations.edit');
+    Route::post('investigations/{investigation}/status', [InvestigationController::class, 'updateStatus'])
+        ->name('investigations.update-status')
+        ->middleware('admin.permission:investigations.edit');
 
     // ─────────────────────────────────────────────────────────────
     // VGL Integration — Push order data to VGL for certificate creation
@@ -335,19 +361,19 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // ─────────────────────────────────────────────────────────────
     // Client Dashboard Module
     // ─────────────────────────────────────────────────────────────
-    Route::get('clients', [\App\Http\Controllers\ClientController::class, 'index'])
+    Route::get('clients', [ClientController::class, 'index'])
         ->name('clients.index')
         ->middleware('admin.permission:clients.view');
-    Route::get('clients/data', [\App\Http\Controllers\ClientController::class, 'data'])
+    Route::get('clients/data', [ClientController::class, 'data'])
         ->name('clients.data')
         ->middleware('admin.permission:clients.view');
-    Route::get('clients/export', [\App\Http\Controllers\ClientController::class, 'export'])
+    Route::get('clients/export', [ClientController::class, 'export'])
         ->name('clients.export')
         ->middleware('admin.permission:clients.export');
-    Route::get('clients/search', [\App\Http\Controllers\ClientController::class, 'search'])
+    Route::get('clients/search', [ClientController::class, 'search'])
         ->name('clients.search')
         ->middleware('admin.permission:orders.create');
-    Route::get('clients/{client}', [\App\Http\Controllers\ClientController::class, 'show'])
+    Route::get('clients/{client}', [ClientController::class, 'show'])
         ->name('clients.show')
         ->middleware('admin.permission:clients.view');
 
@@ -1041,6 +1067,12 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
             ->name('destroy')
             ->middleware('admin.permission:jewellery_stock.delete');
     });
+
+    // ─────────────────────────────────────────────────────────────
+    // Jewellery Price Calculator Tool
+    // ─────────────────────────────────────────────────────────────
+    Route::get('/jewellery-price-calculator', [JewelleryPriceCalculatorController::class, 'index'])
+        ->name('jewellery-price-calculator.index');
 
     // ─────────────────────────────────────────────────────────────
     // Package Handover & Return Management System

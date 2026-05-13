@@ -742,8 +742,8 @@
         }
 
         /* ==========================================
-                   RESPONSIVE STYLES - ALL DEVICES
-                   ========================================== */
+                       RESPONSIVE STYLES - ALL DEVICES
+                       ========================================== */
 
         /* Tablet and below (1024px) */
         @media (max-width: 1024px) {
@@ -1840,8 +1840,7 @@
                                                         </td>
                                                         <td>
                                                             @if ($diamond->available_pieces != 0)
-                                                                <span
-                                                                    data-stock-badge="1"
+                                                                <span data-stock-badge="1"
                                                                     class="badge {{ $diamond->available_pieces > 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' }} border px-3 py-2 rounded-pill"
                                                                     style="cursor:pointer"
                                                                     onclick="openHistoryModal({{ $diamond->id }})"
@@ -1849,8 +1848,7 @@
                                                                     {{ $diamond->available_pieces }} pcs
                                                                 </span>
                                                             @else
-                                                                <span
-                                                                    data-stock-badge="1"
+                                                                <span data-stock-badge="1"
                                                                     class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill"
                                                                     style="cursor:pointer"
                                                                     onclick="openHistoryModal({{ $diamond->id }})"
@@ -2550,23 +2548,12 @@
 
         // Simple toast helper
         function showMeleeToast(msg, type = 'info') {
-            const container = document.getElementById('meleeToastContainer');
-            const bgClass = type === 'success' ? 'bg-success' : type === 'danger' ? 'bg-danger' : type === 'warning' ?
-                'bg-warning text-dark' : 'bg-primary';
-            const iconClass = type === 'success' ? 'bi-check-circle' : type === 'danger' ? 'bi-exclamation-triangle' :
-                type === 'warning' ? 'bi-exclamation-circle' : 'bi-info-circle';
-
-            const toastEl = document.createElement('div');
-            toastEl.className = `toast show align-items-center text-white ${bgClass} border-0 mb-2`;
-            toastEl.setAttribute('role', 'alert');
-            toastEl.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body"><i class="bi ${iconClass} me-2"></i>${msg}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
-                </div>
-            `;
-            container.appendChild(toastEl);
-            setTimeout(() => toastEl.remove(), 4000);
+            let toastType = type;
+            if (toastType === 'danger') toastType = 'error';
+            if (typeof showToast === 'function') {
+                showToast(msg, 4000, toastType);
+                return;
+            }
         }
 
         // Transaction Modal logic
@@ -2760,19 +2747,19 @@
                             </div>
 
                             ${data.diamond_sku ? `
-                                    <div class="mb-3">
-                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
-                                        <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
-                                    </div>` : ''}
+                                        <div class="mb-3">
+                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Diamond SKU</label>
+                                            <code class="fs-6 text-primary fw-bold">${data.diamond_sku}</code>
+                                        </div>` : ''}
 
                             ${data.melee_details ? `
-                                    <div class="p-3 border rounded bg-light mb-3">
-                                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span>${data.melee_details.name}</span>
-                                            <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
-                                        </div>
-                                    </div>` : ''}
+                                        <div class="p-3 border rounded bg-light mb-3">
+                                            <label class="text-muted small text-uppercase fw-bold d-block mb-1">Melee Component</label>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>${data.melee_details.name}</span>
+                                                <span class="fw-bold text-dark">${data.melee_details.pieces} pcs / ${data.melee_details.carat} ct</span>
+                                            </div>
+                                        </div>` : ''}
 
                             <div class="row pt-3 border-top">
                                 <div class="col-6">

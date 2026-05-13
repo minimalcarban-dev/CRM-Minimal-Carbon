@@ -69,7 +69,7 @@ class OrderController extends Controller
 
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
-        $baseQuery = Order::query()->with(['company', 'creator', 'factoryRelation']);
+        $baseQuery = Order::query()->with(['company', 'creator', 'factoryRelation', 'investigation']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -1729,6 +1729,13 @@ class OrderController extends Controller
         $channel->users()->syncWithoutDetaching($membersPayload);
     }
 
+    public function getShipping(Order $order)
+    {
+        return response()->json([
+            'order' => $this->buildOrderShippingPayload($order->load('investigation'))
+        ]);
+    }
+
     /**
      * Sync tracking data from carrier website
      */
@@ -2586,6 +2593,7 @@ class OrderController extends Controller
             'dispatch_date' => optional($order->dispatch_date)->format('Y-m-d'),
             'dispatch_date_label' => optional($order->dispatch_date)->format('d M Y'),
             'has_shipping_details' => filled($order->shipping_company_name) || filled($order->tracking_number) || filled($order->tracking_url) || filled($order->dispatch_date),
+            'investigation_status' => $order->investigation ? $order->investigation->investigation_status : null,
         ];
     }
 

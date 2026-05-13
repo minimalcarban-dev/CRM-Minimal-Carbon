@@ -559,7 +559,8 @@
                         <i class="bi bi-shield-lock"></i>
                         Security & Device Management
                     </h1>
-                    <p class="page-subtitle">Manage trusted device access with session cookies, device tokens, and audit logs</p>
+                    <p class="page-subtitle">Manage trusted device access with session cookies, device tokens, and audit
+                        logs</p>
                 </div>
             </div>
         </div>
@@ -589,7 +590,7 @@
                 </div>
             </div>
 
-            @if(!$ipRestrictionEnabled)
+            @if (!$ipRestrictionEnabled)
                 <div class="config-alert info" style="margin-top: 1.25rem;">
                     <i class="bi bi-info-circle-fill"></i>
                     <div class="config-alert-content">
@@ -604,7 +605,8 @@
                     <div class="config-alert-content">
                         <h6>Trusted Device Access is Active</h6>
                         <p>Only browsers with a valid trusted device token can access the site. If locked out, use
-                            <code>php artisan device:approve {email}</code> via SSH.</p>
+                            <code>php artisan device:approve {email}</code> via SSH.
+                        </p>
                     </div>
                 </div>
             @endif
@@ -661,8 +663,8 @@
                 </div>
                 <div class="form-group">
                     <label for="label">Label <small style="color: var(--gray);">(optional)</small></label>
-                    <input type="text" class="form-control" id="label" name="label" placeholder="e.g., Office, Home, VPN"
-                        value="{{ old('label') }}">
+                    <input type="text" class="form-control" id="label" name="label"
+                        placeholder="e.g., Office, Home, VPN" value="{{ old('label') }}">
                 </div>
                 <button type="submit" class="btn-primary-custom" style="height: 48px; margin-bottom: 0;">
                     <i class="bi bi-plus-lg"></i> Add IP
@@ -670,7 +672,7 @@
             </form>
 
             <!-- IP Table -->
-            @if($allowedIps->count() > 0)
+            @if ($allowedIps->count() > 0)
                 <div style="overflow-x: auto;">
                     <table class="ip-table">
                         <thead>
@@ -685,15 +687,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($allowedIps as $ip)
+                            @foreach ($allowedIps as $ip)
                                 <tr id="ipRow{{ $ip->id }}">
                                     <td>
                                         <strong>{{ $ip->label ?? '—' }}</strong>
-                                        @if($ip->ip_address === $currentIp)
+                                        @if ($ip->ip_address === $currentIp)
                                             <span
                                                 style="background: rgba(99, 102, 241, 0.1); color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem;">YOU</span>
                                         @endif
-                                        @if($ip->device_token)
+                                        @if ($ip->device_token)
                                             <span
                                                 style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.25rem;">
                                                 <i class="bi bi-shield-check"></i> DEVICE
@@ -702,9 +704,10 @@
                                     </td>
                                     <td class="ip-address-cell">{{ $ip->ip_address }}</td>
                                     <td style="font-size: 0.85rem;">
-                                        @if($ip->user_agent)
+                                        @if ($ip->user_agent)
                                             <div style="display:flex; align-items:center; gap: 0.4rem;">
-                                                <i class="bi bi-globe2" style="color: var(--info); font-size: 0.9rem;"></i>
+                                                <i class="bi bi-globe2"
+                                                    style="color: var(--info); font-size: 0.9rem;"></i>
                                                 {{ \App\Models\AllowedIp::parseBrowserName($ip->user_agent) }}
                                             </div>
                                         @else
@@ -712,9 +715,10 @@
                                         @endif
                                     </td>
                                     <td style="font-size: 0.85rem;">
-                                        @if($ip->city || $ip->country)
+                                        @if ($ip->city || $ip->country)
                                             <div style="display:flex; align-items:center; gap: 0.4rem;">
-                                                <i class="bi bi-geo-alt" style="color: var(--danger); font-size: 0.9rem;"></i>
+                                                <i class="bi bi-geo-alt"
+                                                    style="color: var(--danger); font-size: 0.9rem;"></i>
                                                 {{ implode(', ', array_filter([$ip->city, $ip->country])) }}
                                             </div>
                                         @else
@@ -722,7 +726,7 @@
                                         @endif
                                     </td>
                                     <td style="font-size: 0.8rem; color: var(--gray);">
-                                        @if($ip->last_used_at)
+                                        @if ($ip->last_used_at)
                                             {{ $ip->last_used_at->diffForHumans() }}
                                         @else
                                             Never
@@ -737,12 +741,13 @@
                                     </td>
                                     <td>
                                         <div class="action-row">
-                                            <button type="button" class="btn-success-sm" onclick="toggleIp({{ $ip->id }})"
-                                                title="Toggle Status">
+                                            <button type="button" class="btn-success-sm"
+                                                onclick="toggleIp({{ $ip->id }})" title="Toggle Status">
                                                 <i class="bi bi-{{ $ip->is_active ? 'pause' : 'play' }}"></i>
                                             </button>
                                             <button type="button" class="btn-danger-custom"
-                                                onclick="deleteIp({{ $ip->id }}, '{{ $ip->ip_address }}')" title="Remove Device">
+                                                onclick="deleteIp({{ $ip->id }}, '{{ $ip->ip_address }}')"
+                                                title="Remove Device">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -770,7 +775,7 @@
                     Access Requests
                 </h2>
                 <span style="font-size: 0.85rem; color: var(--gray);">
-                    @if($pendingRequestCount > 0)
+                    @if ($pendingRequestCount > 0)
                         <span class="status-badge restriction-on" style="animation: pulse 2s infinite;">
                             <i class="bi bi-bell-fill"></i>
                             {{ $pendingRequestCount }} pending
@@ -781,7 +786,7 @@
                 </span>
             </div>
 
-            @if($accessRequests->count() > 0)
+            @if ($accessRequests->count() > 0)
                 <div style="overflow-x: auto;">
                     <table class="ip-table">
                         <thead>
@@ -795,27 +800,30 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($accessRequests as $req)
+                            @foreach ($accessRequests as $req)
                                 <tr id="reqRow{{ $req->id }}">
                                     <td>
                                         <strong>{{ $req->name ?? 'Unknown' }}</strong>
-                                        <div class="ip-address-cell" style="font-size: 0.8rem;">{{ $req->ip_address }}</div>
-                                        @if($req->isp)
+                                        <div class="ip-address-cell" style="font-size: 0.8rem;">{{ $req->ip_address }}
+                                        </div>
+                                        @if ($req->isp)
                                             <div style="font-size: 0.7rem; color: var(--gray);">{{ $req->isp }}</div>
                                         @endif
                                     </td>
                                     <td>
                                         <div style="font-size: 0.85rem;">
-                                            @if($req->city || $req->country)
-                                                <i class="bi bi-geo-alt" style="color: var(--danger); margin-right:2px;"></i>
+                                            @if ($req->city || $req->country)
+                                                <i class="bi bi-geo-alt"
+                                                    style="color: var(--danger); margin-right:2px;"></i>
                                                 {{ $req->location }}
                                             @else
                                                 <span style="color: var(--gray);">—</span>
                                             @endif
                                         </div>
-                                        @if($req->latitude && $req->longitude)
+                                        @if ($req->latitude && $req->longitude)
                                             <div style="font-size: 0.7rem; color: var(--gray);">
-                                                {{ number_format($req->latitude, 4) }}, {{ number_format($req->longitude, 4) }}
+                                                {{ number_format($req->latitude, 4) }},
+                                                {{ number_format($req->longitude, 4) }}
                                             </div>
                                         @endif
                                     </td>
@@ -823,8 +831,9 @@
                                         {{ $req->reason ?? '—' }}
                                     </td>
                                     <td>
-                                        @if($req->status === 'pending')
-                                            <span class="status-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                        @if ($req->status === 'pending')
+                                            <span class="status-badge"
+                                                style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
                                                 <i class="bi bi-clock"></i> Pending
                                             </span>
                                         @elseif($req->status === 'approved')
@@ -841,7 +850,7 @@
                                         {{ $req->created_at->format('d M Y, h:i A') }}
                                     </td>
                                     <td>
-                                        @if($req->status === 'pending')
+                                        @if ($req->status === 'pending')
                                             <div class="action-row">
                                                 <button type="button" class="btn-success-sm"
                                                     onclick="approveRequest({{ $req->id }}, '{{ $req->ip_address }}')"
@@ -849,7 +858,8 @@
                                                     <i class="bi bi-check-lg"></i>
                                                 </button>
                                                 <button type="button" class="btn-danger-custom"
-                                                    onclick="rejectRequest({{ $req->id }}, '{{ $req->ip_address }}')" title="Reject">
+                                                    onclick="rejectRequest({{ $req->id }}, '{{ $req->ip_address }}')"
+                                                    title="Reject">
                                                     <i class="bi bi-x-lg"></i>
                                                 </button>
                                             </div>
@@ -868,7 +878,8 @@
                 <div class="empty-state">
                     <i class="bi bi-person-badge"></i>
                     <p>No access requests</p>
-                    <p style="font-size: 0.85rem;">When blocked users click "Request Access" on the 403 page, their requests
+                    <p style="font-size: 0.85rem;">When blocked users click "Request Access" on the 403 page, their
+                        requests
                         will appear here</p>
                 </div>
             @endif
@@ -886,15 +897,16 @@
                     <span style="font-size: 0.85rem; color: var(--gray);">
                         {{ $accessLogs->count() }} entries
                     </span>
-                    @if($accessLogs->count() > 0)
-                        <button type="button" class="btn-danger-custom" onclick="clearLogs()" style="font-size: 0.75rem;">
+                    @if ($accessLogs->count() > 0)
+                        <button type="button" class="btn-danger-custom" onclick="clearLogs()"
+                            style="font-size: 0.75rem;">
                             <i class="bi bi-trash"></i> Clear All
                         </button>
                     @endif
                 </div>
             </div>
 
-            @if($accessLogs->count() > 0)
+            @if ($accessLogs->count() > 0)
                 <div style="overflow-x: auto;">
                     <table class="ip-table">
                         <thead>
@@ -907,21 +919,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($accessLogs as $log)
+                            @foreach ($accessLogs as $log)
                                 <tr>
                                     <td class="ip-address-cell">{{ $log->ip_address }}</td>
                                     <td>
                                         <div style="font-size: 0.85rem;">
-                                            @if($log->city || $log->country)
-                                                <i class="bi bi-geo-alt" style="color: var(--danger); margin-right:2px;"></i>
+                                            @if ($log->city || $log->country)
+                                                <i class="bi bi-geo-alt"
+                                                    style="color: var(--danger); margin-right:2px;"></i>
                                                 {{ $log->location }}
                                             @else
                                                 <span style="color: var(--gray);">—</span>
                                             @endif
                                         </div>
-                                        @if($log->latitude && $log->longitude)
+                                        @if ($log->latitude && $log->longitude)
                                             <div style="font-size: 0.7rem; color: var(--gray);">
-                                                {{ number_format($log->latitude, 4) }}°, {{ number_format($log->longitude, 4) }}°
+                                                {{ number_format($log->latitude, 4) }}°,
+                                                {{ number_format($log->longitude, 4) }}°
                                             </div>
                                         @endif
                                     </td>
@@ -942,7 +956,8 @@
                 <div class="empty-state">
                     <i class="bi bi-shield-check"></i>
                     <p>No blocked attempts recorded</p>
-                    <p style="font-size: 0.85rem;">Blocked access attempts will appear here when trusted device access is active</p>
+                    <p style="font-size: 0.85rem;">Blocked access attempts will appear here when trusted device access is
+                        active</p>
                 </div>
             @endif
         </div>
@@ -955,11 +970,11 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
         // Toggle IP Restriction
-        document.getElementById('ipRestrictionToggle').addEventListener('change', async function () {
+        document.getElementById('ipRestrictionToggle').addEventListener('change', async function() {
             const isChecked = this.checked;
 
             try {
-                const response = await fetch('{{ route("settings.security.ip-restriction.toggle") }}', {
+                const response = await fetch('{{ route('settings.security.ip-restriction.toggle') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -973,7 +988,8 @@
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: data.enabled ? 'Trusted Device Access Enabled' : 'Trusted Device Access Disabled',
+                        title: data.enabled ? 'Trusted Device Access Enabled' :
+                            'Trusted Device Access Disabled',
                         text: data.message,
                         confirmButtonColor: '#6366f1',
                     }).then(() => {
@@ -1104,14 +1120,15 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const response = await fetch(`{{ url('admin/settings/security/request') }}/${id}/approve`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                            },
-                        });
+                        const response = await fetch(
+                            `{{ url('admin/settings/security/request') }}/${id}/approve`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Accept': 'application/json',
+                                },
+                            });
                         const data = await response.json();
                         if (data.success) {
                             Swal.fire({
@@ -1122,7 +1139,12 @@
                             }).then(() => window.location.reload());
                         }
                     } catch (error) {
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to approve request.', confirmButtonColor: '#6366f1' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to approve request.',
+                            confirmButtonColor: '#6366f1'
+                        });
                     }
                 }
             });
@@ -1141,14 +1163,15 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const response = await fetch(`{{ url('admin/settings/security/request') }}/${id}/reject`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                            },
-                        });
+                        const response = await fetch(
+                            `{{ url('admin/settings/security/request') }}/${id}/reject`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Accept': 'application/json',
+                                },
+                            });
                         const data = await response.json();
                         if (data.success) {
                             Swal.fire({
@@ -1159,7 +1182,12 @@
                             }).then(() => window.location.reload());
                         }
                     } catch (error) {
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to reject request.', confirmButtonColor: '#6366f1' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to reject request.',
+                            confirmButtonColor: '#6366f1'
+                        });
                     }
                 }
             });
@@ -1176,27 +1204,31 @@
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#64748b',
             }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const response = await fetch('{{ route("settings.security.logs.clear") }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                            },
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Logs Cleared',
-                                text: data.message,
-                                confirmButtonColor: '#6366f1',
-                            }).then(() => window.location.reload());
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch('{{ route('settings.security.logs.clear') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Accept': 'application/json',
+                                },
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                if (typeof showToast === 'function') {
+                                    showToast(data.message, 3000, 'success');
+                                }
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                if (typeof showToast === 'function') {}
+                                showToast(data.message || 'Failed to clear logs.', 4000, 'error');
+                            }
                         }
                     } catch (error) {
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to clear logs.', confirmButtonColor: '#6366f1' });
+                        if (typeof showToast === 'function') {
+                            showToast('Failed to clear logs.', 4000, 'error');
+                        }
                     }
                 }
             });

@@ -34,18 +34,6 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="alert-card success">
-                <div class="alert-icon">
-                    <i class="bi bi-check-circle-fill"></i>
-                </div>
-                <div class="alert-content">
-                    <div class="alert-title">Success</div>
-                    <div class="alert-message">{{ session('success') }}</div>
-                </div>
-            </div>
-        @endif
-
         @if (session('error'))
             <div class="alert-card danger">
                 <div class="alert-icon">

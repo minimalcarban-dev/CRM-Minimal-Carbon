@@ -961,7 +961,9 @@
                 const shortage = Math.max(0, requested - available);
                 const lotName = this.escapeHtml(entry.name || 'Selected Melee Lot');
 
-                if (typeof window.Swal !== 'undefined') {
+                if (typeof showToast === 'function') {
+                    showToast(`<strong>Stock Limit Crossed</strong><br>📦 ${lotName}<br>Available: ${available} pcs<br>Requested: ${requested} pcs<br>Shortage: ${shortage} pcs`, 6000, 'warning');
+                } else if (typeof window.Swal !== 'undefined') {
                     window.Swal.fire({
                         icon: 'warning',
                         title: 'Stock Limit Crossed',

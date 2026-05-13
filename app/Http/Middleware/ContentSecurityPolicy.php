@@ -21,7 +21,7 @@ class ContentSecurityPolicy
         // if ($isLocal) {
         //     $scriptSrc .= " 'unsafe-eval'";
         // }
-        $styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com";
+        $styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com";
         $connectSrc = "'self' https://* wss:";
 
         if ($viteUrl) {

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toast Notification Mockup (Sonner Style)</title>
+    
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+    <!-- Bootstrap Icons (used in the project) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8fafc;
+            padding: 2rem;
+            color: #1e293b;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success { background: #10b981; color: white; }
+        .btn-error { background: #ef4444; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* --- Custom Sonner-Style Toast CSS --- */
+        .toastify {
+            padding: 12px 16px;
+            color: #1e293b;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            max-width: 350px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            cursor: default;
+        }
+
+        /* Override default toastify background */
+        .toastify.success-toast { background: #ffffff; }
+        .toastify.error-toast { background: #ffffff; }
+        .toastify.warning-toast { background: #ffffff; }
+
+        /* Icons */
+        .toastify-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            margin-top: -2px; /* align with first line of text */
+        }
+
+        .success-toast .toastify-icon { color: #10b981; }
+        .error-toast .toastify-icon { color: #ef4444; }
+        .warning-toast .toastify-icon { color: #f59e0b; }
+
+        /* Text Content */
+        .toastify-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toastify-title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .toastify-message {
+            color: #64748b;
+        }
+
+        /* Close Button styling applied to Toastify's injected element */
+        .toast-close {
+            opacity: 0;
+            color: #94a3b8;
+            margin-left: auto;
+            cursor: pointer;
+            padding: 2px;
+            font-size: 1rem;
+            transition: opacity 0.2s, color 0.2s;
+            text-decoration: none;
+        }
+        
+        .toastify:hover .toast-close {
+            opacity: 1;
+        }
+
+        .toast-close:hover {
+            color: #0f172a;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Toast Mockup</h1>
+    <p>Click the buttons below to test the Sonner-style toasts. They will appear in the top-right corner.</p>
+
+    <div class="controls">
+        <button class="btn-success" onclick="showToast('success', 'Success!', 'The client record has been successfully updated.')">Test Success</button>
+        <button class="btn-error" onclick="showToast('error', 'Error!', 'Failed to save the record. Please check the form.')">Test Error</button>
+        <button class="btn-warning" onclick="showToast('warning', 'Warning!', 'Your session is about to expire.')">Test Warning</button>
+    </div>
+
+    <!-- Toastify JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        function showToast(type, title, message) {
+            let iconClass = '';
+            
+            if (type === 'success') {
+                iconClass = 'bi-check-circle-fill';
+            } else if (type === 'warning') {
+                iconClass = 'bi-exclamation-triangle-fill';
+            } else {
+                iconClass = 'bi-x-circle-fill';
+            }
+
+            // HTML content for the toast
+            const toastHTML = `
+                <i class="bi ${iconClass} toastify-icon"></i>
+                <div class="toastify-content">
+                    <span class="toastify-title">${title}</span>
+                    <span class="toastify-message">${message}</span>
+                </div>
+            `;
+
+            Toastify({
+                text: toastHTML,
+                escapeMarkup: false, // Allow HTML
+                duration: 4000,
+                gravity: "top", // top or bottom
+                position: "right", // left, center or right
+                className: `${type}-toast`, // Add custom class for styling based on type
+                close: true, // Show close icon
+                style: {
+                    background: "white", 
+                    color: "inherit",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
+                },
+                onClick: function(){} // Callback after click
+            }).showToast();
+        }
+    </script>
+</body>
+</html>

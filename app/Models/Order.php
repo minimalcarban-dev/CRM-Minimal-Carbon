@@ -161,6 +161,11 @@ class Order extends Model
         return $this->hasMany(OrderPayment::class)->orderByDesc('received_at')->orderByDesc('id');
     }
 
+    public function investigation()
+    {
+        return $this->hasOne(OrderInvestigation::class);
+    }
+
     public function getPaymentStatusLabelAttribute(): string
     {
         $summary = $this->resolvePaymentSummary(null, null, null, false);

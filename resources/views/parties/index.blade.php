@@ -29,14 +29,6 @@
             </div>
         </div>
 
-        <!-- Success Alert -->
-        @if (session('success'))
-            <div class="success-alert">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
         <!-- Search and Filter Section -->
         <div class="search-filter-section">
             <form method="GET" action="{{ route('parties.index') }}" class="search-form">

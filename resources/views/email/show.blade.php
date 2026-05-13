@@ -663,19 +663,13 @@
 
                             const data = await response.json();
                             if (data.success) {
-                                Swal.fire({
-                                    title: 'Draft Saved',
-                                    text: 'Your message has been saved as a draft.',
-                                    icon: 'success',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
+                                showToast('Your message has been saved as a draft.', 3000, 'success');
                             } else {
-                                Swal.fire('Error', 'Error saving draft: ' + data.message, 'error');
+                                showToast('Error saving draft: ' + data.message, 4000, 'error');
                             }
                         } catch (error) {
                             console.error('Draft error:', error);
-                            Swal.fire('Error', 'Failed to save draft', 'error');
+                            showToast('Failed to save draft', 4000, 'error');
                         } finally {
                             this.disabled = false;
                             this.innerHTML = originalContent;
