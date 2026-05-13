@@ -11,8 +11,8 @@ class SettingsPermissionSeeder extends Seeder
     {
         $permissions = [
             [
-                'name' => 'settings.manage',
-                'slug' => 'settings-manage',
+                'name' => 'Manage Settings',
+                'slug' => 'settings.manage',
                 'category' => 'settings',
                 'description' => 'Access and manage application settings including IP security',
             ],

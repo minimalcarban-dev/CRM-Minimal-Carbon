@@ -1628,16 +1628,14 @@
             }
 
             function showAlert(type, message) {
-                if (!flash) {
+                // Forward local alert calls to the global toast system
+                let toastType = type;
+                if (type === 'danger') toastType = 'error';
+                
+                if (typeof showToast === 'function') {
+                    showToast(message, 4000, toastType);
                     return;
                 }
-
-                flash.innerHTML = `
-                    <div class="alert alert-${type} alert-dismissible fade show mb-0" role="alert">
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `;
             }
 
             function clearAlert() {

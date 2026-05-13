@@ -65,13 +65,7 @@
             </form>
         </div>
 
-        <!-- Success Alert -->
-        @if (session('success'))
-            <div class="success-alert">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
+
 
         <!-- Clients Table Card -->
         <div class="table-card">

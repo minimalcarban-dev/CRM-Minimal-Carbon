@@ -100,3 +100,35 @@ it('uses net_weight_grams as default listing weight', function () {
     expect($default['net_weight_grams'])->toBe(5.1)
         ->and($default['listing_price'])->toBeGreaterThan(0);
 });
+
+it('adds extra charge for 935 Argentium silver', function () {
+    $admin = new Admin();
+    $admin->is_super = true;
+    
+    // Set the env variable for the test
+    putenv('SILVER_ARGENTIUM_EXTRA=30');
+
+    $rows = jewelleryPricingService()->calculateMatrix([
+        'silver_935__none' => [
+            'net_weight_grams' => 10,
+            'stone_cost' => 0,
+            'extra_cost' => 0,
+            'labor_rate_usd_per_gram' => 0,
+            'commission_percent' => 0,
+            'profit_percent' => 0,
+            'sales_markup_percent' => 0,
+        ],
+    ], $admin);
+    
+    $argentium = collect($rows)->firstWhere('material_code', 'silver_935');
+    
+    // base_rate for silver_935 is 2 * (93.5/100) = 1.87
+    // material_value = 10 * 1.87 = 18.7
+    // subtotal = 18.7 + 0 (labor) + 0 (stone) + 0 (extra) + 30 (argentium extra) = 48.7
+    
+    expect($argentium['material_value'])->toBe(18.7)
+        ->and($argentium['subtotal_cost'])->toBe(48.7);
+        
+    // Clean up
+    putenv('SILVER_ARGENTIUM_EXTRA');
+});

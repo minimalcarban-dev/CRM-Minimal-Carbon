@@ -173,10 +173,10 @@ class PermissionSeeder extends Seeder
             ['name' => 'Delete Factories', 'slug' => 'factories.delete', 'description' => 'Delete factories', 'category' => 'factories'],
 
             // Gold Tracking
-            ['name' => 'View Gold Tracking', 'slug' => 'gold-tracking.view', 'description' => 'View gold stock and tracking', 'category' => 'gold_tracking'],
-            ['name' => 'Create Gold Transaction', 'slug' => 'gold-tracking.create', 'description' => 'Create gold purchases or distributions', 'category' => 'gold_tracking'],
-            ['name' => 'Edit Gold Transaction', 'slug' => 'gold-tracking.edit', 'description' => 'Edit gold transactions', 'category' => 'gold_tracking'],
-            ['name' => 'Delete Gold Transaction', 'slug' => 'gold-tracking.delete', 'description' => 'Delete gold transactions', 'category' => 'gold_tracking'],
+            ['name' => 'View Gold Tracking', 'slug' => 'gold_tracking.view', 'description' => 'View gold stock and tracking', 'category' => 'gold_tracking'],
+            ['name' => 'Create Gold Transaction', 'slug' => 'gold_tracking.create', 'description' => 'Create gold purchases or distributions', 'category' => 'gold_tracking'],
+            ['name' => 'Edit Gold Transaction', 'slug' => 'gold_tracking.edit', 'description' => 'Edit gold transactions', 'category' => 'gold_tracking'],
+            ['name' => 'Delete Gold Transaction', 'slug' => 'gold_tracking.delete', 'description' => 'Delete gold transactions', 'category' => 'gold_tracking'],
             ['name' => 'Add Gold Weight', 'slug' => 'orders.add_gold_weight', 'description' => 'Add gold weight to orders', 'category' => 'orders'],
 
             // Mail System
@@ -194,6 +194,24 @@ class PermissionSeeder extends Seeder
             ['name' => 'Shopify Collections', 'slug' => 'shopify.collections', 'description' => 'Manage Shopify collections', 'category' => 'shopify'],
             ['name' => 'View Shopify Logs', 'slug' => 'shopify.logs', 'description' => 'View Shopify sync logs', 'category' => 'shopify'],
 
+            // Settings
+            ['name' => 'Manage Settings', 'slug' => 'settings.manage', 'description' => 'Manage security and other system settings', 'category' => 'settings'],
+
+            // Jewellery Stock (Add missing ones)
+            ['name' => 'View Jewellery Stock', 'slug' => 'jewellery_stock.view', 'description' => 'View jewellery stock list and details', 'category' => 'jewellery_stock'],
+            ['name' => 'Create Jewellery Stock', 'slug' => 'jewellery_stock.create', 'description' => 'Create new jewellery stock records', 'category' => 'jewellery_stock'],
+            ['name' => 'Edit Jewellery Stock', 'slug' => 'jewellery_stock.edit', 'description' => 'Edit existing jewellery stock records', 'category' => 'jewellery_stock'],
+            ['name' => 'Delete Jewellery Stock', 'slug' => 'jewellery_stock.delete', 'description' => 'Delete jewellery stock records', 'category' => 'jewellery_stock'],
+
+            // Packages
+            ['name' => 'View Packages', 'slug' => 'packages.view', 'description' => 'View shipping packages', 'category' => 'packages'],
+            ['name' => 'Create Packages', 'slug' => 'packages.create', 'description' => 'Create new shipping packages', 'category' => 'packages'],
+            ['name' => 'Return Packages', 'slug' => 'packages.return', 'description' => 'Handle package returns', 'category' => 'packages'],
+            ['name' => 'Delete Packages', 'slug' => 'packages.delete', 'description' => 'Delete shipping packages', 'category' => 'packages'],
+
+            // Investigation
+            ['name' => 'View Investigations', 'slug' => 'investigations.view', 'description' => 'View investigation inbox and details', 'category' => 'investigations'],
+            ['name' => 'Edit Investigations', 'slug' => 'investigations.edit', 'description' => 'Start investigations, add notes and update status', 'category' => 'investigations'],
         ];
 
         foreach ($perms as $p) {

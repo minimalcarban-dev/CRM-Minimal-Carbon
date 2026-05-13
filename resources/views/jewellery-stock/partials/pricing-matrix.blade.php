@@ -266,7 +266,12 @@
                         pricingNumber(window.jewelleryPricingRates.gold_adjusted_usd_per_gram) * purity / 100);
                 const metal = weight * rate;
                 const labor = weight * laborRate;
-                const subtotal = metal + labor + stone + extra;
+                let subtotal = metal + labor + stone + extra;
+
+                if (materialCode === 'silver_935') {
+                    subtotal += pricingNumber('{{ env("SILVER_ARGENTIUM_EXTRA", 0) }}');
+                }
+
                 const commission = subtotal * commissionPct / 100;
                 const afterCommission = subtotal + commission;
                 const profit = afterCommission * profitPct / 100;

@@ -26,6 +26,8 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.1/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
     @php
@@ -245,76 +247,112 @@
             color: var(--dark);
         }
 
-        /* Unified Alert Card */
-        .alert-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
+        /* --- Custom Sonner-Style Toast CSS --- */
+        .toastify {
+            padding: 12px 16px;
+            color: #1e293b;
             display: flex;
-            gap: 1.25rem;
-            margin: 1rem 1rem 0 1rem;
-            box-shadow: 0 1px 3px var(--shadow);
-            border: 2px solid var(--border);
-            transition: opacity 0.4s ease, transform 0.4s ease;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            max-width: 350px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            cursor: default;
+        }
+
+        /* Override default toastify background */
+        .toastify.success-toast {
+            background: #ffffff;
+        }
+
+        .toastify.error-toast {
+            background: #ffffff;
+        }
+
+        .toastify.warning-toast {
+            background: #ffffff;
+        }
+
+        /* Icons */
+        .toastify-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            margin-top: -2px;
+            /* align with first line of text */
+        }
+
+        .success-toast .toastify-icon {
+            color: #10b981;
+        }
+
+        .error-toast .toastify-icon {
+            color: #ef4444;
+        }
+
+        .warning-toast .toastify-icon {
+            color: #f59e0b;
+        }
+
+        /* Text Content */
+        .toastify-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toastify-title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .toastify-message {
+            color: #64748b;
+        }
+
+        /* Close Button styling applied to Toastify's injected element */
+        .toast-close {
+            opacity: 0;
+            color: #94a3b8;
+            margin-left: auto;
+            cursor: pointer;
+            padding: 2px;
+            font-size: 1rem;
+            transition: opacity 0.2s, color 0.2s;
+            text-decoration: none;
+        }
+
+        .toastify:hover .toast-close {
             opacity: 1;
         }
 
-        .alert-card.success {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
-            border-color: rgba(16, 185, 129, 0.2);
+        .toast-close:hover {
+            color: #0f172a;
         }
 
-        .alert-card.danger {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
-            border-color: rgba(239, 68, 68, 0.2);
+        [data-theme="dark"] .toastify {
+            background: var(--bg-card);
+            border-color: var(--border);
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        .alert-card.warning {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.05));
-            border-color: rgba(245, 158, 11, 0.2);
+        [data-theme="dark"] .toastify-title {
+            color: var(--text-primary);
         }
 
-        .alert-card .alert-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-            color: #fff;
+        [data-theme="dark"] .toastify-message {
+            color: var(--text-secondary);
         }
 
-        .alert-card.success .alert-icon {
-            background: linear-gradient(135deg, var(--success), #059669);
-        }
-
-        .alert-card.danger .alert-icon {
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-        }
-
-        .alert-card.warning .alert-icon {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-
-        .alert-card .alert-title {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin: 0 0 0.25rem 0;
-        }
-
-        .alert-card .alert-message {
-            color: var(--gray);
-            margin: 0;
-            font-size: 0.95rem;
-        }
-
-        .alert-card.alert-hide {
-            opacity: 0;
-            transform: translateY(-6px);
-            pointer-events: none;
+        [data-theme="dark"] .toastify.success-toast,
+        [data-theme="dark"] .toastify.error-toast,
+        [data-theme="dark"] .toastify.warning-toast {
+            background: var(--bg-card);
         }
 
         /* Global Pagination Styles */
@@ -2914,6 +2952,15 @@
                             <span id="orderUnreadBadge" class="hidden"></span>
                         </a>
                     </li>
+                    @if (auth()->guard('admin')->user()->hasPermission('investigations.view'))
+                        <li>
+                            <a class="nav-link {{ request()->routeIs('investigations.*') ? 'active cat-orders' : '' }}"
+                                href="{{ route('investigations.index') }}" data-tooltip="Investigations">
+                                <i class="bi bi-search"></i>
+                                <span>Investigations</span>
+                            </a>
+                        </li>
+                    @endif
                 @endif
 
                 @if (auth()->guard('admin')->user() &&
@@ -3060,6 +3107,14 @@
                         </a>
                     </li>
                 @endif
+
+                <li>
+                    <a class="nav-link {{ request()->routeIs('jewellery-price-calculator.*') ? 'active cat-inventory' : '' }}"
+                        href="{{ route('jewellery-price-calculator.index') }}" data-tooltip="Price Calculator">
+                        <i class="bi bi-calculator"></i>
+                        <span>Price Calculator</span>
+                    </a>
+                </li>
 
                 @if (auth()->guard('admin')->user() &&
                         auth()->guard('admin')->user()->canAccessAny(['packages.view', 'packages.create']))
@@ -3268,6 +3323,14 @@
                     </button>
                     <div class="dropdown-menu-custom {{ $toolsActive ? 'show' : '' }}" id="toolsMenu">
                         <ul class="nav">
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('jewellery-price-calculator.*') ? 'active' : '' }}"
+                                    href="{{ route('jewellery-price-calculator.index') }}"
+                                    data-tooltip="Pricing Variants">
+                                    <i class="bi bi-calculator"></i>
+                                    <span>Pricing Variants</span>
+                                </a>
+                            </li>
                             <li>
                                 <a class="nav-link {{ request()->routeIs('tools.jewellery-calculator') ? 'active' : '' }}"
                                     href="{{ route('tools.jewellery-calculator') }}"
@@ -3950,35 +4013,84 @@
                 }
             }
         })();
+    </script>
 
+    <!-- Toastify JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
         // Toast Helper
-        window.showToast = function(message, delay = 3000) {
-            try {
-                const container = document.getElementById('toast-container');
-                if (!container) return;
+        window.showToast = function(message, delay = 5000, type = 'info') {
+            // Track last toast for persistence across reloads
+            window._lastToast = {
+                message,
+                delay,
+                type,
+                timestamp: Date.now()
+            };
 
-                const toastEl = document.createElement('div');
-                toastEl.className = 'toast align-items-center custom-toast border-0';
-                toastEl.setAttribute('role', 'alert');
-                toastEl.innerHTML = `
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <span class="toast-icon">🔔</span>
-                            <span>${message}</span>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
-                `;
-                container.appendChild(toastEl);
-                const bsToast = new bootstrap.Toast(toastEl, {
-                    delay
-                });
-                bsToast.show();
-                toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-            } catch (e) {
-                console.error('[Toast Error]', e);
+            let iconClass = 'bi-info-circle-fill';
+            if (type === 'success') {
+                iconClass = 'bi-check-circle-fill';
+            } else if (type === 'error' || type === 'danger') {
+                iconClass = 'bi-x-circle-fill';
+                type = 'error'; // normalize for class
+            } else if (type === 'warning') {
+                iconClass = 'bi-exclamation-triangle-fill';
             }
+
+            const toastHTML = `
+                <i class="bi ${iconClass} toastify-icon"></i>
+                <div class="toastify-content">
+                    <span class="toastify-message">${message}</span>
+                </div>
+            `;
+
+            Toastify({
+                text: toastHTML,
+                escapeMarkup: false,
+                duration: delay,
+                gravity: "top",
+                position: "right",
+                className: `${type}-toast`,
+                close: true,
+                style: {
+                    background: "white",
+                    color: "inherit",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
+                },
+                onClick: function() {}
+            }).showToast();
         }
+
+        // Persistence logic: Save toast on page unload if it was shown recently
+        window.addEventListener('beforeunload', function() {
+            if (window._lastToast && (Date.now() - window._lastToast.timestamp < 3000)) {
+                sessionStorage.setItem('pendingToast', JSON.stringify(window._lastToast));
+            }
+        });
+
+        // Check for pending toasts on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const pending = sessionStorage.getItem('pendingToast');
+            if (pending) {
+                try {
+                    const {
+                        message,
+                        delay,
+                        type,
+                        timestamp
+                    } = JSON.parse(pending);
+                    sessionStorage.removeItem('pendingToast');
+                    // Show it again, but don't re-persist it unless there's another unload
+                    setTimeout(() => {
+                        window.showToast(message, delay, type);
+                    }, 500); // Slight delay for better visibility
+                } catch (e) {
+                    sessionStorage.removeItem('pendingToast');
+                }
+            }
+        });
 
         // Sidebar Toggle
         const sidebar = document.getElementById('sidebar');
@@ -4293,100 +4405,82 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    }
-                })
-                .catch(err => console.error('Error:', err));
-        }
+                        if (data.success) {
+                            location.reload();
+                        }
+                        // Global alert helper function
+                        window.showAlert = function(message, type = 'info', title = null) {
+                            // Map legacy sweetalert types to toastify types
+                            let toastType = type;
+                            if (type === 'danger') toastType = 'error';
 
-        // Add animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideOut {
-                to {
-                    opacity: 0;
-                    transform: translateX(100%);
+                            // Escape HTML entities to prevent XSS
+                            const escapeHtml = (str) => str ? String(str).replace(/[&<>"']/g, c => ({
+                                '&': '&amp;',
+                                '<': '&lt;',
+                                '>': '&gt;',
+                                '"': '&quot;',
+                                "'": '&#39;'
+                            })[c]) : '';
+
+                            // Format message if there's a title
+                            const fullMessage = title ?
+                                `<strong>${escapeHtml(title)}</strong><br>${escapeHtml(message)}` : escapeHtml(message);
+
+                            showToast(fullMessage, 4000, toastType);
+                        };
+                    }
                 }
-            }
-        `;
+            `;
         document.head.appendChild(style);
 
         // Global alert helper function
         window.showAlert = function(message, type = 'info', title = null) {
-            const typeConfig = {
-                'success': {
-                    icon: 'success',
-                    background: '#d4edda',
-                    color: '#155724'
-                },
-                'error': {
-                    icon: 'error',
-                    background: '#f8d7da',
-                    color: '#721c24'
-                },
-                'warning': {
-                    icon: 'warning',
-                    background: '#fff3cd',
-                    color: '#856404'
-                },
-                'info': {
-                    icon: 'info',
-                    background: '#d1ecf1',
-                    color: '#0c5460'
-                }
-            };
+            // Map legacy sweetalert types to toastify types
+            let toastType = type;
+            if (type === 'danger') toastType = 'error';
+            
+            // Format message if there's a title
+            const fullMessage = title ? ` < strong > $ {
+                title
+            } < /strong><br>${message}` : message;
 
-            const config = typeConfig[type] || typeConfig['info'];
+        showToast(fullMessage, 4000, toastType);
+    };
 
-            Swal.fire({
-                icon: config.icon,
-                title: title || (type.charAt(0).toUpperCase() + type.slice(1)),
-                text: message,
-                timer: 3000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-                background: config.background,
-                color: config.color,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer);
-                    toast.addEventListener('mouseleave', Swal.resumeTimer);
-                }
-            });
-        };
+    // Global confirm helper function
+    window.showConfirm = function(message, title = 'Are you sure?', confirmButtonText = 'Yes',
+        cancelButtonText =
+        'Cancel') {
+        return Swal.fire({
+            title: title,
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: 'rgba(255, 147, 147, 1)',
+            confirmButtonText: confirmButtonText,
+            cancelButtonText: cancelButtonText,
+            background: '#fff',
+            backdrop: 'rgba(0,0,0,0.4)'
+        }).then((result) => {
+            return result.isConfirmed;
+        });
+    };
 
-        // Global confirm helper function
-        window.showConfirm = function(message, title = 'Are you sure?', confirmButtonText = 'Yes', cancelButtonText =
-            'Cancel') {
-            return Swal.fire({
-                title: title,
-                text: message,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: 'rgba(255, 147, 147, 1)',
-                confirmButtonText: confirmButtonText,
-                cancelButtonText: cancelButtonText,
-                background: '#fff',
-                backdrop: 'rgba(0,0,0,0.4)'
-            }).then((result) => {
-                return result.isConfirmed;
-            });
-        };
-
-        // Global error handler for fetch requests
-        document.addEventListener('DOMContentLoaded', function() {
-            // Intercept fetch calls to handle errors globally
-            const originalFetch = window.fetch;
-            window.fetch = function(...args) {
-                return originalFetch.apply(this, args)
-                    .then(response => {
-                        if (!response.ok && response.status !== 422) {
-                            response.json().then(data => {
-                                const message = data.message || `Error: ${response.status}`;
-                                showAlert(message, 'error', 'Error');
-                            }).catch(() => {
-                                showAlert(`HTTP Error: ${response.status}`, 'error', 'Error');
+    // Global error handler for fetch requests
+    document.addEventListener('DOMContentLoaded', function() {
+        // Intercept fetch calls to handle errors globally
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            return originalFetch.apply(this, args)
+                .then(response => {
+                    if (!response.ok && response.status !== 422) {
+                        response.json().then(data => {
+                            const message = data.message || `Error: ${response.status}`;
+                            showAlert(message, 'error', 'Error');
+                        }).catch(() => {
+                            showAlert(`HTTP Error: ${response.status}`, 'error', 'Error');
                             });
                         }
                         return response;
@@ -4433,20 +4527,19 @@
                                     '<span style="color: #ef4444; font-size: 0.75rem;"><i class="bi bi-exclamation-triangle"></i> Error</span>' :
                                     '';
                                 draftsHtml +=
-                                    `
-                                                                                                                                                    <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                                                        <div>
-                                                                                                                                                            <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
-                                                                                                                                                            <div style="font-size: 0.8rem; color: #64748b;">
-                                                                                                                                                                ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
-                                                                                                                                                            </div>
-                                                                                                                                                        </div>
-                                                                                                                                                        <a href="${draft.resume_url}"
-                                                                                                                                                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
-                                                                                                                                                            Resume
-                                                                                                                                                        </a>    
-                                                                                                                                                    </div>
-                                                                                                                                                `;
+                                    `[<div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                                <div>
+                                                    <strong style="color: #1e293b;">${draft.order_type || 'No Type'}</strong>
+                                                    <div style="font-size: 0.8rem; color: #64748b;">
+                                                        ${draft.client_name || 'No client'} • ${draft.time_ago} ${hasError}
+                                                    </div>
+                                                </div>
+                                                <a href="${draft.resume_url}"
+                                                    style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; text-decoration: none; font-weight: 600;">
+                                                    Resume
+                                                </a>    
+                                            </div>
+                                        ]`;
                             });
                             draftsHtml += '</div>';
 
@@ -4454,11 +4547,11 @@
                             Swal.fire({
                                 title: '<span style="color: #1e293b; font-weight: 700;"><i class="bi bi-file-earmark-text" style="color: #6366f1;"></i> Pending Drafts</span>',
                                 html: `
-                                                                                                                                                    <p style="color: #64748b; margin-bottom: 1rem;">
-                                                                                                                                                        You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
-                                                                                                                                                    </p>
-                                                                                                                                                    ${draftsHtml}
-                                                                                                                                                `,
+                                        <p style="color: #64748b; margin-bottom: 1rem;">
+                                            You have <strong style="color: #6366f1;">${data.count}</strong> pending order draft${data.count > 1 ? 's' : ''} that need attention.
+                                        </p>
+                                        ${draftsHtml}
+                                    `,
                                 showCancelButton: true,
                                 confirmButtonText: '<i class="bi bi-collection"></i> View All Drafts',
                                 cancelButtonText: 'Dismiss',
@@ -4484,8 +4577,8 @@
 
     <script>
         /* ══════════════════════════════════════
-                            ENHANCEMENTS JS
-                ══════════════════════════════════════ */
+                                                    ENHANCEMENTS JS
+                                        ══════════════════════════════════════ */
 
         // ── DARK MODE ──
         const darkBtn = document.getElementById('darkModeBtn');
@@ -4682,16 +4775,16 @@
             container.innerHTML = groups.map(g => `
             <div class="cmd-group-label">${g}</div>
             ${filtered.filter(i => i.group === g).map((item, idx) => `
-                            <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
-                                <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
-                                    <i class="bi ${item.icon}"></i>
-                                </div>
-                                <div class="cmd-item-text">
-                                    <div>${item.label}</div>
-                                    <div class="cmd-item-hint">${item.hint}</div>
-                                </div>
-                            </a>
-                        `).join('')}
+                                                    <a href="${item.url}" class="cmd-item" data-idx="${filtered.indexOf(item)}">
+                                                        <div class="cmd-item-icon" style="background:${item.bg};color:${item.color};">
+                                                            <i class="bi ${item.icon}"></i>
+                                                        </div>
+                                                        <div class="cmd-item-text">
+                                                            <div>${item.label}</div>
+                                                            <div class="cmd-item-hint">${item.hint}</div>
+                                                        </div>
+                                                    </a>
+                                                `).join('')}
         `).join('') ||
                 '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:0.875rem;">No results found</div>';
         }

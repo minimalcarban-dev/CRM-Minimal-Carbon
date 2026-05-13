@@ -1130,22 +1130,12 @@
                             if (response.ok && data.success) {
                                 broadcastMeleeStockRefresh(data, formData);
 
-                                if (window.Swal) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success!',
-                                        text: data.message,
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    }).then(() => {
-                                        window.location.href = data.redirect || '/admin/orders';
-                                    });
-                                } else {
-                                    showToastNotification(data.message, 'success');
-                                    setTimeout(() => {
-                                        window.location.href = data.redirect || '/admin/orders';
-                                    }, 1500);
+                                if (typeof showToast === 'function') {
+                                    showToast(data.message, 3000, 'success');
                                 }
+                                setTimeout(() => {
+                                    window.location.href = data.redirect || '/admin/orders';
+                                }, 1000);
                             } else {
                                 // Error - show inline
                                 hideLoader();

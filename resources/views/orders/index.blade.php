@@ -87,9 +87,16 @@
                             ->notExpired()
                             ->count();
                         $headerTotalOrdersHref = route('orders.index', request()->except(['order_type', 'page']));
-                        $headerShippedHref = request('shipped') === '1'
-                            ? route('orders.index', request()->except(['shipped', 'page']))
-                            : route('orders.index', array_merge(request()->except(['page', 'order_type', 'diamond_status', 'in_transit']), ['shipped' => '1']));
+                        $headerShippedHref =
+                            request('shipped') === '1'
+                                ? route('orders.index', request()->except(['shipped', 'page']))
+                                : route(
+                                    'orders.index',
+                                    array_merge(
+                                        request()->except(['page', 'order_type', 'diamond_status', 'in_transit']),
+                                        ['shipped' => '1'],
+                                    ),
+                                );
                     @endphp
                     <div class="header-actions">
                         @if ($draftCount > 0)
@@ -184,9 +191,18 @@
             @php
                 $trackingBaseParams = request()->except(['page', 'in_transit', 'shipped', 'tracking_status']);
                 $trackingLinks = [
-                    'in_transit' => route('orders.index', array_merge($trackingBaseParams, ['tracking_status' => 'in_transit'])),
-                    'out_for_delivery' => route('orders.index', array_merge($trackingBaseParams, ['tracking_status' => 'out_for_delivery'])),
-                    'delivered' => route('orders.index', array_merge($trackingBaseParams, ['tracking_status' => 'delivered'])),
+                    'in_transit' => route(
+                        'orders.index',
+                        array_merge($trackingBaseParams, ['tracking_status' => 'in_transit']),
+                    ),
+                    'out_for_delivery' => route(
+                        'orders.index',
+                        array_merge($trackingBaseParams, ['tracking_status' => 'out_for_delivery']),
+                    ),
+                    'delivered' => route(
+                        'orders.index',
+                        array_merge($trackingBaseParams, ['tracking_status' => 'delivered']),
+                    ),
                 ];
             @endphp
             <div class="stat-card stat-card-warning tracking-summary-card {{ request('tracking_status') ? 'active-filter' : '' }}"
@@ -230,7 +246,8 @@
                         <i class="bi bi-currency-dollar"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-label">Today's Sales <i class="bi bi-chevron-down toggle-icon" id="toggleIcon"></i>
+                        <div class="stat-label">Today's Sales <i class="bi bi-chevron-down toggle-icon"
+                                id="toggleIcon"></i>
                         </div>
                         <div class="stat-value">${{ number_format($todaysSales ?? 0, 2) }}</div>
                         <div class="stat-trend">
@@ -241,7 +258,8 @@
                             style="font-size: 0.7rem; color: var(--gray); margin-top: 4px; border-top: 1px solid rgba(16, 185, 129, 0.1); padding-top: 4px;">
                             <span style="display: flex; justify-content: space-between; align-items: center;">
                                 <span>Month:</span>
-                                <span style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
+                                <span
+                                    style="font-weight: 600; color: #10b981;">${{ number_format($monthSales ?? 0, 2) }}</span>
                             </span>
                         </div>
                     </div>
@@ -250,11 +268,9 @@
         </div>
 
         {{-- Company Monthly Progress Section (Hidden by default, toggle on Today's Sales click) --}}
-        @if (
-                auth('admin')->user()->hasExplicitPermission('sales.view') &&
+        @if (auth('admin')->user()->hasExplicitPermission('sales.view') &&
                 isset($companySalesStats) &&
-                $companySalesStats->count() > 0
-            )
+                $companySalesStats->count() > 0)
             <div class="company-progress-section" id="companyProgressSection" style="display: none;">
                 <div class="section-header">
                     <h3 class="section-title">
@@ -264,16 +280,19 @@
                 </div>
                 <div class="company-progress-grid">
                     @foreach ($companySalesStats as $company)
-                        <a href="{{ route('companies.sales-dashboard', $company['id']) }}" class="company-progress-card-simple">
+                        <a href="{{ route('companies.sales-dashboard', $company['id']) }}"
+                            class="company-progress-card-simple">
                             <div class="company-name-simple">{{ $company['name'] }}</div>
                             <div class="progress-ring-large">
                                 @if ($company['target_progress'] !== null)
                                     <svg viewBox="0 0 36 36" class="circular-chart-large">
                                         <path class="circle-bg-large"
                                             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path class="circle-large" stroke-dasharray="{{ min($company['target_progress'], 100) }}, 100"
+                                        <path class="circle-large"
+                                            stroke-dasharray="{{ min($company['target_progress'], 100) }}, 100"
                                             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <text x="18" y="20.35" class="percentage-large">{{ round($company['target_progress']) }}%</text>
+                                        <text x="18" y="20.35"
+                                            class="percentage-large">{{ round($company['target_progress']) }}%</text>
                                     </svg>
                                 @else
                                     <div class="no-target-large">
@@ -335,8 +354,9 @@
 
                 <select name="factory_id" class="filter-select">
                     <option value="">All Factories</option>
-                    @foreach($factories ?? [] as $factory)
-                        <option value="{{ $factory->id }}" {{ request('factory_id') == $factory->id ? 'selected' : '' }}>
+                    @foreach ($factories ?? [] as $factory)
+                        <option value="{{ $factory->id }}"
+                            {{ request('factory_id') == $factory->id ? 'selected' : '' }}>
                             {{ $factory->name }}
                         </option>
                     @endforeach
@@ -344,8 +364,9 @@
 
                 <select name="company_id" class="filter-select">
                     <option value="">All Companies</option>
-                    @foreach($companies ?? [] as $company)
-                        <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                    @foreach ($companies ?? [] as $company)
+                        <option value="{{ $company->id }}"
+                            {{ request('company_id') == $company->id ? 'selected' : '' }}>
                             {{ $company->name }}
                         </option>
                     @endforeach
@@ -353,52 +374,75 @@
 
                 <select name="tracking_status" class="filter-select">
                     <option value="">All Tracking Statuses</option>
-                    <option value="in_transit" {{ request('tracking_status') == 'in_transit' ? 'selected' : '' }}>In Transit</option>
-                    <option value="out_for_delivery" {{ request('tracking_status') == 'out_for_delivery' ? 'selected' : '' }}>Out for Delivery</option>
-                    <option value="delivered" {{ request('tracking_status') == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                    <option value="in_transit" {{ request('tracking_status') == 'in_transit' ? 'selected' : '' }}>In
+                        Transit</option>
+                    <option value="out_for_delivery"
+                        {{ request('tracking_status') == 'out_for_delivery' ? 'selected' : '' }}>Out for Delivery</option>
+                    <option value="delivered" {{ request('tracking_status') == 'delivered' ? 'selected' : '' }}>Delivered
+                    </option>
                 </select>
 
                 <select name="diamond_status" class="filter-select">
                     <option value="">All Diamond Status</option>
 
                     {{-- Ready to Ship Statuses --}}
-                    <option value="r_order_in_process" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process
+                    <option value="r_order_in_process" class="status-option ready_to_ship"
+                        {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process
                     </option>
-                    <option value="r_order_shipped" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
-                    <option value="r_order_cancelled" class="status-option ready_to_ship" {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled
+                    <option value="r_order_shipped" class="status-option ready_to_ship"
+                        {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
+                    <option value="r_order_cancelled" class="status-option ready_to_ship"
+                        {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled
                     </option>
 
                     {{-- Custom Diamond Statuses --}}
-                    <option value="d_diamond_in_discuss" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
+                    <option value="d_diamond_in_discuss" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
                     </option>
-                    <option value="d_diamond_in_making" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making
+                    <option value="d_diamond_in_making" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making
                     </option>
-                    <option value="d_diamond_completed" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed
+                    <option value="d_diamond_completed" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed
                     </option>
-                    <option value="d_diamond_in_certificate" class="status-option custom_diamond" {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
+                    <option value="d_diamond_in_certificate" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
                         Certificate</option>
-                    <option value="d_order_shipped" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
-                    <option value="d_order_cancelled" class="status-option custom_diamond" {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled
+                    <option value="d_order_shipped" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
+                    <option value="d_order_cancelled" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled
                     </option>
 
                     {{-- Custom Jewellery Statuses --}}
-                    <option value="j_diamond_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In
+                    <option value="j_diamond_in_progress" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In
                         Progress
                     </option>
-                    <option value="j_diamond_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed
+                    <option value="j_diamond_completed" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed
                     </option>
-                    <option value="j_diamond_in_discuss" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
+                    <option value="j_diamond_in_discuss" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
                     </option>
-                    <option value="j_cad_in_progress" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress
+                    <option value="j_cad_in_progress" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress
                     </option>
-                    <option value="j_cad_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
-                    <option value="j_order_completed" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed
+                    <option value="j_cad_done" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
+                    <option value="j_order_completed" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed
                     </option>
-                    <option value="j_order_in_qc" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
-                    <option value="j_qc_done" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
-                    <option value="j_order_shipped" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
-                    <option value="j_order_hold" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
-                    <option value="j_order_cancelled" class="status-option custom_jewellery" {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled
+                    <option value="j_order_in_qc" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
+                    <option value="j_qc_done" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
+                    <option value="j_order_shipped" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
+                    <option value="j_order_hold" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
+                    <option value="j_order_cancelled" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled
                     </option>
                 </select>
 
@@ -431,14 +475,17 @@
 
                 <select name="priority_status" class="filter-select">
                     <option value="">All Priorities</option>
-                    <option value="priority" {{ request('priority_status') == 'priority' ? 'selected' : '' }}>Priority Order</option>
-                    <option value="non_priority" {{ request('priority_status') == 'non_priority' ? 'selected' : '' }}>Non-Priority</option>
+                    <option value="priority" {{ request('priority_status') == 'priority' ? 'selected' : '' }}>Priority
+                        Order</option>
+                    <option value="non_priority" {{ request('priority_status') == 'non_priority' ? 'selected' : '' }}>
+                        Non-Priority</option>
                 </select>
 
                 <select name="payment_status" class="filter-select">
                     <option value="">All Payment Statuses</option>
                     <option value="full" {{ request('payment_status') == 'full' ? 'selected' : '' }}>Full Paid</option>
-                    <option value="partial" {{ request('payment_status') == 'partial' ? 'selected' : '' }}>Partial Paid</option>
+                    <option value="partial" {{ request('payment_status') == 'partial' ? 'selected' : '' }}>Partial Paid
+                    </option>
                     <option value="due" {{ request('payment_status') == 'due' ? 'selected' : '' }}>Payment Due</option>
                 </select>
 
@@ -481,9 +528,9 @@
                 </a>
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', function () {
+                    document.addEventListener('DOMContentLoaded', function() {
                         const filterForm = document.getElementById('orderFilterForm');
-                        
+
                         // Clean up empty inputs before form submission so URL stays clean
                         function cleanEmptyInputs() {
                             const elements = filterForm.elements;
@@ -566,22 +613,22 @@
                         updateStatusDropdown();
 
                         // Auto-submit on order type change
-                        orderTypeSelect.addEventListener('change', function () {
+                        orderTypeSelect.addEventListener('change', function() {
                             updateStatusDropdown();
                             filterForm.submit();
                         });
 
                         // Auto-submit on diamond status change
                         document.querySelectorAll('.filter-select').forEach(select => {
-                            select.addEventListener('change', function () {
+                            select.addEventListener('change', function() {
                                 filterForm.submit();
                             });
                         });
 
                         // Debounced auto-submit on search input
-                        searchInput.addEventListener('input', function () {
+                        searchInput.addEventListener('input', function() {
                             const currentValue = searchInput.value.trim();
-                            debounceSearch(function () {
+                            debounceSearch(function() {
                                 // Submit only if search value actually changed
                                 if (currentValue === lastSubmittedSearchValue) {
                                     return;
@@ -592,7 +639,7 @@
                         });
 
                         // Also submit on Enter key for search
-                        searchInput.addEventListener('keypress', function (e) {
+                        searchInput.addEventListener('keypress', function(e) {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
                                 clearTimeout(searchTimeout);
@@ -607,7 +654,7 @@
                         // Sync All Confirm & Loader
                         const btnSyncAll = document.getElementById('btnSyncAll');
                         if (btnSyncAll) {
-                            btnSyncAll.addEventListener('click', function (e) {
+                            btnSyncAll.addEventListener('click', function(e) {
                                 e.preventDefault();
                                 const url = this.getAttribute('href');
 
@@ -640,7 +687,8 @@
                                         form.action = url;
 
                                         // Add CSRF token
-                                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                                        const csrfToken = document.querySelector('meta[name="csrf-token"]')
+                                            .getAttribute('content');
                                         const csrfInput = document.createElement('input');
                                         csrfInput.type = 'hidden';
                                         csrfInput.name = '_token';
@@ -658,7 +706,37 @@
 
                 {{-- Action Dropdown Menu Handler --}}
                 <script>
-                    document.addEventListener('DOMContentLoaded', function () {
+                    // Global dropdown management
+                    window.allDropdowns = [];
+                    window.closeAllPortals = (e) => {
+                        // If the event is happening inside a portal menu, don't close it
+                        if (e && e.target && e.target.closest && e.target.closest('.action-portal-menu, .status-portal-menu')) {
+                            return;
+                        }
+
+                        const portals = document.querySelectorAll('.action-portal-menu, .status-portal-menu');
+                        if (portals.length > 0) {
+                            portals.forEach(portal => portal.remove());
+                            document.querySelectorAll('.order-status-badge, [id^="actionBtn"]').forEach(el => el.classList.remove(
+                                'active'));
+                            // Force close state on all dropdown instances
+                            if (window.allDropdowns) {
+                                window.allDropdowns.forEach(d => {
+                                    d.isOpen = false;
+                                });
+                            }
+                        }
+                    };
+
+                    // Listen for any scroll event in the capture phase
+                    window.addEventListener('scroll', window.closeAllPortals, true);
+                    window.addEventListener('wheel', window.closeAllPortals, {
+                        capture: true,
+                        passive: true
+                    });
+                    document.addEventListener('scroll', window.closeAllPortals, true);
+
+                    document.addEventListener('DOMContentLoaded', function() {
                         // Portal-based dropdown renderer - renders menu at body level to escape overflow
                         class ActionDropdownPortal {
                             constructor(btnElement, menuElement) {
@@ -702,14 +780,7 @@
 
                             open() {
                                 // Close all other open dropdowns
-                                document.querySelectorAll('.action-portal-menu').forEach(portal => {
-                                    if (portal !== this.portalElement) {
-                                        portal.remove();
-                                    }
-                                });
-                                document.querySelectorAll('[id^="actionBtn"]').forEach(btn => {
-                                    btn.classList.remove('active');
-                                });
+                                window.closeAllPortals();
 
                                 // Create portal element
                                 this.portalElement = document.createElement('div');
@@ -766,16 +837,108 @@
                             }
                         }
 
+                        // Status Dropdown Portal - renders status menu at body level
+                        class StatusDropdownPortal {
+                            constructor(btnElement, menuElement) {
+                                this.btn = btnElement;
+                                this.menu = menuElement;
+                                this.orderId = btnElement.getAttribute('data-order-id');
+                                this.portalElement = null;
+                                this.isOpen = false;
+
+                                this.init();
+                            }
+
+                            init() {
+                                this.btn.addEventListener('click', (e) => this.toggle(e));
+                                document.addEventListener('click', (e) => this.handleOutsideClick(e));
+                                document.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Escape' && this.isOpen) this.close();
+                                });
+                            }
+
+                            toggle(e) {
+                                e.stopPropagation();
+                                if (this.isOpen) this.close();
+                                else this.open();
+                            }
+
+                            open() {
+                                // Close all other open dropdowns
+                                window.closeAllPortals();
+
+                                this.portalElement = document.createElement('div');
+                                this.portalElement.className = 'status-portal-menu';
+
+                                const clonedMenu = this.menu.cloneNode(true);
+                                clonedMenu.style.display = 'block';
+
+                                const rect = this.btn.getBoundingClientRect();
+                                this.portalElement.style.position = 'fixed';
+                                this.portalElement.style.top = (rect.bottom + 8) + 'px';
+                                this.portalElement.style.left = rect.left + 'px';
+                                this.portalElement.style.zIndex = '99999';
+
+                                this.portalElement.appendChild(clonedMenu);
+                                document.body.appendChild(this.portalElement);
+
+                                // Attach click handlers to cloned items
+                                this.portalElement.querySelectorAll('.status-menu-item').forEach(item => {
+                                    item.addEventListener('click', async (e) => {
+                                        e.preventDefault();
+                                        const nextStatus = item.getAttribute('data-status');
+                                        const previousStatus = this.btn.getAttribute(
+                                            'data-current-status');
+
+                                        if (nextStatus === previousStatus) {
+                                            this.close();
+                                            return;
+                                        }
+
+                                        await window.performStatusUpdate(this.orderId, nextStatus, this
+                                            .btn);
+                                        this.close();
+                                    });
+                                });
+
+                                this.btn.classList.add('active');
+                                this.isOpen = true;
+                            }
+
+                            close() {
+                                if (this.portalElement) {
+                                    this.portalElement.remove();
+                                    this.portalElement = null;
+                                }
+                                this.btn.classList.remove('active');
+                                this.isOpen = false;
+                            }
+
+                            handleOutsideClick(e) {
+                                const isClickOnBtn = e.target.closest(`#statusBtn${this.orderId}`);
+                                const isClickOnPortal = e.target.closest('.status-portal-menu');
+
+                                if (!isClickOnBtn && !isClickOnPortal && this.isOpen) {
+                                    this.close();
+                                }
+                            }
+                        }
+
                         // Initialize all action dropdowns
                         const actionButtons = document.querySelectorAll('[id^="actionBtn"]');
-                        const dropdowns = new Map();
+                        const statusButtons = document.querySelectorAll('[id^="statusBtn"]');
+                        const dropdowns = [];
 
                         actionButtons.forEach(btn => {
                             const orderId = btn.getAttribute('data-order-id');
                             const menu = document.getElementById(`actionMenu${orderId}`);
-                            if (menu) {
-                                dropdowns.set(orderId, new ActionDropdownPortal(btn, menu));
-                            }
+                            if (menu) dropdowns.push(new ActionDropdownPortal(btn, menu));
+                        });
+
+                        statusButtons.forEach(btn => {
+                            const orderId = btn.getAttribute('data-order-id');
+                            const menu = document.getElementById(`statusMenu${orderId}`);
+                            if (menu) dropdowns.push(new StatusDropdownPortal(btn, menu));
                         });
 
                         // Close all dropdowns on escape
@@ -784,6 +947,15 @@
                                 dropdowns.forEach(dropdown => dropdown.close());
                             }
                         });
+
+                        window.allDropdowns = dropdowns;
+
+                        // Specifically target the main scrolling containers just in case
+                        const mainContent = document.getElementById('mainContent');
+                        if (mainContent) mainContent.addEventListener('scroll', window.closeAllPortals);
+
+                        const tableContainer = document.querySelector('.table-container');
+                        if (tableContainer) tableContainer.addEventListener('scroll', window.closeAllPortals);
                     });
 
                     // Delete order function
@@ -837,12 +1009,12 @@
                     <table class="orders-table">
                         <thead>
                             <tr>
-                            <!-- <th class="th-id">
-                                    <div class="th-content">
-                                        <i class="bi bi-hash"></i>
-                                        <span>ID</span>
-                                    </div>
-                                </th> -->
+                                <!-- <th class="th-id">
+                                        <div class="th-content">
+                                            <i class="bi bi-hash"></i>
+                                            <span>ID</span>
+                                        </div>
+                                    </th> -->
                                 <th>
                                     <div class="th-content">
                                         <i class="bi bi-image"></i>
@@ -918,7 +1090,9 @@
                                         <div class="custom-row mb-2 d-flex align-items-center gap-1">
                                             <span class="order-id-badge">#{{ $order->id }}</span>
                                             @if ($order->note === 'priority')
-                                                <span style="background-color: #ef4444; color: white; border-radius: 4px; padding: 1px 6px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);" title="Priority Order">P</span>
+                                                <span
+                                                    style="background-color: #ef4444; color: white; border-radius: 4px; padding: 1px 6px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);"
+                                                    title="Priority Order">P</span>
                                             @endif
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
@@ -939,9 +1113,9 @@
                                                 $skuText = !empty($skus) ? implode(', ', $skus) : '—';
                                             @endphp
                                             <div class="image-with-sku">
-                                                <div class="thumbnail-container {{ $firstImage ? 'has-image' : '' }}" @if ($firstImage) data-preview-src="{{ $firstImage['url'] }}" tabindex="0"
-                                                    role="button" aria-label="Preview product image for order #{{ $order->id }}"
-                                                @endif>
+                                                <div class="thumbnail-container {{ $firstImage ? 'has-image' : '' }}"
+                                                    @if ($firstImage) data-preview-src="{{ $firstImage['url'] }}" tabindex="0"
+                                                    role="button" aria-label="Preview product image for order #{{ $order->id }}" @endif>
                                                     @if ($firstImage)
                                                         <img src="{{ $firstImage['url'] }}" alt="Product">
                                                     @else
@@ -970,23 +1144,42 @@
                                                     $icon = $statusIcons[$statusKey] ?? 'bi-circle';
                                                     $statusOptions = $statusFlowOptions[$order->order_type] ?? [];
                                                 @endphp
-                                                <div class="order-status-control">
-                                                    <span class="badge-item badge-status status-{{ $color }} order-status-badge"
-                                                        id="status-badge-{{ $order->id }}">
+                                                <div class="order-status-control" id="statusControl{{ $order->id }}">
+                                                    <span
+                                                        class="badge-item badge-status status-{{ $color }} order-status-badge"
+                                                        id="statusBtn{{ $order->id }}"
+                                                        data-order-id="{{ $order->id }}">
                                                         <i class="bi {{ $icon }} status-icon"></i>
-                                                        <span class="status-label">{{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}</span>
-                                                        <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.8;"></i>
+                                                        <span
+                                                            class="status-label">{{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}</span>
+                                                        <i class="bi bi-chevron-down ms-1"
+                                                            style="font-size: 0.7rem; opacity: 0.8;"></i>
                                                     </span>
-                                                    <select class="status-dropdown-select"
-                                                        data-order-id="{{ $order->id }}"
-                                                        data-current-status="{{ $order->diamond_status }}">
+                                                    <div class="status-custom-dropdown"
+                                                        id="statusMenu{{ $order->id }}">
                                                         @foreach ($statusOptions as $statusOption)
-                                                            <option value="{{ $statusOption }}"
-                                                                {{ $order->diamond_status === $statusOption ? 'selected' : '' }}>
-                                                                {{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $statusOption))) }}
-                                                            </option>
+                                                            @php
+                                                                $optColor = $statusColors[$statusOption] ?? 'secondary';
+                                                                $optIcon = $statusIcons[$statusOption] ?? 'bi-circle';
+                                                                $optLabel = ucfirst(
+                                                                    str_replace(
+                                                                        '_',
+                                                                        ' ',
+                                                                        preg_replace('/^[rdj]_/', '', $statusOption),
+                                                                    ),
+                                                                );
+                                                                $isActive = $order->diamond_status === $statusOption;
+                                                            @endphp
+                                                            <button type="button"
+                                                                class="status-menu-item {{ $isActive ? 'active' : '' }}"
+                                                                data-status="{{ $statusOption }}"
+                                                                data-order-id="{{ $order->id }}">
+                                                                <i
+                                                                    class="bi {{ $optIcon }} text-{{ $optColor }}"></i>
+                                                                <span>{{ $optLabel }}</span>
+                                                            </button>
                                                         @endforeach
-                                                    </select>
+                                                    </div>
                                                 </div>
 
                                                 {{-- Company --}}
@@ -1013,7 +1206,8 @@
                                                 {{-- add factory name with these status --}}
                                                 @if ($order->factoryRelation)
                                                     <span class="badge-item badge-factory">
-                                                        <i class="bi bi-building"></i> {{ $order->factoryRelation->name }}
+                                                        <i class="bi bi-building"></i>
+                                                        {{ $order->factoryRelation->name }}
                                                     </span>
                                                 @endif
 
@@ -1049,7 +1243,8 @@
 
                                                 @if ($taxId = $order->display_client_tax_id)
                                                     <div class="d-flex align-items-center text-muted">
-                                                        <span class="text-uppercase me-1" style="font-size: 0.7rem; font-weight: 600;">
+                                                        <span class="text-uppercase me-1"
+                                                            style="font-size: 0.7rem; font-weight: 600;">
                                                             {{ $order->client_tax_id_type ? \App\Models\Order::TAX_ID_TYPES[$order->client_tax_id_type] ?? $order->client_tax_id_type : 'Tax ID' }}:
                                                         </span>
                                                         {{ $taxId }}
@@ -1060,13 +1255,15 @@
                                     </td>
 
                                     <td>
-                                        <div class="d-flex flex-column gap-1" style="font-size: 0.8rem; max-width: 300px;">
+                                        <div class="d-flex flex-column gap-1"
+                                            style="font-size: 0.8rem; max-width: 300px;">
                                             @if ($order->special_notes)
                                                 <div>
                                                     <strong
                                                         style="font-size: 0.7rem; color: #6366f1; display: block;">Special
                                                         Note:</strong>
-                                                    <div style="white-space: pre-wrap;">{{ trim($order->special_notes) }}</div>
+                                                    <div style="white-space: pre-wrap;">{{ trim($order->special_notes) }}
+                                                    </div>
                                                 </div>
                                             @else
                                                 <span class="text-muted">No special note</span>
@@ -1075,18 +1272,24 @@
                                     </td>
 
                                     <td>
-                                        <div class="d-flex flex-column gap-1" style="font-size: 0.8rem; max-width: 300px;">
+                                        <div class="d-flex flex-column gap-1"
+                                            style="font-size: 0.8rem; max-width: 300px;">
                                             @if ($order->jewellery_details)
                                                 <div>
                                                     <strong
                                                         style="font-size: 0.7rem; color: #6366f1; display: block;">Jewellery:</strong>
-                                                    <div class="truncated-text" title="{{ $order->jewellery_details }}" style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ trim($order->jewellery_details) }}</div>
+                                                    <div class="truncated-text" title="{{ $order->jewellery_details }}"
+                                                        style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                                        {{ trim($order->jewellery_details) }}</div>
                                                 </div>
                                             @endif
                                             @if ($order->diamond_details)
                                                 <div>
-                                                    <strong style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
-                                                    <div class="truncated-text" title="{{ $order->diamond_details }}" style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ trim($order->diamond_details) }}</div>
+                                                    <strong
+                                                        style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
+                                                    <div class="truncated-text" title="{{ $order->diamond_details }}"
+                                                        style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                                        {{ trim($order->diamond_details) }}</div>
                                                 </div>
                                             @endif
                                             @if (!$order->jewellery_details && !$order->diamond_details)
@@ -1103,17 +1306,18 @@
                                                 <span class="text-muted">&mdash;</span>
                                             @endif
                                         </span>
-                                        @if($order->payment_status)
+                                        @if ($order->payment_status)
                                             <div class="mt-1">
                                                 <span
                                                     class="s-badge {{ $order->payment_status === 'full' ? 'status-completed' : ($order->payment_status === 'partial' ? 'status-factory_making' : 'status-r_order_cancelled') }}">
                                                     {{ $order->payment_status_label }}
                                                 </span>
-                                                @if(in_array($order->payment_status, ['partial', 'due'], true))
+                                                @if (in_array($order->payment_status, ['partial', 'due'], true))
                                                     <div class="d-flex flex-wrap gap-2 mt-2">
                                                         <span class="badge rounded-pill px-3 py-2"
                                                             style="{{ $order->payment_status === 'partial' ? 'background: rgba(245, 158, 11, 0.15); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.25);' : 'background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.18);' }}">
-                                                            Received ${{ number_format((float) $order->amount_received_total, 2) }}
+                                                            Received
+                                                            ${{ number_format((float) $order->amount_received_total, 2) }}
                                                         </span>
                                                         <span class="badge rounded-pill px-3 py-2"
                                                             style="{{ $order->payment_status === 'partial' ? 'background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.2);' : 'background: rgba(148, 163, 184, 0.12); color: #475569; border: 1px solid rgba(148, 163, 184, 0.18);' }}">
@@ -1151,17 +1355,28 @@
                                                 'tracking_status' => $order->tracking_status,
                                                 'tracking_history' => $order->tracking_history ?? [],
                                                 'dispatch_date' => optional($order->dispatch_date)->format('Y-m-d'),
-                                                'dispatch_date_label' => optional($order->dispatch_date)->format('d M Y'),
-                                                'has_shipping_details' => filled($order->shipping_company_name) || filled($order->tracking_number) || filled($order->tracking_url) || filled($order->dispatch_date),
+                                                'dispatch_date_label' => optional($order->dispatch_date)->format(
+                                                    'd M Y',
+                                                ),
+                                                'has_shipping_details' =>
+                                                    filled($order->shipping_company_name) ||
+                                                    filled($order->tracking_number) ||
+                                                    filled($order->tracking_url) ||
+                                                    filled($order->dispatch_date),
+                                                'investigation_status' => $order->investigation
+                                                    ? $order->investigation->investigation_status
+                                                    : null,
                                             ];
                                         @endphp
                                         <div class="shipping-info-cell" id="shipping-cell-{{ $order->id }}"
                                             data-shipping-state='@json($shippingState)'>
                                             @if ($order->shipping_company_name || $order->tracking_number)
                                                 <div class="shipping-main">
-                                                    <span class="shipping-company">{{ $order->shipping_company_name }}</span>
+                                                    <span
+                                                        class="shipping-company">{{ $order->shipping_company_name }}</span>
                                                     @if ($order->tracking_number)
-                                                        <button type="button" class="tracking-number-link tracking-link-btn"
+                                                        <button type="button"
+                                                            class="tracking-number-link tracking-link-btn"
                                                             onclick="showTrackingHistoryByOrder({{ $order->id }})"
                                                             title="Click to view history">
                                                             {{ $order->tracking_number }}
@@ -1169,7 +1384,8 @@
                                                     @endif
 
                                                     @if ($order->tracking_number && ($order->shipping_company_name || $order->tracking_url))
-                                                        <button class="btn-sync-inline" onclick="syncTracking({{ $order->id }}, this)"
+                                                        <button class="btn-sync-inline"
+                                                            onclick="syncTracking({{ $order->id }}, this)"
                                                             title="Sync Tracking">
                                                             <i class="bi bi-arrow-repeat"></i>
                                                         </button>
@@ -1190,6 +1406,25 @@
                                                 <i class="bi bi-truck"></i>
                                                 <span>{{ $shippingState['has_shipping_details'] ? 'Edit Shipping' : 'Add Shipping' }}</span>
                                             </button>
+
+                                            @if (auth()->guard('admin')->user()->hasPermission('investigations.edit') && $order->tracking_number)
+                                                @if (
+                                                    $order->investigation &&
+                                                        $order->investigation->investigation_status !== 'Resolved' &&
+                                                        $order->investigation->investigation_status !== 'Delivered')
+                                                    <div class="mt-2 text-center">
+                                                        <span class="badge bg-primary" style="font-size: 0.7rem;"><i
+                                                                class="bi bi-search"></i> Investigation Active</span>
+                                                    </div>
+                                                @else
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-secondary w-100 mt-2 start-investigation-btn"
+                                                        style="font-size: 0.75rem; border-radius: 6px;"
+                                                        onclick="startInvestigation({{ $order->id }})">
+                                                        <i class="bi bi-search"></i> Start Investigation
+                                                    </button>
+                                                @endif
+                                            @endif
                                         </div>
                                     </td>
                                     <td>
@@ -1202,8 +1437,9 @@
                                     </td>
                                     <td class="td-actions">
                                         <div class="action-dropdown-wrapper">
-                                            <button type="button" class="action-menu-btn" id="actionBtn{{ $order->id }}"
-                                                data-order-id="{{ $order->id }}" title="Actions">
+                                            <button type="button" class="action-menu-btn"
+                                                id="actionBtn{{ $order->id }}" data-order-id="{{ $order->id }}"
+                                                title="Actions">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <div class="action-dropdown-menu" id="actionMenu{{ $order->id }}"
@@ -1216,10 +1452,8 @@
                                                 </a>
 
                                                 {{-- Edit Option --}}
-                                                @if (
-                                                        auth()->guard('admin')->user() &&
-                                                        auth()->guard('admin')->user()->canAccessAny(['orders.edit'])
-                                                    )
+                                                @if (auth()->guard('admin')->user() &&
+                                                        auth()->guard('admin')->user()->canAccessAny(['orders.edit']))
                                                     <a href="{{ route('orders.edit', $order->id) }}"
                                                         class="action-menu-item action-menu-edit">
                                                         <i class="bi bi-pencil"></i>
@@ -1228,11 +1462,9 @@
                                                 @endif
 
                                                 {{-- Cancel Option --}}
-                                                @if (
-                                                        auth()->guard('admin')->user() &&
+                                                @if (auth()->guard('admin')->user() &&
                                                         auth()->guard('admin')->user()->hasPermission('orders.cancel') &&
-                                                        !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'])
-                                                    )
+                                                        !in_array($order->diamond_status, ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled']))
                                                     <button type="button" class="action-menu-item action-menu-cancel"
                                                         onclick="openCancelModal({{ $order->id }}, '{{ addslashes($order->client_name) }}')">
                                                         <i class="bi bi-x-circle"></i>
@@ -1241,10 +1473,8 @@
                                                 @endif
 
                                                 {{-- Delete Option --}}
-                                                @if (
-                                                        auth()->guard('admin')->user() &&
-                                                        auth()->guard('admin')->user()->canAccessAny(['orders.delete'])
-                                                    )
+                                                @if (auth()->guard('admin')->user() &&
+                                                        auth()->guard('admin')->user()->canAccessAny(['orders.delete']))
                                                     <button type="button" class="action-menu-item action-menu-delete"
                                                         onclick="deleteOrder({{ $order->id }})">
                                                         <i class="bi bi-trash"></i>
@@ -2436,19 +2666,81 @@
         }
 
         /* Portal menu - rendered at body level to escape overflow */
-        .action-portal-menu {
+        .action-portal-menu,
+        .status-portal-menu {
             position: fixed;
             z-index: 99999;
             background: transparent;
             pointer-events: auto;
         }
 
-        .action-portal-menu .action-dropdown-menu {
+        .action-portal-menu .action-dropdown-menu,
+        .status-portal-menu .status-custom-dropdown {
             display: block !important;
             position: absolute;
             top: 0;
             right: 0;
             margin: 0;
+        }
+
+        .status-custom-dropdown {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
+            min-width: 220px;
+            z-index: 99999;
+            overflow: hidden;
+            animation: statusMenuFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+            padding: 6px;
+        }
+
+        @keyframes statusMenuFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .status-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .status-menu-item:hover {
+            background: var(--light-gray);
+            color: var(--primary);
+        }
+
+        .status-menu-item.active {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary);
+        }
+
+        .status-menu-item i {
+            font-size: 1.1rem;
+            width: 20px;
+            display: flex;
+            justify-content: center;
         }
 
         .orders-table {
@@ -2560,18 +2852,8 @@
         }
 
         .status-dropdown-select {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 10;
-            min-width: 0;
-            padding: 0;
-            border: none;
-            appearance: none;
+            display: none;
+            /* Hide native select completely */
         }
 
         .status-dropdown-select:disabled {
@@ -2579,13 +2861,21 @@
         }
 
         .order-status-badge {
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            user-select: none;
         }
 
-        .order-status-control:hover .order-status-badge {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
+        .order-status-badge:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1.5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .order-status-badge.active {
+            filter: brightness(0.95);
+            transform: translateY(0.5px);
+            box-shadow: none;
         }
 
         /* Shipping Column Styles */
@@ -3583,8 +3873,8 @@
         .order-details-column {
             display: flex;
             flex-direction: column;
-            gap: 5px;
-            /* align-items: flex-start; */
+            gap: 8px;
+            /* Increased from 5px */
             padding-left: 5px;
         }
 
@@ -3654,16 +3944,18 @@
         .badge-status {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            padding: 5px 12px 5px 8px;
-            border-radius: 6px;
-            font-size: 11.5px;
+            gap: 8px;
+            padding: 6px 14px 6px 10px;
+            border-radius: 8px;
+            font-size: 12.5px;
             font-weight: 700;
             line-height: 1;
             white-space: nowrap;
             background: rgb(29 63 173);
             backdrop-filter: blur(4px);
             border: 1.5px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .badge-status i {
@@ -4049,8 +4341,8 @@
             }
 
             /* .client-info {
-                                text-align: start;
-                            } */
+                                    text-align: start;
+                                } */
         }
 
         /* Print Styles */
@@ -4430,8 +4722,11 @@
     <!-- JavaScript -->
     @push('scripts')
         <script>
+            window.canEditInvestigations =
+                {{ auth()->guard('admin')->user()->hasPermission('investigations.edit') ? 'true' : 'false' }};
+
             // Initialize Date Range Picker for Orders
-            $(document).ready(function () {
+            $(document).ready(function() {
                 var startDate = $('#orderDateFrom').val() ? moment($('#orderDateFrom').val()) : null;
                 var endDate = $('#orderDateTo').val() ? moment($('#orderDateTo').val()) : null;
 
@@ -4454,7 +4749,7 @@
                         applyLabel: 'Apply',
                         format: 'MMM D, YYYY'
                     }
-                }, function (start, end, label) {
+                }, function(start, end, label) {
                     $('#orderDateFrom').val(start.format('YYYY-MM-DD'));
                     $('#orderDateTo').val(end.format('YYYY-MM-DD'));
                     $('#orderDateRange').val(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
@@ -4468,7 +4763,7 @@
                 }
 
                 // Clear dates on cancel and auto-submit
-                $('#orderDateRange').on('cancel.daterangepicker', function (ev, picker) {
+                $('#orderDateRange').on('cancel.daterangepicker', function(ev, picker) {
                     $(this).val('');
                     $('#orderDateFrom').val('');
                     $('#orderDateTo').val('');
@@ -4580,14 +4875,14 @@
             window.dismissOverdueBanner = dismissOverdueBanner;
 
             // Check if banner should be hidden on load
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 if (sessionStorage.getItem('hideOverdueBanner') === 'true') {
                     const banner = document.getElementById('overdueAlertBanner');
                     if (banner) banner.style.display = 'none';
                 }
             });
 
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // Add stagger animation to table rows
                 const rows = document.querySelectorAll('.table-row');
                 rows.forEach((row, index) => {
@@ -4605,7 +4900,7 @@
 
                 // Handle delete confirmations with SweetAlert2
                 document.querySelectorAll('.delete-form').forEach(form => {
-                    form.addEventListener('submit', async function (e) {
+                    form.addEventListener('submit', async function(e) {
                         e.preventDefault();
 
                         const confirmed = await showConfirm(
@@ -4648,8 +4943,10 @@
                         showOrdersToast(result.message || 'Tracking synced successfully.', 'success');
                     } else {
                         let errorMsg = result.message;
-                        if (errorMsg && (errorMsg.toLowerCase().includes('no tracking') || errorMsg.toLowerCase().includes('information at this time') || errorMsg.toLowerCase().includes('still being processed'))) {
-                            errorMsg = "Tracking scan initiated. Global Parcel Tracking is querying the carrier. Please wait 15-30 seconds and click Sync again to see the live status.";
+                        if (errorMsg && (errorMsg.toLowerCase().includes('no tracking') || errorMsg.toLowerCase().includes(
+                                'information at this time') || errorMsg.toLowerCase().includes('still being processed'))) {
+                            errorMsg =
+                                "Tracking scan initiated. Global Parcel Tracking is querying the carrier. Please wait 15-30 seconds and click Sync again to see the live status.";
                         }
                         showOrdersToast(errorMsg || 'Failed to sync tracking data.', 'error');
                     }
@@ -4662,16 +4959,63 @@
                 }
             }
 
+            async function startInvestigation(orderId) {
+                const confirmed = await showConfirm(
+                    'Start Shipment Investigation?',
+                    'This will create a tracking entry for this order in the Investigation Inbox.',
+                    'Yes, Start',
+                    'Cancel'
+                );
+
+                if (!confirmed) return;
+
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/investigation`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Refresh the shipping cell
+                        const orderResponse = await fetch(`/admin/orders/${orderId}/shipping-data`, {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        const orderData = await orderResponse.json();
+                        if (orderData.order) {
+                            updateShippingCell(orderData.order);
+                        } else {
+                            window.location.reload();
+                        }
+
+                        showOrdersToast(result.message || 'Investigation started.', 'success');
+                    } else {
+                        showOrdersToast(result.message || 'Failed to start investigation.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Investigation start failed:', error);
+                    showOrdersToast('An error occurred. Please try again.', 'error');
+                }
+            }
+
             function escapeHtml(str) {
                 if (!str) return '';
-                return String(str).replace(/[&<>"']/g, function (m) {
+                return String(str).replace(/[&<>"']/g, function(m) {
                     return {
                         '&': '&amp;',
                         '<': '&lt;',
                         '>': '&gt;',
                         '"': '&quot;',
                         "'": '&#39;'
-                    }[m];
+                    } [m];
                 });
             }
 
@@ -4703,20 +5047,31 @@
                 const hasTrackingNumber = !!order.tracking_number;
                 const hasTrackingLink = hasTrackingNumber && (hasCompany || !!order.tracking_url);
                 const hasShippingDetails = !!order.has_shipping_details;
-                const trackingStatusClass = order.tracking_status
-                    ? `status-${String(order.tracking_status).toLowerCase().replace(/\s+/g, '_')}`
-                    : '';
+                const trackingStatusClass = order.tracking_status ?
+                    `status-${String(order.tracking_status).toLowerCase().replace(/\s+/g, '_')}` :
+                    '';
 
-                const mainContent = hasCompany || hasTrackingNumber
-                    ? `
+                const mainContent = hasCompany || hasTrackingNumber ?
+                    `
                         <div class="shipping-main">
                             ${hasCompany ? `<span class="shipping-company">${escapeHtml(order.shipping_company_name)}</span>` : ''}
                             ${hasTrackingNumber ? `<button type="button" class="tracking-number-link tracking-link-btn" onclick="showTrackingHistoryByOrder(${order.id})" title="Click to view history">${escapeHtml(order.tracking_number)}</button>` : ''}
                             ${hasTrackingLink ? `<button class="btn-sync-inline" onclick="syncTracking(${order.id}, this)" title="Sync Tracking"><i class="bi bi-arrow-repeat"></i></button>` : ''}
                         </div>
                         ${order.tracking_status ? `<div class="shipping-status-label ${trackingStatusClass}">${escapeHtml(order.tracking_status)}</div>` : ''}
-                    `
-                    : '<span class="text-muted shipping-empty-placeholder">&mdash;</span>';
+                    ` :
+                    '<span class="text-muted shipping-empty-placeholder">&mdash;</span>';
+
+                const investigationHtml = (window.canEditInvestigations && order.tracking_number) ?
+                    (order.investigation_status && order.investigation_status !== 'Resolved' && order.investigation_status !==
+                        'Delivered' ?
+                        `<div class="mt-2 text-center">
+                            <span class="badge bg-primary" style="font-size: 0.7rem;"><i class="bi bi-search"></i> Investigation Active</span>
+                           </div>` :
+                        `<button type="button" class="btn btn-sm btn-outline-secondary w-100 mt-2 start-investigation-btn" style="font-size: 0.75rem; border-radius: 6px;" onclick="startInvestigation(${order.id})">
+                            <i class="bi bi-search"></i> Start Investigation
+                           </button>`) :
+                    '';
 
                 return `
                     ${mainContent}
@@ -4724,6 +5079,7 @@
                         <i class="bi bi-truck"></i>
                         <span>${hasShippingDetails ? 'Edit Shipping' : 'Add Shipping'}</span>
                     </button>
+                    ${investigationHtml}
                 `;
             }
 
@@ -4799,7 +5155,7 @@
                 const syncBtn = document.getElementById('modalSyncBtn');
                 if (syncBtn) {
                     // Creating a fresh onClick handler that captures current orderId
-                    syncBtn.onclick = function () {
+                    syncBtn.onclick = function() {
                         syncTracking(orderId, this);
                     };
                 }
@@ -4835,7 +5191,8 @@
                 }
 
                 document.getElementById('shippingModalOrderId').value = orderId;
-                document.getElementById('shippingModalTitle').textContent = state.has_shipping_details ? 'Edit Shipping' : 'Add Shipping';
+                document.getElementById('shippingModalTitle').textContent = state.has_shipping_details ? 'Edit Shipping' :
+                    'Add Shipping';
 
                 ensureCarrierOption(state.shipping_company_name);
 
@@ -4936,69 +5293,62 @@
                 modal.show();
             }
 
-            document.querySelectorAll('.status-dropdown-select').forEach(select => {
-                select.addEventListener('change', async function () {
-                    const orderId = this.dataset.orderId;
-                    const previousStatus = this.dataset.currentStatus || '';
-                    const nextStatus = this.value;
-                    const badge = document.getElementById(`status-badge-${orderId}`);
+            window.performStatusUpdate = async function(orderId, nextStatus, badge) {
+                if (!orderId || !nextStatus) return;
 
-                    if (!orderId || !nextStatus || nextStatus === previousStatus) {
-                        return;
+                const previousStatus = badge.dataset.currentStatus || '';
+                badge.style.opacity = '0.65';
+                badge.style.pointerEvents = 'none';
+
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/update-status`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            status: nextStatus
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Failed to update status.');
                     }
 
-                    this.disabled = true;
+                    badge.dataset.currentStatus = result.status || nextStatus;
+
                     if (badge) {
-                        badge.style.opacity = '0.65';
-                    }
+                        // Update class
+                        badge.className = badge.className.replace(/status-\w+/,
+                            `status-${result.status_color || 'secondary'}`);
 
-                    try {
-                        const response = await fetch(`/admin/orders/${orderId}/update-status`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: JSON.stringify({ status: nextStatus })
-                        });
-
-                        const result = await response.json();
-
-                        if (!response.ok || !result.success) {
-                            throw new Error(result.message || 'Failed to update status.');
+                        // Update icon
+                        const icon = badge.querySelector('.status-icon');
+                        if (icon) {
+                            icon.className = `bi ${result.status_icon || 'bi-circle'} status-icon`;
                         }
 
-                        this.dataset.currentStatus = result.status || nextStatus;
-
-                        if (badge) {
-                            badge.className = badge.className.replace(/status-\w+/, `status-${result.status_color || 'secondary'}`);
-
-                            const icon = badge.querySelector('.status-icon');
-                            if (icon) {
-                                icon.className = `bi ${result.status_icon || 'bi-circle'} status-icon`;
-                            }
-
-                            const label = badge.querySelector('.status-label');
-                            if (label) {
-                                label.textContent = result.status_label || 'N/A';
-                            }
-                        }
-
-                        showOrdersToast(result.message || 'Status updated successfully.', 'success');
-                    } catch (error) {
-                        console.error('Status update error:', error);
-                        this.value = previousStatus;
-                        showOrdersToast(error.message || 'Failed to update status.', 'error');
-                    } finally {
-                        this.disabled = false;
-                        if (badge) {
-                            badge.style.opacity = '1';
+                        // Update label
+                        const label = badge.querySelector('.status-label');
+                        if (label) {
+                            label.textContent = result.status_label || 'N/A';
                         }
                     }
-                });
-            });
+
+                    showOrdersToast(result.message || 'Status updated successfully.', 'success');
+                } catch (error) {
+                    console.error('Status update error:', error);
+                    showOrdersToast(error.message || 'Failed to update status.', 'error');
+                } finally {
+                    badge.style.opacity = '1';
+                    badge.style.pointerEvents = 'auto';
+                }
+            };
         </script>
     @endpush
 

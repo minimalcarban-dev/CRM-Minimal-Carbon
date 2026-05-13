@@ -1133,12 +1133,7 @@
                 });
             });
 
-            // Add success message handling
-            @if(session('success'))
-                if (typeof showAlert !== 'undefined') {
-                    showAlert('{{ session('success') }}', 'success', 'Success');
-                }
-            @endif
+
                             });
     </script>
 

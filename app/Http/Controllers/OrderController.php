@@ -69,7 +69,7 @@ class OrderController extends Controller
 
         $shippedStatuses = ['r_order_shipped', 'd_order_shipped', 'j_order_shipped'];
         $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
-        $baseQuery = Order::query()->with(['company', 'creator', 'factoryRelation']);
+        $baseQuery = Order::query()->with(['company', 'creator', 'factoryRelation', 'investigation']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -353,9 +353,9 @@ class OrderController extends Controller
         $companies = Company::where('status', 'active')->orderBy('name')->get();
         $statusTransitionService = app(StatusTransitionService::class);
         $statusFlowOptions = [
-            'ready_to_ship' => $statusTransitionService->getValidStatuses('ready_to_ship'),
-            'custom_diamond' => $statusTransitionService->getValidStatuses('custom_diamond'),
-            'custom_jewellery' => $statusTransitionService->getValidStatuses('custom_jewellery'),
+            'ready_to_ship' => array_filter($statusTransitionService->getValidStatuses('ready_to_ship'), fn($s) => !str_ends_with($s, '_cancelled')),
+            'custom_diamond' => array_filter($statusTransitionService->getValidStatuses('custom_diamond'), fn($s) => !str_ends_with($s, '_cancelled')),
+            'custom_jewellery' => array_filter($statusTransitionService->getValidStatuses('custom_jewellery'), fn($s) => !str_ends_with($s, '_cancelled')),
         ];
 
         // Mark all unread order-created notifications as read for this admin
@@ -1729,6 +1729,13 @@ class OrderController extends Controller
         $channel->users()->syncWithoutDetaching($membersPayload);
     }
 
+    public function getShipping(Order $order)
+    {
+        return response()->json([
+            'order' => $this->buildOrderShippingPayload($order->load('investigation'))
+        ]);
+    }
+
     /**
      * Sync tracking data from carrier website
      */
@@ -2370,6 +2377,26 @@ class OrderController extends Controller
                 ]);
             });
 
+            // ── Queue update notifications ─────────────────────────────────────
+            dispatch(function () use ($order, $currentStatus, $newStatus, $admin) {
+                $adminsToNotify = Admin::where('id', '!=', $admin->id)
+                    ->where(function ($q) {
+                        $q->where('is_super', true)
+                            ->orWhereHas('permissions', function ($pq) {
+                                $pq->whereIn('slug', ['orders.view', 'orders.view_team']);
+                            });
+                    })->get();
+
+                if ($adminsToNotify->isNotEmpty()) {
+                    Notification::send($adminsToNotify, new OrderUpdatedNotification(
+                        $order,
+                        $admin,
+                        ['Diamond Status' => $this->formatStatusLabel($currentStatus)],
+                        ['Diamond Status' => $this->formatStatusLabel($newStatus)]
+                    ));
+                }
+            })->afterResponse();
+
             $statusUi = $this->buildOrderStatusUiPayload($newStatus);
 
             Log::info('Order status updated via dropdown', [
@@ -2566,6 +2593,7 @@ class OrderController extends Controller
             'dispatch_date' => optional($order->dispatch_date)->format('Y-m-d'),
             'dispatch_date_label' => optional($order->dispatch_date)->format('d M Y'),
             'has_shipping_details' => filled($order->shipping_company_name) || filled($order->tracking_number) || filled($order->tracking_url) || filled($order->dispatch_date),
+            'investigation_status' => $order->investigation ? $order->investigation->investigation_status : null,
         ];
     }
 

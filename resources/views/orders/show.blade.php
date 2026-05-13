@@ -3255,6 +3255,16 @@
                     ? `This payment can change status from <b>${statusLabel(currentStatus)}</b> to <b>${statusLabel(projectedStatus)}</b>.<br><br>Do you want to continue?`
                     : `You are about to record <b>$ ${enteredAmount.toFixed(2)}</b> for this order.<br><br>Do you want to continue?`;
 
+                if (typeof showConfirm !== 'undefined') {
+                    showConfirm(html, title, 'Yes, Add Payment', 'Cancel').then((confirmed) => {
+                        if (confirmed) {
+                            paymentForm.dataset.confirmed = '1';
+                            paymentForm.submit();
+                        }
+                    });
+                    return;
+                }
+
                 if (typeof Swal === 'undefined') {
                     const confirmed = window.confirm('Are you sure you want to record this payment?');
                     if (confirmed) {
