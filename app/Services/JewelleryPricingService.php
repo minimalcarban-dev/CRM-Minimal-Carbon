@@ -127,6 +127,11 @@ class JewelleryPricingService
             $materialValue = $weight * $baseRate;
             $laborCost = $weight * $laborRate;
             $subtotal = $materialValue + $laborCost + $stoneCost + $extraCost;
+
+            if ($materialCode === 'silver_935') {
+                $subtotal += $this->settingFloat('jewellery_pricing.silver_argentium_extra', 0);
+            }
+
             $commissionAmount = $subtotal * ($commissionPercent / 100);
             $afterCommission = $subtotal + $commissionAmount;
             $profitAmount = $afterCommission * ($profitPercent / 100);
