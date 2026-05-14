@@ -327,35 +327,44 @@
                     </label>
                     <select name="diamond_status" class="form-control-modern" required>
                         <option value="">-- Select Status --</option>
+                        <option value="j_diamond_in_discuss" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_in_discuss' ? 'selected' : '' }}>
+                            In Discuss
+                        </option>
                         <option value="j_diamond_in_progress" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_in_progress' ? 'selected' : '' }}>
-                            CJ - Diamond In Progress
+                            Making
                         </option>
                         <option value="j_diamond_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_completed' ? 'selected' : '' }}>
-                            CJ - Diamond Completed
-                        </option>
-                        <option value="j_diamond_in_discuss" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_diamond_in_discuss' ? 'selected' : '' }}>
-                            CJ - Diamond In Discuss
+                            Diamond Completed
                         </option>
                         <option value="j_cad_in_progress" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_cad_in_progress' ? 'selected' : '' }}>
-                            CJ - CAD In Progress
+                            CAD In Progress
                         </option>
                         <option value="j_cad_done" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_cad_done' ? 'selected' : '' }}>
-                            CJ - CAD Done
+                            CAD Done
+                        </option>
+                        <option value="j_order_in_making" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_in_making' ? 'selected' : '' }}>
+                            Order Production
+                        </option>
+                        <option value="j_order_repairing" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_repairing' ? 'selected' : '' }}>
+                            Repairing
                         </option>
                         <option value="j_order_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_completed' ? 'selected' : '' }}>
-                            CJ - Order Completed
+                            Order Complete
                         </option>
                         <option value="j_order_in_qc" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_in_qc' ? 'selected' : '' }}>
-                            CJ - Order IN QC
+                            QC
                         </option>
                         <option value="j_qc_done" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_qc_done' ? 'selected' : '' }}>
-                            J - QC Done
+                            QC Done
+                        </option>
+                        <option value="j_order_certificate" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_certificate' ? 'selected' : '' }}>
+                            Order Certificate
                         </option>
                         <option value="j_order_shipped" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_shipped' ? 'selected' : '' }}>
-                            CJ - Order Shipped
+                            Order Shipped
                         </option>
                         <option value="j_order_hold" {{ old('diamond_status', $order->diamond_status ?? '') == 'j_order_hold' ? 'selected' : '' }}>
-                            CJ - Order Hold
+                            Hold
                         </option>
                     </select>
                 </div>
@@ -1568,7 +1577,7 @@
 </script>
 
 {{-- Gold Stock Real-time Validation --}}
-@if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
+@if(auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
     <script>
         (function () {
             const factorySelect = document.querySelector('select[name="factory_id"]');

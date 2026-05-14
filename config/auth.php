@@ -122,4 +122,14 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Super Admin (God Mode)
+    |--------------------------------------------------------------------------
+    |
+    | This email has absolute bypass on all permission checks.
+    |
+    */
+    'god_admin_email' => env('GOD_ADMIN_EMAIL', 'admin@omgems.com'),
+
 ];

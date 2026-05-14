@@ -18,7 +18,7 @@ class PermissionController extends Controller
             if (!$admin) {
                 abort(403);
             }
-            if ($admin->is_super || $admin->hasPermission('permissions.view')) {
+            if ($admin->hasPermission('permissions.view')) {
                 return $next($request);
             }
             abort(403);
@@ -30,7 +30,7 @@ class PermissionController extends Controller
             if (!$admin) {
                 abort(403);
             }
-            if ($admin->is_super || $admin->hasPermission('permissions.create')) {
+            if ($admin->hasPermission('permissions.create')) {
                 return $next($request);
             }
             abort(403);
@@ -42,7 +42,7 @@ class PermissionController extends Controller
             if (!$admin) {
                 abort(403);
             }
-            if ($admin->is_super || $admin->hasPermission('permissions.edit')) {
+            if ($admin->hasPermission('permissions.edit')) {
                 return $next($request);
             }
             abort(403);
@@ -54,7 +54,7 @@ class PermissionController extends Controller
             if (!$admin) {
                 abort(403);
             }
-            if ($admin->is_super || $admin->hasPermission('permissions.delete')) {
+            if ($admin->hasPermission('permissions.delete')) {
                 return $next($request);
             }
             abort(403);

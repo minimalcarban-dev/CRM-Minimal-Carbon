@@ -4405,48 +4405,33 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        }
-                        // Global alert helper function
-                        window.showAlert = function(message, type = 'info', title = null) {
-                            // Map legacy sweetalert types to toastify types
-                            let toastType = type;
-                            if (type === 'danger') toastType = 'error';
-
-                            // Escape HTML entities to prevent XSS
-                            const escapeHtml = (str) => str ? String(str).replace(/[&<>"']/g, c => ({
-                                '&': '&amp;',
-                                '<': '&lt;',
-                                '>': '&gt;',
-                                '"': '&quot;',
-                                "'": '&#39;'
-                            })[c]) : '';
-
-                            // Format message if there's a title
-                            const fullMessage = title ?
-                                `<strong>${escapeHtml(title)}</strong><br>${escapeHtml(message)}` : escapeHtml(message);
-
-                            showToast(fullMessage, 4000, toastType);
-                        };
+                    if (data.success) {
+                        location.reload();
                     }
-                }
-            `;
-        document.head.appendChild(style);
+                });
+        }
 
         // Global alert helper function
         window.showAlert = function(message, type = 'info', title = null) {
             // Map legacy sweetalert types to toastify types
             let toastType = type;
             if (type === 'danger') toastType = 'error';
-            
-            // Format message if there's a title
-            const fullMessage = title ? ` < strong > $ {
-                title
-            } < /strong><br>${message}` : message;
 
-        showToast(fullMessage, 4000, toastType);
-    };
+            // Escape HTML entities to prevent XSS
+            const escapeHtml = (str) => str ? String(str).replace(/[&<>"']/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[c]) : '';
+
+            // Format message if there's a title
+            const fullMessage = title ?
+                `<strong>${escapeHtml(title)}</strong><br>${escapeHtml(message)}` : escapeHtml(message);
+
+            showToast(fullMessage, 4000, toastType);
+        };
 
     // Global confirm helper function
     window.showConfirm = function(message, title = 'Are you sure?', confirmButtonText = 'Yes',

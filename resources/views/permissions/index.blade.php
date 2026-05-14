@@ -92,7 +92,7 @@
                     <p class="page-subtitle">Manage and organize system permissions by modules and actions</p>
                 </div>
                 <div class="header-right">
-                    @if (isset($currentAdmin) && ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.create')))
+                    @if (isset($currentAdmin) && $currentAdmin->hasPermission('permissions.create'))
                         <a href="{{ route('permissions.create') }}" class="btn-primary-custom">
                             <i class="bi bi-plus-circle"></i>
                             <span>Create Permission</span>
@@ -231,19 +231,19 @@
                                             <i class="bi {{ $iconMap[$action] ?? 'bi-circle-fill' }}"></i>
                                         </div>
                                         <div class="permission-actions">
-                                            @if ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.view'))
+                                            @if ($currentAdmin->hasPermission('permissions.view'))
                                                 <a href="{{ route('permissions.show', $perm) }}" class="action-btn action-btn-view"
                                                     title="View">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                             @endif
-                                            @if ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.edit'))
+                                            @if ($currentAdmin->hasPermission('permissions.edit'))
                                                 <a href="{{ route('permissions.edit', $perm) }}" class="action-btn action-btn-edit"
                                                     title="Edit">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                             @endif
-                                            @if ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.delete'))
+                                            @if ($currentAdmin->hasPermission('permissions.delete'))
                                                 <form action="{{ route('permissions.delete', $perm) }}" method="POST" class="d-inline"
                                                     class="delete-form">
                                                     @csrf @method('DELETE')

@@ -21,13 +21,9 @@ class EnsureAdminHasPermission
             return redirect()->route('admin.login');
         }
 
-        // Super admin is always allowed.
-        if ($admin->is_super) {
-            return $next($request);
-        }
-
-        // Permission check for normal admins.
-        if ($permission && $admin->hasPermission($permission)) {
+        // Delegate to Admin::hasPermission() which handles super admin bypass
+        // (including strict-prefix enforcement for purchases, expenses, etc.)
+        if (!$permission || $admin->hasPermission($permission)) {
             return $next($request);
         }
 

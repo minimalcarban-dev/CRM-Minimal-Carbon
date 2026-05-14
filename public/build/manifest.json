@@ -1,6 +1,6 @@
 {
-  "_Chat-Dhn5dQby.js": {
-    "file": "assets/Chat-Dhn5dQby.js",
+  "_Chat-BT1d_Goi.js": {
+    "file": "assets/Chat-BT1d_Goi.js",
     "name": "Chat",
     "isDynamicEntry": true,
     "imports": [
@@ -18,7 +18,7 @@
     "src": "_Chat-XaHJ7U5O.css"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CgWunnvb.css",
+    "file": "assets/app-BgdhkqoB.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -27,22 +27,22 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B2XBm2Q_.js",
+    "file": "assets/app-h7Asups0.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "_Chat-Dhn5dQby.js"
+      "_Chat-BT1d_Goi.js"
     ]
   },
   "resources/js/components/MediaGallery.vue": {
-    "file": "assets/MediaGallery-CoSzGIq6.js",
+    "file": "assets/MediaGallery-vPmMa9bh.js",
     "name": "MediaGallery",
     "src": "resources/js/components/MediaGallery.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_Chat-Dhn5dQby.js"
+      "_Chat-BT1d_Goi.js"
     ],
     "css": [
       "assets/MediaGallery-BRQO4LuG.css"

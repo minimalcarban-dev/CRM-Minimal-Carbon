@@ -585,9 +585,9 @@
     @php
         $currentAdmin = auth()->guard('admin')->user();
         $canViewPricing =
-            $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_pricing'));
+            $currentAdmin && $currentAdmin->hasPermission('jewellery_stock.view_pricing');
         $canViewProfit =
-            $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_profit'));
+            $currentAdmin && $currentAdmin->hasPermission('jewellery_stock.view_profit');
         $images = collect($jewelleryStock->images ?? [])
             ->filter(fn ($image) => is_array($image) && !empty($image['url']))
             ->values();
@@ -1039,7 +1039,21 @@
                         </div>
                         <div class="card-body">
                             <div class="variant-list">
-                                @foreach ($jewelleryStock->pricingVariants as $variant)
+                                @php
+                                    $sortOrder = [
+                                        'silver_925' => 1,
+                                        'silver_935' => 2,
+                                        'gold_10k' => 3,
+                                        'gold_14k' => 4,
+                                        'gold_18k' => 5,
+                                        'gold_20k' => 6,
+                                        'platinum_950' => 7,
+                                        'gold_22k' => 8,
+                                    ];
+                                @endphp
+                                @foreach ($jewelleryStock->pricingVariants->sortBy(function($variant) use ($sortOrder) {
+                                    return $sortOrder[$variant->material_code] ?? 99;
+                                }) as $variant)
                                     <div class="variant-card {{ $variant->is_default_listing ? 'is-default' : '' }}">
                                         <div class="variant-row">
                                             <span class="variant-name">{{ $variant->variant_label }}</span>

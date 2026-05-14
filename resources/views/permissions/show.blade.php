@@ -15,7 +15,7 @@
                     <p class="page-subtitle mb-0">View permission information and configuration</p>
                 </div>
                 <div class="header-actions">
-                    @if(isset($currentAdmin) && ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.edit')))
+                    @if(isset($currentAdmin) && $currentAdmin->hasPermission('permissions.edit'))
                         <a href="{{ route('permissions.edit', $permission) }}" class="btn-primary-custom">
                             <i class="bi bi-pencil-square me-2"></i>Edit Permission
                         </a>
@@ -165,7 +165,7 @@
                     </div>
                     <div class="info-card-body">
                         <div class="action-buttons">
-                            @if(isset($currentAdmin) && ($currentAdmin->is_super || $currentAdmin->hasPermission('permissions.edit')))
+                            @if(isset($currentAdmin) && $currentAdmin->hasPermission('permissions.edit'))
                                 <a href="{{ route('permissions.edit', $permission) }}" class="action-btn primary">
                                     <i class="bi bi-pencil-square"></i>
                                     <span>Edit Permission</span>

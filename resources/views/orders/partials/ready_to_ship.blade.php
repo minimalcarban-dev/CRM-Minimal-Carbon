@@ -1783,7 +1783,7 @@
 </script>
 
 {{-- Gold Stock Real-time Validation --}}
-@if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
+@if(auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
     <script>
         (function () {
             const factorySelect = document.querySelector('select[name="factory_id"]');

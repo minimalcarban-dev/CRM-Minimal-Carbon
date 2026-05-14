@@ -12,9 +12,7 @@ class JewelleryStockPricing extends Model
     protected $fillable = [
         'jewellery_stock_id',
         'material_code',
-        'metal_color',
         'net_weight_grams',
-        'color_weights',
         'purity_percent',
         'base_rate_usd_per_gram',
         'material_value',
@@ -37,7 +35,6 @@ class JewelleryStockPricing extends Model
 
     protected $casts = [
         'net_weight_grams' => 'decimal:3',
-        'color_weights' => 'array',
         'purity_percent' => 'decimal:2',
         'base_rate_usd_per_gram' => 'decimal:4',
         'material_value' => 'decimal:2',
@@ -71,6 +68,7 @@ class JewelleryStockPricing extends Model
             'gold_10k' => '10K Gold',
             'gold_14k' => '14K Gold',
             'gold_18k' => '18K Gold',
+            'gold_20k' => '20K Gold',
             'gold_22k' => '22K Gold',
             default => ucwords(str_replace('_', ' ', (string) $this->material_code)),
         };
@@ -78,9 +76,7 @@ class JewelleryStockPricing extends Model
 
     public function getVariantLabelAttribute(): string
     {
-        $color = $this->metal_color ? ucfirst($this->metal_color) . ' ' : '';
-
-        return trim($color . $this->material_label);
+        return $this->material_label;
     }
 
     public function getDiscountedPriceAttribute()

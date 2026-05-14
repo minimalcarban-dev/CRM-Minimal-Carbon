@@ -102,6 +102,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label">Color</label>
+                        <p class="form-value">{{ $diamond->color ?? 'N/A' }}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Clarity</label>
+                        <p class="form-value">{{ $diamond->clarity ?? 'N/A' }}</p>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label">Measurement</label>
                         <p class="form-value">{{ $diamond->measurement ?? 'N/A' }}</p>
                     </div>
@@ -235,7 +245,7 @@
                     <div class="form-group">
                         <label class="form-label">Duration Price</label>
                         <p class="form-value">
-                            @if(auth()->guard('admin')->user() && (auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing')))
+                            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing'))
                                 ${{ number_format($diamond->duration_price ?? 0, 2) }}
                             @else
                                 <span class="text-muted" title="Restricted">Restricted</span>
@@ -246,7 +256,7 @@
                     <div class="form-group">
                         <label class="form-label">Sold Out Price</label>
                         <p class="form-value">
-                            @if(auth()->guard('admin')->user() && (auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing')))
+                            @if(auth()->guard('admin')->user() && auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing'))
                                 ${{ number_format($diamond->sold_out_price ?? 0, 2) }}
                             @else
                                 <span class="text-muted" title="Restricted">Restricted</span>

@@ -24,7 +24,7 @@ class StoreOrderRequest extends FormRequest
             'diamond_sku' => 'nullable|string|max:191',
             'diamond_skus' => 'nullable|array',
             'diamond_skus.*' => 'nullable|string|max:191',
-            'diamond_status' => 'nullable|string|in:r_order_in_process,r_order_shipped,d_diamond_in_discuss,d_diamond_in_making,d_diamond_completed,d_diamond_in_certificate,d_order_shipped,j_diamond_in_progress,j_diamond_completed,j_diamond_in_discuss,j_cad_in_progress,j_cad_done,j_order_completed,j_order_in_qc,j_qc_done,j_order_shipped,j_order_hold',
+            'diamond_status' => 'nullable|string|in:r_order_in_process,r_order_shipped,r_order_cancelled,d_diamond_in_discuss,d_diamond_in_making,d_diamond_in_certificate,d_diamond_repairing,d_diamond_completed,d_order_shipped,d_order_cancelled,j_diamond_in_discuss,j_diamond_in_progress,j_diamond_completed,j_cad_in_progress,j_cad_done,j_order_in_making,j_order_repairing,j_order_completed,j_order_in_qc,j_qc_done,j_order_certificate,j_order_shipped,j_order_hold,j_order_cancelled',
             'company_id' => 'required|exists:companies,id',
             'factory_id' => 'nullable|exists:factories,id',
             'gross_sell' => 'nullable|numeric|min:0',

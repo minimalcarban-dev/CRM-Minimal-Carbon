@@ -65,7 +65,8 @@ class Admin extends Authenticatable
 
     public function isGodAdmin(): bool
     {
-        return $this->email === 'superadmin@example.com';
+        $godEmail = config('auth.god_admin_email');
+        return $this->email === $godEmail;
     }
 
     public function hasPermission(string $slug): bool
@@ -76,7 +77,7 @@ class Admin extends Authenticatable
 
         if ($this->is_super) {
             // List of strict prefixes that super admin shouldn't bypass
-            $strictPrefixes = ['purchases.', 'expenses.', 'gold-tracking.', 'factories.', 'sales.'];
+            $strictPrefixes = ['purchases.', 'expenses.', 'gold_tracking.', 'factories.', 'sales.'];
             $isStrict = false;
             foreach ($strictPrefixes as $prefix) {
                 if (str_starts_with($slug, $prefix)) {
