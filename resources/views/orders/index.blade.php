@@ -12,20 +12,24 @@
         // Custom Diamond
         'd_diamond_in_discuss' => 'info',
         'd_diamond_in_making' => 'warning',
-        'd_diamond_completed' => 'success',
         'd_diamond_in_certificate' => 'purple',
+        'd_diamond_repairing' => 'warning',
+        'd_diamond_completed' => 'success',
         'd_order_shipped' => 'dark',
         'd_order_cancelled' => 'danger',
 
         // Custom Jewellery
-        'j_diamond_in_progress' => 'info',
+        'j_diamond_in_discuss' => 'info',
+        'j_diamond_in_progress' => 'warning',
         'j_diamond_completed' => 'success',
-        'j_diamond_in_discuss' => 'cyan',
         'j_cad_in_progress' => 'warning',
         'j_cad_done' => 'purple',
+        'j_order_in_making' => 'warning',
+        'j_order_repairing' => 'warning',
         'j_order_completed' => 'success',
         'j_order_in_qc' => 'warning',
         'j_qc_done' => 'success',
+        'j_order_certificate' => 'purple',
         'j_order_shipped' => 'dark',
         'j_order_hold' => 'danger',
         'j_order_cancelled' => 'danger',
@@ -39,23 +43,58 @@
         // Custom Diamond
         'd_diamond_in_discuss' => 'bi-chat-dots',
         'd_diamond_in_making' => 'bi-tools',
-        'd_diamond_completed' => 'bi-gem',
         'd_diamond_in_certificate' => 'bi-file-earmark-text',
+        'd_diamond_repairing' => 'bi-hammer',
+        'd_diamond_completed' => 'bi-gem',
         'd_order_shipped' => 'bi-truck',
         'd_order_cancelled' => 'bi-x-circle',
 
         // Custom Jewellery
-        'j_diamond_in_progress' => 'bi-gem',
-        'j_diamond_completed' => 'bi-check-circle',
         'j_diamond_in_discuss' => 'bi-chat-dots',
+        'j_diamond_in_progress' => 'bi-tools',
+        'j_diamond_completed' => 'bi-gem',
         'j_cad_in_progress' => 'bi-pencil-square',
         'j_cad_done' => 'bi-file-check',
+        'j_order_in_making' => 'bi-tools',
+        'j_order_repairing' => 'bi-hammer',
         'j_order_completed' => 'bi-award',
         'j_order_in_qc' => 'bi-search',
         'j_qc_done' => 'bi-check-all',
+        'j_order_certificate' => 'bi-file-earmark-check',
         'j_order_shipped' => 'bi-truck',
         'j_order_hold' => 'bi-pause-circle',
         'j_order_cancelled' => 'bi-x-circle',
+    ];
+
+    $statusLabels = [
+        'r_order_in_process' => 'In Process',
+        'r_order_shipped' => 'Shipped',
+        'r_order_cancelled' => 'Cancelled',
+
+        // Custom Diamond
+        'd_diamond_in_discuss' => 'In Discuss',
+        'd_diamond_in_making' => 'Making',
+        'd_diamond_in_certificate' => 'Diamond Certificate',
+        'd_diamond_repairing' => 'Repairing',
+        'd_diamond_completed' => 'Diamond Completed',
+        'd_order_shipped' => 'Order Shipped',
+        'd_order_cancelled' => 'Cancelled',
+
+        // Custom Jewellery
+        'j_diamond_in_discuss' => 'In Discuss',
+        'j_diamond_in_progress' => 'Making',
+        'j_diamond_completed' => 'Diamond Completed',
+        'j_cad_in_progress' => 'CAD In Progress',
+        'j_cad_done' => 'CAD Done',
+        'j_order_in_making' => 'Order Production',
+        'j_order_repairing' => 'Repairing',
+        'j_order_completed' => 'Order Complete',
+        'j_order_in_qc' => 'QC',
+        'j_qc_done' => 'QC Done',
+        'j_order_certificate' => 'Order Certificate',
+        'j_order_shipped' => 'Order Shipped',
+        'j_order_hold' => 'Hold',
+        'j_order_cancelled' => 'Cancelled',
     ];
 @endphp
 
@@ -387,63 +426,57 @@
 
                     {{-- Ready to Ship Statuses --}}
                     <option value="r_order_in_process" class="status-option ready_to_ship"
-                        {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>R - Order In Process
-                    </option>
+                        {{ request('diamond_status') == 'r_order_in_process' ? 'selected' : '' }}>In Process</option>
                     <option value="r_order_shipped" class="status-option ready_to_ship"
-                        {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>R - Order Shipped</option>
+                        {{ request('diamond_status') == 'r_order_shipped' ? 'selected' : '' }}>Shipped</option>
                     <option value="r_order_cancelled" class="status-option ready_to_ship"
-                        {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>R - Order Cancelled
-                    </option>
+                        {{ request('diamond_status') == 'r_order_cancelled' ? 'selected' : '' }}>Cancelled</option>
 
                     {{-- Custom Diamond Statuses --}}
                     <option value="d_diamond_in_discuss" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>D - Diamond In Discuss
-                    </option>
+                        {{ request('diamond_status') == 'd_diamond_in_discuss' ? 'selected' : '' }}>In Discuss</option>
                     <option value="d_diamond_in_making" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>D - Diamond In Making
-                    </option>
-                    <option value="d_diamond_completed" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>D - Diamond Completed
-                    </option>
+                        {{ request('diamond_status') == 'd_diamond_in_making' ? 'selected' : '' }}>Making</option>
                     <option value="d_diamond_in_certificate" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>D - Diamond In
-                        Certificate</option>
+                        {{ request('diamond_status') == 'd_diamond_in_certificate' ? 'selected' : '' }}>Diamond Certificate</option>
+                    <option value="d_diamond_repairing" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_repairing' ? 'selected' : '' }}>Repairing</option>
+                    <option value="d_diamond_completed" class="status-option custom_diamond"
+                        {{ request('diamond_status') == 'd_diamond_completed' ? 'selected' : '' }}>Diamond Completed</option>
                     <option value="d_order_shipped" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>D - Order Shipped</option>
+                        {{ request('diamond_status') == 'd_order_shipped' ? 'selected' : '' }}>Order Shipped</option>
                     <option value="d_order_cancelled" class="status-option custom_diamond"
-                        {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>D - Order Cancelled
-                    </option>
+                        {{ request('diamond_status') == 'd_order_cancelled' ? 'selected' : '' }}>Cancelled</option>
 
                     {{-- Custom Jewellery Statuses --}}
-                    <option value="j_diamond_in_progress" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>J - Diamond In
-                        Progress
-                    </option>
-                    <option value="j_diamond_completed" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>J - Diamond Completed
-                    </option>
                     <option value="j_diamond_in_discuss" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>J - Diamond In Discuss
-                    </option>
+                        {{ request('diamond_status') == 'j_diamond_in_discuss' ? 'selected' : '' }}>In Discuss</option>
+                    <option value="j_diamond_in_progress" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_in_progress' ? 'selected' : '' }}>Making</option>
+                    <option value="j_diamond_completed" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_diamond_completed' ? 'selected' : '' }}>Diamond Completed</option>
                     <option value="j_cad_in_progress" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>J - CAD In Progress
-                    </option>
+                        {{ request('diamond_status') == 'j_cad_in_progress' ? 'selected' : '' }}>CAD In Progress</option>
                     <option value="j_cad_done" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>J - CAD Done</option>
+                        {{ request('diamond_status') == 'j_cad_done' ? 'selected' : '' }}>CAD Done</option>
+                    <option value="j_order_in_making" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_in_making' ? 'selected' : '' }}>Order Production</option>
+                    <option value="j_order_repairing" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_repairing' ? 'selected' : '' }}>Repairing</option>
                     <option value="j_order_completed" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>J - Order Completed
-                    </option>
+                        {{ request('diamond_status') == 'j_order_completed' ? 'selected' : '' }}>Order Complete</option>
                     <option value="j_order_in_qc" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>J - Order IN QC</option>
+                        {{ request('diamond_status') == 'j_order_in_qc' ? 'selected' : '' }}>QC</option>
                     <option value="j_qc_done" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>J - QC Done</option>
+                        {{ request('diamond_status') == 'j_qc_done' ? 'selected' : '' }}>QC Done</option>
+                    <option value="j_order_certificate" class="status-option custom_jewellery"
+                        {{ request('diamond_status') == 'j_order_certificate' ? 'selected' : '' }}>Order Certificate</option>
                     <option value="j_order_shipped" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>J - Order Shipped</option>
+                        {{ request('diamond_status') == 'j_order_shipped' ? 'selected' : '' }}>Order Shipped</option>
                     <option value="j_order_hold" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>J - Order Hold</option>
+                        {{ request('diamond_status') == 'j_order_hold' ? 'selected' : '' }}>Hold</option>
                     <option value="j_order_cancelled" class="status-option custom_jewellery"
-                        {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>J - Order Cancelled
-                    </option>
+                        {{ request('diamond_status') == 'j_order_cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
 
                 <div class="date-range-wrapper">
@@ -1151,7 +1184,7 @@
                                                         data-order-id="{{ $order->id }}">
                                                         <i class="bi {{ $icon }} status-icon"></i>
                                                         <span
-                                                            class="status-label">{{ ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}</span>
+                                                            class="status-label">{{ $statusLabels[$order->diamond_status] ?? ucfirst(str_replace('_', ' ', preg_replace('/^[rdj]_/', '', $order->diamond_status ?? 'N/A'))) }}</span>
                                                         <i class="bi bi-chevron-down ms-1"
                                                             style="font-size: 0.7rem; opacity: 0.8;"></i>
                                                     </span>
@@ -1161,7 +1194,7 @@
                                                             @php
                                                                 $optColor = $statusColors[$statusOption] ?? 'secondary';
                                                                 $optIcon = $statusIcons[$statusOption] ?? 'bi-circle';
-                                                                $optLabel = ucfirst(
+                                                                $optLabel = $statusLabels[$statusOption] ?? ucfirst(
                                                                     str_replace(
                                                                         '_',
                                                                         ' ',
@@ -1310,18 +1343,18 @@
                                             <div class="mt-1">
                                                 <span
                                                     class="s-badge {{ $order->payment_status === 'full' ? 'status-completed' : ($order->payment_status === 'partial' ? 'status-factory_making' : 'status-r_order_cancelled') }}">
-                                                    {{ $order->payment_status_label }}
+                                                    {{ ['full' => 'Full Paid', 'partial' => 'Partial Paid', 'due' => 'Due'][$order->payment_status] ?? ucfirst($order->payment_status ?? 'N/A') }}
                                                 </span>
                                                 @if (in_array($order->payment_status, ['partial', 'due'], true))
                                                     <div class="d-flex flex-wrap gap-2 mt-2">
                                                         <span class="badge rounded-pill px-3 py-2"
                                                             style="{{ $order->payment_status === 'partial' ? 'background: rgba(245, 158, 11, 0.15); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.25);' : 'background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.18);' }}">
                                                             Received
-                                                            ${{ number_format((float) $order->amount_received_total, 2) }}
+                                                            ${{ number_format((float) ($order->amount_received ?? 0), 2) }}
                                                         </span>
                                                         <span class="badge rounded-pill px-3 py-2"
                                                             style="{{ $order->payment_status === 'partial' ? 'background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.2);' : 'background: rgba(148, 163, 184, 0.12); color: #475569; border: 1px solid rgba(148, 163, 184, 0.18);' }}">
-                                                            Due ${{ number_format((float) $order->amount_due_total, 2) }}
+                                                            Due ${{ number_format((float) ($order->amount_due ?? 0), 2) }}
                                                         </span>
                                                     </div>
                                                 @endif
@@ -1412,14 +1445,13 @@
                                                     $order->investigation &&
                                                         $order->investigation->investigation_status !== 'Resolved' &&
                                                         $order->investigation->investigation_status !== 'Delivered')
-                                                    <div class="mt-2 text-center">
-                                                        <span class="badge bg-primary" style="font-size: 0.7rem;"><i
-                                                                class="bi bi-search"></i> Investigation Active</span>
-                                                    </div>
+                                                    <a href="{{ route('investigations.index', ['order_id' => $order->id]) }}"
+                                                        class="investigation-action-btn">
+                                                        <i class="bi bi-box-arrow-up-right"></i> Go to Investigation
+                                                    </a>
                                                 @else
                                                     <button type="button"
-                                                        class="btn btn-sm btn-outline-secondary w-100 mt-2 start-investigation-btn"
-                                                        style="font-size: 0.75rem; border-radius: 6px;"
+                                                        class="investigation-action-btn-outline start-investigation-btn"
                                                         onclick="startInvestigation({{ $order->id }})">
                                                         <i class="bi bi-search"></i> Start Investigation
                                                     </button>
@@ -1743,43 +1775,59 @@
         }
 
         .header-stats {
-            border-top: 1px solid var(--border);
             display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            min-width: 180px;
-            padding-top: 0.65rem;
-            text-align: right;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            align-items: center;
         }
 
         .header-stat-item {
-            align-items: baseline;
-            border-radius: 8px;
-            color: var(--gray);
+            align-items: center;
+            border-radius: 999px;
+            color: #475569;
             display: inline-flex;
-            gap: 0.35rem;
-            justify-content: flex-end;
-            padding: 0.15rem 0.25rem;
+            gap: 0.5rem;
+            padding: 0.35rem 0.45rem 0.35rem 0.85rem;
             text-decoration: none;
-            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            font-size: 0.82rem;
         }
 
         .header-stat-item:hover,
         .header-stat-item.active {
-            background: rgba(99, 102, 241, 0.08);
-            color: var(--primary);
-            transform: translateX(-2px);
+            background: #f8fafc;
+            border-color: #6366f1;
+            color: #6366f1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
         }
 
         .header-stat-label {
-            font-size: 0.82rem;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .header-stat-value {
-            color: var(--primary);
-            font-size: 1rem;
-            font-weight: 800;
+            font-weight: 700;
+            background: #6366f1;
+            color: white;
+            padding: 0.15rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .header-stat-item:hover .header-stat-value,
+        .header-stat-item.active .header-stat-value {
+            background: #4f46e5;
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
         }
 
         .btn-drafts-custom {
@@ -2987,8 +3035,9 @@
         .shipping-action-btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.4rem;
-            width: fit-content;
+            width: 100%;
             border: 1px solid rgba(59, 130, 246, 0.25);
             background: rgba(59, 130, 246, 0.08);
             color: #1d4ed8;
@@ -3002,6 +3051,53 @@
         .shipping-action-btn:hover {
             background: rgba(59, 130, 246, 0.14);
             color: #1e40af;
+        }
+
+        .investigation-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            width: 100%;
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            background: rgba(99, 102, 241, 0.08);
+            color: #4338ca;
+            border-radius: 999px;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .investigation-action-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            color: #3730a3;
+            transform: translateY(-1px);
+        }
+
+        .investigation-action-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            width: 100%;
+            border: 1px dashed rgba(100, 116, 139, 0.4);
+            background: transparent;
+            color: #475569;
+            border-radius: 999px;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .investigation-action-btn-outline:hover {
+            border-style: solid;
+            border-color: #64748b;
+            color: #334155;
+            background: #f8fafc;
+            transform: translateY(-1px);
         }
 
         .shipping-modal-shell {
@@ -5065,10 +5161,10 @@
                 const investigationHtml = (window.canEditInvestigations && order.tracking_number) ?
                     (order.investigation_status && order.investigation_status !== 'Resolved' && order.investigation_status !==
                         'Delivered' ?
-                        `<div class="mt-2 text-center">
-                            <span class="badge bg-primary" style="font-size: 0.7rem;"><i class="bi bi-search"></i> Investigation Active</span>
-                           </div>` :
-                        `<button type="button" class="btn btn-sm btn-outline-secondary w-100 mt-2 start-investigation-btn" style="font-size: 0.75rem; border-radius: 6px;" onclick="startInvestigation(${order.id})">
+                        `<a href="/admin/investigations?order_id=${order.id}" class="investigation-action-btn">
+                            <i class="bi bi-box-arrow-up-right"></i> Go to Investigation
+                           </a>` :
+                        `<button type="button" class="investigation-action-btn-outline start-investigation-btn" onclick="startInvestigation(${order.id})">
                             <i class="bi bi-search"></i> Start Investigation
                            </button>`) :
                     '';

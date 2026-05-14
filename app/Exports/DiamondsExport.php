@@ -106,10 +106,8 @@ class DiamondsExport implements FromCollection, WithHeadings, WithMapping, WithC
             $query->where('admin_id', (int) $this->filters['admin_id']);
         }
 
-        if ($this->admin && !$this->admin->is_super) {
-            if (!$this->admin->hasPermission('diamonds.view_team')) {
-                $query->where('admin_id', $this->admin->id);
-            }
+        if ($this->admin && !$this->admin->hasPermission('diamonds.view_team')) {
+            $query->where('admin_id', $this->admin->id);
         }
 
         return $query->get();
@@ -117,7 +115,7 @@ class DiamondsExport implements FromCollection, WithHeadings, WithMapping, WithC
 
     public function map($diamond): array
     {
-        $hasPricingPerm = $this->admin && ($this->admin->is_super || $this->admin->hasPermission('diamonds.view_pricing'));
+        $hasPricingPerm = $this->admin && $this->admin->hasPermission('diamonds.view_pricing');
 
         return [
             $diamond->id,

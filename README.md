@@ -73,7 +73,7 @@ Orders have three distinct types, each with a different form and field set:
 - Dynamic form loading via AJAX based on selected order type
 - Image uploads (up to 10) and PDF uploads (up to 5) per order
 - PDF compression via Ghostscript for files over 10 MB
-- Diamond status tracking: processed → completed → diamond_purchased → factory_making → diamond_completed
+- **Standardized Status Tracking**: Unified 15-step workflow (In Discuss → Making → ... → Repairing → Shipped) for both Custom Diamond and Custom Jewellery.
 - Shipping details with tracking number and URL
 - Order index header now surfaces compact clickable Total Orders and Total Shipped metrics beside the action buttons, while the stats strip focuses on Ready to Ship, Custom Diamond, Custom Jewellery, Tracking, and Today's Sales.
 - Order index tracking summary card showing In Transit, Out for Delivery, and Delivered shipment totals, with each count linking to its matching tracking-status filter even when those orders are already shipped
@@ -81,8 +81,18 @@ Orders have three distinct types, each with a different form and field set:
 - Order index status updates now feature a premium portal-based custom dropdown that provides a theme-consistent UI with icons and smooth animations. Additionally, status changes now trigger real-time notifications to other relevant administrators, ensuring team-wide synchronization.
 - **Enhanced Dropdown Stability**: Implemented a global portal manager that prevents menu clipping and ensures dropdowns automatically close on scroll or when interacting with other elements, providing a rock-solid desktop-like experience.
 - **Notification Testing**: Verified the automated status update notification pipeline with dedicated feature tests (`tests/Feature/OrderStatusNotificationTest.php`) ensuring reliable delivery to administrators.
-- Order index shipping can now be added or edited inline through a reusable modal, without leaving the listing page
+- **Standardized Button Aesthetics**: Unified the visual style of "Edit Shipping", "Go to Investigation", and "Start Investigation" buttons with consistent full-width alignment and centering to ensure a premium, balanced UI layout across all tracking cells.
 - Manual shipping edits, manual status changes, tracker syncs, and tracking webhooks all append to the existing `audit_logs`-backed order history timeline
+- **⚡ Order Index Performance Optimization**: Reduced page load from 200+ SQL queries (~250ms) to ~10 SQL queries (~35ms) through:
+    - **Conditional Aggregation**: Replaced 12 separate `COUNT` queries with a single `SUM(CASE WHEN...)` dashboard stats query.
+    - **Bulk Company Stats**: Replaced 131 per-company accessor queries with 2 bulk aggregate SQL queries + cache (5-min TTL).
+    - **N+1 Elimination**: Replaced expensive `payment_status_label` and `amount_received_total` model accessors (which re-queried `order_payments` per row) with direct column reads from the stored `payment_status`, `amount_received`, and `amount_due` columns.
+    - **Targeted Database Indexes**: Added composite indexes on `(deleted_at, diamond_status, dispatch_date)`, `tracking_status`, `created_at`, and `payment_status`.
+- **Standardized Order Status Workflow**: Implemented a unified, 15-step production sequence across "Custom Diamond" and "Custom Jewellery" order types:
+    - **Integrated Repairing Status**: Added a dedicated `Repairing` stage for both diamond and jewellery flows.
+    - **Unified Logic**: Synchronized `StatusTransitionService` to enforce the new master sequence, ensuring consistent state transitions.
+    - **UI Synchronization**: Updated order list and filter dropdowns with standardized color-coded badges, icons, and human-readable labels.
+    - **Form Integration**: Updated create and edit order forms with the new status sequence for better operational clarity.
 
 ### Real-Time Chat
 
@@ -108,6 +118,12 @@ A complete messaging system for admins, embedded in the panel:
     - **Auto-Pricing Sync** — Real-time calculation of total stone investment (weight + price) with automatic injection into the 'Stone Cost' field across all pricing matrix variants for accurate margin calculation.
     - **Pricing Visibility Controls** — `jewellery_stock.view_pricing` gates purchase cost, component gemstone cost, per-carat stone prices, and stone totals on jewellery detail pages; `jewellery_stock.view_profit` separately gates profit and margin output.
 
+- **Diamond Management** — Comprehensive tracking for individual loose diamonds:
+    - **Inventory Visibility** — Added detailed specifications (Cut, Clarity, Color, Shape, Measurement) to the diamond detail page for full transparency.
+    - **Quick Overview** — Standardized the diamond management index with new columns for Color and Clarity, enabling faster inventory assessment.
+    - **4Cs Tracking** — Integrated management of Cut, Clarity, Color, and Carat weight across the entire lifecycle from import to sale.
+    - **Smart Filters** — Advanced filtering by all diamond specifications, including range filters for price and weight.
+
 ### Inventory & Financials
 
 - **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation. Atomic stock deduction/return with net-quantity diffing during order edits (prevents duplicate transactions).
@@ -116,11 +132,11 @@ A complete messaging system for admins, embedded in the panel:
 - **Expense & Purchase Tracking** — Centralized log of business expenses and inventory purchases
 - **Lead CRM** — Track potential client inquiries with 24-hour SLA monitoring and status pipeline
 - **Shipment Investigation Module** — Specialized workspace for identifying and resolving stalled shipments:
-    - **Bento-grid Workspace** — A modern, high-density dashboard that fits perfectly within the viewport, providing a centralized view of investigation data.
-    - **Admin Timeline** — Internal audit log and communication channel for administrators to document progress and collaborate on resolutions.
-    - **Tracking History** — Integrated view of carrier events, allowing admins to cross-reference shipment status without leaving the module.
+    - **Bento-grid Workspace** — A modern, high-density dashboard that perfectly fits the viewport without unnecessary scrolling. The layout uses optimized CSS flexbox properties to dynamically stretch content like tracking logs to perfectly fill available vertical space.
+    - **Admin Timeline** — Internal audit log and communication channel for administrators. The note composer includes UX improvements such as "Enter" to submit and "Shift+Enter" for multi-line formatting.
+    - **Tracking History** — Integrated scrollable view of carrier events displaying full delivery status history without pagination cuts.
     - **Workflow Automation** — Permission-gated lifecycle (Pending → In Progress → Carrier Contacted → Resolved) with automated identifications for stalled packages.
-    - **Premium Aesthetics** — Optimized with hidden scrollbars, glassmorphism headers, and smooth transitions for a state-of-the-art admin experience.
+    - **Premium Aesthetics** — Optimized with hidden global scrollbars, glassmorphism headers, responsive padding constraints, and smooth transitions for a state-of-the-art native app experience.
 
 ### Advanced Dashboard
 
@@ -234,7 +250,7 @@ php artisan key:generate
 
 # 3. Configure .env
 # Set DB_*, PUSHER_*, and VITE_PUSHER_* values
-# Set SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD
+# Set GOD_ADMIN_EMAIL
 
 # 4. Database
 php artisan migrate
@@ -271,7 +287,6 @@ Set `CHAT_VIRUS_SCAN=true` in `.env` and ensure `clamscan` is available on your 
 | `JEWELLERY_PLATINUM_RATE` | Overrides dynamic platinum pricing (per gram) | —                         |
 | `VGL_API_KEY`             | VGL Certificate system API key                | —                         |
 | `CHAT_MAX_UPLOAD_MB`      | Max attachment size per file                  | `10`                     |
-| `SUPER_ADMIN_EMAIL`       | Bootstrap super admin email                   | `superadmin@example.com` |
 | `SESSION_SECURE_COOKIE`   | Require HTTPS for session cookie              | `true`                   |
 
 ---

@@ -17,9 +17,21 @@ class InvestigationController extends Controller
             $query->where('investigation_status', $request->status);
         }
 
+        if ($request->filled('order_id')) {
+            $query->where('order_id', $request->order_id);
+        }
+
         $investigations = $query->paginate(20);
 
-        return view('investigations.index', compact('investigations'));
+        $counts = OrderInvestigation::selectRaw('investigation_status, count(*) as count')->groupBy('investigation_status')->pluck('count', 'investigation_status')->toArray();
+        
+        $statusCounts = [
+            'Pending' => $counts['Pending'] ?? 0,
+            'In Progress' => ($counts['In Progress'] ?? 0) + ($counts['Carrier Contacted'] ?? 0),
+            'Resolved' => ($counts['Resolved'] ?? 0) + ($counts['Delivered'] ?? 0),
+        ];
+
+        return view('investigations.index', compact('investigations', 'statusCounts'));
     }
 
     public function fragment(OrderInvestigation $investigation)

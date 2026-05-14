@@ -342,8 +342,7 @@
                         </div>
 
                         @if (auth()->guard('admin')->user() &&
-                                (auth()->guard('admin')->user()->is_super ||
-                                    auth()->guard('admin')->user()->hasPermission('diamonds.view_team')))
+                                auth()->guard('admin')->user()->hasPermission('diamonds.view_team'))
                             <div class="filter-field">
                                 <label class="filter-label">
                                     <i class="bi bi-person"></i>
@@ -477,6 +476,18 @@
                             </th>
                             <th>
                                 <div class="th-content">
+                                    <i class="bi bi-palette"></i>
+                                    <span>Color</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="bi bi-eye"></i>
+                                    <span>Clarity</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
                                     <i class="bi bi-rulers"></i>
                                     <span>Measurement</span>
                                 </div>
@@ -546,6 +557,16 @@
                                 </td>
                                 <td>
                                     <div class="cell-content">
+                                        <span class="text-muted">{{ $d->color ?: '—' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="cell-content">
+                                        <span class="text-muted">{{ $d->clarity ?: '—' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="cell-content">
                                         <span class="text-muted">{{ $d->measurement ?: '—' }}</span>
                                     </div>
                                 </td>
@@ -557,8 +578,7 @@
                                 <td>
                                     <div class="cell-content">
                                         @if (auth()->guard('admin')->user() &&
-                                                (auth()->guard('admin')->user()->is_super ||
-                                                    auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing')))
+                                                auth()->guard('admin')->user()->hasPermission('diamonds.view_pricing'))
                                             <span
                                                 class="price-value">${{ number_format($d->purchase_price ?? 0, 2) }}</span>
                                         @else

@@ -7,26 +7,33 @@
                 <div>
                     <h2 class="workspace-title">Order #{{ $investigation->order->id }}</h2>
                     <div class="workspace-meta">
-                        <span class="meta-item"><i class="bi bi-person"></i> {{ $investigation->order->client_name }}</span>
+                        <span class="meta-item"><i class="bi bi-person"></i>
+                            {{ $investigation->order->client_name }}</span>
                         <span class="meta-separator"></span>
-                        <span class="meta-item"><i class="bi bi-hash"></i> {{ $investigation->order->tracking_number }}</span>
+                        <span class="meta-item"><i class="bi bi-hash"></i>
+                            {{ $investigation->order->tracking_number }}</span>
                     </div>
                 </div>
             </div>
             <div class="action-zone">
                 <div class="status-switcher">
-                    <button class="status-current-btn tag-{{ str_replace(' ', '-', strtolower($investigation->investigation_status)) }}" type="button" data-bs-toggle="dropdown">
+                    <button
+                        class="status-current-btn tag-{{ str_replace(' ', '-', strtolower($investigation->investigation_status)) }}"
+                        type="button" data-bs-toggle="dropdown">
                         {{ $investigation->investigation_status }} <i class="bi bi-chevron-down ms-2"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end premium-dropdown">
                         <li class="dropdown-header">Update Status</li>
                         @foreach(['Pending', 'In Progress', 'Carrier Contacted', 'Resolved', 'Delivered'] as $status)
                             <li>
-                                <form action="{{ route('investigations.update-status', $investigation->id) }}" method="POST">
+                                <form action="{{ route('investigations.update-status', $investigation->id) }}"
+                                    method="POST">
                                     @csrf
                                     <input type="hidden" name="status" value="{{ $status }}">
-                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 {{ $investigation->investigation_status == $status ? 'active' : '' }}">
-                                        <span class="status-dot-sm dot-{{ str_replace(' ', '-', strtolower($status)) }}"></span>
+                                    <button type="submit"
+                                        class="dropdown-item d-flex align-items-center gap-2 {{ $investigation->investigation_status == $status ? 'active' : '' }}">
+                                        <span
+                                            class="status-dot-sm dot-{{ str_replace(' ', '-', strtolower($status)) }}"></span>
                                         {{ $status }}
                                     </button>
                                 </form>
@@ -49,12 +56,15 @@
                 <div class="bento-card-body">
                     <div class="info-row">
                         <div class="info-label">Dispatch Date</div>
-                        <div class="info-value">{{ $investigation->order->dispatch_date ? \Carbon\Carbon::parse($investigation->order->dispatch_date)->format('d M, Y') : 'N/A' }}</div>
+                        <div class="info-value">
+                            {{ $investigation->order->dispatch_date ? \Carbon\Carbon::parse($investigation->order->dispatch_date)->format('d M, Y') : 'N/A' }}
+                        </div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Courier Status</div>
                         <div class="info-value">
-                            <span class="badge-soft-primary">{{ $investigation->order->tracking_status ?? 'Unknown' }}</span>
+                            <span
+                                class="badge-soft-primary">{{ $investigation->order->tracking_status ?? 'Unknown' }}</span>
                         </div>
                     </div>
                     <div class="info-row">
@@ -62,7 +72,8 @@
                         <div class="info-value">{{ $investigation->order->gold_weight ?? '0.00' }}g</div>
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('orders.show', $investigation->order->id) }}" target="_blank" class="btn-workspace-action">
+                        <a href="{{ route('orders.show', $investigation->order->id) }}" target="_blank"
+                            class="btn-workspace-action">
                             View Order <i class="bi bi-box-arrow-up-right ms-2"></i>
                         </a>
                     </div>
@@ -73,10 +84,10 @@
                 <div class="bento-card-header">
                     <h6><i class="bi bi-truck"></i> Tracking History</h6>
                 </div>
-                <div class="bento-card-body p-0">
+                <div class="bento-card-body p-0 d-flex flex-column">
                     <div class="mini-history-list scroll-y-custom">
                         @if($investigation->order->tracking_history && count($investigation->order->tracking_history) > 0)
-                            @foreach(array_slice(array_reverse($investigation->order->tracking_history), 0, 8) as $event)
+                            @foreach(array_reverse($investigation->order->tracking_history) as $event)
                                 <div class="mini-history-item">
                                     <div class="history-date">{{ \Carbon\Carbon::parse($event['date'])->format('d M') }}</div>
                                     <div class="history-content">
@@ -109,7 +120,8 @@
                                         <div class="timeline-content">
                                             <div class="note-header">
                                                 <span class="note-author">{{ $note['admin'] }}</span>
-                                                <span class="note-time">{{ \Carbon\Carbon::parse($note['time'])->diffForHumans() }}</span>
+                                                <span
+                                                    class="note-time">{{ \Carbon\Carbon::parse($note['time'])->diffForHumans() }}</span>
                                             </div>
                                             <div class="note-body">
                                                 {{ $note['text'] }}
@@ -130,7 +142,9 @@
                         <form action="{{ route('investigations.add-note', $investigation->id) }}" method="POST">
                             @csrf
                             <div class="composer-box">
-                                <textarea name="note" class="composer-input" rows="2" placeholder="Add an internal note or update..." required></textarea>
+                                <textarea name="note" class="composer-input" rows="2"
+                                    placeholder="Add an internal note or update..." required
+                                    onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.closest('form').submit(); }"></textarea>
                                 <div class="composer-actions">
                                     <button type="submit" class="composer-submit">
                                         Update <i class="bi bi-send ms-1"></i>
@@ -147,7 +161,7 @@
 
 <style>
     .workspace-details-container {
-        height: 100%;
+        flex: 1;
         display: flex;
         flex-direction: column;
         padding: 1.5rem 2rem;
@@ -193,7 +207,10 @@
         gap: 0.5rem;
     }
 
-    .meta-item i { margin-right: 4px; color: var(--inv-primary); }
+    .meta-item i {
+        margin-right: 4px;
+        color: var(--inv-primary);
+    }
 
     .meta-separator {
         width: 3px;
@@ -206,6 +223,7 @@
     .action-zone {
         text-align: right;
     }
+
     .started-info {
         font-size: 0.7rem;
         color: var(--inv-text-muted);
@@ -228,7 +246,7 @@
     .premium-dropdown {
         border: 1px solid var(--inv-border);
         border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         padding: 0.5rem;
         min-width: 200px;
     }
@@ -254,10 +272,22 @@
         height: 6px;
         border-radius: 50%;
     }
-    .dot-pending { background: var(--inv-tag-pending-text); }
-    .dot-in-progress { background: var(--inv-tag-active-text); }
-    .dot-carrier-contacted { background: var(--inv-tag-active-text); }
-    .dot-resolved { background: var(--inv-tag-resolved-text); }
+
+    .dot-pending {
+        background: var(--inv-tag-pending-text);
+    }
+
+    .dot-in-progress {
+        background: var(--inv-tag-active-text);
+    }
+
+    .dot-carrier-contacted {
+        background: var(--inv-tag-active-text);
+    }
+
+    .dot-resolved {
+        background: var(--inv-tag-resolved-text);
+    }
 
     /* Bento Grid */
     .workspace-grid {
@@ -275,16 +305,20 @@
             overflow-y: auto;
             gap: 1.5rem;
         }
-        .grid-left, .grid-right {
+
+        .grid-left,
+        .grid-right {
             min-height: auto;
         }
+
         .mini-history-list {
             height: auto;
             max-height: 300px;
         }
     }
 
-    .grid-left, .grid-right {
+    .grid-left,
+    .grid-right {
         display: flex;
         flex-direction: column;
         min-height: 0;
@@ -301,11 +335,14 @@
         min-height: 0;
     }
 
-    .timeline-card, .history-card {
+    .timeline-card,
+    .history-card {
         flex: 1;
     }
 
-    .bento-card:hover { border-color: #cbd5e1; }
+    .bento-card:hover {
+        border-color: #cbd5e1;
+    }
 
     .bento-card-header {
         padding: 1rem 1.25rem 0.5rem;
@@ -337,8 +374,17 @@
         border-bottom: 1px solid #f8fafc;
     }
 
-    .info-label { font-size: 0.8rem; color: var(--inv-text-muted); font-weight: 500; }
-    .info-value { font-size: 0.85rem; font-weight: 700; color: var(--inv-text-main); }
+    .info-label {
+        font-size: 0.8rem;
+        color: var(--inv-text-muted);
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--inv-text-main);
+    }
 
     .btn-workspace-action {
         display: flex;
@@ -388,8 +434,18 @@
         flex-shrink: 0;
     }
 
-    .history-status { font-size: 0.8rem; font-weight: 800; color: var(--inv-text-main); line-height: 1.2; }
-    .history-location { font-size: 0.7rem; color: var(--inv-text-muted); font-weight: 500; }
+    .history-status {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--inv-text-main);
+        line-height: 1.2;
+    }
+
+    .history-location {
+        font-size: 0.7rem;
+        color: var(--inv-text-muted);
+        font-weight: 500;
+    }
 
     /* Modern Timeline */
     .timeline-container {
@@ -431,11 +487,27 @@
         z-index: 1;
     }
 
-    .timeline-entry:last-child::before { display: none; }
+    .timeline-entry:last-child::before {
+        display: none;
+    }
 
-    .note-header { display: flex; justify-content: space-between; margin-bottom: 0.4rem; }
-    .note-author { font-weight: 800; font-size: 0.85rem; color: var(--inv-text-main); }
-    .note-time { font-size: 0.7rem; color: var(--inv-text-muted); font-weight: 500; }
+    .note-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.4rem;
+    }
+
+    .note-author {
+        font-weight: 800;
+        font-size: 0.85rem;
+        color: var(--inv-text-main);
+    }
+
+    .note-time {
+        font-size: 0.7rem;
+        color: var(--inv-text-muted);
+        font-weight: 500;
+    }
 
     .note-body {
         background: #fdfdfe;
@@ -446,7 +518,7 @@
         line-height: 1.6;
         border: 1px solid #f1f5f9;
         font-weight: 500;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
 
     /* Composer */
@@ -476,7 +548,11 @@
         color: var(--inv-text-main);
     }
 
-    .composer-actions { display: flex; justify-content: flex-end; padding: 0.25rem 0.5rem; }
+    .composer-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0.25rem 0.5rem;
+    }
 
     .composer-submit {
         background: var(--inv-text-main);
@@ -493,7 +569,10 @@
         letter-spacing: 0.5px;
     }
 
-    .composer-submit:hover { transform: translateY(-1px); opacity: 0.9; }
+    .composer-submit:hover {
+        transform: translateY(-1px);
+        opacity: 0.9;
+    }
 
     .badge-soft-primary {
         background: var(--inv-primary-light);
@@ -504,7 +583,7 @@
         font-weight: 800;
         text-transform: uppercase;
     }
-    
+
     .empty-timeline-state {
         height: 100%;
         display: flex;
@@ -514,8 +593,10 @@
         color: #94a3b8;
         padding: 2rem 0;
     }
-    
-    .empty-timeline-state i { font-size: 2rem; opacity: 0.2; margin-bottom: 0.75rem; }
+
+    .empty-timeline-state i {
+        font-size: 2rem;
+        opacity: 0.2;
+        margin-bottom: 0.75rem;
+    }
 </style>
-
-

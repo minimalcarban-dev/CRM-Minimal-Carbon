@@ -466,7 +466,7 @@ class OrderService
 
         $admin = Auth::guard('admin')->user();
         if (array_key_exists('gold_net_weight', $validated)) {
-            if ($admin && ($admin->is_super || $admin->hasPermission('orders.add_gold_weight'))) {
+            if ($admin && $admin->hasPermission('orders.add_gold_weight')) {
                 $order->gold_net_weight = $validated['gold_net_weight'];
             }
         }

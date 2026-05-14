@@ -15,12 +15,12 @@
                     <p class="page-subtitle mb-0">View complete administrator profile and information</p>
                 </div>
                 <div class="header-actions">
-                    @if (isset($currentAdmin) && ($currentAdmin->is_super || $currentAdmin->hasPermission('admins.edit')))
+                    @if (isset($currentAdmin) && $currentAdmin->hasPermission('admins.edit'))
                         <a href="{{ route('admins.edit', $admin) }}" class="btn btn-primary">
                             <i class="bi bi-pencil-square me-2"></i>Edit Profile
                         </a>
                     @endif
-                    @if (isset($currentAdmin) && ($currentAdmin->is_super || $currentAdmin->hasPermission('admins.delete')))
+                    @if (isset($currentAdmin) && $currentAdmin->hasPermission('admins.delete'))
                         <button type="button" class="btn btn-danger" onclick="confirmDelete()">
                             <i class="bi bi-trash me-2"></i>Delete
                         </button>
@@ -263,7 +263,7 @@
         </div>
 
         <!-- Delete Confirmation Form (Hidden) -->
-        @if (isset($currentAdmin) && ($currentAdmin->is_super || $currentAdmin->hasPermission('admins.delete')))
+        @if (isset($currentAdmin) && $currentAdmin->hasPermission('admins.delete'))
             <form method="POST" action="{{ route('admins.destroy', $admin) }}" id="deleteForm" style="display: none;">
                 @csrf
                 @method('DELETE')

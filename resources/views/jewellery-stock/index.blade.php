@@ -6,7 +6,7 @@
     @php
         $currentAdmin = auth()->guard('admin')->user();
         $canViewPricing =
-            $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('jewellery_stock.view_pricing'));
+            $currentAdmin && $currentAdmin->hasPermission('jewellery_stock.view_pricing');
     @endphp
 
     <div class="tracker-page">

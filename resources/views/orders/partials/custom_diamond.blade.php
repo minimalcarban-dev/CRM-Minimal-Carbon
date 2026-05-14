@@ -192,19 +192,22 @@
                     <select name="diamond_status" class="form-control-modern" required>
                         <option value="">-- Select Status --</option>
                         <option value="d_diamond_in_discuss" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_discuss' ? 'selected' : '' }}>
-                            CD - Diamond In Discuss
+                            In Discuss
                         </option>
                         <option value="d_diamond_in_making" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_making' ? 'selected' : '' }}>
-                            CD - Diamond In Making
-                        </option>
-                        <option value="d_diamond_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_completed' ? 'selected' : '' }}>
-                            CD - Diamond Completed
+                            Making
                         </option>
                         <option value="d_diamond_in_certificate" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_in_certificate' ? 'selected' : '' }}>
-                            CD - Diamond In Certificate
+                            Diamond Certificate
+                        </option>
+                        <option value="d_diamond_repairing" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_repairing' ? 'selected' : '' }}>
+                            Repairing
+                        </option>
+                        <option value="d_diamond_completed" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_diamond_completed' ? 'selected' : '' }}>
+                            Diamond Completed
                         </option>
                         <option value="d_order_shipped" {{ old('diamond_status', $order->diamond_status ?? '') == 'd_order_shipped' ? 'selected' : '' }}>
-                            CD - Order Shipped
+                            Order Shipped
                         </option>
                     </select>
                     <div class="form-hint">
@@ -1465,7 +1468,7 @@
 </script>
 
 {{-- Gold Stock Real-time Validation --}}
-@if(auth()->guard('admin')->user()->is_super || auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
+@if(auth()->guard('admin')->user()->hasPermission('orders.add_gold_weight'))
     <script>
         (function () {
             const factorySelect = document.querySelector('select[name="factory_id"]');

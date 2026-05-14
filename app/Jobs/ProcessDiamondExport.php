@@ -54,10 +54,8 @@ class ProcessDiamondExport implements ShouldQueue
             $query = Diamond::with(['assignedAdmin:id,name', 'assignedByAdmin:id,name']);
             
             $admin = Admin::find($this->adminId);
-            if ($admin && !$admin->is_super) {
-                if (!$admin->hasPermission('diamonds.view_team')) {
-                    $query->where('admin_id', $admin->id);
-                }
+            if ($admin && !$admin->hasPermission('diamonds.view_team')) {
+                $query->where('admin_id', $admin->id);
             }
 
             $this->applyFilters($query, $this->filters);

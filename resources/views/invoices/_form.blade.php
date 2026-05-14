@@ -1,8 +1,8 @@
 @csrf
 @php
     $currentAdmin = auth()->guard('admin')->user();
-    $canCreatePartyInline = $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('parties.create'));
-    $canViewPartyDetails = $currentAdmin && ($currentAdmin->is_super || $currentAdmin->hasPermission('parties.view'));
+    $canCreatePartyInline = $currentAdmin && $currentAdmin->hasPermission('parties.create');
+    $canViewPartyDetails = $currentAdmin && $currentAdmin->hasPermission('parties.view');
 @endphp
 <div class="form-section-card">
     <div class="section-header">

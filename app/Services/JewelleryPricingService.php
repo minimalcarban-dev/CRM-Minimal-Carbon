@@ -10,13 +10,14 @@ use Illuminate\Support\Collection;
 class JewelleryPricingService
 {
     public const MATERIALS = [
-        'silver_925' => ['label' => '925 Silver', 'purity' => 92.5, 'colors' => [null]],
-        'silver_935' => ['label' => '935 Argentium', 'purity' => 93.5, 'colors' => [null]],
-        'platinum_950' => ['label' => '950 Platinum', 'purity' => 95.0, 'colors' => [null]],
-        'gold_10k' => ['label' => '10K Gold', 'purity' => 41.7, 'colors' => ['yellow', 'white', 'rose']],
-        'gold_14k' => ['label' => '14K Gold', 'purity' => 58.5, 'colors' => ['yellow', 'white', 'rose']],
-        'gold_18k' => ['label' => '18K Gold', 'purity' => 75.0, 'colors' => ['yellow', 'white', 'rose']],
-        'gold_22k' => ['label' => '22K Gold', 'purity' => 91.7, 'colors' => ['yellow', 'white', 'rose']],
+        'silver_925' => ['label' => '925 Silver', 'purity' => 92.5],
+        'silver_935' => ['label' => '935 Argentium', 'purity' => 93.5],
+        'gold_10k' => ['label' => '10K Gold', 'purity' => 41.7],
+        'gold_14k' => ['label' => '14K Gold', 'purity' => 58.5],
+        'gold_18k' => ['label' => '18K Gold', 'purity' => 75.0],
+        'gold_20k' => ['label' => '20K Gold', 'purity' => 83.3],
+        'platinum_950' => ['label' => '950 Platinum', 'purity' => 95.0],
+        'gold_22k' => ['label' => '22K Gold', 'purity' => 91.7],
     ];
 
     public function __construct(
@@ -33,10 +34,10 @@ class JewelleryPricingService
             'sales_markup_percent' => $this->settingFloat('jewellery_pricing.default_sales_markup_percent', 0),
             'platinum_950_rate_usd_per_gram' => $this->platinum950Rate(),
             'can_edit_labor' => (bool) ($admin?->is_super),
-            'can_edit_commission' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.edit_commission'))),
-            'can_edit_profit' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.edit_profit'))),
-            'can_edit_sales_markup' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.edit_sales_markup'))),
-            'can_view_profit' => (bool) ($admin && ($admin->is_super || $admin->hasPermission('jewellery_stock.view_profit'))),
+            'can_edit_commission' => (bool) ($admin && $admin->hasPermission('jewellery_stock.edit_commission')),
+            'can_edit_profit' => (bool) ($admin && $admin->hasPermission('jewellery_stock.edit_profit')),
+            'can_edit_sales_markup' => (bool) ($admin && $admin->hasPermission('jewellery_stock.edit_sales_markup')),
+            'can_view_profit' => (bool) ($admin && $admin->hasPermission('jewellery_stock.view_profit')),
         ];
     }
 
@@ -44,15 +45,13 @@ class JewelleryPricingService
     {
         $rows = [];
         foreach (self::MATERIALS as $materialCode => $material) {
-            $key = $this->variantKey($materialCode, null);
+            $key = $this->variantKey($materialCode);
             $rows[$key] = [
                 'key' => $key,
                 'material_code' => $materialCode,
                 'material_label' => $material['label'],
-                'metal_color' => null,
                 'variant_label' => $material['label'],
                 'net_weight_grams' => 0,
-                'color_weights' => null,
                 'stone_cost' => 0,
                 'extra_cost' => 0,
                 'is_default_listing' => $materialCode === 'silver_925',
@@ -67,7 +66,7 @@ class JewelleryPricingService
         $rows = $this->blankVariantMatrix();
 
         foreach (($savedRows ?? collect()) as $row) {
-            $key = $this->variantKey($row->material_code, null);
+            $key = $this->variantKey($row->material_code);
             if (!isset($rows[$key])) {
                 continue;
             }
@@ -76,7 +75,6 @@ class JewelleryPricingService
 
             $rows[$key] = array_merge($rows[$key], [
                 'net_weight_grams' => $resolvedWeight,
-                'color_weights' => is_array($row->color_weights) ? $row->color_weights : null,
                 'stone_cost' => (float) $row->stone_cost,
                 'extra_cost' => (float) $row->extra_cost,
                 'commission_percent' => (float) $row->commission_percent,
@@ -101,7 +99,6 @@ class JewelleryPricingService
             $input = $submittedRows[$key] ?? [];
             $materialCode = $definition['material_code'];
             $purity = self::MATERIALS[$materialCode]['purity'];
-            $colorWeights = null;
             $weight = $this->positiveFloat($input['net_weight_grams'] ?? $definition['net_weight_grams']);
             $stoneCost = $this->positiveFloat($input['stone_cost'] ?? 0);
             $extraCost = $this->positiveFloat($input['extra_cost'] ?? 0);
@@ -141,9 +138,7 @@ class JewelleryPricingService
 
             $rows[] = [
                 'material_code' => $materialCode,
-                'metal_color' => null,
                 'net_weight_grams' => round($weight, 3),
-                'color_weights' => $colorWeights,
                 'purity_percent' => $purity,
                 'base_rate_usd_per_gram' => round($baseRate, 4),
                 'material_value' => round($materialValue, 2),
@@ -187,7 +182,7 @@ class JewelleryPricingService
         return $rows;
     }
 
-    public function variantKey(string $materialCode, ?string $color): string
+    public function variantKey(string $materialCode): string
     {
         return $materialCode . '__none';
     }
