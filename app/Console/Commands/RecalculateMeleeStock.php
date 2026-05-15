@@ -40,7 +40,13 @@ class RecalculateMeleeStock extends Command
             $available_carat = 0;
 
             foreach ($transactions as $t) {
-                if (in_array($t->transaction_type, ['in', 'adjustment'])) {
+                if ($t->transaction_type === 'in' && $t->reference_type === 'order') {
+                    // Order return: only add back to available, NOT to total
+                    // (total was already counted when stock was originally purchased)
+                    $available_pieces += $t->pieces;
+                    $available_carat += $t->carat_weight ?? 0;
+                } elseif (in_array($t->transaction_type, ['in', 'adjustment'])) {
+                    // Manual stock-in or adjustment: add to both total and available
                     $total_pieces += $t->pieces;
                     $available_pieces += $t->pieces;
                     $total_carat += $t->carat_weight ?? 0;

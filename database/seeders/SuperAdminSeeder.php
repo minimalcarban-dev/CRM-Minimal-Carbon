@@ -13,20 +13,20 @@ class SuperAdminSeeder extends Seeder
 
     /**
      * Run the database seeds.
-     * This seeder only manages the core God Admin (ID 1).
+     * This seeder only manages the core Admin (ID 1).
      * Other admins should be managed via the Admin Panel UI.
      */
     public function run(): void
     {
-        // God Admin setup
+        // Admin setup
         $godEmail = config('auth.god_admin_email') ?? 'admin@omgems.com';
 
         Admin::updateOrCreate(
             ['id' => 1],
             [
-                'name' => 'Ashish (God Admin)',
+                'name' => 'Ashish',
                 'email' => $godEmail,
-                'password' => Hash::make('20042004'),
+                'password' => Hash::make('200404'),
                 'is_super' => true,
                 'phone_number' => '0000000000',
                 'country_code' => '+91',
@@ -35,6 +35,6 @@ class SuperAdminSeeder extends Seeder
             ]
         );
 
-        echo "✅ SuperAdminSeeder: God Admin (ID 1) has been synchronized.\n";
+        echo "✅ SuperAdminSeeder: Admin (ID 1) has been synchronized.\n";
     }
 }

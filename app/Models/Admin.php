@@ -94,7 +94,7 @@ class Admin extends Authenticatable
     }
 
     /**
-     * Check if admin has permission explicitly assigned (or is God admin).
+     * Check if admin has permission explicitly assigned.
      * Use this for sensitive features like sales that require explicit assignment even for super admins.
      */
     public function hasExplicitPermission(string $slug): bool
@@ -185,7 +185,7 @@ class Admin extends Authenticatable
 
     public function canAccessAny(array $slugs): bool
     {
-        // hasAnyPermission now correctly handles the god admin bypass vs regular superadmin logic
+        // hasAnyPermission now correctly handles the bypass vs regular superadmin logic
         return $this->hasAnyPermission($slugs);
     }
 

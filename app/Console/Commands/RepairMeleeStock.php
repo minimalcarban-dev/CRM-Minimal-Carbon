@@ -33,6 +33,14 @@ class RepairMeleeStock extends Command
             $this->cleanDuplicateTransactions($dryRun);
         }
 
+        // ─── PHASE 1.5: Clean orphaned return transactions ───────────────
+        // Old code (pre-FIX-10) used to call returnForOrder() + deductForOrder()
+        // on every order edit. This created "Stock returned" (IN) entries for
+        // orders that were never cancelled. These orphaned returns inflate stock.
+        if (!$skipDuplicates) {
+            $this->cleanOrphanedReturns($dryRun);
+        }
+
         // ─── PHASE 2: Recalculate stock levels ──────────────────────────
         if (!$skipStock) {
             $this->repairStockLevels($dryRun);
@@ -121,6 +129,71 @@ class RepairMeleeStock extends Command
     }
 
     /**
+     * Remove return (IN) transactions for orders that are NOT cancelled.
+     *
+     * The old update code (pre-FIX-10) called returnForOrder() + deductForOrder()
+     * on every edit. This created "Stock returned for Order #X" entries even though
+     * the order was never cancelled. These orphaned returns inflate the stock count
+     * because the recalculate logic treats them as real returns.
+     */
+    private function cleanOrphanedReturns(bool $dryRun): void
+    {
+        $this->info('── Phase 1.5: Cleaning orphaned return transactions ──');
+
+        $cancelledStatuses = ['r_order_cancelled', 'd_order_cancelled', 'j_order_cancelled'];
+
+        // Find all 'in' (return) transactions for orders that are NOT cancelled
+        $orphanedReturns = DB::table('melee_transactions as mt')
+            ->join('orders as o', 'o.id', '=', 'mt.reference_id')
+            ->where('mt.reference_type', 'order')
+            ->where('mt.transaction_type', 'in')
+            ->whereNotIn('o.diamond_status', $cancelledStatuses)
+            ->select('mt.id', 'mt.reference_id as order_id', 'mt.melee_diamond_id', 'mt.pieces', 'mt.notes', 'o.diamond_status')
+            ->orderBy('mt.reference_id', 'desc')
+            ->get();
+
+        if ($orphanedReturns->isEmpty()) {
+            $this->info('  ✅ No orphaned return transactions found.');
+            return;
+        }
+
+        $this->warn("  Found {$orphanedReturns->count()} orphaned return transactions:");
+
+        // Pre-load diamond details for display
+        $diamondIds = $orphanedReturns->pluck('melee_diamond_id')->unique();
+        $diamonds = MeleeDiamond::with('category')->whereIn('id', $diamondIds)->get()->keyBy('id');
+
+        $table = [];
+        $idsToDelete = [];
+        foreach ($orphanedReturns as $r) {
+            $diamond = $diamonds->get($r->melee_diamond_id);
+            $diamondLabel = $diamond
+                ? ($diamond->category->name ?? 'N/A') . ' | ' . ($diamond->size_label ?? '') . ' | ' . ($diamond->shape ?? '')
+                : "#{$r->melee_diamond_id}";
+
+            $table[] = [
+                "#{$r->order_id}",
+                "#{$r->melee_diamond_id}",
+                $diamondLabel,
+                $r->pieces,
+                $r->diamond_status,
+                $r->notes,
+                "TX #{$r->id}",
+            ];
+            $idsToDelete[] = $r->id;
+        }
+
+        $this->table(['Order', 'Diamond ID', 'Diamond Details', 'Pieces', 'Order Status', 'Notes', 'TX ID'], $table);
+
+        if (!$dryRun) {
+            MeleeTransaction::whereIn('id', $idsToDelete)->delete();
+        }
+
+        $action = $dryRun ? 'Would remove' : 'Removed';
+        $this->info("  {$action} {$orphanedReturns->count()} orphaned return transactions.");
+    }
+
+    /**
      * Recalculate available_pieces and available_carat_weight for all diamonds
      * based on the cleaned transaction ledger.
      */
@@ -128,11 +201,36 @@ class RepairMeleeStock extends Command
     {
         $this->info('── Phase 2: Repairing stock levels ──');
 
-        $diamonds = MeleeDiamond::all();
+        $diamonds = MeleeDiamond::with('category')->get();
         $repaired = 0;
         $table = [];
 
         foreach ($diamonds as $diamond) {
+            // Calculate total_pieces from ledger (manual stock-in + adjustments only, NOT order returns)
+            $ledgerTotalPieces = (int) MeleeTransaction::where('melee_diamond_id', $diamond->id)
+                ->where(function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('transaction_type', 'in')
+                            ->where(function ($ref) {
+                                $ref->where('reference_type', '!=', 'order')
+                                    ->orWhereNull('reference_type');
+                            });
+                    })->orWhere('transaction_type', 'adjustment');
+                })
+                ->sum('pieces');
+
+            $ledgerTotalCarat = (float) MeleeTransaction::where('melee_diamond_id', $diamond->id)
+                ->where(function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('transaction_type', 'in')
+                            ->where(function ($ref) {
+                                $ref->where('reference_type', '!=', 'order')
+                                    ->orWhereNull('reference_type');
+                            });
+                    })->orWhere('transaction_type', 'adjustment');
+                })
+                ->sum('carat_weight');
+
             // Calculate expected available from transaction ledger
             $totalOut = (int) MeleeTransaction::where('melee_diamond_id', $diamond->id)
                 ->where('transaction_type', 'out')
@@ -153,28 +251,52 @@ class RepairMeleeStock extends Command
                 ->where('reference_type', 'order')
                 ->sum('carat_weight');
 
-            $expectedAvailable = $diamond->total_pieces - $totalOut + $orderReturns;
-            $expectedCarat = round($diamond->total_carat_weight - $caratOut + $caratReturns, 3);
+            // Expected: total from purchases - sold out + order returns
+            $expectedAvailable = $ledgerTotalPieces - $totalOut + $orderReturns;
+            $expectedCarat = round($ledgerTotalCarat - $caratOut + $caratReturns, 3);
             $actualAvailable = $diamond->available_pieces;
             $actualCarat = (float) $diamond->available_carat_weight;
 
             $piecesDiff = $actualAvailable - $expectedAvailable;
             $caratDiff = round($actualCarat - $expectedCarat, 3);
+            $totalPiecesDiff = (int) $diamond->total_pieces - $ledgerTotalPieces;
+            $totalCaratDiff = round((float) $diamond->total_carat_weight - $ledgerTotalCarat, 3);
 
-            if ($piecesDiff !== 0 || abs($caratDiff) > 0.001) {
+            if ($piecesDiff !== 0 || abs($caratDiff) > 0.001 || $totalPiecesDiff !== 0 || abs($totalCaratDiff) > 0.001) {
+                // Get linked order details for this diamond
+                $linkedOrders = MeleeTransaction::where('melee_diamond_id', $diamond->id)
+                    ->where('reference_type', 'order')
+                    ->distinct()
+                    ->pluck('reference_id')
+                    ->sort()
+                    ->values();
+
+                $orderCount = $linkedOrders->count();
+                $orderList = $linkedOrders->map(fn($id) => "#{$id}")->implode(', ');
+
+                // Diamond identity
+                $categoryName = $diamond->category->name ?? 'N/A';
+                $diamondInfo = "{$categoryName} | {$diamond->size_label} | {$diamond->shape}";
+                if ($diamond->color) {
+                    $diamondInfo .= " | {$diamond->color}";
+                }
+                if ($diamond->sieve_size) {
+                    $diamondInfo .= " | Sieve: {$diamond->sieve_size}";
+                }
+
                 $table[] = [
-                    $diamond->id,
-                    $diamond->total_pieces,
-                    $totalOut,
-                    $orderReturns,
-                    $expectedAvailable,
-                    $actualAvailable,
-                    $piecesDiff,
-                    $expectedCarat,
-                    $actualCarat,
+                    "#{$diamond->id}",
+                    $diamondInfo,
+                    $diamond->total_pieces . ($totalPiecesDiff !== 0 ? " → {$ledgerTotalPieces}" : ''),
+                    "{$actualAvailable} → {$expectedAvailable} ({$piecesDiff})",
+                    round($actualCarat, 3) . ' → ' . $expectedCarat,
+                    $orderCount,
+                    strlen($orderList) > 40 ? substr($orderList, 0, 37) . '...' : $orderList,
                 ];
 
                 if (!$dryRun) {
+                    $diamond->total_pieces = $ledgerTotalPieces;
+                    $diamond->total_carat_weight = $ledgerTotalCarat;
                     $diamond->available_pieces = $expectedAvailable;
                     $diamond->available_carat_weight = $expectedCarat;
                     $diamond->save();
@@ -182,11 +304,15 @@ class RepairMeleeStock extends Command
                     // Log the correction as an adjustment note (no transaction, just log)
                     \Illuminate\Support\Facades\Log::info('Melee stock repaired', [
                         'diamond_id' => $diamond->id,
+                        'diamond_name' => $diamondInfo,
+                        'old_total_pieces' => (int) $diamond->getOriginal('total_pieces'),
+                        'new_total_pieces' => $ledgerTotalPieces,
                         'old_available_pieces' => $actualAvailable,
                         'new_available_pieces' => $expectedAvailable,
                         'old_available_carat' => $actualCarat,
                         'new_available_carat' => $expectedCarat,
                         'pieces_correction' => -$piecesDiff,
+                        'linked_orders' => $linkedOrders->all(),
                     ]);
                 }
 
@@ -200,7 +326,7 @@ class RepairMeleeStock extends Command
         }
 
         $this->table(
-            ['Diamond', 'Total', 'Out', 'Returns', 'Expected', 'Actual', 'Drift', 'Exp Carat', 'Act Carat'],
+            ['Diamond', 'Details', 'Total Pieces', 'Available (Drift)', 'Carat (Drift)', 'Orders', 'Linked Order #s'],
             $table
         );
 
