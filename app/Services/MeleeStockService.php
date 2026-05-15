@@ -35,6 +35,27 @@ class MeleeStockService
 
         try {
             return DB::transaction(function () use ($orderId, $entries, $allowNegative) {
+                // ── Idempotency guard: skip if this order already has 'out' transactions ──
+                // This prevents duplicate deductions on retries or double-submissions.
+                // The update flow uses adjustForOrderDiff() instead, which handles diffs.
+                $existingOutCount = MeleeTransaction::where('reference_type', 'order')
+                    ->where('reference_id', $orderId)
+                    ->where('transaction_type', 'out')
+                    ->count();
+
+                if ($existingOutCount > 0) {
+                    Log::warning('Melee deductForOrder skipped — order already has out transactions', [
+                        'order_id' => $orderId,
+                        'existing_out_count' => $existingOutCount,
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'message' => 'Stock already deducted for this order.',
+                        'diamond_ids' => [],
+                    ];
+                }
+
                 $diamonds = $this->lockDiamondsForEntries($entries);
                 $validationResult = $this->validateLockedAvailability($entries, $diamonds, $allowNegative);
 
@@ -124,6 +145,25 @@ class MeleeStockService
 
         try {
             return DB::transaction(function () use ($orderId, $entries) {
+                // ── Idempotency guard: skip if this order already has 'in' (return) transactions ──
+                $existingReturnCount = MeleeTransaction::where('reference_type', 'order')
+                    ->where('reference_id', $orderId)
+                    ->where('transaction_type', 'in')
+                    ->count();
+
+                if ($existingReturnCount > 0) {
+                    Log::warning('Melee returnForOrder skipped — order already has return transactions', [
+                        'order_id' => $orderId,
+                        'existing_return_count' => $existingReturnCount,
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'message' => 'Stock already returned for this order.',
+                        'diamond_ids' => [],
+                    ];
+                }
+
                 $diamonds = $this->lockDiamondsForEntries($entries);
                 $transactions = [];
                 $touchedDiamonds = collect();

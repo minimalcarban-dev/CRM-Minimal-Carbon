@@ -1321,8 +1321,7 @@
                                                     <strong
                                                         style="font-size: 0.7rem; color: #6366f1; display: block;">Diamond:</strong>
                                                     <div class="truncated-text" title="{{ $order->diamond_details }}"
-                                                        style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                                                        {{ trim($order->diamond_details) }}</div>
+                                                        style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ trim($order->diamond_details) }}</div>
                                                 </div>
                                             @endif
                                             @if (!$order->jewellery_details && !$order->diamond_details)
