@@ -13,6 +13,10 @@ use App\Events\UserMentioned;
 use App\Listeners\SendChatMentionNotification;
 use App\Models\Invoice;
 use App\Policies\InvoicePolicy;
+use App\Models\MeleeDiamond;
+use App\Policies\MeleeDiamondPolicy;
+use App\Models\MeleeCategory;
+use App\Policies\MeleeCategoryPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,5 +51,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Invoice policy
         Gate::policy(Invoice::class, InvoicePolicy::class);
+
+        // Register Melee Diamond policy — Sprint 3
+        Gate::policy(MeleeDiamond::class, MeleeDiamondPolicy::class);
+
+        // Register Melee Category policy — Sprint 3
+        Gate::policy(MeleeCategory::class, MeleeCategoryPolicy::class);
     }
 }

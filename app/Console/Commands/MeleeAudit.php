@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class MeleeAudit extends Command
 {
+    // ================================================================
+    // READ-ONLY — no mutations permitted.
+    // This command MUST NEVER write, update, or delete any data.
+    // ================================================================
+
     protected $signature = 'melee:audit';
     protected $description = 'Read-only audit of melee stock data — checks for duplicates, drift, and anomalies.';
 
@@ -16,11 +21,23 @@ class MeleeAudit extends Command
     {
         $this->info("===== MELEE STOCK AUDIT =====\n");
 
-        // 1. Totals
+        // 1. Summary Table (Sprint 1 format)
         $totalDiamonds = MeleeDiamond::count();
         $totalTransactions = MeleeTransaction::count();
-        $this->line("Total Melee Diamonds: {$totalDiamonds}");
-        $this->line("Total Melee Transactions: {$totalTransactions}");
+        $orphanedRecords = MeleeDiamond::whereNull('melee_category_id')->count();
+        $negativeStockCount = MeleeDiamond::where('available_pieces', '<', 0)->count();
+        $updatedToday = MeleeDiamond::whereDate('updated_at', today())->count();
+        $totalValue = MeleeDiamond::sum('total_price');
+
+        $this->table(['Metric', 'Value'], [
+            ['Total melee diamond records', $totalDiamonds],
+            ['Total melee transactions', $totalTransactions],
+            ['Orphaned records (no category)', $orphanedRecords],
+            ['Negative stock records', $negativeStockCount],
+            ['Records updated today', $updatedToday],
+            ['Total stock value', number_format((float) $totalValue, 2)],
+        ]);
+
         $this->newLine();
 
         // 2. Duplicate transactions
@@ -28,7 +45,7 @@ class MeleeAudit extends Command
         $duplicates = DB::select("
             SELECT reference_id as order_id, melee_diamond_id, transaction_type, pieces,
                    COUNT(*) as occurrences,
-                   GROUP_CONCAT(id ORDER BY id) as transaction_ids
+                   GROUP_CONCAT(id) as transaction_ids
             FROM melee_transactions
             WHERE reference_type = 'order'
             GROUP BY reference_id, melee_diamond_id, transaction_type, pieces

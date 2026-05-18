@@ -7,9 +7,17 @@ use App\Models\MeleeCategory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Models\MeleeTransaction;
+use App\Services\MeleeStockService;
 
 class MeleeCategoryController extends Controller
 {
+    private MeleeStockService $meleeStockService;
+
+    public function __construct(MeleeStockService $meleeStockService)
+    {
+        $this->meleeStockService = $meleeStockService;
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -20,7 +28,7 @@ class MeleeCategoryController extends Controller
         try {
             DB::beginTransaction();
 
-            $category = MeleeCategory::create([
+            $category = $this->meleeStockService->createCategory([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'type' => $request->type,
@@ -51,16 +59,8 @@ class MeleeCategoryController extends Controller
 
             $category = MeleeCategory::with('diamonds.transactions')->findOrFail($id);
 
-            // Delete transactions of diamonds under this category
-            foreach ($category->diamonds as $diamond) {
-                MeleeTransaction::where('melee_diamond_id', $diamond->id)->delete();
-            }
-
-            // Delete diamonds
-            $category->diamonds()->delete();
-
-            // Delete category
-            $category->delete();
+            // Delete category (and its diamonds/transactions)
+            $this->meleeStockService->deleteCategory($category);
 
             DB::commit();
 

@@ -126,7 +126,12 @@ A complete messaging system for admins, embedded in the panel:
 
 ### Inventory & Financials
 
-- **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation. Atomic stock deduction/return with net-quantity diffing during order edits (prevents duplicate transactions).
+- **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation.
+    - Atomic stock deduction/return with net-quantity diffing during order edits (prevents duplicate transactions).
+    - **Single Write Path Architecture**: Eliminated dual-write issues by migrating all Eloquent mutations to a centralized `MeleeStockService`, ensuring robust, test-verified transaction integrity and safe bridging of legacy fields during schema transitions.
+    - **Policy-Based Authorization (Sprint 3)**: All melee mutations are now governed by `MeleeDiamondPolicy` registered in `AppServiceProvider`. Permission slugs follow the dot-notation convention: `melee.view`, `melee.create`, `melee.edit`, `melee.delete`. Super-admins bypass these automatically; regular admins require explicit permission assignment.
+    - **Form Request Validation (Sprint 3)**: Inline `$request->validate()` calls in `addShape()` and `update()` are now replaced by dedicated `StoreMeleeRequest` and `UpdateMeleeRequest` classes (in `app/Http/Requests/`), which also enforce authorization. This centralizes validation rules for future UI/documentation use.
+    - **Sprint 3 Tests**: 30 new tests added — `MeleeDiamondPolicyTest` (unit, 10 cases) and `MeleeFormRequestTest` (feature, 10 cases) — all green with zero regressions on Sprint 1+2 characterization tests.
 - **Gold Tracking** — Manage gold stock levels and transactions across different purities. Features a unified transaction log with styled links to orders for consumed gold, allowing administrators to jump directly from a tracking entry to the relevant order details.
 - **Multi-Currency Invoices** — Generate professional invoices with support for different regions and currency symbols
 - **Expense & Purchase Tracking** — Centralized log of business expenses and inventory purchases
