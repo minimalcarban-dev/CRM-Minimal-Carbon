@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\MeleeCategory;
 use App\Models\MeleeDiamond;
 use App\Models\MeleeTransaction;
 use Illuminate\Console\Command;
@@ -180,6 +181,48 @@ class MeleeAudit extends Command
                 $driftTable
             );
         }
+
+
+        // 6. Diamonds with zero purchase price
+        $this->info('── ZERO PURCHASE PRICE ──');
+        $zeroPriceDiamonds = MeleeDiamond::with('category')
+            ->where('purchase_price_per_ct', 0)
+            ->get();
+
+        if ($zeroPriceDiamonds->isEmpty()) {
+            $this->info('  ✅ All diamonds have a purchase price set.');
+        } else {
+            $this->warn("  ⚠️ {$zeroPriceDiamonds->count()} diamond(s) have zero purchase price:");
+            $table = [];
+            foreach ($zeroPriceDiamonds as $d) {
+                $table[] = ["#{$d->id}", optional($d->category)->name ?? '—', $d->shape, $d->size_label];
+            }
+            $this->table(['Diamond', 'Category', 'Shape', 'Size'], $table);
+        }
+
+        $this->newLine();
+
+        // 7. Categories with zero diamonds
+        $this->info('── EMPTY CATEGORIES ──');
+        $emptyCategories = MeleeCategory::doesntHave('diamonds')->get();
+
+        if ($emptyCategories->isEmpty()) {
+            $this->info('  ✅ All categories have at least one diamond.');
+        } else {
+            $this->warn("  ⚠️ {$emptyCategories->count()} category/categories have no diamonds:");
+            $table = [];
+            foreach ($emptyCategories as $c) {
+                $table[] = ["#{$c->id}", $c->name, $c->type ?? '—'];
+            }
+            $this->table(['Category', 'Name', 'Type'], $table);
+        }
+
+        $this->newLine();
+
+        // 8. Recent transactions (last 24 hours)
+        $this->info('── RECENT TRANSACTIONS (LAST 24H) ──');
+        $recentCount = MeleeTransaction::where('created_at', '>=', now()->subDay())->count();
+        $this->info("  🕐 {$recentCount} transaction(s) recorded in the last 24 hours.");
 
         $this->newLine();
         $this->info('===== AUDIT COMPLETE =====');

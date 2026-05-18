@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Admin;
 use App\Observers\AdminObserver;
+use App\Observers\MeleeObserver;
 use App\Events\UserMentioned;
 use App\Listeners\SendChatMentionNotification;
 use App\Models\Invoice;
@@ -35,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Attach observer to auto-enroll new admins into default channels
         Admin::observe(AdminObserver::class);
+
+        // Register MeleeObserver — Sprint 6
+        MeleeDiamond::observe(MeleeObserver::class);
 
         // Share currently-logged-in admin with all views (nullable)
         View::composer('*', function ($view) {

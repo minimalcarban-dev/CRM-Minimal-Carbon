@@ -6,6 +6,7 @@ use App\Models\Admin;
 use App\Models\MeleeDiamond;
 use App\Policies\MeleeDiamondPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -33,7 +34,7 @@ class MeleeDiamondPolicyTest extends TestCase
     // viewAny
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function super_admin_can_view_any_melee(): void
     {
         $admin = Admin::factory()->super()->create();
@@ -41,7 +42,7 @@ class MeleeDiamondPolicyTest extends TestCase
         $this->assertTrue($this->policy->viewAny($admin));
     }
 
-    /** @test */
+    #[Test]
     public function admin_without_view_permission_cannot_view_any(): void
     {
         // Regular factory admin has no permissions by default
@@ -54,7 +55,7 @@ class MeleeDiamondPolicyTest extends TestCase
     // view (single record)
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function super_admin_can_view_any_specific_diamond(): void
     {
         $admin   = Admin::factory()->super()->create();
@@ -63,7 +64,7 @@ class MeleeDiamondPolicyTest extends TestCase
         $this->assertTrue($this->policy->view($admin, $diamond));
     }
 
-    /** @test */
+    #[Test]
     public function admin_without_view_permission_cannot_view_specific_diamond(): void
     {
         $admin   = Admin::factory()->create();
@@ -76,7 +77,7 @@ class MeleeDiamondPolicyTest extends TestCase
     // create
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function super_admin_can_create_melee(): void
     {
         $admin = Admin::factory()->super()->create();
@@ -84,7 +85,7 @@ class MeleeDiamondPolicyTest extends TestCase
         $this->assertTrue($this->policy->create($admin));
     }
 
-    /** @test */
+    #[Test]
     public function admin_without_create_permission_cannot_create(): void
     {
         $admin = Admin::factory()->create();
@@ -96,7 +97,7 @@ class MeleeDiamondPolicyTest extends TestCase
     // update
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function super_admin_can_update_any_diamond(): void
     {
         $admin   = Admin::factory()->super()->create();
@@ -105,7 +106,7 @@ class MeleeDiamondPolicyTest extends TestCase
         $this->assertTrue($this->policy->update($admin, $diamond));
     }
 
-    /** @test */
+    #[Test]
     public function admin_without_edit_permission_cannot_update(): void
     {
         $admin   = Admin::factory()->create();
@@ -118,7 +119,7 @@ class MeleeDiamondPolicyTest extends TestCase
     // delete
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function super_admin_can_delete_any_diamond(): void
     {
         $admin   = Admin::factory()->super()->create();
@@ -127,7 +128,7 @@ class MeleeDiamondPolicyTest extends TestCase
         $this->assertTrue($this->policy->delete($admin, $diamond));
     }
 
-    /** @test */
+    #[Test]
     public function admin_without_delete_permission_cannot_delete(): void
     {
         $admin   = Admin::factory()->create();

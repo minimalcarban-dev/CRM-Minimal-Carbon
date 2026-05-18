@@ -8,6 +8,7 @@ use App\Models\MeleeDiamond;
 use App\Models\MeleeTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -35,7 +36,7 @@ class MeleeCharacterizationTest extends TestCase
     // MeleeDiamond Boot Hook — saving() Characterization
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function boot_hook_auto_calculates_sold_pieces_on_save(): void
     {
         $diamond = MeleeDiamond::factory()->create([
@@ -49,7 +50,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertEquals(30, $diamond->sold_pieces);
     }
 
-    /** @test */
+    #[Test]
     public function boot_hook_auto_calculates_total_price_on_save(): void
     {
         $diamond = MeleeDiamond::factory()->create([
@@ -63,7 +64,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertEquals(250.00, (float) $diamond->total_price);
     }
 
-    /** @test */
+    #[Test]
     public function boot_hook_sets_status_out_of_stock_when_zero_pieces(): void
     {
         $diamond = MeleeDiamond::factory()->create([
@@ -76,7 +77,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertEquals('out_of_stock', $diamond->status);
     }
 
-    /** @test */
+    #[Test]
     public function boot_hook_sets_status_low_stock_at_threshold(): void
     {
         $diamond = MeleeDiamond::factory()->create([
@@ -91,7 +92,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertEquals('low_stock', $diamond->status);
     }
 
-    /** @test */
+    #[Test]
     public function boot_hook_sets_status_in_stock_above_threshold(): void
     {
         $diamond = MeleeDiamond::factory()->create([
@@ -106,7 +107,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertEquals('in_stock', $diamond->status);
     }
 
-    /** @test */
+    #[Test]
     public function boot_hook_recalculates_on_update(): void
     {
         $diamond = MeleeDiamond::factory()->create([
@@ -127,7 +128,7 @@ class MeleeCharacterizationTest extends TestCase
     // MeleeDiamond Factory + Persistence
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function it_stores_a_melee_diamond_with_all_current_fields(): void
     {
         $category = MeleeCategory::factory()->labGrown()->create();
@@ -154,7 +155,7 @@ class MeleeCharacterizationTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_stores_a_melee_category_with_all_current_fields(): void
     {
         $category = MeleeCategory::factory()->create([
@@ -179,7 +180,7 @@ class MeleeCharacterizationTest extends TestCase
     // MeleeTransaction Boot Hook — created() Characterization (Dual-Write)
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function transaction_boot_hook_adds_stock_for_manual_in_transaction(): void
     {
         Notification::fake();
@@ -209,7 +210,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertEquals($originalAvailable + 20, $diamond->available_pieces);
     }
 
-    /** @test */
+    #[Test]
     public function transaction_boot_hook_deducts_stock_for_out_transaction(): void
     {
         Notification::fake();
@@ -237,7 +238,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertEquals($originalAvailable - 10, $diamond->available_pieces);
     }
 
-    /** @test */
+    #[Test]
     public function transaction_boot_hook_handles_order_return_differently(): void
     {
         Notification::fake();
@@ -271,7 +272,7 @@ class MeleeCharacterizationTest extends TestCase
     // Controller Endpoint Characterization
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function index_returns_200_for_authenticated_admin(): void
     {
         $admin = $this->adminUser();
@@ -282,7 +283,7 @@ class MeleeCharacterizationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    /** @test */
+    #[Test]
     public function search_returns_json_array(): void
     {
         $admin = $this->adminUser();
@@ -295,7 +296,7 @@ class MeleeCharacterizationTest extends TestCase
         $response->assertJsonIsArray();
     }
 
-    /** @test */
+    #[Test]
     public function search_returns_expected_fields_per_result(): void
     {
         $admin = $this->adminUser();
@@ -313,7 +314,7 @@ class MeleeCharacterizationTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function get_stock_returns_diamond_data(): void
     {
         $admin = $this->adminUser();
@@ -329,7 +330,7 @@ class MeleeCharacterizationTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function get_history_returns_transaction_list(): void
     {
         Notification::fake();
@@ -352,7 +353,7 @@ class MeleeCharacterizationTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function add_shape_creates_new_diamond_in_category(): void
     {
         // Sprint 3: addShape now requires melee.create permission. Super-admin bypasses.
@@ -376,7 +377,7 @@ class MeleeCharacterizationTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function add_shape_rejects_duplicate_in_same_category(): void
     {
         // Sprint 3: addShape now requires melee.create permission. Super-admin bypasses.
@@ -399,7 +400,7 @@ class MeleeCharacterizationTest extends TestCase
             ->assertJson(['success' => false]);
     }
 
-    /** @test */
+    #[Test]
     public function transaction_endpoint_records_stock_in(): void
     {
         Notification::fake();
@@ -422,7 +423,7 @@ class MeleeCharacterizationTest extends TestCase
             ->assertJson(['success' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function destroy_deletes_diamond_and_transactions(): void
     {
         Notification::fake();
@@ -450,7 +451,7 @@ class MeleeCharacterizationTest extends TestCase
     // No Permission Middleware — Characterizing Current Gap
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function melee_routes_have_no_permission_middleware(): void
     {
         // Current behaviour: ANY authenticated admin can access all melee routes
@@ -467,7 +468,7 @@ class MeleeCharacterizationTest extends TestCase
     // Model Relationship Characterization
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function diamond_belongs_to_category(): void
     {
         $category = MeleeCategory::factory()->labGrown()->create();
@@ -476,7 +477,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertTrue($diamond->category->is($category));
     }
 
-    /** @test */
+    #[Test]
     public function diamond_has_many_transactions(): void
     {
         Notification::fake();
@@ -492,7 +493,7 @@ class MeleeCharacterizationTest extends TestCase
         $this->assertCount(3, $diamond->transactions);
     }
 
-    /** @test */
+    #[Test]
     public function diamond_name_accessor_returns_category_and_size(): void
     {
         $category = MeleeCategory::factory()->create(['name' => 'Brilliant Cut']);

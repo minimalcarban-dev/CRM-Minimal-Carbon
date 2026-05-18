@@ -8,6 +8,7 @@ use App\Models\MeleeDiamond;
 use App\Models\MeleeTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -19,14 +20,14 @@ class MeleeAuditCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function audit_command_runs_without_errors(): void
     {
         $this->artisan('melee:audit')
             ->assertExitCode(0);
     }
 
-    /** @test */
+    #[Test]
     public function audit_command_displays_header(): void
     {
         $this->artisan('melee:audit')
@@ -34,7 +35,7 @@ class MeleeAuditCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
-    /** @test */
+    #[Test]
     public function audit_command_displays_summary_table_with_correct_counts(): void
     {
         Notification::fake();
@@ -57,7 +58,7 @@ class MeleeAuditCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
-    /** @test */
+    #[Test]
     public function audit_command_displays_audit_complete_footer(): void
     {
         $this->artisan('melee:audit')
@@ -65,7 +66,7 @@ class MeleeAuditCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
-    /** @test */
+    #[Test]
     public function audit_command_is_read_only(): void
     {
         Notification::fake();
@@ -102,7 +103,7 @@ class MeleeAuditCommandTest extends TestCase
         $this->assertEquals($diamondBefore, $diamondAfter, 'Diamond record was mutated during audit');
     }
 
-    /** @test */
+    #[Test]
     public function audit_command_detects_stock_drift(): void
     {
         Notification::fake();

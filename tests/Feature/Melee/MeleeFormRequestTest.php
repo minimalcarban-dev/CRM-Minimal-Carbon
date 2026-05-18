@@ -6,6 +6,7 @@ use App\Models\Admin;
 use App\Models\MeleeCategory;
 use App\Models\MeleeDiamond;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -24,7 +25,7 @@ class MeleeFormRequestTest extends TestCase
     // StoreMeleeRequest — addShape (POST /melee/add-shape)
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function add_shape_rejects_missing_category_id(): void
     {
         $admin = Admin::factory()->super()->create();
@@ -38,7 +39,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJsonValidationErrors(['category_id']);
     }
 
-    /** @test */
+    #[Test]
     public function add_shape_rejects_nonexistent_category(): void
     {
         $admin = Admin::factory()->super()->create();
@@ -53,7 +54,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJsonValidationErrors(['category_id']);
     }
 
-    /** @test */
+    #[Test]
     public function add_shape_rejects_invalid_size_format(): void
     {
         $admin    = Admin::factory()->super()->create();
@@ -69,7 +70,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJsonValidationErrors(['size']);
     }
 
-    /** @test */
+    #[Test]
     public function add_shape_rejects_missing_shape(): void
     {
         $admin    = Admin::factory()->super()->create();
@@ -84,7 +85,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJsonValidationErrors(['shape']);
     }
 
-    /** @test */
+    #[Test]
     public function add_shape_succeeds_with_valid_payload(): void
     {
         $admin    = Admin::factory()->super()->create();
@@ -100,7 +101,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJson(['success' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function add_shape_forbidden_for_admin_without_create_permission(): void
     {
         $admin    = Admin::factory()->create(); // no permissions
@@ -119,7 +120,7 @@ class MeleeFormRequestTest extends TestCase
     // UpdateMeleeRequest — update (PUT /melee/{id})
     // =========================================================================
 
-    /** @test */
+    #[Test]
     public function update_rejects_missing_shape(): void
     {
         $admin   = Admin::factory()->super()->create();
@@ -133,7 +134,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJsonValidationErrors(['shape']);
     }
 
-    /** @test */
+    #[Test]
     public function update_rejects_invalid_size_format(): void
     {
         $admin   = Admin::factory()->super()->create();
@@ -148,7 +149,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJsonValidationErrors(['size']);
     }
 
-    /** @test */
+    #[Test]
     public function update_rejects_negative_last_carats(): void
     {
         $admin   = Admin::factory()->super()->create();
@@ -165,7 +166,7 @@ class MeleeFormRequestTest extends TestCase
             ->assertJsonValidationErrors(['last_carats']);
     }
 
-    /** @test */
+    #[Test]
     public function update_forbidden_for_admin_without_edit_permission(): void
     {
         $admin   = Admin::factory()->create(); // no permissions
