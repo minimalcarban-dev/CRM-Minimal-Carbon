@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Admin;
 use App\Observers\AdminObserver;
+use App\Observers\MeleeObserver;
 use App\Events\UserMentioned;
 use App\Listeners\SendChatMentionNotification;
 use App\Models\Invoice;
 use App\Policies\InvoicePolicy;
+use App\Models\MeleeDiamond;
+use App\Policies\MeleeDiamondPolicy;
+use App\Models\MeleeCategory;
+use App\Policies\MeleeCategoryPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +37,9 @@ class AppServiceProvider extends ServiceProvider
         // Attach observer to auto-enroll new admins into default channels
         Admin::observe(AdminObserver::class);
 
+        // Register MeleeObserver — Sprint 6
+        MeleeDiamond::observe(MeleeObserver::class);
+
         // Share currently-logged-in admin with all views (nullable)
         View::composer('*', function ($view) {
             /** @var Admin|null $admin */
@@ -47,5 +55,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Invoice policy
         Gate::policy(Invoice::class, InvoicePolicy::class);
+
+        // Register Melee Diamond policy — Sprint 3
+        Gate::policy(MeleeDiamond::class, MeleeDiamondPolicy::class);
+
+        // Register Melee Category policy — Sprint 3
+        Gate::policy(MeleeCategory::class, MeleeCategoryPolicy::class);
     }
 }

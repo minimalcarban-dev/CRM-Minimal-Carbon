@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Admin;
+use App\Models\MeleeCategory;
 use App\Models\MeleeDiamond;
 use App\Models\MeleeTransaction;
 use App\Notifications\MeleeLowStockNotification;
@@ -670,5 +671,113 @@ class MeleeStockService
     private function resolveActorId(): int
     {
         return (int) (Auth::guard('admin')->id() ?? Auth::id() ?? 1);
+    }
+
+    /**
+     * The single authoritative method for creating a melee record.
+     */
+    public function create(array $validated): MeleeDiamond
+    {
+        $melee = MeleeDiamond::create($validated);
+
+        // Legacy field bridge — keep readable until Sprint 5 cleanup
+        $this->syncLegacyFields($melee);
+        $melee->saveQuietly(); // avoid double-firing observers
+
+        return $melee;
+    }
+
+    /**
+     * The single authoritative method for updating a melee record.
+     */
+    public function update(MeleeDiamond $melee, array $validated): MeleeDiamond
+    {
+        $melee->fill($validated);
+
+        $this->syncLegacyFields($melee);
+        $melee->save();
+
+        return $melee;
+    }
+
+    /**
+     * The single authoritative method for deleting a melee record.
+     */
+    public function delete(MeleeDiamond $melee): void
+    {
+        // Delete associated transactions first
+        MeleeTransaction::where('melee_diamond_id', $melee->id)->delete();
+        $melee->delete();
+    }
+
+    /**
+     * Legacy field bridge pattern during transition.
+     */
+    private function syncLegacyFields(MeleeDiamond $melee): void
+    {
+        // Map new canonical fields → legacy fields
+        // Update this array when new canonical fields are finalized
+        $bridges = [
+            // 'new_field' => 'legacy_field',
+        ];
+
+        foreach ($bridges as $new => $legacy) {
+            if ($melee->isDirty($new) && isset($melee->{$new})) {
+                $melee->{$legacy} = $melee->{$new};
+            }
+        }
+    }
+
+    /**
+     * Update a Melee Transaction.
+     */
+    public function updateTransactionRecord(MeleeTransaction $transaction, array $validated): MeleeTransaction
+    {
+        $transaction->fill($validated);
+        $transaction->save();
+        return $transaction;
+    }
+
+    /**
+     * Delete a Melee Transaction.
+     */
+    public function deleteTransactionRecord(MeleeTransaction $transaction): void
+    {
+        $transaction->delete();
+    }
+
+    /**
+     * Create a Melee Category.
+     */
+    public function createCategory(array $validated): MeleeCategory
+    {
+        return MeleeCategory::create($validated);
+    }
+
+    /**
+     * Update a Melee Category.
+     */
+    public function updateCategory(MeleeCategory $category, array $validated): MeleeCategory
+    {
+        $category->fill($validated);
+        $category->save();
+        return $category;
+    }
+
+    /**
+     * Delete a Melee Category.
+     */
+    public function deleteCategory(MeleeCategory $category): void
+    {
+        // Delete transactions of diamonds under this category
+        foreach ($category->diamonds as $diamond) {
+            MeleeTransaction::where('melee_diamond_id', $diamond->id)->delete();
+        }
+
+        // Delete diamonds
+        $category->diamonds()->delete();
+
+        // Delete category
+        $category->delete();
     }
 }

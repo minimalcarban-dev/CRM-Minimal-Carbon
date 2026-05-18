@@ -2,15 +2,19 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             DB::statement("ALTER TABLE orders MODIFY COLUMN diamond_status ENUM(
                 'r_order_in_process', 'r_order_shipped', 'r_order_cancelled',
@@ -25,6 +29,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             // Revert to the previous known state (from 2026_02_23 migration)
             DB::statement("ALTER TABLE orders MODIFY COLUMN diamond_status ENUM(

@@ -126,7 +126,35 @@ A complete messaging system for admins, embedded in the panel:
 
 ### Inventory & Financials
 
-- **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation. Atomic stock deduction/return with net-quantity diffing during order edits (prevents duplicate transactions).
+- **Melee Diamond Inventory** — Track small diamonds by category, shape, and weight with total value calculation.
+    - Atomic stock deduction/return with net-quantity diffing during order edits (prevents duplicate transactions).
+    - **Single Write Path Architecture**: Eliminated dual-write issues by migrating all Eloquent mutations to a centralized `MeleeStockService`, ensuring robust, test-verified transaction integrity and safe bridging of legacy fields during schema transitions.
+    - **Policy-Based Authorization (Sprint 3)**: All melee mutations are now governed by `MeleeDiamondPolicy` registered in `AppServiceProvider`. Permission slugs follow the dot-notation convention: `melee.view`, `melee.create`, `melee.edit`, `melee.delete`. Super-admins bypass these automatically; regular admins require explicit permission assignment.
+    - **Form Request Validation (Sprint 3)**: Inline `$request->validate()` calls in `addShape()` and `update()` are now replaced by dedicated `StoreMeleeRequest` and `UpdateMeleeRequest` classes (in `app/Http/Requests/`), which also enforce authorization. This centralizes validation rules for future UI/documentation use.
+    - **Sprint 3 Tests**: 30 new tests added — `MeleeDiamondPolicyTest` (unit, 10 cases) and `MeleeFormRequestTest` (feature, 10 cases) — all green with zero regressions on Sprint 1+2 characterization tests.
+    - **Sprint 4 — View Decomposition**: The 3,183-line monolithic `resources/views/melee/index.blade.php` has been decomposed into **8 focused partials** under `resources/views/melee/partials/`:
+        - `_page_header.blade.php` — Title, Lab Grown/Natural tab switcher, Add/Use Stock buttons.
+        - `_stats_cards.blade.php` — Super-admin-only stat cards (Total Diamonds, Total Value, Avg. Value).
+        - `_category_sidebar.blade.php` — Lab Grown and Natural category nav lists with delete and add buttons.
+        - `_diamond_panel.blade.php` — Full shapes accordion, diamond table rows, add-size and add-shape bars.
+        - `_modal_history.blade.php` — Stock history modal with transaction table and diamond info header.
+        - `_modal_quick_order.blade.php` — Order quick-view modal (dark gradient header, improved footer CTA).
+        - `_modal_edit_melee.blade.php` — Edit diamond shape/size modal with gradient header and grouped input layout.
+        - `_modal_edit_transaction.blade.php` — Edit transaction modal with indigo gradient header and larger inputs.
+        - The pre-existing `transaction_modal.blade.php` (Add/Use Stock form) remains in place.
+        - The orphaned `stock_table.blade.php` was deleted (it was never wired in).
+        - `index.blade.php` is now **~2,644 lines** — primarily CSS + `@include` wires + inline JS (Phase 2 deferred).
+        - All 51 Melee tests remain green with zero regressions. Modals received visual upgrades (gradient headers, themed icons, improved input sizing) matching the system design language.
+    - **Sprint 6 — Observer, Hardened Audit & Full Test Coverage**:
+        - **MeleeObserver** (`app/Observers/MeleeObserver.php`) registered in `AppServiceProvider::boot()` and wired to three application events: `MeleeCreated`, `MeleeStatusChanged` (fires **only** when `status` actually changes, guarded by `wasChanged('status')`), and `MeleeDeleted`.
+        - **Hardened Audit Command** — `php artisan melee:audit` extended with 3 new read-only checks: zero-purchase-price diamonds (34 flagged), empty categories (3 flagged), and a 24-hour recent-transaction count. Scheduled daily at 06:00 via `routes/console.php`.
+        - **Full Integration Tests** — `MeleeStockServiceTest` (9 tests, 36 assertions) covers all public service methods: `deductForOrder` (happy path, insufficient stock, idempotency), `returnForOrder`, `adjustForOrderDiff` (net increase, net decrease, no change), `recordManualTransaction` (stock in, stock out insufficient).
+        - **Observer Tests** — `MeleeObserverTest` (4 tests) verifies all three event dispatches and the no-event guard using scoped `Event::fake([Xyz::class])` to prevent Eloquent internal model events from being intercepted.
+        - **PHPUnit Attribute Migration** — All 44 `/** @test */` doc-comment annotations across 4 melee test files converted to `#[Test]` PHP 8 attribute syntax, eliminating PHPUnit 12 deprecation warnings.
+        - **Total test score after Sprint 6:** 64 tests / 144 assertions — all green.
+        - Architecture documentation written to `docs/melee/README.md` covering write path, row locking, idempotency, permissions, audit usage, and known drift fix plan.
+
+
 - **Gold Tracking** — Manage gold stock levels and transactions across different purities. Features a unified transaction log with styled links to orders for consumed gold, allowing administrators to jump directly from a tracking entry to the relevant order details.
 - **Multi-Currency Invoices** — Generate professional invoices with support for different regions and currency symbols
 - **Expense & Purchase Tracking** — Centralized log of business expenses and inventory purchases
@@ -335,6 +363,7 @@ Channel authorization happens at `/admin/broadcasting/auth`, protected by the `a
 ### Inventory & Stock Management
 | Command | Purpose |
 |---------|----------|
+| `php artisan melee:audit` | **Read-only** daily audit (scheduled 06:00). Reports drift, duplicates, zero-price lots, empty categories, and recent activity. |
 | `php artisan melee:repair` | Clean duplicate transactions and recalibrate melee stock levels. |
 | `php artisan melee:repair --dry-run` | Preview stock repairs without applying changes. |
 | `php artisan melee:recalculate` | Re-sum all transactions to fix drift in `available_weight`. |

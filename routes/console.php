@@ -21,6 +21,11 @@ Schedule::command('diamonds:sync-duration --chunk=500')
     ->dailyAt('02:15')
     ->withoutOverlapping();
 
+// Run melee stock audit every morning — Sprint 6
+Schedule::command('melee:audit')
+    ->dailyAt('06:00')
+    ->withoutOverlapping();
+
 // Safe background queue processing for shared cPanel hosting
 // It processes any pending jobs and stops. Max time ensures it doesn't run endlessly.
 Schedule::command('queue:work --stop-when-empty --max-time=240 --memory=128 --tries=3')
