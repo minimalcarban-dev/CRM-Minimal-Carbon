@@ -31,7 +31,8 @@ trait AuthorizesPermissions
         $admin = $this->resolveAdmin();
 
         if (!$admin || !$admin->hasPermission($permission)) {
-            abort(403, $message ?? 'You do not have permission to perform this action.');
+            $friendlyName = \App\Models\Permission::getFriendlyName($permission);
+            abort(403, $message ?? "You do not have permission to: {$friendlyName}.");
         }
     }
 
@@ -47,7 +48,8 @@ trait AuthorizesPermissions
         $admin = $this->resolveAdmin();
 
         if (!$admin || !$admin->hasExplicitPermission($permission)) {
-            abort(403, $message ?? 'You do not have permission to perform this action.');
+            $friendlyName = \App\Models\Permission::getFriendlyName($permission);
+            abort(403, $message ?? "You do not have permission to: {$friendlyName}.");
         }
     }
 

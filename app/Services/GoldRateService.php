@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class GoldRateService
 {
-    private const CUSTOM_GOLD_API_URL = 'https://custom-gold-api.onrender.com/gold';
+    private const CUSTOM_GOLD_API_URL = 'https://custom-gold-api-pu4h.onrender.com';
     private const NAVKAR_PROXY_URL = 'https://navkar-gold-proxy.minimalcarbonstore.workers.dev';
     private const NAVKAR_PROXY_KEY = 'navkar-proxy-xK9mP2024';
     private const LIVE_CACHE_SECONDS = 60;
