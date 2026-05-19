@@ -105,6 +105,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Diamond Pricing', 'slug' => 'diamonds.view_pricing', 'description' => 'View diamond pricing details (per_ct, purchase_price, margin)', 'category' => 'diamonds'],
             ['name' => 'View Job History', 'slug' => 'diamond_jobs.view', 'description' => 'View background job history', 'category' => 'diamonds'],
 
+            // Melee Diamonds
+            ['name' => 'View Melee Inventory', 'slug' => 'melee_diamonds.view', 'description' => 'Can view the melee diamond inventory dashboard', 'category' => 'melee_diamonds'],
+            ['name' => 'Create Melee Stock', 'slug' => 'melee_diamonds.create', 'description' => 'Can add new melee diamond categories or parcels', 'category' => 'melee_diamonds'],
+            ['name' => 'Edit Melee Stock', 'slug' => 'melee_diamonds.edit', 'description' => 'Can edit melee diamond details', 'category' => 'melee_diamonds'],
+            ['name' => 'Delete Melee Stock', 'slug' => 'melee_diamonds.delete', 'description' => 'Can delete melee diamond records', 'category' => 'melee_diamonds'],
+            ['name' => 'Manage Stock Transactions', 'slug' => 'melee_diamonds.transaction', 'description' => 'Can perform IN/OUT stock transactions', 'category' => 'melee_diamonds'],
+
             // Jewellery Stock
             ['name' => 'View Jewellery Pricing', 'slug' => 'jewellery_stock.view_pricing', 'description' => 'View jewellery pricing details (purchase price and margin)', 'category' => 'jewellery_stock'],
             ['name' => 'View Jewellery Profit', 'slug' => 'jewellery_stock.view_profit', 'description' => 'View hidden jewellery profit calculation details', 'category' => 'jewellery_stock'],

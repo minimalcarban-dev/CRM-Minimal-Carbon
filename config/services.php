@@ -58,4 +58,11 @@ return [
         'api_key'  => env('VGL_API_KEY'),
     ],
 
+    // Jewellery Module Pricing Configurations
+    'jewellery' => [
+        'silver_argentium_extra' => (float) env('SILVER_ARGENTIUM_EXTRA', 0),
+        'platinum_rate' => env('JEWELLERY_PLATINUM_RATE'),
+    ],
+
 ];
+

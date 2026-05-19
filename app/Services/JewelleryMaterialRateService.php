@@ -16,7 +16,8 @@ class JewelleryMaterialRateService
 
     public function __construct(
         protected GoldRateService $goldRateService
-    ) {}
+    ) {
+    }
 
     public function currentRates(bool $force = false): array
     {
@@ -95,7 +96,7 @@ class JewelleryMaterialRateService
             try {
                 $response = Http::withoutVerifying()
                     ->timeout(8)
-                    ->get('https://custom-gold-api.onrender.com/silver');
+                    ->get('https://custom-gold-api-pu4h.onrender.com/silver');
 
                 if ($response->successful()) {
                     // Primary source now exposes silver on dedicated /silver endpoint.

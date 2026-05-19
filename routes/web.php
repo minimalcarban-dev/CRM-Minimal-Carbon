@@ -1009,22 +1009,45 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     // ─────────────────────────────────────────────────────────────
     // Melee Diamond Inventory
     // ─────────────────────────────────────────────────────────────
-    Route::prefix('melee')->name('melee.')->group(
+    Route::prefix('melee')->name('melee.')->middleware('admin.permission:melee_diamonds.view')->group(
         function () {
             Route::get('/', [MeleeDiamondController::class, 'index'])->name('index'); // View
             Route::get('/search', [MeleeDiamondController::class, 'search'])->name('search');
             Route::get('/stock/{id}', [MeleeDiamondController::class, 'getStock'])->name('get-stock');
             Route::get('/history/{id}', [MeleeDiamondController::class, 'getHistory'])->name('history');
-            Route::post('/transaction', [MeleeDiamondController::class, 'transaction'])->name('transaction'); // Stock IN/OUT
-            Route::post('/add-shape', [MeleeDiamondController::class, 'addShape'])->name('add-shape'); // Add new Shape+Size
-            Route::put('/{id}', [MeleeDiamondController::class, 'update'])->name('update');
-            Route::delete('/{id}', [MeleeDiamondController::class, 'destroy'])->name('destroy');
-            Route::put('/transaction/{id}', [MeleeDiamondController::class, 'updateTransaction'])->name('update-transaction');
-            Route::delete('/transaction/{id}', [MeleeDiamondController::class, 'destroyTransaction'])->name('destroy-transaction');
+            
+            Route::post('/transaction', [MeleeDiamondController::class, 'transaction'])
+                ->name('transaction')
+                ->middleware('admin.permission:melee_diamonds.transaction'); // Stock IN/OUT
+                
+            Route::post('/add-shape', [MeleeDiamondController::class, 'addShape'])
+                ->name('add-shape')
+                ->middleware('admin.permission:melee_diamonds.create'); // Add new Shape+Size
+                
+            Route::put('/{id}', [MeleeDiamondController::class, 'update'])
+                ->name('update')
+                ->middleware('admin.permission:melee_diamonds.edit');
+                
+            Route::delete('/{id}', [MeleeDiamondController::class, 'destroy'])
+                ->name('destroy')
+                ->middleware('admin.permission:melee_diamonds.delete');
+                
+            Route::put('/transaction/{id}', [MeleeDiamondController::class, 'updateTransaction'])
+                ->name('update-transaction')
+                ->middleware('admin.permission:melee_diamonds.transaction');
+                
+            Route::delete('/transaction/{id}', [MeleeDiamondController::class, 'destroyTransaction'])
+                ->name('destroy-transaction')
+                ->middleware('admin.permission:melee_diamonds.transaction');
 
             // Category Management
-            Route::post('/category', [MeleeCategoryController::class, 'store'])->name('category.store');
-            Route::delete('/category/{id}', [MeleeCategoryController::class, 'destroy'])->name('category.destroy');
+            Route::post('/category', [MeleeCategoryController::class, 'store'])
+                ->name('category.store')
+                ->middleware('admin.permission:melee_diamonds.create');
+                
+            Route::delete('/category/{id}', [MeleeCategoryController::class, 'destroy'])
+                ->name('category.destroy')
+                ->middleware('admin.permission:melee_diamonds.delete');
         }
     );
 

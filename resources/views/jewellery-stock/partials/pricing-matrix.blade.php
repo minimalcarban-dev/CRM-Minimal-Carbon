@@ -11,7 +11,7 @@
     $profitDefault = $canViewProfit || $canEditProfit ? (float) ($pricingDefaults['profit_percent'] ?? 25) : 0;
     $salesMarkupDefault = (float) ($pricingDefaults['sales_markup_percent'] ?? 0);
     $platinumDefault = (float) ($pricingDefaults['platinum_950_rate_usd_per_gram'] ?? 30);
-    $isPlatinumLocked = env('JEWELLERY_PLATINUM_RATE') !== null && env('JEWELLERY_PLATINUM_RATE') !== '';
+    $isPlatinumLocked = (config('services.jewellery.platinum_rate') ?? env('JEWELLERY_PLATINUM_RATE')) !== null && (config('services.jewellery.platinum_rate') ?? env('JEWELLERY_PLATINUM_RATE')) !== '';
 @endphp
 
 <div class="form-section-card">
@@ -269,7 +269,7 @@
                 let subtotal = metal + labor + stone + extra;
 
                 if (materialCode === 'silver_935') {
-                    subtotal += pricingNumber('{{ env("SILVER_ARGENTIUM_EXTRA", 0) }}');
+                    subtotal += pricingNumber('{{ \App\Models\AppSetting::get("jewellery_pricing.silver_argentium_extra", config("services.jewellery.silver_argentium_extra", 0)) }}');
                 }
 
                 const commission = subtotal * commissionPct / 100;
