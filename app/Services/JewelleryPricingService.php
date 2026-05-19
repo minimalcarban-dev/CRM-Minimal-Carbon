@@ -52,6 +52,7 @@ class JewelleryPricingService
                 'material_label' => $material['label'],
                 'variant_label' => $material['label'],
                 'net_weight_grams' => 0,
+                'color_weights' => null,
                 'stone_cost' => 0,
                 'extra_cost' => 0,
                 'is_default_listing' => $materialCode === 'silver_925',
@@ -75,6 +76,7 @@ class JewelleryPricingService
 
             $rows[$key] = array_merge($rows[$key], [
                 'net_weight_grams' => $resolvedWeight,
+                'color_weights' => is_string($row->color_weights) ? json_decode($row->color_weights, true) : $row->color_weights,
                 'stone_cost' => (float) $row->stone_cost,
                 'extra_cost' => (float) $row->extra_cost,
                 'commission_percent' => (float) $row->commission_percent,
@@ -126,7 +128,10 @@ class JewelleryPricingService
             $subtotal = $materialValue + $laborCost + $stoneCost + $extraCost;
 
             if ($materialCode === 'silver_935') {
-                $subtotal += $this->settingFloat('jewellery_pricing.silver_argentium_extra', 0);
+                $subtotal += $this->settingFloat(
+                    'jewellery_pricing.silver_argentium_extra',
+                    (float) config('services.jewellery.silver_argentium_extra', 0)
+                );
             }
 
             $commissionAmount = $subtotal * ($commissionPercent / 100);
@@ -140,6 +145,7 @@ class JewelleryPricingService
                 'material_code' => $materialCode,
                 'net_weight_grams' => round($weight, 3),
                 'purity_percent' => $purity,
+                'color_weights' => $input['color_weights'] ?? null,
                 'base_rate_usd_per_gram' => round($baseRate, 4),
                 'material_value' => round($materialValue, 2),
                 'labor_rate_usd_per_gram' => round($laborRate, 2),
@@ -214,7 +220,7 @@ class JewelleryPricingService
 
     protected function platinum950Rate(): float
     {
-        $envRate = env('JEWELLERY_PLATINUM_RATE');
+        $envRate = config('services.jewellery.platinum_rate') ?? env('JEWELLERY_PLATINUM_RATE');
 
         if ($envRate !== null && $envRate !== '') {
             return (float) $envRate;

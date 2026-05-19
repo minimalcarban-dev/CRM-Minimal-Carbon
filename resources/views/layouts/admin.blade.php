@@ -2934,8 +2934,8 @@
                                 'purchases.create',
                                 'expenses.view',
                                 'expenses.create',
-                                'gold-tracking.view',
-                                'gold-tracking.create',
+                                'gold_tracking.view',
+                                'gold_tracking.create',
                                 'factories.view',
                                 'factories.create',
                             ]))
@@ -3000,8 +3000,8 @@
                                 'purchases.create',
                                 'expenses.view',
                                 'expenses.create',
-                                'gold-tracking.view',
-                                'gold-tracking.create',
+                                'gold_tracking.view',
+                                'gold_tracking.create',
                                 'factories.view',
                                 'factories.create',
                             ]))
@@ -3036,7 +3036,7 @@
                                         </a>
                                     </li>
                                 @endif
-                                @if (auth()->guard('admin')->user()->canAccessAny(['gold-tracking.view', 'gold-tracking.create']))
+                                @if (auth()->guard('admin')->user()->canAccessAny(['gold_tracking.view', 'gold_tracking.create']))
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('gold-tracking.*') ? 'active cat-finance' : '' }}"
                                             href="{{ route('gold-tracking.index') }}" data-tooltip="Gold Tracking">
@@ -4668,7 +4668,7 @@
                 },
             @endif
             @if (auth()->guard('admin')->user() &&
-                    auth()->guard('admin')->user()->canAccessAny(['gold-tracking.view']))
+                    auth()->guard('admin')->user()->canAccessAny(['gold_tracking.view']))
                 {
                     label: 'Gold Tracking',
                     group: 'Tracking',

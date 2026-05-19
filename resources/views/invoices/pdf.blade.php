@@ -705,8 +705,9 @@
                 $placeOfSupply = $invoice->place_of_supply ?? ($invoice->company->state ?? '-');
 
                 // Option C: GST hidden when foreign party OR region ≠ India
-                $isForeignInvoice = ($invoice->invoice_region && $invoice->invoice_region !== 'IN')
-                    || ($invoice->billedTo && $invoice->billedTo->is_foreign);
+                $isForeignInvoice =
+                    ($invoice->invoice_region && $invoice->invoice_region !== 'IN') ||
+                    ($invoice->billedTo && $invoice->billedTo->is_foreign);
             @endphp
 
             <!-- Invoice Header -->
@@ -714,8 +715,9 @@
                 <div class="invoice-type">
                     {{ $invoice->invoice_type == 'proforma' ? 'Proforma Invoice' : 'Tax Invoice' }}
                 </div>
-                @if($invoice->invoice_type == 'proforma')
-                    <div class="invoice-subtitle">Invoice issued under Section 31 of Central Goods and Service Tax Act, 2017
+                @if ($invoice->invoice_type == 'proforma')
+                    <div class="invoice-subtitle">Invoice issued under Section 31 of Central Goods and Service Tax Act,
+                        2017
                     </div>
                 @endif
             </div>
@@ -743,7 +745,7 @@
                                 $logoUrl = null;
                             }
                         @endphp
-                        @if($logoUrl)
+                        @if ($logoUrl)
                             <img src="{{ $logoUrl }}" alt="Company Logo">
                         @else
                             <div class="logo-placeholder">LOGO</div>
@@ -764,7 +766,7 @@
                             </div>
                         @endif
 
-                        @if(!empty($invoice->company->phone))
+                        @if (!empty($invoice->company->phone))
                             <div class="company-info"><strong>Tel:</strong> {{ $invoice->company->phone }}</div>
                         @endif
                     </div>
@@ -783,13 +785,17 @@
                     <div class="copy-checkbox-section">
                         <div class="checkbox-item">
                             <div class="checkbox {{ $invoice->copy_type == 'original' ? 'checked' : '' }}">
-                                @if($invoice->copy_type == 'original')✓@endif
+                                @if ($invoice->copy_type == 'original')
+                                    ✓
+                                @endif
                             </div>
                             <div>Original - Recipient</div>
                         </div>
                         <div class="checkbox-item">
                             <div class="checkbox {{ $invoice->copy_type == 'duplicate' ? 'checked' : '' }}">
-                                @if($invoice->copy_type == 'duplicate')✓@endif
+                                @if ($invoice->copy_type == 'duplicate')
+                                    ✓
+                                @endif
                             </div>
                             <div>Duplicate - Transporter</div>
                         </div>
@@ -815,45 +821,45 @@
                         <div class="address-name">{{ optional($invoice->billedTo)->name ?? '-' }}</div>
                         <div>{{ optional($invoice->billedTo)->address ?? '' }}</div>
 
-                        @if(!$isForeignInvoice)
-                            @if(optional($invoice->billedTo)->gst_no || optional($invoice->billedTo)->pan_no)
+                        @if (!$isForeignInvoice)
+                            @if (optional($invoice->billedTo)->gst_no || optional($invoice->billedTo)->pan_no)
                                 <div class="address-field">
-                                    @if(optional($invoice->billedTo)->gst_no)
+                                    @if (optional($invoice->billedTo)->gst_no)
                                         <strong>GSTIN:</strong> {{ $invoice->billedTo->gst_no }}
                                     @endif
-                                    @if(optional($invoice->billedTo)->gst_no && optional($invoice->billedTo)->pan_no)
+                                    @if (optional($invoice->billedTo)->gst_no && optional($invoice->billedTo)->pan_no)
                                         &nbsp;|&nbsp;
                                     @endif
-                                    @if(optional($invoice->billedTo)->pan_no)
+                                    @if (optional($invoice->billedTo)->pan_no)
                                         <strong>PAN:</strong> {{ $invoice->billedTo->pan_no }}
                                     @endif
                                 </div>
                             @endif
 
-                            @if(optional($invoice->billedTo)->state_code || ($placeOfSupply && $placeOfSupply !== '-'))
+                            @if (optional($invoice->billedTo)->state_code || ($placeOfSupply && $placeOfSupply !== '-'))
                                 <div class="address-field">
-                                    @if(optional($invoice->billedTo)->state_code)
+                                    @if (optional($invoice->billedTo)->state_code)
                                         <strong>State Code:</strong> {{ $invoice->billedTo->state_code }}
                                     @endif
-                                    @if(optional($invoice->billedTo)->state_code && ($placeOfSupply && $placeOfSupply !== '-'))
+                                    @if (optional($invoice->billedTo)->state_code && ($placeOfSupply && $placeOfSupply !== '-'))
                                         &nbsp;|&nbsp;
                                     @endif
-                                    @if($placeOfSupply && $placeOfSupply !== '-')
+                                    @if ($placeOfSupply && $placeOfSupply !== '-')
                                         <strong>Place of Supply:</strong> {{ $placeOfSupply }}
                                     @endif
                                 </div>
                             @endif
                         @endif
 
-                        @if(optional($invoice->billedTo)->email || optional($invoice->billedTo)->phone)
+                        @if (optional($invoice->billedTo)->email || optional($invoice->billedTo)->phone)
                             <div class="address-field">
-                                @if(optional($invoice->billedTo)->email)
+                                @if (optional($invoice->billedTo)->email)
                                     <strong>Email:</strong> {{ $invoice->billedTo->email }}
                                 @endif
-                                @if(optional($invoice->billedTo)->email && optional($invoice->billedTo)->phone)
+                                @if (optional($invoice->billedTo)->email && optional($invoice->billedTo)->phone)
                                     &nbsp;|&nbsp;
                                 @endif
-                                @if(optional($invoice->billedTo)->phone)
+                                @if (optional($invoice->billedTo)->phone)
                                     <strong>Tel:</strong> {{ $invoice->billedTo->phone }}
                                 @endif
                             </div>
@@ -867,45 +873,45 @@
                         <div class="address-name">{{ optional($invoice->shippedTo)->name ?? '-' }}</div>
                         <div>{{ optional($invoice->shippedTo)->address ?? '' }}</div>
 
-                        @if(!$isForeignInvoice)
-                            @if(optional($invoice->shippedTo)->gst_no || optional($invoice->shippedTo)->pan_no)
+                        @if (!$isForeignInvoice)
+                            @if (optional($invoice->shippedTo)->gst_no || optional($invoice->shippedTo)->pan_no)
                                 <div class="address-field">
-                                    @if(optional($invoice->shippedTo)->gst_no)
+                                    @if (optional($invoice->shippedTo)->gst_no)
                                         <strong>GSTIN:</strong> {{ $invoice->shippedTo->gst_no }}
                                     @endif
-                                    @if(optional($invoice->shippedTo)->gst_no && optional($invoice->shippedTo)->pan_no)
+                                    @if (optional($invoice->shippedTo)->gst_no && optional($invoice->shippedTo)->pan_no)
                                         &nbsp;|&nbsp;
                                     @endif
-                                    @if(optional($invoice->shippedTo)->pan_no)
+                                    @if (optional($invoice->shippedTo)->pan_no)
                                         <strong>PAN:</strong> {{ $invoice->shippedTo->pan_no }}
                                     @endif
                                 </div>
                             @endif
 
-                            @if(optional($invoice->shippedTo)->state_code || ($placeOfSupply && $placeOfSupply !== '-'))
+                            @if (optional($invoice->shippedTo)->state_code || ($placeOfSupply && $placeOfSupply !== '-'))
                                 <div class="address-field">
-                                    @if(optional($invoice->shippedTo)->state_code)
+                                    @if (optional($invoice->shippedTo)->state_code)
                                         <strong>State Code:</strong> {{ $invoice->shippedTo->state_code }}
                                     @endif
-                                    @if(optional($invoice->shippedTo)->state_code && ($placeOfSupply && $placeOfSupply !== '-'))
+                                    @if (optional($invoice->shippedTo)->state_code && ($placeOfSupply && $placeOfSupply !== '-'))
                                         &nbsp;|&nbsp;
                                     @endif
-                                    @if($placeOfSupply && $placeOfSupply !== '-')
+                                    @if ($placeOfSupply && $placeOfSupply !== '-')
                                         <strong>Place of Supply:</strong> {{ $placeOfSupply }}
                                     @endif
                                 </div>
                             @endif
                         @endif
 
-                        @if(optional($invoice->shippedTo)->email || optional($invoice->shippedTo)->phone)
+                        @if (optional($invoice->shippedTo)->email || optional($invoice->shippedTo)->phone)
                             <div class="address-field">
-                                @if(optional($invoice->shippedTo)->email)
+                                @if (optional($invoice->shippedTo)->email)
                                     <strong>Email:</strong> {{ $invoice->shippedTo->email }}
                                 @endif
-                                @if(optional($invoice->shippedTo)->email && optional($invoice->shippedTo)->phone)
+                                @if (optional($invoice->shippedTo)->email && optional($invoice->shippedTo)->phone)
                                     &nbsp;|&nbsp;
                                 @endif
-                                @if(optional($invoice->shippedTo)->phone)
+                                @if (optional($invoice->shippedTo)->phone)
                                     <strong>Tel:</strong> {{ $invoice->shippedTo->phone }}
                                 @endif
                             </div>
@@ -927,13 +933,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($invoice->items as $k => $it)
+                    @foreach ($invoice->items as $k => $it)
                         <tr>
                             <td>{{ $k + 1 }}</td>
                             <td>{{ $it->description_of_goods }}</td>
                             <td>{{ $it->hsn_code }}</td>
                             <td>
-                                @if(!empty($it->pieces))
+                                @if (!empty($it->pieces))
                                     {{ $it->pieces }}
                                     <span style="float:right;">Pcs</span>
                                 @elseif(!empty($it->carats))
@@ -950,7 +956,9 @@
 
             <!-- Totals Section -->
             @php
-                $regionData = \App\Models\Invoice::REGIONS[$invoice->invoice_region ?? 'IN'] ?? \App\Models\Invoice::REGIONS['IN'];
+                $regionData =
+                    \App\Models\Invoice::REGIONS[$invoice->invoice_region ?? 'IN'] ??
+                    \App\Models\Invoice::REGIONS['IN'];
                 $currencySymbol = $regionData['symbol'];
             @endphp
             <div class="totals-section">
@@ -959,24 +967,24 @@
                         <td>Total Taxable Amount {{ $currencySymbol }}</td>
                         <td class="text-right">{{ number_format($invoice->taxable_amount ?? 0, 2) }}</td>
                     </tr>
-                    @if(!$isForeignInvoice)
+                    @if (!$isForeignInvoice)
                         <tr>
-                            <td>IGST{{ isset($invoice->igst_rate) ? ' ' . number_format($invoice->igst_rate, 2) . "%" : '' }}
+                            <td>IGST{{ isset($invoice->igst_rate) ? ' ' . number_format($invoice->igst_rate, 2) . '%' : '' }}
                             </td>
                             <td class="text-right">{{ number_format($invoice->igst_amount ?? 0, 2) }}</td>
                         </tr>
                         <tr>
-                            <td>CGST{{ isset($invoice->cgst_rate) ? ' ' . number_format($invoice->cgst_rate, 2) . "%" : '' }}
+                            <td>CGST{{ isset($invoice->cgst_rate) ? ' ' . number_format($invoice->cgst_rate, 2) . '%' : '' }}
                             </td>
                             <td class="text-right">{{ number_format($invoice->cgst_amount ?? 0, 2) }}</td>
                         </tr>
                         <tr>
-                            <td>SGST{{ isset($invoice->sgst_rate) ? ' ' . number_format($invoice->sgst_rate, 2) . "%" : '' }}
+                            <td>SGST{{ isset($invoice->sgst_rate) ? ' ' . number_format($invoice->sgst_rate, 2) . '%' : '' }}
                             </td>
                             <td class="text-right">{{ number_format($invoice->sgst_amount ?? 0, 2) }}</td>
                         </tr>
                     @endif
-                    @if(isset($invoice->express_shipping) && $invoice->express_shipping > 0)
+                    @if (isset($invoice->express_shipping) && $invoice->express_shipping > 0)
                         <tr>
                             <td>Express Shipping</td>
                             <td class="text-right">{{ number_format($invoice->express_shipping, 2) }}</td>
@@ -993,10 +1001,41 @@
                 if (!function_exists('in_words')) {
                     function _two_digits($n)
                     {
-                        $words = [0 => 'Zero', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five', 6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten', 11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen', 15 => 'Fifteen', 16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen', 19 => 'Nineteen'];
-                        $tens = [2 => 'Twenty', 3 => 'Thirty', 4 => 'Forty', 5 => 'Fifty', 6 => 'Sixty', 7 => 'Seventy', 8 => 'Eighty', 9 => 'Ninety'];
-                        if ($n < 20)
+                        $words = [
+                            0 => 'Zero',
+                            1 => 'One',
+                            2 => 'Two',
+                            3 => 'Three',
+                            4 => 'Four',
+                            5 => 'Five',
+                            6 => 'Six',
+                            7 => 'Seven',
+                            8 => 'Eight',
+                            9 => 'Nine',
+                            10 => 'Ten',
+                            11 => 'Eleven',
+                            12 => 'Twelve',
+                            13 => 'Thirteen',
+                            14 => 'Fourteen',
+                            15 => 'Fifteen',
+                            16 => 'Sixteen',
+                            17 => 'Seventeen',
+                            18 => 'Eighteen',
+                            19 => 'Nineteen',
+                        ];
+                        $tens = [
+                            2 => 'Twenty',
+                            3 => 'Thirty',
+                            4 => 'Forty',
+                            5 => 'Fifty',
+                            6 => 'Sixty',
+                            7 => 'Seventy',
+                            8 => 'Eighty',
+                            9 => 'Ninety',
+                        ];
+                        if ($n < 20) {
                             return $words[$n];
+                        }
                         $d = intval($n / 10);
                         $r = $n % 10;
                         return $tens[$d] . ($r ? ' ' . $words[$r] : '');
@@ -1004,14 +1043,26 @@
 
                     function _three_digits($n)
                     {
-                        $words = [0 => 'Zero', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five', 6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine'];
+                        $words = [
+                            0 => 'Zero',
+                            1 => 'One',
+                            2 => 'Two',
+                            3 => 'Three',
+                            4 => 'Four',
+                            5 => 'Five',
+                            6 => 'Six',
+                            7 => 'Seven',
+                            8 => 'Eight',
+                            9 => 'Nine',
+                        ];
                         $str = '';
                         if ($n >= 100) {
                             $h = intval($n / 100);
                             $str .= $words[$h] . ' Hundred';
                             $r = $n % 100;
-                            if ($r)
+                            if ($r) {
                                 $str .= ' ' . _two_digits($r);
+                            }
                         } else {
                             $str .= _two_digits($n);
                         }
@@ -1021,12 +1072,13 @@
                     function in_words($amount)
                     {
                         $amount = number_format((float) $amount, 2, '.', '');
-                        list($rupees, $paise) = explode('.', $amount);
+                        [$rupees, $paise] = explode('.', $amount);
                         $rupees = intval($rupees);
                         $paise = intval($paise);
 
-                        if ($rupees == 0)
+                        if ($rupees == 0) {
                             $rupees_words = 'Zero';
+                        }
 
                         $parts = [];
                         $crore = intval($rupees / 10000000);
@@ -1049,12 +1101,16 @@
                         }
 
                         $rupees_words = implode(' ', $parts);
-                        if (trim($rupees_words) == '')
+                        if (trim($rupees_words) == '') {
                             $rupees_words = 'Zero';
+                        }
 
                         $paise_words = $paise ? _two_digits($paise) : 'Zero';
 
-                        return ucfirst(strtolower(trim($rupees_words))) . ' Rupees And ' . ucfirst(strtolower($paise_words)) . ' Paise Only.';
+                        return ucfirst(strtolower(trim($rupees_words))) .
+                            ' Rupees And ' .
+                            ucfirst(strtolower($paise_words)) .
+                            ' Paise Only.';
                     }
                 }
             @endphp
@@ -1065,7 +1121,9 @@
             <div class="amount-words">
                 @php
                     // Use invoice_region for currency symbol and terminology
-                    $regionData = \App\Models\Invoice::REGIONS[$invoice->invoice_region ?? 'IN'] ?? \App\Models\Invoice::REGIONS['IN'];
+                    $regionData =
+                        \App\Models\Invoice::REGIONS[$invoice->invoice_region ?? 'IN'] ??
+                        \App\Models\Invoice::REGIONS['IN'];
                     $amountCurrencySymbol = $regionData['symbol'];
 
                     // Get currency name and cents name from centralized config
@@ -1083,7 +1141,7 @@
                 {{ $amountWords }}
             </div>
 
-            @if($invoice->include_terms_conditions)
+            @if ($invoice->include_terms_conditions)
                 <div class="declarations">
                     <div class="declaration-section">
                         <div class="declaration-title">Terms & Conditions</div>
@@ -1098,13 +1156,13 @@
             @endif
 
             <!-- Bank Details -->
-            <!-- @if(!empty($invoice->company->bank_name) || !empty($invoice->company->ifsc_code))
-                <div class="bank-details">
+            <!-- @if (!empty($invoice->company->bank_name) || !empty($invoice->company->ifsc_code))
+<div class="bank-details">
                     <strong>Bank Details:</strong>
                     {{ $invoice->company->bank_name ?? '' }} — A/C: {{ $invoice->company->account_no ?? '' }} — IFSC:
                     {{ $invoice->company->ifsc_code ?? '' }}
                 </div>
-            @endif -->
+@endif -->
 
             <!-- Declarations Section -->
             <div class="declarations">
@@ -1122,30 +1180,33 @@
                     <div class="declaration-text">
                         @php
                             $country = strtolower($invoice->company->country ?? '');
-                            $isUSCompany = str_contains($country, 'us') ||
+                            $isUSCompany =
+                                str_contains($country, 'us') ||
                                 str_contains($country, 'usa') ||
                                 str_contains($country, 'united states') ||
                                 str_contains($country, 'america');
                         @endphp
 
-                        @if($isUSCompany && !empty($invoice->company->aba_routing_number))
+                        @if ($isUSCompany && !empty($invoice->company->aba_routing_number))
                             {{-- US Bank Details --}}
                             <strong>BENEFICIARY:</strong>
-                            {{ $invoice->company->beneficiary_name ?? $invoice->company->account_holder_name ?? '-' }}<br>
+                            {{ $invoice->company->beneficiary_name ?? ($invoice->company->account_holder_name ?? '-') }}<br>
                             <strong>BANK:</strong> {{ $invoice->company->bank_name ?? '-' }}<br>
                             <strong>ABA ROUTING NO:</strong> {{ $invoice->company->aba_routing_number ?? '-' }}<br>
                             <strong>A/C NO:</strong>
-                            {{ $invoice->company->us_account_no ?? $invoice->company->account_no ?? '-' }}<br>
+                            {{ $invoice->company->us_account_no ?? ($invoice->company->account_no ?? '-') }}<br>
                             <strong>A/C TYPE:</strong> {{ ucfirst($invoice->company->account_type ?? '-') }}<br>
-                            @if(!empty($invoice->company->beneficiary_address))
+                            @if (!empty($invoice->company->beneficiary_address))
                                 <strong>BENEFICIARY ADDRESS:</strong> {{ $invoice->company->beneficiary_address }}
                             @endif
                         @else
                             {{-- India/UK/Default Bank Details --}}
                             {{ $invoice->company->bank_name ?? 'STATE BANK OF INDIA (DIAMOND BRANCH - MUMBAI)' }}<br>
-                            ACCOUNT NO: {{ $invoice->company->account_no ?? '30257052826' }}<br>
-                            RTGS / NEFT (IFSC): {{ $invoice->company->ifsc_code ?? 'SBIN0009276' }}
-                            @if(!empty($invoice->company->swift_code))
+                            ACCOUNT NO: {{ $invoice->company->account_no ?? '-' }}<br>
+                            @if (!empty($invoice->company->ifsc_code))
+                                RTGS / NEFT (IFSC): {{ $invoice->company->ifsc_code }}
+                            @endif
+                            @if (!empty($invoice->company->swift_code))
                                 <br>SWIFT CODE: {{ $invoice->company->swift_code }}
                             @endif
                         @endif
@@ -1190,12 +1251,22 @@
 
                 <div class="authorized-signature">
                     <div class="signature-image">
-                        @if(!empty($invoice->signed_image) && (Str::startsWith($invoice->signed_image, ['http://', 'https://']) || file_exists(public_path('storage/' . $invoice->signed_image)) || file_exists(public_path($invoice->signed_image))))
+                        @if (
+                            !empty($invoice->signed_image) &&
+                                (Str::startsWith($invoice->signed_image, ['http://', 'https://']) ||
+                                    file_exists(public_path('storage/' . $invoice->signed_image)) ||
+                                    file_exists(public_path($invoice->signed_image))))
                             @php
                                 $sig = $invoice->signed_image;
-                                if (!Str::startsWith($sig, ['http://', 'https://']) && file_exists(storage_path('app/public/' . $sig))) {
+                                if (
+                                    !Str::startsWith($sig, ['http://', 'https://']) &&
+                                    file_exists(storage_path('app/public/' . $sig))
+                                ) {
                                     $sig = asset('storage/' . $sig);
-                                } elseif (!Str::startsWith($sig, ['http://', 'https://']) && file_exists(public_path($sig))) {
+                                } elseif (
+                                    !Str::startsWith($sig, ['http://', 'https://']) &&
+                                    file_exists(public_path($sig))
+                                ) {
                                     $sig = asset($sig);
                                 }
                             @endphp
@@ -1214,7 +1285,7 @@
             </div>
 
             <!-- Footer Note -->
-            @if(!empty($invoice->notes))
+            @if (!empty($invoice->notes))
                 <div style="margin-top: 12px; font-size: 10px; padding: 8px; background: #f8fafc; border-radius: 4px;">
                     <strong>Note:</strong> {{ $invoice->notes }}
                 </div>
@@ -1226,4 +1297,6 @@
             </div>
         </div>
     </div>
-</body></html>
+</body>
+
+</html>

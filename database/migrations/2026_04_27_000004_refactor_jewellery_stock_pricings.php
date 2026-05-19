@@ -57,7 +57,7 @@ return new class extends Migration {
                 ]);
 
             DB::table('jewellery_stock_pricings')
-                ->whereIn('id', $rows->pluck('id')->filter(fn ($id) => $id !== $keepId)->values())
+                ->whereIn('id', $rows->pluck('id')->filter(fn($id) => $id !== $keepId)->values())
                 ->delete();
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Admin;
+use App\Models\Permission;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,16 +28,15 @@ class EnsureAdminHasPermission
             return $next($request);
         }
 
-        $moduleName = 'this module';
+        $permissionName = 'this feature';
         if ($permission) {
-            $parts = explode('.', $permission);
-            $moduleName = ucfirst($parts[0]);
+            $permissionName = Permission::getFriendlyName($permission);
         }
 
         // For AJAX/API requests, return JSON instead of HTML redirect.
         if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'message' => "You do not have permission to access the {$moduleName} module.",
+                'message' => "You do not have permission to: {$permissionName}.",
                 'error' => 'forbidden',
                 'permission' => $permission,
             ], 403);
@@ -44,6 +44,6 @@ class EnsureAdminHasPermission
 
         // For normal page requests, keep redirect behavior.
         return redirect()->route('admin.dashboard')
-            ->with('error', "Your permission to access the <strong>$moduleName</strong> module may have changed or been revoked, so you have been redirected here.");
+            ->with('error', "Your permission to: <strong>$permissionName</strong> may have changed or been revoked, so you have been redirected here.");
     }
 }

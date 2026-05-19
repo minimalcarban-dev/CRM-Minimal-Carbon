@@ -23,10 +23,12 @@ class Permission extends Model
 
         static::saved(function ($permission) {
             self::clearCache();
+            Cache::forget('permission_friendly_' . md5($permission->slug));
         });
 
         static::deleted(function ($permission) {
             self::clearCache();
+            Cache::forget('permission_friendly_' . md5($permission->slug));
         });
     }
 
@@ -113,5 +115,41 @@ class Permission extends Model
     public function admins()
     {
         return $this->belongsToMany(Admin::class, 'admin_permission');
+    }
+
+    /**
+     * Get a friendly human-readable name for a permission slug.
+     * Caches lookups for maximum performance.
+     */
+    public static function getFriendlyName(string $slug): string
+    {
+        return Cache::remember('permission_friendly_' . md5($slug), 86400, function () use ($slug) {
+            $permission = static::where('slug', $slug)->first();
+            if ($permission) {
+                return $permission->name;
+            }
+
+            // Fallback parsing (e.g. 'melee_diamonds.create' -> 'Create Melee Diamonds')
+            $parts = explode('.', $slug);
+            if (count($parts) < 2) {
+                return ucwords(str_replace(['_', '-'], ' ', $slug));
+            }
+
+            $module = str_replace(['_', '-'], ' ', $parts[0]);
+            $action = str_replace(['_', '-'], ' ', $parts[1]);
+
+            // Map common actions to cleaner verbs
+            $actionMapping = [
+                'view' => 'View',
+                'create' => 'Create',
+                'edit' => 'Edit',
+                'delete' => 'Delete',
+                'transaction' => 'Perform Transactions on',
+                'access' => 'Access',
+            ];
+
+            $actionWord = $actionMapping[strtolower($action)] ?? ucwords($action);
+            return $actionWord . ' ' . ucwords($module);
+        });
     }
 }
