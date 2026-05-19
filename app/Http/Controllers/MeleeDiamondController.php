@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMeleeRequest;
+use App\Http\Requests\UpdateMeleeRequest;
 use App\Models\MeleeCategory;
 use App\Models\MeleeDiamond;
 use App\Models\MeleeTransaction;
@@ -213,13 +215,8 @@ class MeleeDiamondController extends Controller
      * AJAX: Add a new shape+size to a category.
      * size_label is stored as "shape-size" in lowercase (e.g., "round-1.5").
      */
-    public function addShape(Request $request)
+    public function addShape(StoreMeleeRequest $request)
     {
-        $request->validate([
-            'category_id' => 'required|exists:melee_categories,id',
-            'shape' => 'required|string|max:100',
-            'size' => ['required', 'string', 'max:20', 'regex:/^[0-9.*x\s]+$/i'],
-        ]);
 
         $category = MeleeCategory::findOrFail($request->category_id);
 
@@ -245,11 +242,10 @@ class MeleeDiamondController extends Controller
         $ucShape = ucfirst(strtolower($shape));
         if (!in_array($ucShape, $allowedShapes)) {
             $allowedShapes[] = $ucShape;
-            $category->allowed_shapes = $allowedShapes;
-            $category->save();
+            $this->meleeStockService->updateCategory($category, ['allowed_shapes' => $allowedShapes]);
         }
 
-        $diamond = MeleeDiamond::create([
+        $diamond = $this->meleeStockService->create([
             'melee_category_id' => $category->id,
             'shape' => $ucShape,
             'size_label' => $sizeLabel,
@@ -276,14 +272,8 @@ class MeleeDiamondController extends Controller
     /**
      * AJAX: Update an existing shape/size, and optionally adjust the very last IN transaction.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateMeleeRequest $request, $id)
     {
-        $request->validate([
-            'shape' => 'required|string|max:100',
-            'size' => ['required', 'string', 'max:20', 'regex:/^[0-9.*x\s]+$/i'],
-            'last_pieces' => 'nullable|integer|min:1',
-            'last_carats' => 'nullable|numeric|min:0',
-        ]);
 
         try {
             DB::beginTransaction();
@@ -314,8 +304,7 @@ class MeleeDiamondController extends Controller
             $allowedShapes = $category->allowed_shapes ?? [];
             if (!in_array($ucShape, $allowedShapes)) {
                 $allowedShapes[] = $ucShape;
-                $category->allowed_shapes = $allowedShapes;
-                $category->save();
+                $this->meleeStockService->updateCategory($category, ['allowed_shapes' => $allowedShapes]);
             }
 
             // --- Handle Last Transaction Update ---
@@ -335,9 +324,10 @@ class MeleeDiamondController extends Controller
                     // Apply adjustments if there's a difference
                     if ($piecesDiff != 0 || floatval($caratsDiff) != 0.0) {
                         // Adjust transaction
-                        $lastInTx->pieces = $newPieces;
-                        $lastInTx->carat_weight = $newCarats;
-                        $lastInTx->save();
+                        $this->meleeStockService->updateTransactionRecord($lastInTx, [
+                            'pieces' => $newPieces,
+                            'carat_weight' => $newCarats,
+                        ]);
 
                         // Adjust totals on the diamond
                         $diamond->total_pieces += $piecesDiff;
@@ -349,19 +339,22 @@ class MeleeDiamondController extends Controller
             }
 
             // --- Update Core Diamond Properties ---
-            $diamond->shape = $ucShape;
-            $diamond->size_label = $sizeLabel;
-
-            // Recalculate status just in case pieces changed
+            $status = 'in_stock';
             if ($diamond->available_pieces <= 0) {
-                $diamond->status = 'out_of_stock';
+                $status = 'out_of_stock';
             } elseif ($diamond->available_pieces <= $diamond->low_stock_threshold) {
-                $diamond->status = 'low_stock';
-            } else {
-                $diamond->status = 'in_stock';
+                $status = 'low_stock';
             }
 
-            $diamond->save();
+            $diamond = $this->meleeStockService->update($diamond, [
+                'shape' => $ucShape,
+                'size_label' => $sizeLabel,
+                'total_pieces' => $diamond->total_pieces,
+                'available_pieces' => $diamond->available_pieces,
+                'total_carat_weight' => $diamond->total_carat_weight,
+                'available_carat_weight' => $diamond->available_carat_weight,
+                'status' => $status,
+            ]);
 
             DB::commit();
 
@@ -389,11 +382,8 @@ class MeleeDiamondController extends Controller
             DB::beginTransaction();
             $diamond = MeleeDiamond::findOrFail($id);
 
-            // Delete associated transactions first
-            MeleeTransaction::where('melee_diamond_id', $id)->delete();
-
             // Delete the diamond entry
-            $diamond->delete();
+            $this->meleeStockService->delete($diamond);
 
             DB::commit();
 
@@ -457,20 +447,26 @@ class MeleeDiamondController extends Controller
                 }
 
                 // Update the transaction itself
-                $transaction->pieces = $newPieces;
-                $transaction->carat_weight = $newCarats;
-                $transaction->save();
+                $this->meleeStockService->updateTransactionRecord($transaction, [
+                    'pieces' => $newPieces,
+                    'carat_weight' => $newCarats,
+                ]);
 
                 // Recalculate diamond status
+                $status = 'in_stock';
                 if ($diamond->available_pieces <= 0) {
-                    $diamond->status = 'out_of_stock';
+                    $status = 'out_of_stock';
                 } elseif ($diamond->available_pieces <= $diamond->low_stock_threshold) {
-                    $diamond->status = 'low_stock';
-                } else {
-                    $diamond->status = 'in_stock';
+                    $status = 'low_stock';
                 }
 
-                $diamond->save();
+                $diamond = $this->meleeStockService->update($diamond, [
+                    'total_pieces' => $diamond->total_pieces,
+                    'available_pieces' => $diamond->available_pieces,
+                    'total_carat_weight' => $diamond->total_carat_weight,
+                    'available_carat_weight' => $diamond->available_carat_weight,
+                    'status' => $status,
+                ]);
             }
 
             DB::commit();
@@ -515,18 +511,23 @@ class MeleeDiamondController extends Controller
                 $diamond->available_carat_weight += $transaction->carat_weight;
             }
 
-            $transaction->delete();
+            $this->meleeStockService->deleteTransactionRecord($transaction);
 
             // Recalculate diamond status
+            $status = 'in_stock';
             if ($diamond->available_pieces <= 0) {
-                $diamond->status = 'out_of_stock';
+                $status = 'out_of_stock';
             } elseif ($diamond->available_pieces <= $diamond->low_stock_threshold) {
-                $diamond->status = 'low_stock';
-            } else {
-                $diamond->status = 'in_stock';
+                $status = 'low_stock';
             }
 
-            $diamond->save();
+            $diamond = $this->meleeStockService->update($diamond, [
+                'total_pieces' => $diamond->total_pieces,
+                'available_pieces' => $diamond->available_pieces,
+                'total_carat_weight' => $diamond->total_carat_weight,
+                'available_carat_weight' => $diamond->available_carat_weight,
+                'status' => $status,
+            ]);
 
             DB::commit();
 

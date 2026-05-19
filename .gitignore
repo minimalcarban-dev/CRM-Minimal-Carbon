@@ -35,3 +35,4 @@ AGENTS.md
 /.codex/
 /.graphifyignore
 /graphify-out/
+/docs*
